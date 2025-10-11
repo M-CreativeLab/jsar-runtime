@@ -1,8 +1,11 @@
 #include "./webgl_rendering_context.hpp"
+#include "./active_info.hpp"
+#include "./uniform_location.hpp"
 #include "./shader.hpp"
 #include "./program.hpp"
-#include "./buffer.hpp"
+#include "./vertex_array.hpp"
 #include "./texture.hpp"
+#include "./buffer.hpp"
 #include "./renderbuffer.hpp"
 #include "./framebuffer.hpp"
 #include "./extensions/all.hpp"
@@ -1184,55 +1187,309 @@ namespace script_bindings
       HandleScope scope(isolate);
       Local<Context> context = isolate->GetCurrentContext();
 
-      if (info.Length() < 2)
+      if (info.Length() < 3)
       {
-        isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "bufferData", "2 arguments required, but only fewer present")));
+        auto msg = "3 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "bufferData", msg.c_str())));
         return;
       }
       if (!info[0]->IsNumber())
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "bufferData", "first argument must be a number")));
+          MakeMethodError(isolate, "bufferData", "first argument(target) must be a number")));
         return;
       }
-      if (!info[1]->IsArrayBuffer() && !info[1]->IsTypedArray() && !info[1]->IsNull())
+      if (!info[2]->IsNumber())
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "bufferData", "second argument must be an ArrayBuffer, TypedArray, or null")));
-        return;
+          MakeMethodError(isolate, "bufferData", "third argument(usage) must be a number")));
       }
 
       client_graphics::WebGLBufferBindingTarget bufferTarget;
       {
-        int intValue = info[0]->Int32Value(context).FromMaybe(0);
-        bufferTarget = static_cast<client_graphics::WebGLBufferBindingTarget>(intValue);
+        uint32_t value = info[0]->Uint32Value(context).FromMaybe(0);
+        bufferTarget = static_cast<client_graphics::WebGLBufferBindingTarget>(value);
       }
 
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "bufferData", "not implemented")));
+      client_graphics::WebGLBufferUsage usage;
+      {
+        uint32_t value = info[2]->Uint32Value(context).FromMaybe(0);
+        usage = static_cast<client_graphics::WebGLBufferUsage>(value);
+      }
+
+      auto secondArg = info[1];
+      if (secondArg->IsNumber())
+      {
+        uint32_t size = secondArg->Uint32Value(context).FromMaybe(0);
+        handle()->bufferData(bufferTarget, size, usage);
+      }
+      else if (secondArg->IsNull())
+      {
+        handle()->bufferData(bufferTarget, 0, usage);
+      }
+      else if (secondArg->IsArrayBufferView())
+      {
+        auto arrayBufferView = secondArg.As<ArrayBufferView>();
+        auto arrayBuffer = arrayBufferView->Buffer();
+        if (arrayBuffer.IsEmpty())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "bufferData", "invalid ArrayBufferView")));
+          return;
+        }
+        auto data = static_cast<uint8_t *>(arrayBuffer->Data()) + arrayBufferView->ByteOffset();
+        size_t size = arrayBufferView->ByteLength();
+        handle()->bufferData(bufferTarget, size, data, usage);
+      }
+      else if (secondArg->IsArray())
+      {
+        auto jsArray = secondArg.As<Array>();
+        size_t length = jsArray->Length();
+        std::vector<float> data(length);
+        for (size_t i = 0; i < length; ++i)
+        {
+          auto element = jsArray->Get(context, i).ToLocalChecked();
+          data[i] = static_cast<float>(element->NumberValue(context).FromMaybe(0.0));
+        }
+        handle()->bufferData(bufferTarget, data.size() * sizeof(float), data.data(), usage);
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bufferData", "second argument must be a number or ArrayBufferView, Array or null")));
+        return;
+      }
+
+      // Returns undefined
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BufferSubData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "bufferSubData", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        auto msg = "2 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "bufferSubData", msg.c_str())));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bufferSubData", "first argument(target) must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bufferSubData", "second argument(offset) must be a number")));
+        return;
+      }
+
+      client_graphics::WebGLBufferBindingTarget bufferTarget;
+      {
+        uint32_t value = info[0]->Uint32Value(context).FromMaybe(0);
+        bufferTarget = static_cast<client_graphics::WebGLBufferBindingTarget>(value);
+      }
+      uint32_t offset = info[1]->Uint32Value(context).FromMaybe(0);
+
+      if (info.Length() == 2)
+      {
+        handle()->bufferSubData(bufferTarget, offset, 0, nullptr);
+      }
+      else
+      {
+        assert(info.Length() >= 3);
+        auto srcDataValue = info[2];
+        if (srcDataValue->IsNull())
+        {
+          handle()->bufferSubData(bufferTarget, offset, 0, nullptr);
+        }
+        else if (srcDataValue->IsArrayBufferView())
+        {
+          auto arrayBufferView = srcDataValue.As<ArrayBufferView>();
+          auto arrayBuffer = arrayBufferView->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "bufferSubData", "invalid ArrayBufferView")));
+            return;
+          }
+          auto data = static_cast<uint8_t *>(arrayBuffer->Data()) + arrayBufferView->ByteOffset();
+          size_t size = arrayBufferView->ByteLength();
+          handle()->bufferSubData(bufferTarget, offset, size, data);
+        }
+        else if (srcDataValue->IsArray())
+        {
+          auto jsArray = srcDataValue.As<Array>();
+          size_t length = jsArray->Length();
+          std::vector<float> data(length);
+          for (size_t i = 0; i < length; ++i)
+          {
+            auto element = jsArray->Get(context, i).ToLocalChecked();
+            data[i] = static_cast<float>(element->NumberValue(context).FromMaybe(0.0));
+          }
+          handle()->bufferSubData(bufferTarget, offset, data.size() * sizeof(float), data.data());
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(MakeMethodError(
+            isolate, "bufferSubData", "third argument must be an ArrayBufferView, Array or null")));
+          return;
+        }
+      }
+
+      // Returns undefined
+      info.GetReturnValue().SetUndefined();
     }
 
     // Framebuffer operations
     void WebGLRenderingContext::FramebufferRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "framebufferRenderbuffer", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 4)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferRenderbuffer", "4 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferRenderbuffer", "first argument(target) must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferRenderbuffer", "second argument(attachment) must be a number")));
+        return;
+      }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferRenderbuffer", "third argument(renderbuffertarget) must be a number")));
+        return;
+      }
+      if (!WebGLRenderbuffer::IsInstanceOf(isolate, info[3]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferRenderbuffer", "fourth argument must be a WebGLRenderbuffer or null")));
+        return;
+      }
+
+      client_graphics::WebGLFramebufferBindingTarget target;
+      {
+        int value = info[0]->Int32Value(context).FromMaybe(0);
+        target = static_cast<client_graphics::WebGLFramebufferBindingTarget>(value);
+      }
+      client_graphics::WebGLFramebufferAttachment attachment;
+      {
+        int value = info[1]->Int32Value(context).FromMaybe(0);
+        attachment = static_cast<client_graphics::WebGLFramebufferAttachment>(value);
+      }
+      client_graphics::WebGLRenderbufferBindingTarget renderbufferTarget;
+      {
+        int value = info[2]->Int32Value(context).FromMaybe(0);
+        renderbufferTarget = static_cast<client_graphics::WebGLRenderbufferBindingTarget>(value);
+      }
+
+      auto renderbufferObj = info[3]->ToObject(context).ToLocalChecked();
+      auto renderbufferBinding = WebGLRenderbuffer::Unwrap(isolate, renderbufferObj);
+      if (renderbufferBinding == nullptr || !renderbufferBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferRenderbuffer", "invalid WebGLRenderbuffer object")));
+        return;
+      }
+
+      handle()->framebufferRenderbuffer(target, attachment, renderbufferTarget, renderbufferBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::FramebufferTexture2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "framebufferTexture2D", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 5)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferTexture2D", "5 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferTexture2D", "first argument(target) must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferTexture2D", "second argument(attachment) must be a number")));
+        return;
+      }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferTexture2D", "third argument(textarget) must be a number")));
+        return;
+      }
+      if (!WebGLTexture::IsInstanceOf(isolate, info[3]) && !info[3]->IsNull())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferTexture2D", "fourth argument must be a WebGLTexture or null")));
+        return;
+      }
+      if (!info[4]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "framebufferTexture2D", "fifth argument(level) must be a number")));
+        return;
+      }
+
+      client_graphics::WebGLFramebufferBindingTarget target;
+      {
+        int value = info[0]->Int32Value(context).FromMaybe(0);
+        target = static_cast<client_graphics::WebGLFramebufferBindingTarget>(value);
+      }
+      client_graphics::WebGLFramebufferAttachment attachment;
+      {
+        int value = info[1]->Int32Value(context).FromMaybe(0);
+        attachment = static_cast<client_graphics::WebGLFramebufferAttachment>(value);
+      }
+      client_graphics::WebGLTexture2DTarget textarget;
+      {
+        int value = info[2]->Int32Value(context).FromMaybe(0);
+        textarget = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int level = info[4]->Int32Value(context).FromMaybe(0);
+
+      if (info[3]->IsNull())
+      {
+        handle()->framebufferTexture2D(target, attachment, textarget, nullptr, level);
+      }
+      else
+      {
+        auto textureObj = info[3]->ToObject(context).ToLocalChecked();
+        auto textureBinding = WebGLTexture::Unwrap(isolate, textureObj);
+        if (textureBinding == nullptr || !textureBinding->hasData())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "framebufferTexture2D", "invalid WebGLTexture object")));
+          return;
+        }
+        handle()->framebufferTexture2D(target, attachment, textarget, textureBinding->handle(), level);
+      }
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::CheckFramebufferStatus(const FunctionCallbackInfo<Value> &info)
@@ -1262,250 +1519,543 @@ namespace script_bindings
     void WebGLRenderingContext::Clear(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int mask = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->clear(mask);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clear", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clear", "first argument(mask) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      uint32_t mask = info[0]->Uint32Value(context).FromMaybe(0);
+      handle()->clear(mask);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::ClearColor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        float red = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float green = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float blue = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float alpha = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->clearColor(red, green, blue, alpha);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clearColor", "4 arguments required, but only fewer present")));
+        return;
       }
+      for (int i = 0; i < 4; ++i)
+      {
+        if (!info[i]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "clearColor", "all arguments must be numbers")));
+          return;
+        }
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      float r = static_cast<float>(info[0]->NumberValue(context).FromMaybe(0.0));
+      float g = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float b = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      float a = static_cast<float>(info[3]->NumberValue(context).FromMaybe(0.0));
+      handle()->clearColor(r, g, b, a);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::ClearDepth(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        float depth = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->clearDepth(depth);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clearDepth", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clearDepth", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      float depth = static_cast<float>(info[0]->NumberValue(context).FromMaybe(0.0));
+      handle()->clearDepth(depth);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::ClearStencil(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int s = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->clearStencil(s);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clearStencil", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "clearStencil", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int s = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->clearStencil(s);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::ColorMask(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        bool red = info[0]->BooleanValue(isolate);
-        bool green = info[1]->BooleanValue(isolate);
-        bool blue = info[2]->BooleanValue(isolate);
-        bool alpha = info[3]->BooleanValue(isolate);
-        self->handle()->colorMask(red, green, blue, alpha);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "colorMask", "4 arguments required, but only fewer present")));
+        return;
       }
+      for (int i = 0; i < 4; ++i)
+      {
+        if (!info[i]->IsBoolean())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "colorMask", "all arguments must be boolean")));
+          return;
+        }
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      bool r = info[0]->BooleanValue(isolate);
+      bool g = info[1]->BooleanValue(isolate);
+      bool b = info[2]->BooleanValue(isolate);
+      bool a = info[3]->BooleanValue(isolate);
+      handle()->colorMask(r, g, b, a);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DepthMask(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        bool flag = info[0]->BooleanValue(isolate);
-        self->handle()->depthMask(flag);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "depthMask", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsBoolean())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "depthMask", "first argument must be boolean")));
+        return;
+      }
+
+      bool flag = info[0]->BooleanValue(isolate);
+      handle()->depthMask(flag);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DepthFunc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int func = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->depthFunc(func);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "depthFunc", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "depthFunc", "first argument(func) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int func = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->depthFunc(func);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DepthRange(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        float zNear = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float zFar = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->depthRange(zNear, zFar);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "depthRange", "2 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "depthRange", "both arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      float zNear = static_cast<float>(info[0]->NumberValue(context).FromMaybe(0.0));
+      float zFar = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      handle()->depthRange(zNear, zFar);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::StencilFunc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int func = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int ref = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int mask = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->stencilFunc(func, ref, mask);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilFunc", "3 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilFunc", "all arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int func = info[0]->Int32Value(context).FromMaybe(0);
+      int ref = info[1]->Int32Value(context).FromMaybe(0);
+      int mask = info[2]->Int32Value(context).FromMaybe(0);
+      handle()->stencilFunc(func, ref, mask);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::StencilFuncSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        int face = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int func = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int ref = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int mask = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->stencilFuncSeparate(face, func, ref, mask);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilFuncSeparate", "4 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilFuncSeparate", "all arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int face = info[0]->Int32Value(context).FromMaybe(0);
+      int func = info[1]->Int32Value(context).FromMaybe(0);
+      int ref = info[2]->Int32Value(context).FromMaybe(0);
+      int mask = info[3]->Int32Value(context).FromMaybe(0);
+      handle()->stencilFuncSeparate(face, func, ref, mask);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::StencilMask(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int mask = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->stencilMask(mask);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilMask", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilMask", "first argument(mask) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int mask = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->stencilMask(mask);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::StencilMaskSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        int face = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int mask = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->stencilMaskSeparate(face, mask);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilMaskSeparate", "2 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilMaskSeparate", "both arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int face = info[0]->Int32Value(context).FromMaybe(0);
+      int mask = info[1]->Int32Value(context).FromMaybe(0);
+      handle()->stencilMaskSeparate(face, mask);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::StencilOp(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int fail = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int zfail = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int zpass = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->stencilOp(fail, zfail, zpass);
+        auto msg = "3 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "stencilOp", msg.c_str())));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilOp", "all arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int fail = info[0]->Int32Value(context).FromMaybe(0);
+      int zfail = info[1]->Int32Value(context).FromMaybe(0);
+      int zpass = info[2]->Int32Value(context).FromMaybe(0);
+      handle()->stencilOp(fail, zfail, zpass);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::StencilOpSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        int face = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int fail = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int zfail = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int zpass = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->stencilOpSeparate(face, fail, zfail, zpass);
+        auto msg = "4 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "stencilOpSeparate", msg.c_str())));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "stencilOpSeparate", "all arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int face = info[0]->Int32Value(context).FromMaybe(0);
+      int fail = info[1]->Int32Value(context).FromMaybe(0);
+      int zfail = info[2]->Int32Value(context).FromMaybe(0);
+      int zpass = info[3]->Int32Value(context).FromMaybe(0);
+      handle()->stencilOpSeparate(face, fail, zfail, zpass);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BlendColor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4)
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        float red = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float green = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float blue = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float alpha = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->blendColor(red, green, blue, alpha);
+        auto msg = "4 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "blendColor", msg.c_str())));
+        return;
       }
+      for (int i = 0; i < 4; ++i)
+      {
+        if (!info[i]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "blendColor", "all arguments must be numbers")));
+          return;
+        }
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      float r = static_cast<float>(info[0]->NumberValue(context).FromMaybe(0.0));
+      float g = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float b = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      float a = static_cast<float>(info[3]->NumberValue(context).FromMaybe(0.0));
+      handle()->blendColor(r, g, b, a);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BlendEquation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->blendEquation(mode);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "blendEquation", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "blendEquation", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int mode = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->blendEquation(mode);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BlendEquationSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        int modeRGB = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int modeAlpha = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->blendEquationSeparate(modeRGB, modeAlpha);
+        auto msg = "2 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "blendEquationSeparate", msg.c_str())));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "blendEquationSeparate", "both arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int modeRGB = info[0]->Int32Value(context).FromMaybe(0);
+      int modeAlpha = info[1]->Int32Value(context).FromMaybe(0);
+
+      handle()->blendEquationSeparate(modeRGB, modeAlpha);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BlendFunc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        int sfactor = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int dfactor = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->blendFunc(sfactor, dfactor);
+        auto msg = "2 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "blendFunc", msg.c_str())));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "blendFunc", "both arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int sfactor = info[0]->Int32Value(context).FromMaybe(0);
+      int dfactor = info[1]->Int32Value(context).FromMaybe(0);
+
+      handle()->blendFunc(sfactor, dfactor);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BlendFuncSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        int srcRGB = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int dstRGB = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int srcAlpha = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int dstAlpha = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+        auto msg = "4 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "blendFuncSeparate", msg.c_str())));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "blendFuncSeparate", "all arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int srcRGB = info[0]->Int32Value(context).FromMaybe(0);
+      int dstRGB = info[1]->Int32Value(context).FromMaybe(0);
+      int srcAlpha = info[2]->Int32Value(context).FromMaybe(0);
+      int dstAlpha = info[3]->Int32Value(context).FromMaybe(0);
+
+      handle()->blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::RenderbufferStorage(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int internalformat = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int height = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->renderbufferStorage(target, internalformat, width, height);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "renderbufferStorage", "4 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "renderbufferStorage", "first argument(target) must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "renderbufferStorage", "second argument(internalformat) must be a number")));
+        return;
+      }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "renderbufferStorage", "third argument(width) must be a number")));
+        return;
+      }
+      if (!info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "renderbufferStorage", "fourth argument(height) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int target = info[0]->Int32Value(context).FromMaybe(0);
+      int internalformat = info[1]->Int32Value(context).FromMaybe(0);
+      int width = info[2]->Int32Value(context).FromMaybe(0);
+      int height = info[3]->Int32Value(context).FromMaybe(0);
+
+      handle()->renderbufferStorage(static_cast<client_graphics::WebGLRenderbufferBindingTarget>(target),
+                                    internalformat,
+                                    width,
+                                    height);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::CompileShader(const FunctionCallbackInfo<Value> &info)
@@ -1612,318 +2162,806 @@ namespace script_bindings
     void WebGLRenderingContext::DeleteBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto buffer = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (buffer)
-        {
-          // self->handle()->deleteBuffer(buffer);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteBuffer", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLBuffer::IsInstanceOf(isolate, info[1]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteBuffer", "first argument must be a WebGLBuffer object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto bufferObj = info[0]->ToObject(context).ToLocalChecked();
+      auto bufferBinding = WebGLBuffer::Unwrap(isolate, bufferObj);
+      if (bufferBinding == nullptr || !bufferBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteBuffer", "invalid WebGLBuffer object")));
+        return;
+      }
+
+      handle()->deleteBuffer(bufferBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DeleteFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto framebuffer = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (framebuffer)
-        {
-          // self->handle()->deleteFramebuffer(framebuffer);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteFramebuffer", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLFramebuffer::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteFramebuffer", "first argument must be a WebGLFramebuffer object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto framebufferObj = info[0]->ToObject(context).ToLocalChecked();
+      auto framebufferBinding = WebGLFramebuffer::Unwrap(isolate, framebufferObj);
+      if (framebufferBinding == nullptr || !framebufferBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteFramebuffer", "invalid WebGLFramebuffer object")));
+        return;
+      }
+
+      handle()->deleteFramebuffer(framebufferBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DeleteProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program)
-        {
-          // self->handle()->deleteProgram(program);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteProgram", "1 argument required, and it must not be null")));
+        return;
       }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteProgram", "first argument must be a WebGLProgram object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteProgram", "invalid WebGLProgram object")));
+        return;
+      }
+
+      handle()->deleteProgram(programBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DeleteRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto renderbuffer = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (renderbuffer)
-        {
-          // self->handle()->deleteRenderbuffer(renderbuffer);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteRenderbuffer", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLRenderbuffer::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteRenderbuffer", "first argument must be a WebGLRenderbuffer object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto renderbufferObj = info[0]->ToObject(context).ToLocalChecked();
+      auto renderbufferBinding = WebGLRenderbuffer::Unwrap(isolate, renderbufferObj);
+      if (renderbufferBinding == nullptr || !renderbufferBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteRenderbuffer", "invalid WebGLRenderbuffer object")));
+        return;
+      }
+
+      handle()->deleteRenderbuffer(renderbufferBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DeleteShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (shader)
-        {
-          // self->handle()->deleteShader(shader);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteShader", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLShader::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteShader", "first argument must be a WebGLShader object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto shaderObj = info[0]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteShader", "invalid WebGLShader object")));
+        return;
+      }
+
+      handle()->deleteShader(shaderBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DeleteTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto texture = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (texture)
-        {
-          // self->handle()->deleteTexture(texture);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteTexture", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLTexture::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteTexture", "first argument must be a WebGLTexture object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto textureObj = info[0]->ToObject(context).ToLocalChecked();
+      auto textureBinding = WebGLTexture::Unwrap(isolate, textureObj);
+      if (textureBinding == nullptr || !textureBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteTexture", "invalid WebGLTexture object")));
+        return;
+      }
+
+      handle()->deleteTexture(textureBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DrawArrays(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int first = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int count = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->drawArrays(mode, first, count);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "drawArrays", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "drawArrays", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int mode = info[0]->Int32Value(context).FromMaybe(0);
+      int first = info[1]->Int32Value(context).FromMaybe(0);
+      int count = info[2]->Int32Value(context).FromMaybe(0);
+
+      handle()->drawArrays(static_cast<client_graphics::WebGLDrawMode>(mode), first, count);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DrawElements(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int type = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto indices = info[3]->ToObject(isolate->GetCurrentContext()).ToLocalChecked();
-        // self->handle()->drawElements(mode, count, type, indices);
+        auto msg = "3 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "drawElements", msg.c_str())));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "drawElements", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int mode = info[0]->Int32Value(context).FromMaybe(0);
+      int count = info[1]->Int32Value(context).FromMaybe(0);
+      int type = info[2]->Int32Value(context).FromMaybe(0);
+
+      int offset = 0;
+      if (info.Length() > 3 && info[3]->IsNumber())
+      {
+        offset = info[3]->Int32Value(context).FromMaybe(0);
+      }
+
+      handle()->drawElements(static_cast<client_graphics::WebGLDrawMode>(mode),
+                             count,
+                             type,
+                             offset);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Enable(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int cap = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->enable(cap);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "enable", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "enable", "first argument(cap) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int cap = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->enable(cap);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Disable(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int cap = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->disable(cap);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "disable", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "disable", "first argument(cap) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int cap = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->disable(cap);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::EnableVertexAttribArray(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->enableVertexAttribArray(index);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "enableVertexAttribArray", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "enableVertexAttribArray", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->enableVertexAttribArray(index);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DisableVertexAttribArray(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->disableVertexAttribArray(index);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "disableVertexAttribArray", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "disableVertexAttribArray", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->disableVertexAttribArray(index);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::GetActiveAttrib(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (program)
-        {
-          // auto attrib = self->handle()->getActiveAttrib(program, index);
-          // Wrap and return the attribute
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveAttrib", "2 arguments required, but fewer were provided")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveAttrib", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveAttrib", "second argument must be a number")));
+        return;
+      }
+
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveAttrib", "invalid WebGLProgram object")));
+        return;
+      }
+
+      int index = info[1]->Int32Value(context).FromMaybe(0);
+      auto activeAttrib = handle()->getActiveAttrib(programBinding->handle(), index);
+      if (!activeAttrib.has_value())
+      {
+        info.GetReturnValue().Set(Null(isolate));
+      }
+      else
+      {
+        info.GetReturnValue().Set(WebGLActiveInfo::NewInstance(isolate,
+                                                               activeAttrib.value()));
       }
     }
 
     void WebGLRenderingContext::GetActiveUniform(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (program)
-        {
-          // auto uniform = self->handle()->getActiveUniform(program, index);
-          // Wrap and return the uniform
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveUniform", "2 arguments required, but fewer were provided")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveUniform", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveUniform", "second argument must be a number")));
+        return;
+      }
+
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getActiveUniform", "invalid WebGLProgram object")));
+        return;
+      }
+
+      int index = info[1]->Int32Value(context).FromMaybe(0);
+      auto activeUniform = handle()->getActiveUniform(programBinding->handle(), index);
+      if (!activeUniform.has_value())
+      {
+        info.GetReturnValue().Set(Null(isolate));
+      }
+      else
+      {
+        info.GetReturnValue().Set(WebGLActiveInfo::NewInstance(isolate, activeUniform.value()));
       }
     }
 
     void WebGLRenderingContext::GetAttribLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        String::Utf8Value name(isolate, info[1]);
-        if (program && *name)
-        {
-          // int location = self->handle()->getAttribLocation(program, *name);
-          // info.GetReturnValue().Set(Integer::New(isolate, location));
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getAttribLocation", "2 arguments required, but fewer were provided")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getAttribLocation", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!info[1]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getAttribLocation", "second argument must be a string")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getAttribLocation", "invalid WebGLProgram object")));
+        return;
+      }
+
+      auto nameUtf8 = String::Utf8Value(isolate, info[1]);
+      string name = *nameUtf8;
+
+      auto loc = handle()->getAttribLocation(programBinding->handle(), name);
+      if (!loc.has_value())
+      {
+        info.GetReturnValue().Set(Number::New(isolate, -1));
+      }
+      else
+      {
+        info.GetReturnValue().Set(Number::New(isolate, loc->index.value_or(-1)));
       }
     }
 
     void WebGLRenderingContext::GetUniformLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        String::Utf8Value name(isolate, info[1]);
-        if (program && *name)
-        {
-          // auto location = self->handle()->getUniformLocation(program, *name);
-          // Wrap and return the location
-        }
+        auto msg = "2 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "getUniformLocation", msg.c_str())));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getUniformLocation", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!info[1]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getUniformLocation", "second argument must be a string")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getUniformLocation", "invalid WebGLProgram object")));
+        return;
+      }
+
+      auto nameUtf8 = String::Utf8Value(isolate, info[1]);
+      string name = *nameUtf8;
+
+      auto location = handle()->getUniformLocation(programBinding->handle(), name);
+      if (!location.has_value())
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        info.GetReturnValue().Set(WebGLUniformLocation::NewInstance(isolate, location.value()));
       }
     }
 
     void WebGLRenderingContext::LinkProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program)
-        {
-          // self->handle()->linkProgram(program);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "linkProgram", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "linkProgram", "first argument must be a WebGLProgram object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "linkProgram", "invalid WebGLProgram object")));
+        return;
+      }
+
+      handle()->linkProgram(programBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::UseProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program)
-        {
-          // self->handle()->useProgram(program);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "useProgram", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]) && !info[0]->IsNull())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "useProgram", "first argument must be a WebGLProgram object or null")));
+        return;
+      }
+
+      if (info[0]->IsNull())
+      {
+        handle()->useProgram(nullptr);
+      }
+      else
+      {
+        Local<Context> context = isolate->GetCurrentContext();
+        auto programObj = info[0]->ToObject(context).ToLocalChecked();
+        auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+        if (programBinding == nullptr || !programBinding->hasData())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "useProgram", "invalid WebGLProgram object")));
+          return;
+        }
+        handle()->useProgram(programBinding->handle());
+      }
+
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::ValidateProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program)
-        {
-          // self->handle()->validateProgram(program);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "validateProgram", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "validateProgram", "first argument must be a WebGLProgram object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "validateProgram", "invalid WebGLProgram object")));
+        return;
+      }
+
+      handle()->validateProgram(programBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::ShaderSource(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        String::Utf8Value source(isolate, info[1]);
-        if (shader && *source)
-        {
-          // self->handle()->shaderSource(shader, *source);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "shaderSource", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLShader::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "shaderSource", "first argument must be a WebGLShader object")));
+        return;
+      }
+      if (!info[1]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "shaderSource", "second argument must be a string")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto shaderObj = info[0]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "shaderSource", "invalid WebGLShader object")));
+        return;
+      }
+
+      auto sourceUtf8 = String::Utf8Value(isolate, info[1]);
+      std::string source = *sourceUtf8 ? *sourceUtf8 : "";
+
+      handle()->shaderSource(shaderBinding->handle(), source);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::GetShaderSource(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (shader)
-        {
-          // std::string source = self->handle()->getShaderSource(shader);
-          // info.GetReturnValue().Set(String::NewFromUtf8(isolate, source.c_str()).ToLocalChecked());
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderSource", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLShader::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderSource", "first argument must be a WebGLShader object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto shaderObj = info[0]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderSource", "invalid WebGLShader object")));
+        return;
+      }
+
+      string source = handle()->getShaderSource(shaderBinding->handle());
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, source.c_str()).ToLocalChecked());
     }
 
     void WebGLRenderingContext::TexImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 6 && info[0]->IsNumber() && info[1]->IsNumber() &&
-          info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int level = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int internalformat = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int height = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int border = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
+      HandleScope scope(isolate);
 
-        // if (info.Length() >= 7 && (info[6]->IsTypedArray() || info[6]->IsArrayBuffer()))
-        // {
-        //   // Handle pixel data
-        //   self->handle()->texImage2D(target, level, internalformat, width, height, border, info[6]);
-        // }
-        // else
-        // {
-        //   self->handle()->texImage2D(target, level, internalformat, width, height, border);
-        // }
+      if (info.Length() < 9)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texImage2D", "9 arguments required, but fewer were provided")));
+        return;
       }
+
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() ||
+          !info[3]->IsNumber() || !info[4]->IsNumber() || !info[5]->IsNumber() ||
+          !info[6]->IsNumber() || !info[7]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texImage2D", "Arguments 0-7 must be numbers")));
+        return;
+      }
+
+      if (!info[8]->IsTypedArray() && !info[8]->IsNull())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texImage2D", "Argument 8 must be a TypedArray or null")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      client_graphics::WebGLTexture2DTarget target;
+      {
+        int value = info[0]->Int32Value(context).FromMaybe(0);
+        target = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int level = info[1]->Int32Value(context).FromMaybe(0);
+      int internalformat = info[2]->Int32Value(context).FromMaybe(0);
+      int width = info[3]->Int32Value(context).FromMaybe(0);
+      int height = info[4]->Int32Value(context).FromMaybe(0);
+      int border = info[5]->Int32Value(context).FromMaybe(0);
+
+      client_graphics::WebGLTextureFormat format;
+      {
+        int value = info[6]->Int32Value(context).FromMaybe(0);
+        format = static_cast<client_graphics::WebGLTextureFormat>(value);
+      }
+      client_graphics::WebGLPixelType pixelType;
+      {
+        int value = info[7]->Int32Value(context).FromMaybe(0);
+        pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+      }
+
+      if (info[8]->IsNull())
+      {
+        handle()->texImage2D(target,
+                             level,
+                             internalformat,
+                             width,
+                             height,
+                             border,
+                             format,
+                             pixelType,
+                             nullptr);
+      }
+      else
+      {
+        auto data = info[8].As<ArrayBufferView>();
+        auto arrayBuffer = data->Buffer();
+        if (arrayBuffer.IsEmpty())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "texImage2D", "Invalid ArrayBufferView")));
+          return;
+        }
+
+        auto bufferData = static_cast<uint8_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset();
+        handle()->texImage2D(target,
+                             level,
+                             internalformat,
+                             width,
+                             height,
+                             border,
+                             format,
+                             pixelType,
+                             bufferData);
+      }
+
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::TexSubImage2D(const FunctionCallbackInfo<Value> &info)
@@ -1948,337 +2986,642 @@ namespace script_bindings
     void WebGLRenderingContext::TexParameterf(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        float param = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        // self->handle()->texParameterf(target, pname, param);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texParameterf", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texParameterf", "third argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int target = info[0]->Int32Value(context).FromMaybe(0);
+      int pname = info[1]->Int32Value(context).FromMaybe(0);
+      float param = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+
+      handle()->texParameterf(static_cast<client_graphics::WebGLTextureTarget>(target),
+                              static_cast<client_graphics::WebGLTextureParameterName>(pname),
+                              param);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::TexParameteri(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int param = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->texParameteri(target, pname, param);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texParameteri", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texParameteri", "third argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int target = info[0]->Int32Value(context).FromMaybe(0);
+      int pname = info[1]->Int32Value(context).FromMaybe(0);
+      int param = info[2]->Int32Value(context).FromMaybe(0);
+
+      handle()->texParameteri(static_cast<client_graphics::WebGLTextureTarget>(target),
+                              static_cast<client_graphics::WebGLTextureParameterName>(pname),
+                              param);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::CopyTexImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 8 && info[0]->IsNumber() && info[1]->IsNumber() &&
-          info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber() &&
-          info[6]->IsNumber() && info[7]->IsNumber())
+      HandleScope scope(isolate);
+      if (info.Length() < 8)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int level = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int internalformat = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int x = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int height = info[6]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int border = info[7]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->copyTexImage2D(target, level, internalformat, x, y, width, height, border);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "copyTexImage2D", "8 arguments required, but fewer were provided")));
+        return;
       }
+
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() ||
+          !info[3]->IsNumber() || !info[4]->IsNumber() || !info[5]->IsNumber() ||
+          !info[6]->IsNumber() || !info[7]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "copyTexImage2D", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      client_graphics::WebGLTexture2DTarget target;
+      {
+        int value = info[0]->Int32Value(context).FromMaybe(0);
+        target = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int level = info[1]->Int32Value(context).FromMaybe(0);
+      int internalformat = info[2]->Int32Value(context).FromMaybe(0);
+      int x = info[3]->Int32Value(context).FromMaybe(0);
+      int y = info[4]->Int32Value(context).FromMaybe(0);
+      int width = info[5]->Int32Value(context).FromMaybe(0);
+      int height = info[6]->Int32Value(context).FromMaybe(0);
+      int border = info[7]->Int32Value(context).FromMaybe(0);
+
+      handle()->copyTexImage2D(target, level, internalformat, x, y, width, height, border);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::CopyTexSubImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 7 && info[0]->IsNumber() && info[1]->IsNumber() &&
-          info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber() &&
-          info[6]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 7)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int level = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int xoffset = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int yoffset = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int x = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[6]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "copyTexSubImage2D", "7 arguments required, but fewer were provided")));
+        return;
       }
+
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() ||
+          !info[3]->IsNumber() || !info[4]->IsNumber() || !info[5]->IsNumber() || !info[6]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "copyTexSubImage2D", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      client_graphics::WebGLTexture2DTarget target;
+      {
+        int value = info[0]->Int32Value(context).FromMaybe(0);
+        target = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int level = info[1]->Int32Value(context).FromMaybe(0);
+      int xoffset = info[2]->Int32Value(context).FromMaybe(0);
+      int yoffset = info[3]->Int32Value(context).FromMaybe(0);
+      int x = info[4]->Int32Value(context).FromMaybe(0);
+      int y = info[5]->Int32Value(context).FromMaybe(0);
+      int width = info[6]->Int32Value(context).FromMaybe(0);
+      int height = info[7]->Int32Value(context).FromMaybe(0);
+
+      handle()->copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::GenerateMipmap(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      if (info.Length() < 1)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->generateMipmap(target);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "generateMipmap", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "generateMipmap", "first argument(target) must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int target = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->generateMipmap(static_cast<client_graphics::WebGLTextureTarget>(target));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform1f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        if (location)
-        {
-          // self->handle()->uniform1f(location, x);
-        }
+        auto msg = "2 arguments required, but only " + std::to_string(info.Length()) + " present";
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(isolate, "uniform1f", msg.c_str())));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate,
+                          "uniform1f",
+                          "First argument must be a WebGLUniformLocation object and second argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      float v0 = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      handle()->uniform1f(locBinding->handleRef(), v0);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform1i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (location)
-        {
-          // self->handle()->uniform1i(location, x);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1i", "2 arguments required, but only fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1i", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      int v0 = info[1]->ToNumber(context).ToLocalChecked()->Int32Value(context).FromMaybe(0);
+      handle()->uniform1i(locBinding->handleRef(), v0);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform2f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (info.Length() < 3)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        if (location)
-        {
-          // self->handle()->uniform2f(location, x, y);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2f", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2f", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      float v0 = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float v1 = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      handle()->uniform2f(locBinding->handleRef(), v0, v1);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform2i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (info.Length() < 3)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (location)
-        {
-          // self->handle()->uniform2i(location, x, y);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2i", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2i", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      int v0 = info[1]->Int32Value(context).FromMaybe(0);
+      int v1 = info[2]->Int32Value(context).FromMaybe(0);
+      handle()->uniform2i(locBinding->handleRef(), v0, v1);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform3f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        if (location)
-        {
-          // self->handle()->uniform3f(location, x, y, z);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3f", "4 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3f", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      float v0 = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float v1 = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      float v2 = static_cast<float>(info[3]->NumberValue(context).FromMaybe(0.0));
+      handle()->uniform3f(locBinding->handleRef(), v0, v1, v2);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform3i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int z = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (location)
-        {
-          // self->handle()->uniform3i(location, x, y, z);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3i", "4 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3i", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      int v0 = info[1]->Int32Value(context).FromMaybe(0);
+      int v1 = info[2]->Int32Value(context).FromMaybe(0);
+      int v2 = info[3]->Int32Value(context).FromMaybe(0);
+      handle()->uniform3i(locBinding->handleRef(), v0, v1, v2);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform4f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 5 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 5)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float w = static_cast<float>(info[4]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        if (location)
-        {
-          // self->handle()->uniform4f(location, x, y, z, w);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4f", "5 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4f", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      float v0 = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float v1 = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      float v2 = static_cast<float>(info[3]->NumberValue(context).FromMaybe(0.0));
+      float v3 = static_cast<float>(info[4]->NumberValue(context).FromMaybe(0.0));
+      handle()->uniform4f(locBinding->handleRef(), v0, v1, v2, v3);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform4i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 5 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 5)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int z = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int w = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (location)
-        {
-          // self->handle()->uniform4i(location, x, y, z, w);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4i", "5 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4i", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      int v0 = info[1]->Int32Value(context).FromMaybe(0);
+      int v1 = info[2]->Int32Value(context).FromMaybe(0);
+      int v2 = info[3]->Int32Value(context).FromMaybe(0);
+      int v3 = info[4]->Int32Value(context).FromMaybe(0);
+      handle()->uniform4i(locBinding->handleRef(), v0, v1, v2, v3);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform1fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform1fv(location, static_cast<float *>(contents.Data()), data->Length());
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1fv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1fv", "Second argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform1fv(locBinding->handleRef(),
+                           GetFloatValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform1iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Int32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform1iv(location, static_cast<int *>(contents.Data()), data->Length());
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1iv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1iv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1iv", "Second argument must be an Int32Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform1iv(locBinding->handleRef(),
+                           GetIntValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform2fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform2fv(location, static_cast<float *>(contents.Data()), data->Length() / 2);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2fv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2fv", "Second argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform2fv(locBinding->handleRef(),
+                           GetFloatValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform2iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Int32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform2iv(location, static_cast<int *>(contents.Data()), data->Length() / 2);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2iv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2iv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform2iv", "Second argument must be an Int32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform2iv(locBinding->handleRef(),
+                           GetIntValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform3fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform3fv(location, static_cast<float *>(contents.Data()), data->Length() / 3);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3fv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3fv", "Second argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform3fv(locBinding->handleRef(),
+                           GetFloatValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform3iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Int32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform3iv(location, static_cast<int *>(contents.Data()), data->Length() / 3);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3iv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3iv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform3iv", "Second argument must be an Int32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform3iv(locBinding->handleRef(),
+                           GetIntValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform4fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform4fv(location, static_cast<float *>(contents.Data()), data->Length() / 4);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4fv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4fv", "Second argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform4fv(locBinding->handleRef(),
+                           GetFloatValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Uniform4iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<Int32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniform4iv(location, static_cast<int *>(contents.Data()), data->Length() / 4);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4iv", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4iv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsTypedArray() && !info[1]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform4iv", "Second argument must be an Int32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      handle()->uniform4iv(locBinding->handleRef(),
+                           GetIntValuesFromValue(isolate, info[1]));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::UniformMatrix2fv(const FunctionCallbackInfo<Value> &info)
@@ -2335,110 +3678,201 @@ namespace script_bindings
     void WebGLRenderingContext::VertexAttrib1f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->vertexAttrib1f(index, x);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib1f", "2 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib1f", "Both arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      float x = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+
+      handle()->vertexAttrib1f(index, x);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::VertexAttrib2f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->vertexAttrib2f(index, x, y);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib2f", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib2f", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      float x = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float y = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+
+      handle()->vertexAttrib2f(index, x, y);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::VertexAttrib3f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 4)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->vertexAttrib3f(index, x, y, z);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib3f", "4 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib3f", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      float x = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float y = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      float z = static_cast<float>(info[3]->NumberValue(context).FromMaybe(0.0));
+
+      handle()->vertexAttrib3f(index, x, y, z);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::VertexAttrib4f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 5 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 5)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float w = static_cast<float>(info[4]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->vertexAttrib4f(index, x, y, z, w);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib4f", "5 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber() || !info[4]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttrib4f", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      float x = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      float y = static_cast<float>(info[2]->NumberValue(context).FromMaybe(0.0));
+      float z = static_cast<float>(info[3]->NumberValue(context).FromMaybe(0.0));
+      float w = static_cast<float>(info[4]->NumberValue(context).FromMaybe(0.0));
+
+      handle()->vertexAttrib4f(index, x, y, z, w);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::VertexAttribPointer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 6 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsBoolean() && info[4]->IsNumber() && info[5]->IsNumber())
+      if (info.Length() < 6)
       {
-        int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int size = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int type = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        bool normalized = info[3]->BooleanValue(isolate);
-        int stride = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int offset = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->vertexAttribPointer(index, size, type, normalized, stride, offset);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttribPointer", "6 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() ||
+          !info[3]->IsBoolean() || !info[4]->IsNumber() || !info[5]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "vertexAttribPointer", "Arguments must be of the correct types")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int index = info[0]->Int32Value(context).FromMaybe(0);
+      int size = info[1]->Int32Value(context).FromMaybe(0);
+      int type = info[2]->Int32Value(context).FromMaybe(0);
+      bool normalized = info[3]->BooleanValue(isolate);
+      int stride = info[4]->Int32Value(context).FromMaybe(0);
+      int offset = info[5]->Int32Value(context).FromMaybe(0);
+
+      handle()->vertexAttribPointer(index, size, type, normalized, stride, offset);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Viewport(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (info.Length() < 4)
       {
-        int x = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int height = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->viewport(x, y, width, height);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "viewport", "4 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "viewport", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int x = info[0]->Int32Value(context).FromMaybe(0);
+      int y = info[1]->Int32Value(context).FromMaybe(0);
+      int width = info[2]->Int32Value(context).FromMaybe(0);
+      int height = info[3]->Int32Value(context).FromMaybe(0);
+
+      handle()->viewport(x, y, width, height);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::Scissor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (info.Length() < 4)
       {
-        int x = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int y = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int height = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->scissor(x, y, width, height);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "scissor", "4 arguments required, but fewer were provided")));
+        return;
       }
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "scissor", "All arguments must be numbers")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int x = info[0]->Int32Value(context).FromMaybe(0);
+      int y = info[1]->Int32Value(context).FromMaybe(0);
+      int width = info[2]->Int32Value(context).FromMaybe(0);
+      int height = info[3]->Int32Value(context).FromMaybe(0);
+
+      handle()->scissor(x, y, width, height);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::GetError(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        int error = self->handle()->getError();
-        info.GetReturnValue().Set(Integer::New(isolate, error));
-      }
+      HandleScope scope(isolate);
+
+      auto err = handle()->getError();
+      info.GetReturnValue().Set(Integer::New(isolate, err));
     }
 
     void WebGLRenderingContext::GetParameter(const FunctionCallbackInfo<Value> &info)
@@ -2577,32 +4011,94 @@ namespace script_bindings
     void WebGLRenderingContext::GetProgramParameter(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (program)
-        {
-          // auto value = self->handle()->getProgramParameter(program, pname);
-          // Wrap and return the value
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramParameter", "2 arguments required, but fewer were provided")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramParameter", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramParameter", "second argument must be a number")));
+        return;
+      }
+
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramParameter", "invalid WebGLProgram object")));
+        return;
+      }
+
+      int pname = info[1]->Int32Value(context).FromMaybe(0);
+      try
+      {
+        auto value = handle()->getProgramParameter(programBinding->handle(), pname);
+        info.GetReturnValue().Set(Number::New(isolate, value));
+      }
+      catch (const exception &e)
+      {
+        cerr << "WebGLRenderingContext::GetProgramParameter: Exception: " << e.what() << endl;
+        info.GetReturnValue().SetUndefined();
       }
     }
 
     void WebGLRenderingContext::GetShaderParameter(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        if (shader)
-        {
-          // auto value = self->handle()->getShaderParameter(shader, pname);
-          // Wrap and return the value
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderParameter", "2 arguments required, but fewer were provided")));
+        return;
+      }
+      if (!WebGLShader::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderParameter", "first argument must be a WebGLShader object")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderParameter", "second argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto shaderObj = info[0]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderParameter", "invalid WebGLShader object")));
+        return;
+      }
+
+      int pname = info[1]->Int32Value(context).FromMaybe(0);
+      try
+      {
+        auto value = handle()->getShaderParameter(shaderBinding->handle(), pname);
+        info.GetReturnValue().Set(Number::New(isolate, value));
+      }
+      catch (const exception &e)
+      {
+        cerr << "WebGLRenderingContext::GetShaderParameter: Exception: " << e.what() << endl;
+        info.GetReturnValue().SetUndefined();
       }
     }
 
@@ -2640,31 +4136,65 @@ namespace script_bindings
     void WebGLRenderingContext::GetProgramInfoLog(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program)
-        {
-          // std::string log = self->handle()->getProgramInfoLog(program);
-          // info.GetReturnValue().Set(String::NewFromUtf8(isolate, log.c_str()).ToLocalChecked());
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramInfoLog", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramInfoLog", "first argument must be a WebGLProgram object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getProgramInfoLog", "invalid WebGLProgram object")));
+        return;
+      }
+
+      string log = handle()->getProgramInfoLog(programBinding->handle());
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, log.c_str()).ToLocalChecked());
     }
 
     void WebGLRenderingContext::GetShaderInfoLog(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (shader)
-        {
-          // std::string log = self->handle()->getShaderInfoLog(shader);
-          // info.GetReturnValue().Set(String::NewFromUtf8(isolate, log.c_str()).ToLocalChecked());
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderInfoLog", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLShader::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderInfoLog", "first argument must be a WebGLShader object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto shaderObj = info[0]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderInfoLog", "invalid WebGLShader object")));
+        return;
+      }
+
+      string log = handle()->getShaderInfoLog(shaderBinding->handle());
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, log.c_str()).ToLocalChecked());
     }
 
     void WebGLRenderingContext::GetExtension(const FunctionCallbackInfo<Value> &info)
@@ -2704,6 +4234,61 @@ namespace script_bindings
         }
       }
       info.GetReturnValue().Set(extensions);
+    }
+
+    vector<float> WebGLRenderingContext::GetFloatValuesFromValue(Isolate *isolate, Local<Value> value)
+    {
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      vector<float> values;
+      if (value->IsFloat32Array())
+      {
+        auto data = value.As<Float32Array>();
+        auto arrayBuffer = data->Buffer();
+        if (arrayBuffer.IsEmpty())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            WebGLRenderingContextBase::MakeMethodError(isolate, "uniform1fv", "Invalid Float32Array")));
+          return values;
+        }
+
+        auto bufferData = static_cast<float *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(float);
+        values.assign(bufferData, bufferData + data->Length());
+      }
+      else if (value->IsArray())
+      {
+        auto dataArray = value.As<Array>();
+        uint32_t len = dataArray->Length();
+        values.reserve(len);
+
+        for (uint32_t i = 0; i < len; i++)
+        {
+          auto val = dataArray->Get(context, i).ToLocalChecked();
+          if (val->IsNumber())
+            values.push_back(static_cast<float>(val->NumberValue(context).FromMaybe(0.0)));
+          else
+            values.push_back(0.0f);
+        }
+      }
+      return values;
+    }
+
+    vector<int> WebGLRenderingContext::GetIntValuesFromValue(Isolate *isolate, Local<Value> value)
+    {
+      auto data = value.As<Int32Array>();
+      auto arrayBuffer = data->Buffer();
+      if (arrayBuffer.IsEmpty())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniform1iv", "Invalid Int32Array")));
+        return vector<int>{};
+      }
+
+      vector<int> values;
+      auto bufferData = static_cast<int *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(int);
+      values.assign(bufferData, bufferData + data->Length());
+      return values;
     }
   }
 }

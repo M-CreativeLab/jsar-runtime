@@ -15,12 +15,12 @@ namespace script_bindings
     }
 
     Local<Object> WebGLUniformLocation::NewInstance(Isolate *isolate,
-                                                    shared_ptr<client_graphics::WebGLUniformLocation> nativeLocation)
+                                                    const client_graphics::WebGLUniformLocation &loc)
     {
       EscapableHandleScope scope(isolate);
-      return nativeLocation != nullptr
-               ? scope.Escape(WebGLUniformLocationBase::NewInstance(isolate, nativeLocation).As<Object>())
-               : scope.Escape(Local<Object>());
+      return scope.Escape(WebGLUniformLocationBase::NewInstance(isolate,
+                                                                make_shared<client_graphics::WebGLUniformLocation>(loc))
+                            .As<Object>());
     }
 
     WebGLUniformLocation::WebGLUniformLocation(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

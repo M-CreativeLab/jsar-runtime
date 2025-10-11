@@ -20,20 +20,22 @@ namespace script_bindings
       using WebGLUniformLocationBase::ObjectWrap;
 
     public:
-      /**
-       * The name of the WebGLUniformLocation class for V8.
-       */
       static std::string Name()
       {
         return "WebGLUniformLocation";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<client_graphics::WebGLUniformLocation> nativeLocation);
+                                               const client_graphics::WebGLUniformLocation &loc);
 
     public:
       WebGLUniformLocation(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+
+    public:
+      const client_graphics::WebGLUniformLocation &handleRef() const
+      {
+        return *handle();
+      }
     };
 
   } // namespace webgl

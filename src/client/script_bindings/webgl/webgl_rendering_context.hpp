@@ -183,6 +183,10 @@ namespace script_bindings
       // Extensions
       void GetExtension(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetSupportedExtensions(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+    private:
+      static std::vector<float> GetFloatValuesFromValue(v8::Isolate *isolate, v8::Local<v8::Value> value);
+      static std::vector<int> GetIntValuesFromValue(v8::Isolate *isolate, v8::Local<v8::Value> value);
     };
   }
 }
