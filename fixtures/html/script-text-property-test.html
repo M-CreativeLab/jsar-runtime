@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Script Text Property Test</title>
+</head>
+<body>
+  <script id="normalScript" type="text/javascript">
+  const a = 1;
+  const b = 2;
+  </script>
+
+  <script id="moduleScript" type="module">
+  import foo from './foo.js';
+  </script>
+
+  <script id="emptyScript"></script>
+
+  <script>
+    // Test 1: Get text from normal script
+    const normalScript = document.getElementById("normalScript");
+    const normalScriptText = normalScript.text;
+    console.log("Normal script text:", JSON.stringify(normalScriptText));
+    
+    // Test 2: Get text from module script
+    const moduleScript = document.getElementById("moduleScript");
+    const moduleScriptText = moduleScript.text;
+    console.log("Module script text:", JSON.stringify(moduleScriptText));
+    
+    // Test 3: Get text from empty script
+    const emptyScript = document.getElementById("emptyScript");
+    const emptyScriptText = emptyScript.text;
+    console.log("Empty script text:", JSON.stringify(emptyScriptText));
+    
+    // Test 4: Set text property
+    const testScript = document.createElement("script");
+    testScript.text = "console.log('Set via text property');";
+    console.log("Set script text:", JSON.stringify(testScript.text));
+    
+    // Test 5: Verify it's the same as textContent
+    console.log("normalScript.text === normalScript.textContent:", normalScript.text === normalScript.textContent);
+    
+    console.log("All tests completed!");
+  </script>
+</body>
+</html>
