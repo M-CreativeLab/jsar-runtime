@@ -65,8 +65,12 @@ namespace endor
       src = value;
       setAttribute("src", value);
     }
+    inline void setText(const string &value)
+    {
+      cerr << "unimplemented: setting text content of <script> element" << endl;
+    }
+
     string getText() const;
-    void setText(const string &value);
 
     protected:
       void createdCallback(bool from_scripting) override;
