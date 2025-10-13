@@ -1,5 +1,6 @@
-#include "./html_canvas_element.hpp"
 #include <iostream>
+#include <client/script_bindings/canvas/canvas_rendering_context_2d.hpp>
+#include "./html_canvas_element.hpp"
 
 using namespace std;
 using namespace v8;
@@ -87,28 +88,77 @@ namespace script_bindings::html_bindings
     if (info.Length() < 1)
     {
       isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "getContext", "requires at least 1 argument")));
+        MakeMethodArgCountError(isolate, "getContext", 1, info.Length())));
       return;
     }
 
-    cout << "HTMLCanvasElement.getContext() called" << endl;
+    string contextType;
+    if (!info[0]->IsString())
+    {
+      info.GetReturnValue().SetNull();
+      return;
+    }
+    else
+    {
+      String::Utf8Value utf8(isolate, info[0]);
+      contextType = *utf8 ? *utf8 : "";
+    }
 
-    // TODO: Implement context creation
-    // Context types: "2d", "webgl", "webgl2", "webgpu"
-    // Should return the appropriate rendering context object
-
-    info.GetReturnValue().SetNull();
+    auto renderingContext = handle()->getContext(contextType);
+    if (renderingContext == nullptr)
+    {
+      info.GetReturnValue().SetNull();
+    }
+    else if (renderingContext->contextType == canvas::RenderingContextType::RenderingContext2D)
+    {
+      auto context2D = static_pointer_cast<canvas::CanvasRenderingContext2D<canvas::Canvas>>(renderingContext);
+      auto contextObj = canvas_bindings::CanvasRenderingContext2D::GetOrNewInstance(isolate, context2D);
+      info.GetReturnValue().Set(contextObj);
+    }
+    else
+    {
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getContext", "Only '2d' context is supported currently")));
+      info.GetReturnValue().SetUndefined();
+    }
   }
 
   void HTMLCanvasElement::ToDataURL(const FunctionCallbackInfo<Value> &info)
   {
-    cout << "HTMLCanvasElement.toDataURL() called" << endl;
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
-    // TODO: Implement canvas to data URL conversion
-    // Optional arguments: type (string), quality (number)
-    // Should return a data: URL containing the canvas content
+    string type = "image/png"; // Default type
+    constexpr double DEFAULT_QUALITY = 0.92;
+    double encoderQuality = DEFAULT_QUALITY; // Default quality
 
-    info.GetReturnValue().Set(String::NewFromUtf8(info.GetIsolate(), "data:,").ToLocalChecked());
+    if (info.Length() >= 1)
+    {
+      if (!info[0]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "toDataURL", "First argument must be a string")));
+        return;
+      }
+      String::Utf8Value utf8(isolate, info[0]);
+      type = *utf8 ? *utf8 : "image/png";
+    }
+    if (info.Length() >= 2)
+    {
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "toDataURL", "Second argument must be a number")));
+        return;
+      }
+      encoderQuality = info[1]->NumberValue(context).FromMaybe(DEFAULT_QUALITY);
+    }
+
+    auto dataURL = handle()->toDataURL(type, encoderQuality);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  dataURL.c_str())
+                                .ToLocalChecked());
   }
 
   void HTMLCanvasElement::ToBlob(const FunctionCallbackInfo<Value> &info)
@@ -122,12 +172,8 @@ namespace script_bindings::html_bindings
       return;
     }
 
-    cout << "HTMLCanvasElement.toBlob() called" << endl;
-
-    // TODO: Implement canvas to blob conversion
-    // Arguments: callback (function), type (string optional), quality (number optional)
-    // Should call the callback with a Blob containing the canvas content
-
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "toBlob", "Not implemented")));
     info.GetReturnValue().SetUndefined();
   }
 }

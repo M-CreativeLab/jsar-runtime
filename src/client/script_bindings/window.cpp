@@ -35,6 +35,7 @@ namespace script_bindings
     InstanceMethod(isolate, prototype, "prompt", &Window::Prompt);
     InstanceMethod(isolate, prototype, "requestAnimationFrame", &Window::RequestAnimationFrame);
     InstanceMethod(isolate, prototype, "cancelAnimationFrame", &Window::CancelAnimationFrame);
+    InstanceMethod(isolate, prototype, "createImageBitmap", &Window::CreateImageBitmap);
   }
 
   Local<ObjectTemplate> Window::GetInstanceTemplate(Isolate *isolate)
@@ -238,7 +239,8 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    auto callback = [](uint32_t time) {
+    auto callback = [](uint32_t time)
+    {
       cout << "Animation frame at time: " << time << " ms" << endl;
     };
     auto frame_handle = handle()->requestAnimationFrame(callback);
@@ -265,5 +267,16 @@ namespace script_bindings
 
     uint32_t frame_handle = info[0].As<Number>()->Value();
     handle()->cancelAnimationFrame(frame_handle);
+  }
+
+
+  void Window::CreateImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::TypeError(
+      MakeMethodError(isolate, "createImageBitmap", "Not implemented.")));
+    return;
   }
 }

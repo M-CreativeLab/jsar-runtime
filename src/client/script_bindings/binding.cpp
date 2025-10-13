@@ -47,6 +47,13 @@
 #include "./html/html_template_element.hpp"
 #include "./html/html_video_element.hpp"
 
+// Canvas bindings
+#include "./canvas/canvas.hpp"
+#include "./canvas/image_bitmap.hpp"
+#include "./canvas/image_data.hpp"
+#include "./canvas/canvas_rendering_context_2d.hpp"
+#include "./canvas/path2d.hpp"
+
 // WebGL bindings
 #include "./webgl/active_info.hpp"
 #include "./webgl/buffer.hpp"
@@ -116,6 +123,17 @@ namespace script_bindings
       global->Set(context, NAME("Console"), Console).Check();
       global->Set(context, NAME("console"), console).Check();
     }
+
+#define ADD_CANVAS_TYPE(X) \
+  global->Set(context, NAME(#X), canvas_bindings::X::Initialize(isolate)).Check();
+    {
+      ADD_CANVAS_TYPE(OffscreenCanvas)
+      ADD_CANVAS_TYPE(ImageBitmap)
+      ADD_CANVAS_TYPE(ImageData)
+      ADD_CANVAS_TYPE(CanvasRenderingContext2D)
+      ADD_CANVAS_TYPE(Path2D)
+    }
+#undef ADD_CANVAS_TYPE
 
     // Initialize classes and objects for scripting context only
     if (type == ContextType::kScripting)

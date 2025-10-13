@@ -1,3 +1,4 @@
+#include <client/script_bindings/canvas/image_source.hpp>
 #include "./webgl2_rendering_context.hpp"
 #include "./buffer.hpp"
 #include "./program.hpp"
@@ -1469,26 +1470,47 @@ namespace script_bindings
         pixelType = static_cast<client_graphics::WebGLPixelType>(value);
       }
 
+      SkPixmap imagePixmap;
       unsigned char *pixels = nullptr;
+
       if (!args[9]->IsNullOrUndefined())
       {
-        if (!args[9]->IsArrayBufferView())
+        auto arg = args[9];
+        if (arg->IsArrayBufferView())
         {
-          isolate->ThrowException(Exception::TypeError(
-            MakeMethodArgTypeError(isolate, "texImage3D", 9, "ArrayBufferView", args[9])));
-          return;
+          auto data = arg.As<ArrayBufferView>();
+          auto buffer = data->Buffer();
+          if (buffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "texImage3D", "Invalid srcData")));
+            return;
+          }
+          pixels = static_cast<uint8_t *>(buffer->GetBackingStore()->Data()) + data->ByteOffset();
         }
-
-        auto data = args[9].As<ArrayBufferView>();
-        auto buffer = data->Buffer();
-        if (buffer.IsEmpty())
+        else
         {
-          isolate->ThrowException(Exception::TypeError(
-            MakeMethodError(isolate, "texImage3D", "Invalid ArrayBufferView")));
-          return;
+          auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, arg);
+          if (imageSource == nullptr)
+          {
+            auto msg =
+              "ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, ImageBitmap, OffscreenCanvas"
+              " or null object";
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodArgTypeError(isolate, "texImage2D", "pixels", msg, arg)));
+            return;
+          }
+          else
+          {
+            if (!imageSource->readPixels(imagePixmap))
+            {
+              isolate->ThrowException(Exception::TypeError(
+                MakeMethodError(isolate, "texImage2D", "Failed to read pixels from the image source")));
+              return;
+            }
+            pixels = reinterpret_cast<unsigned char *>(imagePixmap.writable_addr());
+          }
         }
-
-        pixels = static_cast<uint8_t *>(buffer->GetBackingStore()->Data()) + data->ByteOffset();
       }
 
       handle()->texImage3D(target,

@@ -46,5 +46,7 @@ namespace script_bindings
 
     void RequestAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info);
     void CancelAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+    void CreateImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info);
   };
 }

@@ -184,19 +184,6 @@ namespace script_bindings
       InstanceMethod(isolate, prototypeTemplate, "transferToImageBitmap", &OffscreenCanvas::TransferToImageBitmap);
     }
 
-    Local<Object> OffscreenCanvas::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeCanvas != nullptr
-               ? scope.Escape(OffscreenCanvasBase::NewInstance(isolate, nativeCanvas).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
-
-    Local<Function> OffscreenCanvas::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
-    }
-
     OffscreenCanvas::OffscreenCanvas(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : OffscreenCanvasBase(isolate, args)
     {
