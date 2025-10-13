@@ -181,9 +181,11 @@ namespace script_bindings
   void EventTarget::setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners)
   {
     unique_lock<mutex> lock(dispatch_mutex_);
+    cerr << "EventTarget::setPendingEventAndDispatch: Waiting to set pending event of type '" << event->typeStr() << "'" << endl;
     dispatch_cv_.wait(lock, [this]()
                       { return pending_event_ == nullptr; });
     pending_event_ = event;
+    cerr << "EventTarget::setPendingEventAndDispatch: Pending event of type '" << event->typeStr() << "' is set" << endl;
 
     // Send async signal to the event loop to process the event
     assert(async_handle_ != nullptr && "Async handle is not initialized.");

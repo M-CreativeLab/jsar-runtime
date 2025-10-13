@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/scripting_base/iterator_protocol_impl.hpp>
 #include <client/dom/node_list-inl.hpp>
 
 namespace script_bindings
@@ -15,11 +16,21 @@ namespace script_bindings
     {
       using NodeListBase::ObjectWrap;
 
+    private:
+      class NodeListIterator : public scripting_base::Iterable<NodeListIterator, dom::Node>
+      {
+        using scripting_base::Iterable<NodeListIterator, dom::Node>::Iterable;
+
+      public:
+        v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<dom::Node> value) override;
+      };
+
     public:
       static std::string Name()
       {
         return "NodeList";
       }
+      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
     public:
@@ -38,7 +49,10 @@ namespace script_bindings
 
       // Indexed property handlers for array-like access
       static void IndexedPropertyGetter(uint32_t index, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IndexedPropertyQuery(uint32_t index, const v8::PropertyCallbackInfo<v8::Integer> &info);
+      static void IndexedPropertySetter(uint32_t index,
+                                        v8::Local<v8::Value> value,
+                                        const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void IndexedPropertyDeleter(uint32_t index, const v8::PropertyCallbackInfo<v8::Boolean> &info);
       static void IndexedPropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
     };
   }

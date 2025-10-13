@@ -1,5 +1,6 @@
-#include "./event.hpp"
 #include <iostream>
+#include "./event.hpp"
+#include "./events/all_events.hpp"
 
 using namespace std;
 using namespace v8;
@@ -27,11 +28,38 @@ namespace script_bindings
   }
 
   // static
-  Local<Object> Event::NewInstance(Isolate *isolate, std::shared_ptr<dom::Event> nativeEvent)
+  Local<Object> Event::NewInstance(Isolate *isolate, std::shared_ptr<dom::Event> event)
   {
     EscapableHandleScope scope(isolate);
-    assert(nativeEvent != nullptr && "nativeEvent must not be null");
-    return scope.Escape(EventBase::NewInstance(isolate, nativeEvent).As<Object>());
+    assert(event != nullptr && "nativeEvent must not be null");
+
+#define CHECK_AND_RETURN_INSTANCE_OF(EVENT_TYPE, HANDLE_TYPE)                          \
+  if (event->is##EVENT_TYPE())                                                         \
+  {                                                                                    \
+    auto typedEvent = static_pointer_cast<HANDLE_TYPE>(event);                         \
+    return scope.Escape(event_bindings::EVENT_TYPE::NewInstance(isolate, typedEvent)); \
+  }
+#define CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(NAME) \
+  CHECK_AND_RETURN_INSTANCE_OF(NAME, dom::events::NAME)
+#define CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(NAME) \
+  CHECK_AND_RETURN_INSTANCE_OF(NAME, client_xr::NAME)
+
+    // DOM Events
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(PointerEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(MouseEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(UIEvent)
+
+    // XR Events
+    CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(XRSessionEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(XRInputSourceEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(XRInputSourcesChangeEvent)
+
+#undef CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT
+#undef CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT
+#undef CHECK_AND_RETURN_INSTANCE_OF
+
+    // For other event types, use the base Event class
+    return scope.Escape(EventBase::NewInstance(isolate, event).As<Object>());
   }
 
   Event::Event(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

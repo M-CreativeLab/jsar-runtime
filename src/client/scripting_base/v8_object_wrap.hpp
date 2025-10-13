@@ -365,7 +365,7 @@ namespace scripting_base
      */
     static void InstanceMethod(v8::Isolate *isolate,
                                v8::Local<v8::ObjectTemplate> objectTemplate,
-                               const char *name,
+                               v8::Local<v8::Name> name,
                                InstanceMethodCallback callback)
     {
       v8::HandleScope scope(isolate);
@@ -384,8 +384,21 @@ namespace scripting_base
       handle->SetWeak(callbackData, releaseCallback, v8::WeakCallbackType::kParameter);
       T::callback_data_handles_.emplace_back(std::move(handle));
 
-      objectTemplate->Set(v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
-                          v8::FunctionTemplate::New(isolate, MethodWrapper, dataValue));
+      objectTemplate->Set(name, v8::FunctionTemplate::New(isolate, MethodWrapper, dataValue));
+    }
+    /**
+     * Create a standardized method callback for instance methods with string name.
+     */
+    static void InstanceMethod(v8::Isolate *isolate,
+                               v8::Local<v8::ObjectTemplate> objectTemplate,
+                               const char *name,
+                               InstanceMethodCallback callback)
+    {
+      v8::HandleScope scope(isolate);
+      T::InstanceMethod(isolate,
+                        objectTemplate,
+                        v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
+                        callback);
     }
     /**
      * Create a standardized accessor callback for instance properties.

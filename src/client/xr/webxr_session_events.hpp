@@ -163,6 +163,11 @@ namespace client_xr
     XRInputSourcesChangeEvent(const XRInputSourcesChangeEvent &) = delete;
 
   public:
+    bool isXRInputSourcesChangeEvent() const override final
+    {
+      return true;
+    }
+
     /**
      * @returns The session that the input sources belong to.
      */

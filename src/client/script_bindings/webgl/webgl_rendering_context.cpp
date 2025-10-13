@@ -702,13 +702,13 @@ namespace script_bindings
       if (!info[0]->IsNumber())
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "pixelStorei", "first argument must be a number")));
+          MakeMethodArgTypeError(isolate, "pixelStorei", "pname", "number", info[0])));
         return;
       }
       if (!info[1]->IsNumber())
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "pixelStorei", "second argument must be a number")));
+          MakeMethodArgTypeError(isolate, "pixelStorei", "param", "number", info[1])));
         return;
       }
 
@@ -2923,8 +2923,10 @@ namespace script_bindings
 
       if (info.Length() == 6)
       {
+        cerr << "WebGLRenderingContext::texImage2D: 6-argument version is not implemented yet" << endl;
         isolate->ThrowException(Exception::TypeError(
           MakeMethodError(isolate, "texImage2D", "6-argument version is not implemented yet")));
+        info.GetReturnValue().SetUndefined();
         return;
       }
       else if (info.Length() >= 9)
@@ -3021,8 +3023,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
+      cerr << "WebGLRenderingContext::texSubImage2D: Not implemented yet" << endl;
       isolate->ThrowException(Exception::TypeError(
         MakeMethodError(isolate, "texSubImage2D", "Not implemented yet")));
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::TexParameterf(const FunctionCallbackInfo<Value> &info)

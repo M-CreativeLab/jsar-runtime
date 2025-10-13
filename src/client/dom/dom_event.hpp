@@ -393,6 +393,18 @@ namespace dom
     {
       return false;
     }
+    virtual bool isXRSessionEvent() const
+    {
+      return false;
+    }
+    virtual bool isXRInputSourceEvent() const
+    {
+      return false;
+    }
+    virtual bool isXRInputSourcesChangeEvent() const
+    {
+      return false;
+    }
 
   public:
     /**

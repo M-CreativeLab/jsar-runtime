@@ -292,6 +292,8 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebSocket);
         V8_SET_GLOBAL_FROM_MAIN(EventSource);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
+        V8_SET_GLOBAL_FROM_MAIN(AbortController);
+        V8_SET_GLOBAL_FROM_MAIN(AbortSignal);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Global functions

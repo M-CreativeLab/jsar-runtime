@@ -34,7 +34,7 @@ namespace scripting_base
 
       v8::Local<v8::Value> jsValue = ObjectWrap<T>::NewInstance(napiEnv);
       v8::Local<v8::Object> jsObject = jsValue->ToObject(context).ToLocalChecked();
-      T *instance = ObjectWrap<T>::Unwrap(jsObject);
+      T *instance = ObjectWrap<T>::Unwrap(isolate, jsObject);
       assert(instance != nullptr && "instance must not be null");
 
       instance->dataSource_ = dataSource;
@@ -83,7 +83,7 @@ namespace scripting_base
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
       v8::HandleScope scope(isolate);
 
-      T *instance = ObjectWrap<T>::Unwrap(info.This());
+      T *instance = ObjectWrap<T>::Unwrap(isolate, info.This());
       if (!instance)
       {
         info.GetReturnValue().Set(v8::Undefined(isolate));

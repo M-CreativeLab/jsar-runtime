@@ -7,27 +7,50 @@ using namespace v8;
 
 namespace script_bindings::dom_bindings
 {
+  Local<Value> NodeList::NodeListIterator::createNextValue(Isolate *isolate,
+                                                           const std::shared_ptr<dom::Node> value)
+  {
+    EscapableHandleScope scope(isolate);
+    if (value != nullptr)
+    {
+      Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, value);
+      return scope.Escape(nodeWrapper);
+    }
+    else
+    {
+      return scope.Escape(Null(isolate));
+    }
+  }
+
+  // static
+  Local<Function> NodeList::Initialize(Isolate *isolate)
+  {
+    NodeListIterator::Initialize(isolate);
+    return NodeListBase::Initialize(isolate);
+  }
+
+  // static
   void NodeList::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add properties
     InstanceReadonlyAccessor(isolate, instanceTemplate, "length", &NodeList::LengthGetter);
 
     // Add methods
-    InstanceMethod(isolate, prototypeTemplate, "item", &NodeList::Item);
-    InstanceMethod(isolate, prototypeTemplate, "entries", &NodeList::Entries);
-    InstanceMethod(isolate, prototypeTemplate, "forEach", &NodeList::ForEach);
-    InstanceMethod(isolate, prototypeTemplate, "keys", &NodeList::Keys);
-    InstanceMethod(isolate, prototypeTemplate, "values", &NodeList::Values);
+    InstanceMethod(isolate, instanceTemplate, "item", &NodeList::Item);
+    InstanceMethod(isolate, instanceTemplate, "entries", &NodeList::Entries);
+    InstanceMethod(isolate, instanceTemplate, "forEach", &NodeList::ForEach);
+    InstanceMethod(isolate, instanceTemplate, "keys", &NodeList::Keys);
+    InstanceMethod(isolate, instanceTemplate, "values", &NodeList::Values);
+    InstanceMethod(isolate, instanceTemplate, Symbol::GetIterator(isolate), &NodeList::Values);
 
     // Set up indexed property handlers for array-like access
     instanceTemplate->SetHandler(IndexedPropertyHandlerConfiguration(
       IndexedPropertyGetter,
-      nullptr, // No setter - NodeList is read-only
-      IndexedPropertyQuery,
-      nullptr, // No deleter - NodeList is read-only
+      IndexedPropertySetter,
+      nullptr,
+      IndexedPropertyDeleter,
       IndexedPropertyEnumerator));
   }
 
@@ -97,9 +120,11 @@ namespace script_bindings::dom_bindings
 
   void NodeList::Values(const FunctionCallbackInfo<Value> &info)
   {
-    cout << "NodeList.values called" << endl;
-    // TODO: Return an iterator of nodes
-    info.GetReturnValue().SetUndefined();
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    auto values = NodeListIterator::NewInstance(nullptr, *handle());
+    info.GetReturnValue().Set(values);
   }
 
   // Property getters
@@ -115,22 +140,60 @@ namespace script_bindings::dom_bindings
   // Indexed property handlers
   void NodeList::IndexedPropertyGetter(uint32_t index, const PropertyCallbackInfo<Value> &info)
   {
-    cout << "NodeList[" << index << "] getter called" << endl;
-    // TODO: Return the node at the specified index
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    NodeList *wrapper = NodeList::Unwrap(isolate, info.This());
+    if (wrapper == nullptr || !wrapper->hasData())
+    {
+      info.GetReturnValue().SetUndefined();
+      return;
+    }
+    else
+    {
+      auto node = wrapper->handle()->item(index);
+      if (node != nullptr)
+      {
+        Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, node);
+        info.GetReturnValue().Set(nodeWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
   }
 
-  void NodeList::IndexedPropertyQuery(uint32_t index, const PropertyCallbackInfo<Integer> &info)
+  void NodeList::IndexedPropertySetter(uint32_t index, Local<Value> value, const PropertyCallbackInfo<Value> &info)
   {
-    cout << "NodeList[" << index << "] query called" << endl;
-    // TODO: Check if index is valid
-    info.GetReturnValue().Set(Integer::New(info.GetIsolate(), None));
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "NodeList is read-only").ToLocalChecked()));
+  }
+
+  void NodeList::IndexedPropertyDeleter(uint32_t index, const PropertyCallbackInfo<Boolean> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "NodeList is read-only").ToLocalChecked()));
   }
 
   void NodeList::IndexedPropertyEnumerator(const PropertyCallbackInfo<Array> &info)
   {
-    cout << "NodeList indexed enumerator called" << endl;
-    // TODO: Return array of valid indices
-    info.GetReturnValue().Set(Array::New(info.GetIsolate()));
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Array> keys = Array::New(isolate, 0);
+    NodeList *instance = Unwrap(isolate, info.This());
+    if (instance != nullptr && instance->hasData())
+    {
+      auto len = instance->handle()->length();
+      for (size_t index = 0; index < len; index++)
+        keys->Set(context, index, Integer::New(isolate, index)).FromJust();
+    }
+    info.GetReturnValue().Set(keys);
   }
 }

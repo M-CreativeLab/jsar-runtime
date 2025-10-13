@@ -17,17 +17,21 @@ namespace script_bindings
       using HTMLMetaElementBase::ObjectWrap;
 
     public:
-      /**
-       * The name of the HTMLMetaElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLMetaElement";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    public:
-      HTMLMetaElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    private:
+      void ContentGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
+      void ContentSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &args);
+      void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
+      void NameSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &args);
+      void HttpEquivGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
+      void HttpEquivSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &args);
+      void MediaGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
+      void MediaSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &args);
     };
   }
 }
