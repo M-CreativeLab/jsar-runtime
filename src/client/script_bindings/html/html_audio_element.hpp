@@ -25,18 +25,14 @@ namespace script_bindings
       using HTMLAudioElementBase::ObjectWrap;
 
     public:
-      /**
-       * The name of the HTMLAudioElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLAudioElement";
       }
-
-      /**
-       * Configure the V8 function template with HTMLAudioElement properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      static v8::Local<v8::Function> CreateAudioConstructor(v8::Isolate *isolate);
+
+    private:
       static void AudioConstructor(const v8::FunctionCallbackInfo<v8::Value> &info);
 
     public:

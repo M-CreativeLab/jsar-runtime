@@ -2,6 +2,7 @@
 #include <rapidjson/document.h>
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
+#include <client/scripting_base/v8_utils.hpp>
 #include <client/script_bindings/window.hpp>
 #include <client/script_bindings/dom/document.hpp>
 #include <client/script_bindings/binding.hpp>
@@ -291,8 +292,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebSocket);
         V8_SET_GLOBAL_FROM_MAIN(EventSource);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
-        V8_SET_GLOBAL_FROM_MAIN(Audio);
-        V8_SET_GLOBAL_FROM_MAIN(Image);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Global functions
@@ -849,7 +848,7 @@ namespace dom
     Local<Context> context = isolate->GetCurrentContext();
 
     TryCatch tryCatch(isolate);
-    if (script->Run(context).IsEmpty())
+    if (script->Run(context).IsEmpty() || tryCatch.HasCaught())
     {
       cerr << "#" << endl;
       cerr << "# Failed to execute script" << endl;

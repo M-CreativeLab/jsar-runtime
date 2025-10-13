@@ -11,6 +11,7 @@
 #include "./per_process.hpp"
 #include "./browser/window.hpp"
 #include "./builtin_scene/scene.hpp"
+#include "./dom/browsing_context.hpp"
 #include "./dom/dom_scripting.hpp"
 #include "./graphics/webgl_context.hpp"
 #include "./media/media_player.hpp"

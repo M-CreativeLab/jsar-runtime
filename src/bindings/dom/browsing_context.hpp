@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <napi.h>
+#include <client/per_process.hpp>
 #include <client/dom/browsing_context.hpp>
 #include "./runtime_context.hpp"
 
@@ -13,12 +14,13 @@ namespace dombinding
     static void Init(Napi::Env env, Napi::Object exports);
 
   public:
-    using RuntimeContextBase::RuntimeContextBase;
+    BrowsingContext(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value Start(const Napi::CallbackInfo &info);
 
   private:
+    TrClientContextPerProcess *client_context_;
     static thread_local Napi::FunctionReference *constructor;
   };
 }

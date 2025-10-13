@@ -18,6 +18,9 @@ namespace browser
  */
 namespace dom
 {
+  class BrowsingContext;
+  class RuntimeContext;
+
   class Document;    // Represents an HTML or XML document
   class Element;     // Represents an element in the DOM tree
   class SceneObject; // Represents a scene object in the DOM tree

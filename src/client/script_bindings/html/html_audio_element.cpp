@@ -1,5 +1,7 @@
-#include "./html_audio_element.hpp"
 #include <iostream>
+#include <client/per_process.hpp>
+#include <client/dom/browsing_context.hpp>
+#include "./html_audio_element.hpp"
 
 using namespace std;
 using namespace v8;
@@ -39,6 +41,38 @@ namespace script_bindings::html_bindings
                      "currentTime",
                      &HTMLAudioElement::CurrentTimeGetter,
                      &HTMLAudioElement::CurrentTimeSetter);
+  }
+
+  // static
+  v8::Local<v8::Function> HTMLAudioElement::CreateAudioConstructor(v8::Isolate *isolate)
+  {
+    return HTMLElement::CreateElementConstructor(isolate, "Audio", HTMLAudioElement::AudioConstructor);
+  }
+
+  // static
+  void HTMLAudioElement::AudioConstructor(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    if (!info.IsConstructCall())
+    {
+      MakeConstructorError(isolate,
+                           "Please use the 'new' operator, this DOM object constructor cannot be called as a function.");
+      return;
+    }
+
+    auto document = TrClientContextPerProcess::Get()->browsingContext->getActiveDocument();
+    auto element = dynamic_pointer_cast<dom::HTMLAudioElement>(document->createElement("audio"));
+    if (info.Length() >= 1 && info[0]->IsString())
+    {
+      String::Utf8Value utf8Value(isolate, info[0]);
+      element->setAttribute("src", *utf8Value);
+    }
+
+    // Return the wrapped object.
+    info.GetReturnValue().Set(NewInstance(isolate, element));
   }
 
   void HTMLAudioElement::AudioConstructor(const FunctionCallbackInfo<Value> &info)

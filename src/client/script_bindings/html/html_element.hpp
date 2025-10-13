@@ -29,6 +29,19 @@ namespace script_bindings
                                                std::shared_ptr<::dom::HTMLElement> nativeElement);
 
     protected:
+      /**
+       * Create the HTML element constructor function, such as Image, Audio, etc.
+       * 
+       * @param isolate The V8 isolate.
+       * @param name The name of the constructor function.
+       * @param callback The constructor callback function.
+       * @return The created constructor function.
+       */
+      static v8::Local<v8::Function> CreateElementConstructor(v8::Isolate *isolate,
+                                                              const char *name,
+                                                              v8::FunctionCallback callback);
+
+    protected:
       void onCreated() override;
 
     private:

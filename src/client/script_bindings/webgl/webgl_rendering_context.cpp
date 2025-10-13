@@ -2171,10 +2171,10 @@ namespace script_bindings
           MakeMethodError(isolate, "deleteBuffer", "1 argument required, but only 0 present")));
         return;
       }
-      if (!WebGLBuffer::IsInstanceOf(isolate, info[1]))
+      if (!WebGLBuffer::IsInstanceOf(isolate, info[0]))
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "deleteBuffer", "first argument must be a WebGLBuffer object")));
+          MakeMethodArgTypeError(isolate, "deleteBuffer", 0, "WebGLBuffer", info[0])));
         return;
       }
 

@@ -535,6 +535,10 @@ public:
    */
   std::shared_ptr<builtin_scene::Scene> builtinScene;
   /**
+   * The main `BrowsingContext` instance for the client process.
+   */
+  std::shared_ptr<::dom::BrowsingContext> browsingContext;
+  /**
    * The `Window` instance for the client process.
    */
   std::shared_ptr<::browser::Window> window;

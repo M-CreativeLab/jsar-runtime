@@ -23,6 +23,10 @@ namespace script_bindings
         return "HTMLImageElement";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      static v8::Local<v8::Function> CreateImageConstructor(v8::Isolate *isolate);
+
+    private:
+      static void ImageConstructor(const v8::FunctionCallbackInfo<v8::Value> &info);
 
     public:
       HTMLImageElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

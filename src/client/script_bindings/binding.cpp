@@ -182,10 +182,8 @@ namespace script_bindings
         using namespace html_bindings;
 
         // Set up constructor as a global function: Audio, Image, etc.
-        auto AudioConstructor = FunctionTemplate::New(isolate, HTMLAudioElement::AudioConstructor)
-                                  ->GetFunction(context)
-                                  .ToLocalChecked();
-        global->Set(context, NAME("Audio"), AudioConstructor).Check();
+        global->Set(context, NAME("Audio"), HTMLAudioElement::CreateAudioConstructor(isolate)).Check();
+        global->Set(context, NAME("Image"), HTMLImageElement::CreateImageConstructor(isolate)).Check();
 
         // Initialize HTML elements which won't be exposed
         HTMLSectionElement::Initialize(isolate);

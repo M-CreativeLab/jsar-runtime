@@ -1,5 +1,6 @@
-#include <client/per_process.hpp>
 #include "./browsing_context.hpp"
+
+using namespace std;
 
 namespace dombinding
 {
@@ -19,6 +20,14 @@ namespace dombinding
     exports.Set("BrowsingContext", func);
   }
 
+  BrowsingContext::BrowsingContext(const Napi::CallbackInfo &info)
+      : RuntimeContextBase<BrowsingContext, dom::BrowsingContext>(info)
+      , client_context_(TrClientContextPerProcess::Get())
+  {
+    assert(this->contextImpl != nullptr && "contextImpl should not be null");
+    client_context_->browsingContext = this->contextImpl;
+  }
+
   Napi::Value BrowsingContext::Start(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -35,7 +44,7 @@ namespace dombinding
     if (info.Length() >= 2 && info[1].IsString())
     {
       auto jsMimeTypeString = info[1].As<Napi::String>();
-      std::string mimeType = jsMimeTypeString.Utf8Value();
+      string mimeType = jsMimeTypeString.Utf8Value();
       if (mimeType == "text/xml" || mimeType == "application/xml")
         parsingType = dom::DOMParsingType::XML;
       else if (mimeType == "image/svg+xml")
@@ -72,11 +81,11 @@ namespace dombinding
         contextImpl->setBaseURI(doc->baseURI);
 
         // Make sure the scripting context is created.
-        contextImpl->scriptingContext->makeMainContext(doc, TrClientContextPerProcess::Get()->window);
+        contextImpl->scriptingContext->makeMainContext(doc, client_context_->window);
         contextImpl->open(doc);
         return env.Undefined();
       }
-      catch (const std::exception &e)
+      catch (const exception &e)
       {
         Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
         return env.Undefined();

@@ -96,6 +96,22 @@ namespace script_bindings::html_bindings
     registerEvent("toggle");
   }
 
+  // static
+  Local<Function> HTMLElement::CreateElementConstructor(Isolate *isolate,
+                                                        const char *name,
+                                                        FunctionCallback callback)
+  {
+    EscapableHandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, callback);
+    tpl->SetClassName(String::NewFromUtf8(isolate, name).ToLocalChecked());
+    tpl->Inherit(GetFunctionTemplate(isolate));
+
+    Local<Function> constructor = tpl->GetFunction(context).ToLocalChecked();
+    return scope.Escape(constructor);
+  }
+
   // Property getters and setters
 
   void HTMLElement::DatasetGetter(const v8::PropertyCallbackInfo<v8::Value> &info)

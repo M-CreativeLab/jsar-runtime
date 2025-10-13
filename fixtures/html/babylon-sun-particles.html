@@ -10,6 +10,11 @@
       }
     }
   </script>
+  <style>
+    body {
+      background-color: transparent;
+    }
+  </style>
   <script type="module">
     import 'babylonjs';
 
@@ -59,6 +64,7 @@
     engine.disableUniformBuffers = true;
 
     createScene(engine).then(scene => {
+
       var stars = BABYLON.Mesh.CreateBox("emitter", 0.01, scene);
 
       // Create particle systems
@@ -245,7 +251,8 @@
       flareParticles.start();
       coronaParticles.start();
       starsParticles.start();
-    }, err => {
+      console.info("scene is ready");
+    }).catch(err => {
       console.error(err);
     });
   </script>
