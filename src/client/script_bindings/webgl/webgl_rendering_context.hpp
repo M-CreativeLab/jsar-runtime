@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <client/canvas/image_source.hpp>
 #include <client/graphics/webgl_context.hpp>
 #include <client/scripting_base/v8_object_wrap.hpp>
 

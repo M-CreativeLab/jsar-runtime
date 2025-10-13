@@ -1,6 +1,7 @@
+#include <iostream>
 #include "./xr_input_source.hpp"
 #include "./xr_space.hpp"
-#include <iostream>
+#include "./xr_hand.hpp"
 
 using namespace std;
 using namespace v8;
@@ -37,15 +38,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return actual Gamepad object from native input source
-      cout << "inputSource.gamepad getter called" << endl;
+      cerr << "Warning: XRInputSource.gamepad is not implemented yet." << endl;
       info.GetReturnValue().SetNull();
     }
 
@@ -54,33 +47,23 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->handle() == nullptr)
+      auto gripSpace = handle()->gripSpace();
+      if (gripSpace == nullptr)
       {
         info.GetReturnValue().SetNull();
-        return;
       }
-
-      // TODO: Return actual XRSpace for grip from native input source
-      cout << "inputSource.gripSpace getter called" << endl;
-      info.GetReturnValue().SetNull();
+      else
+      {
+        info.GetReturnValue().Set(XRSpace::GetOrNewInstance(isolate, gripSpace));
+      }
     }
 
     void XRInputSource::HandGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return actual XRHand object from native input source
-      cout << "inputSource.hand getter called" << endl;
-      info.GetReturnValue().SetNull();
+      info.GetReturnValue().Set(XRHand::NewInstance(isolate,
+                                                    handle()->hand()));
     }
 
     void XRInputSource::HandednessGetter(const PropertyCallbackInfo<Value> &info)
@@ -88,15 +71,20 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->handle() == nullptr)
+      auto handedness = handle()->handedness();
+      switch (handedness)
       {
+      case client_xr::XRHandedness::Left:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "left").ToLocalChecked());
+        break;
+      case client_xr::XRHandedness::Right:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "right").ToLocalChecked());
+        break;
+      case client_xr::XRHandedness::None:
+      default:
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "none").ToLocalChecked());
-        return;
+        break;
       }
-
-      // TODO: Get actual handedness from native input source (left, right, none)
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "right").ToLocalChecked());
     }
 
     void XRInputSource::TargetRayModeGetter(const PropertyCallbackInfo<Value> &info)
@@ -104,15 +92,22 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->handle() == nullptr)
+      auto mode = handle()->targetRayMode();
+      switch (mode)
       {
+      case client_xr::XRTargetRayMode::Gaze:
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "gaze").ToLocalChecked());
-        return;
+        break;
+      case client_xr::XRTargetRayMode::TrackedPointer:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "tracked-pointer").ToLocalChecked());
+        break;
+      case client_xr::XRTargetRayMode::Screen:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "screen").ToLocalChecked());
+        break;
+      default:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "unknown").ToLocalChecked());
+        break;
       }
-
-      // TODO: Get actual target ray mode from native input source (gaze, tracked-pointer, screen)
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "tracked-pointer").ToLocalChecked());
     }
 
     void XRInputSource::TargetRaySpaceGetter(const PropertyCallbackInfo<Value> &info)
@@ -120,16 +115,8 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return actual XRSpace for target ray from native input source
-      cout << "inputSource.targetRaySpace getter called" << endl;
-      info.GetReturnValue().SetNull();
+      auto space = handle()->targetRaySpace();
+      info.GetReturnValue().Set(XRSpace::GetOrNewInstance(isolate, space));
     }
 
     // XRInputSourceArray implementation

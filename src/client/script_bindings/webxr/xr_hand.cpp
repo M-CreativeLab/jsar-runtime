@@ -1,5 +1,8 @@
-#include "./xr_hand.hpp"
 #include <iostream>
+#include <client/xr/webxr_spaces.hpp>
+
+#include "./xr_hand.hpp"
+#include "./xr_space.hpp"
 
 using namespace std;
 using namespace v8;
@@ -25,8 +28,13 @@ namespace script_bindings
       InstanceMethod(isolate, prototype, "values", &XRHand::Values);
 
       // Add iterator support
-      // TODO(yorkie): support Symbol?
-      InstanceMethod(isolate, prototype, "Symbol.iterator", &XRHand::Iterator);
+      InstanceMethod(isolate, prototype, Symbol::GetIterator(isolate), &XRHand::Values);
+    }
+
+    // static
+    Local<Object> XRHand::NewInstance(Isolate *isolate, const client_xr::XRHand &hand)
+    {
+      return XRHandBase::NewInstance(isolate, make_shared<client_xr::XRHand>(hand));
     }
 
     XRHand::XRHand(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -49,17 +57,22 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Array> entries = Array::New(isolate);
 
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->handle() == nullptr)
+      const auto &joints = handle()->values();
+      uint32_t index = 0;
+
+      for (const auto &joint : joints)
       {
-        info.GetReturnValue().SetNull();
-        return;
+        Local<Array> entry = Array::New(isolate, 2);
+        {
+          entry->Set(context, 0, String::NewFromUtf8(isolate, joint->name.c_str()).ToLocalChecked()).Check();
+          entry->Set(context, 1, XRSpace::GetOrNewInstance(isolate, joint)).Check();
+        }
+        entries->Set(context, index++, entry).Check();
       }
-
-      // TODO: Return iterator over hand joint entries
-      cout << "hand.entries called" << endl;
-      info.GetReturnValue().SetNull();
+      info.GetReturnValue().Set(entries);
     }
 
     void XRHand::ForEach(const FunctionCallbackInfo<Value> &info)
@@ -67,14 +80,25 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->handle() == nullptr)
+      if (info.Length() < 1 || !info[0]->IsFunction())
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "forEach", "Requires a callback function as argument")));
         return;
       }
 
-      // TODO: Implement forEach iteration over hand joints
-      cout << "hand.forEach called" << endl;
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Function> callback = info[0].As<Function>();
+
+      const auto &joints = handle()->values();
+      for (const auto &joint : joints)
+      {
+        Local<Value> args[2];
+        args[0] = XRSpace::GetOrNewInstance(isolate, joint);
+        args[1] = String::NewFromUtf8(isolate, joint->name.c_str()).ToLocalChecked();
+        callback->Call(context, info.This(), 2, args).ToLocalChecked();
+      }
+      info.GetReturnValue().SetUndefined();
     }
 
     void XRHand::Get(const FunctionCallbackInfo<Value> &info)
@@ -82,23 +106,21 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->handle() == nullptr)
+      if (info.Length() < 1 || !info[0]->IsString())
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "get", "Requires a string key as argument")));
         return;
       }
 
-      if (info.Length() < 1)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
+      Local<Context> context = isolate->GetCurrentContext();
+      String::Utf8Value key(isolate, info[0]);
 
-      // TODO: Validate joint name and return corresponding XRJointSpace
-      // Joint names: wrist, thumb-metacarpal, thumb-phalanx-proximal, etc.
-      cout << "hand.get called" << endl;
-      info.GetReturnValue().SetNull();
+      auto joint = handle()->get(*key);
+      if (joint == nullptr)
+        info.GetReturnValue().SetNull();
+      else
+        info.GetReturnValue().Set(XRSpace::GetOrNewInstance(isolate, joint));
     }
 
     void XRHand::Keys(const FunctionCallbackInfo<Value> &info)
@@ -106,16 +128,18 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Array> keys = Array::New(isolate);
 
-      // TODO: Return iterator over hand joint keys
-      cout << "hand.keys called" << endl;
-      info.GetReturnValue().SetNull();
+      uint32_t index = 0;
+      for (const auto &name : handle()->keys())
+      {
+        keys->Set(context,
+                  index++,
+                  String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked())
+          .Check();
+      }
+      info.GetReturnValue().Set(keys);
     }
 
     void XRHand::Values(const FunctionCallbackInfo<Value> &info)
@@ -123,33 +147,19 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->handle() == nullptr)
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Array> values = Array::New(isolate);
+
+      const auto &joints = handle()->values();
+      uint32_t index = 0;
+      for (const auto &joint : joints)
       {
-        info.GetReturnValue().SetNull();
-        return;
+        values->Set(context,
+                    index++,
+                    XRSpace::GetOrNewInstance(isolate, joint))
+          .Check();
       }
-
-      // TODO: Return iterator over hand joint spaces
-      cout << "hand.values called" << endl;
-      info.GetReturnValue().SetNull();
-    }
-
-    void XRHand::Iterator(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return iterator for hand joints
-      cout << "hand[Symbol.iterator] called" << endl;
-      info.GetReturnValue().SetNull();
+      info.GetReturnValue().Set(values);
     }
   }
 }

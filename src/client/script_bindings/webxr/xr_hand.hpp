@@ -26,6 +26,7 @@ namespace script_bindings
         return "XRHand";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, const client_xr::XRHand &hand);
 
     public:
       XRHand(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
@@ -37,9 +38,6 @@ namespace script_bindings
       void Get(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Keys(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Values(const v8::FunctionCallbackInfo<v8::Value> &info);
-
-      // Iterator support
-      void Iterator(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Property getters
       void SizeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);

@@ -40,6 +40,9 @@ namespace script_bindings
 
   void EventListenersList::dispatchEvent(v8::Isolate *isolate, v8::Local<Value> recv, shared_ptr<dom::Event> event)
   {
+    if (size() == 0 || event == nullptr)
+      return;
+
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
@@ -180,12 +183,15 @@ namespace script_bindings
 
   void EventTarget::setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners)
   {
-    unique_lock<mutex> lock(dispatch_mutex_);
-    cerr << "EventTarget::setPendingEventAndDispatch: Waiting to set pending event of type '" << event->typeStr() << "'" << endl;
-    dispatch_cv_.wait(lock, [this]()
-                      { return pending_event_ == nullptr; });
-    pending_event_ = event;
-    cerr << "EventTarget::setPendingEventAndDispatch: Pending event of type '" << event->typeStr() << "' is set" << endl;
+    {
+      unique_lock<mutex> lock(dispatch_mutex_);
+      if (pending_event_ != nullptr)
+      {
+        dispatch_cv_.wait(lock, [this]()
+                          { return pending_event_ == nullptr; });
+      }
+      pending_event_ = event;
+    }
 
     // Send async signal to the event loop to process the event
     assert(async_handle_ != nullptr && "Async handle is not initialized.");
@@ -225,10 +231,17 @@ namespace script_bindings
 
       // Dispatch the event to the listeners
       {
-        shared_lock<shared_mutex> lock(event_listeners_mutex_);
-        auto listeners = event_listeners_.find(event_type);
-        if (listeners != event_listeners_.end())
-          listeners->second.dispatchEvent(current_isolate_, value(), pending_event_);
+        // A copy of the found listeners to avoid holding the lock during dispatch
+        EventListenersList found_listeners;
+        {
+          shared_lock<shared_mutex> lock(event_listeners_mutex_);
+          auto listeners = event_listeners_.find(event_type);
+          if (listeners != event_listeners_.end())
+            found_listeners = listeners->second;
+        }
+
+        // Dispatch to the found listeners
+        found_listeners.dispatchEvent(current_isolate_, value(), pending_event_);
       }
     }
     pending_event_.reset();

@@ -1,3 +1,4 @@
+#include <client/script_bindings/canvas/image_source.hpp>
 #include "./webgl_rendering_context.hpp"
 #include "./active_info.hpp"
 #include "./uniform_location.hpp"
@@ -2916,18 +2917,64 @@ namespace script_bindings
       int internalformat = info[2]->Int32Value(context).FromMaybe(0);
       int width;
       int height;
-      int border;
+      int border = 0;
       client_graphics::WebGLTextureFormat format;
       client_graphics::WebGLPixelType pixelType;
+
+      SkPixmap imagePixmap;
       unsigned char *pixels = nullptr;
 
       if (info.Length() == 6)
       {
-        cerr << "WebGLRenderingContext::texImage2D: 6-argument version is not implemented yet" << endl;
-        isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "texImage2D", "6-argument version is not implemented yet")));
-        info.GetReturnValue().SetUndefined();
-        return;
+        if (!info[3]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "format", "number", info[3])));
+          return;
+        }
+        if (!info[4]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "type", "number", info[4])));
+          return;
+        }
+        {
+          // Update `format` from args[3]
+          int value = info[3]->Int32Value(context).FromMaybe(0);
+          format = static_cast<client_graphics::WebGLTextureFormat>(value);
+        }
+        {
+          // Assign `pixelType` from args[4]
+          int value = info[4]->Int32Value(context).FromMaybe(0);
+          pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+        }
+
+        auto sourceValue = info[5];
+        auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, sourceValue);
+        if (imageSource == nullptr)
+        {
+          auto msg =
+            "ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, ImageBitmap, OffscreenCanvas"
+            " or null object";
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "pixels", msg, sourceValue)));
+          return;
+        }
+        else
+        {
+          if (!imageSource->readPixels(imagePixmap))
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "texImage2D", "Failed to read pixels from the image source")));
+            return;
+          }
+          width = imagePixmap.width();
+          height = imagePixmap.height();
+          // FIXME(yorkie): Support other pixel formats.
+          format = client_graphics::WebGLTextureFormat::kRGBA;
+          internalformat = WEBGL2_RGBA8;
+          pixels = reinterpret_cast<unsigned char *>(imagePixmap.writable_addr());
+        }
       }
       else if (info.Length() >= 9)
       {

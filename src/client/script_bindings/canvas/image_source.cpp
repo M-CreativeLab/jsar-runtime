@@ -1,135 +1,70 @@
 #include "image_source.hpp"
 #include <client/canvas/image_source.hpp>
+#include <client/script_bindings/canvas/image_bitmap.hpp>
+#include <client/script_bindings/canvas/image_data.hpp>
+#include <client/script_bindings/canvas/canvas.hpp>
+#include <client/script_bindings/html/html_canvas_element.hpp>
+#include <client/script_bindings/html/html_image_element.hpp>
 
 namespace script_bindings
 {
   namespace canvas_bindings
   {
+    using namespace std;
     using namespace v8;
 
-    void ImageSource::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    shared_ptr<canvas::ImageSource> GetImageSourceFromValue(Isolate *isolate, Local<Value> value)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "ImageSource").ToLocalChecked());
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
+      if (!value->IsObject())
+        return nullptr;
 
-      // Properties (read-only)
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                    WidthGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                    HeightGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "naturalWidth").ToLocalChecked(),
-                                    NaturalWidthGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "naturalHeight").ToLocalChecked(),
-                                    NaturalHeightGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      // Methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getImageData").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetImageData));
-    }
-
-    ImageSource::ImageSource(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : ImageSourceBase(isolate, args)
-    {
-    }
-
-    void ImageSource::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(isolate, info.This());
-
-      if (imageSource && imageSource->handle())
+      auto object = value->ToObject(context).ToLocalChecked();
+      if (ImageBitmap::IsInstanceOf(isolate, object))
       {
-        int width = imageSource->handle()->width();
-        info.GetReturnValue().Set(Number::New(isolate, width));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
-    }
-
-    void ImageSource::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(isolate, info.This());
-
-      if (imageSource && imageSource->handle())
-      {
-        int height = imageSource->handle()->height();
-        info.GetReturnValue().Set(Number::New(isolate, height));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
-    }
-
-    void ImageSource::NaturalWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(isolate, info.This());
-
-      if (imageSource && imageSource->handle())
-      {
-        // TODO(yorkie): Consider using actual natural width if different from width
-        int naturalWidth = imageSource->handle()->width();
-        info.GetReturnValue().Set(Number::New(isolate, naturalWidth));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
-    }
-
-    void ImageSource::NaturalHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(isolate, info.This());
-
-      if (imageSource && imageSource->handle())
-      {
-        // TODO(yorkie): Consider using actual natural height if different from height
-        int naturalHeight = imageSource->handle()->height();
-        info.GetReturnValue().Set(Number::New(isolate, naturalHeight));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
-    }
-
-    void ImageSource::GetImageData(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(isolate, info.This());
-
-      if (!imageSource || !imageSource->handle())
-      {
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid ImageSource instance").ToLocalChecked()));
-        return;
+        auto imageBitmapWrapper = ImageBitmap::Unwrap(isolate, object);
+        if (imageBitmapWrapper)
+          return imageBitmapWrapper->handle();
+        return nullptr;
       }
 
-      // TODO: Implement getImageData method
-      // This should return ImageData representing the image
-      info.GetReturnValue().SetNull();
+      if (ImageData::IsInstanceOf(isolate, object))
+      {
+        auto imageDataWrapper = ImageData::Unwrap(isolate, object);
+        if (imageDataWrapper)
+          return imageDataWrapper->handle();
+        return nullptr;
+      }
+
+      if (OffscreenCanvas::IsInstanceOf(isolate, object))
+      {
+        auto canvasWrapper = OffscreenCanvas::Unwrap(isolate, object);
+        if (canvasWrapper)
+          return canvasWrapper->handle();
+        return nullptr;
+      }
+
+      if (html_bindings::HTMLCanvasElement::IsInstanceOf(isolate, object))
+      {
+        auto canvasWrapper = html_bindings::HTMLCanvasElement::Unwrap(isolate, object);
+        if (canvasWrapper)
+          return canvasWrapper->handle();
+        return nullptr;
+      }
+
+      if (html_bindings::HTMLImageElement::IsInstanceOf(isolate, object))
+      {
+        auto imageWrapper = html_bindings::HTMLImageElement::Unwrap(isolate, object);
+        if (imageWrapper)
+          return imageWrapper->handle();
+        return nullptr;
+      }
+
+      // TODO(yorkie): support other types, e.g. Video, SVG, etc.
+      // Check for ImageData
+      return nullptr;
     }
   }
 }

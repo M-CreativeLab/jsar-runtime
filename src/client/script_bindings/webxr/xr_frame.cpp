@@ -74,18 +74,21 @@ namespace script_bindings
           MakeMethodError(isolate, "getPose", "Requires 2 arguments")));
         return;
       }
-
-      if (XRSpace::IsInstanceOf(isolate, info[0]) == false ||
-          XRSpace::IsInstanceOf(isolate, info[1]) == false)
+      if (!XRSpace::IsInstanceOf(isolate, info[0]))
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "getPose", "Arguments must be `XRSpace` objects")));
+          MakeMethodArgTypeError(isolate, "getPose", "space", "XRSpace", info[0])));
+        return;
+      }
+      if (!XRSpace::IsInstanceOf(isolate, info[1]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "getPose", "baseSpace", "XRSpace", info[1])));
         return;
       }
 
       auto space = XRSpace::Unwrap(isolate, info[0].As<Object>());
       auto baseSpace = XRSpace::Unwrap(isolate, info[1].As<Object>());
-
       auto pose = handle()->getPose(space->handle(), baseSpace->handle());
       if (pose == nullptr)
       {

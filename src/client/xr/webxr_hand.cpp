@@ -12,7 +12,7 @@ namespace client_xr
       push_back(XRJointSpace::Make(inputSource, joint.index));
   }
 
-  XRHand::XRHand(XRHand &that)
+  XRHand::XRHand(const XRHand &that)
       : vector<shared_ptr<XRJointSpace>>(that)
       , inputSource_(that.inputSource_)
   {
