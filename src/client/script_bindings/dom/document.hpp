@@ -49,15 +49,29 @@ namespace script_bindings
                        const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
+      void Append(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void AdoptNode(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ImportNode(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+      void CreateAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CreateAttributeNS(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CreateCDATASection(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateDocumentFragment(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateElement(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CreateElementNS(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateTextNode(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateComment(const v8::FunctionCallbackInfo<v8::Value> &info);
+
       void GetElementById(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementsByTagName(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementsByClassName(const v8::FunctionCallbackInfo<v8::Value> &info);
       void QuerySelector(const v8::FunctionCallbackInfo<v8::Value> &info);
       void QuerySelectorAll(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+      void Close(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Write(const v8::FunctionCallbackInfo<v8::Value> &info, bool newLine);
+      void Write(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Writeln(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

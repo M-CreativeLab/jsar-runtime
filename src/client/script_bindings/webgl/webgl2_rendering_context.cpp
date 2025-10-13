@@ -1749,10 +1749,10 @@ namespace script_bindings
 
       Local<Context> context = isolate->GetCurrentContext();
 
-      if (args.Length() < 6)
+      if (args.Length() < 5)
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodArgCountError(isolate, "drawElementsInstanced", 6, args.Length())));
+          MakeMethodArgCountError(isolate, "drawElementsInstanced", 5, args.Length())));
         return;
       }
 

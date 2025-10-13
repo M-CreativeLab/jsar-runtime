@@ -252,7 +252,7 @@ class CacheStorage {
       return ReadableCache.FromFile(filename);
     } catch (e) {
       if (e?.code !== 'ENOENT') {
-        console.warn(`Failed to get Cache object for "${url}"`, e);
+        console.warn(`Failed to get Cache object for "${url}"`, e?.message || e);
       }
     }
     return null;

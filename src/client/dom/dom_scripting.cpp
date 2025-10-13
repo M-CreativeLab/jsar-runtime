@@ -843,12 +843,14 @@ namespace dom
   void DOMClassicScript::evaluate(Isolate *isolate)
   {
     HandleScope handleScope(isolate);
-
     Local<Script> script = scriptStore.Get(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
     TryCatch tryCatch(isolate);
-    if (script->Run(context).IsEmpty() || tryCatch.HasCaught())
+    MaybeLocal<Value> result = script->Run(context);
+
+    if (result.IsEmpty() ||
+        tryCatch.HasCaught())
     {
       cerr << "#" << endl;
       cerr << "# Failed to execute script" << endl;
@@ -1274,8 +1276,8 @@ namespace dom
     evaluatedOnce = true;
 
     HandleScope scope(isolate);
-    auto module = moduleStore.Get(isolate);
-    auto context = isolate->GetCurrentContext();
+    Local<Module> module = moduleStore.Get(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (module->IsSyntheticModule()) // Synthetic module should not be evaluated
       return;
@@ -1288,45 +1290,38 @@ namespace dom
     Local<Value> resultValue;
     {
       TryCatch tryCatch(isolate);
-      if (!module->Evaluate(context).ToLocal(&resultValue))
+      MaybeLocal<Value> resultMaybeValue = module->Evaluate(context);
+
+      if (resultMaybeValue.IsEmpty() ||
+          tryCatch.HasCaught()) [[unlikely]]
       {
-        if (tryCatch.HasCaught())
-        {
-          if (tryCatch.HasTerminated())
-            tryCatch.ReThrow();
-          return;
-        }
+        cerr << "#" << endl;
+        cerr << "# Failed to execute module script" << endl;
+        cerr << "# URL: " << url << endl;
+        cerr << "#" << endl;
+        cerr << scripting_base::ReportExceptionToString(isolate, tryCatch.Exception());
       }
       else
       {
+        resultValue = resultMaybeValue.ToLocalChecked();
         if (!resultValue->IsPromise())
         {
           cerr << "Failed to execute script: the result is not a promise" << endl;
+          return;
         }
-        else
+
+        auto onModuleRejected = [](const FunctionCallbackInfo<Value> &info)
         {
-          auto promise = Local<Promise>::Cast(resultValue);
-          auto resolveCallback = [](const FunctionCallbackInfo<Value> &info)
-          {
-            Isolate *isolate = info.GetIsolate();
-            Local<Context> context = isolate->GetCurrentContext();
-            Context::Scope contextScope(context);
-            HandleScope handleScope(isolate);
-            assert(info.Length() > 0);
-            info.GetReturnValue().Set(info[0]);
-          };
-          auto rejectCallback = [](const FunctionCallbackInfo<Value> &info)
-          {
-            Isolate *isolate = info.GetIsolate();
-            Local<Context> context = isolate->GetCurrentContext();
-            Context::Scope contextScope(context);
-            HandleScope handleScope(isolate);
-            String::Utf8Value message(info.GetIsolate(), info[0]);
-            cerr << "Failed to execute script: " << *message << endl;
-          };
-          Local<Function> resolveFunc = Function::New(context, resolveCallback).ToLocalChecked();
-          Local<Function> rejectFunc = Function::New(context, rejectCallback).ToLocalChecked();
-        }
+          Isolate *isolate = info.GetIsolate();
+          HandleScope scope(isolate);
+
+          // TODO(yorkie): report the script info?
+          cerr << "Failed to evaluate the module script: "
+               << scripting_base::ReportExceptionToString(isolate, info[0], "Module evaluation failed")
+               << endl;
+        };
+        Local<Function> rejectCallback = Function::New(context, onModuleRejected).ToLocalChecked();
+        resultValue.As<Promise>()->Catch(context, rejectCallback).ToLocalChecked();
       }
     }
   }

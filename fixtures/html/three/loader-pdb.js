@@ -44,6 +44,7 @@ root.position.add(new THREE.Vector3(0.1, 0, 0));
     loadMolecule(params.molecule);
 
     const buttons = document.querySelectorAll('.btn');
+    console.info(buttons);
     const select = (target) => {
       for (const btn of buttons) {
         btn.setAttribute('class', 'btn');
@@ -143,7 +144,10 @@ root.position.add(new THREE.Vector3(0.1, 0, 0));
 }
 
 const gl = navigator.gl;
+console.info('buffer width:', gl.drawingBufferWidth, 'height:', gl.drawingBufferHeight);
 navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+  console.info(session);
+
   const baseLayer = new XRWebGLLayer(session, gl);
   session.updateRenderState({ baseLayer });
 
@@ -167,6 +171,8 @@ navigator.xr.requestSession('immersive-ar', {}).then((session) => {
 
   camera.position.z = 5;
   renderer.setAnimationLoop(animate);
-}, (err) => {
+  console.info('XR session started');
+  
+}).catch((err) => {
   console.warn('Failed to start XR session:', err);
 });

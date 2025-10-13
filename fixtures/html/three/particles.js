@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+let parameters;
 
 // Create lights
 const light = new THREE.DirectionalLight(0xffffff, 0.5);

@@ -68,31 +68,11 @@ namespace script_bindings::html_bindings
     if (info.Length() >= 1 && info[0]->IsString())
     {
       String::Utf8Value utf8Value(isolate, info[0]);
-      element->setAttribute("src", *utf8Value);
+      element->setSrc(*utf8Value);
     }
 
     // Return the wrapped object.
     info.GetReturnValue().Set(NewInstance(isolate, element));
-  }
-
-  void HTMLAudioElement::AudioConstructor(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    cout << "new Audio() constructor called" << endl;
-
-    // TODO: Create new HTMLAudioElement instance
-    // Optional argument: src (string)
-
-    Local<Function> constructor = HTMLAudioElement::GetConstructorFunction(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    Local<Value> argv[info.Length()];
-    for (int i = 0; i < info.Length(); i++)
-      argv[i] = info[i];
-    Local<Object> instance = constructor->NewInstance(context, info.Length(), argv).ToLocalChecked();
-    info.GetReturnValue().Set(instance);
   }
 
   HTMLAudioElement::HTMLAudioElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
