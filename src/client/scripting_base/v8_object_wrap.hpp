@@ -220,9 +220,13 @@ namespace scripting_base
       }
 
       std::vector<v8::Local<v8::Value>> args;
-      v8::Local<v8::External> option = v8::External::New(isolate,
-                                                         new ConstructingContext(ConstructingContext::kNative));
-      args.push_back(option);
+      if constexpr (!std::is_same_v<TData, void>)
+      {
+        // Only mark native constructing when the handle type is specified (not `void`)
+        auto constructingContext = new ConstructingContext(ConstructingContext::kNative);
+        v8::Local<v8::External> option = v8::External::New(isolate, constructingContext);
+        args.push_back(option);
+      }
 
       v8::TryCatch tryCatch(isolate);
       v8::Local<v8::Object> jsThis;

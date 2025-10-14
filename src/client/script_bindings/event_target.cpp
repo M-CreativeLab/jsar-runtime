@@ -48,8 +48,7 @@ namespace script_bindings
 
     // Wrap the native event into a V8 Event object
     Local<Object> eventObj = Event::GetOrNewInstance(isolate, event);
-    if (eventObj.IsEmpty())
-      return;
+    assert(!eventObj.IsEmpty() && "Failed to create Event object");
 
     // Call each listener with the event object
     for (const auto &listener : *this)
@@ -147,6 +146,7 @@ namespace script_bindings
     async_handle_ = make_unique<uv_async_t>();
     async_handle_->data = this;
     uv_async_init(getEventLoop(), async_handle_.get(), EventCallback);
+    creating_async_thread_id_ = this_thread::get_id();
   }
 
   void EventTarget::listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event)
@@ -183,26 +183,39 @@ namespace script_bindings
 
   void EventTarget::setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners)
   {
+    if (this_thread::get_id() == creating_async_thread_id_)
     {
-      unique_lock<mutex> lock(dispatch_mutex_);
-      if (pending_event_ != nullptr)
-      {
-        dispatch_cv_.wait(lock, [this]()
-                          { return pending_event_ == nullptr; });
-      }
+      // Directly set and dispatch if on the same thread as async handle creation
       pending_event_ = event;
+      didDispatchPendingEvent();
     }
+    else
+    {
+      {
+        unique_lock<mutex> lock(dispatch_mutex_);
+        if (pending_event_ != nullptr)
+        {
+          dispatch_cv_.wait(lock, [this]()
+                            { cerr << "Waiting for previous event to be dispatched..., pending event?" << (pending_event_ == nullptr ? "y" : "n") << endl;
+                            return pending_event_ == nullptr; });
+        }
+        pending_event_ = event;
+      }
 
-    // Send async signal to the event loop to process the event
-    assert(async_handle_ != nullptr && "Async handle is not initialized.");
-    uv_async_send(async_handle_.get());
+      // Send async signal to the event loop to process the event
+      assert(async_handle_ != nullptr && "Async handle is not initialized.");
+      uv_async_send(async_handle_.get());
+    }
   }
 
   void EventTarget::didDispatchPendingEvent()
   {
     unique_lock<mutex> lock(dispatch_mutex_);
     if (!pending_event_) [[unlikely]]
+    {
+      dispatch_cv_.notify_all();
       return;
+    }
 
     {
       Isolate::Scope isolate_scope(current_isolate_);

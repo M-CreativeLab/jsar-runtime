@@ -44,7 +44,6 @@ root.position.add(new THREE.Vector3(0.1, 0, 0));
     loadMolecule(params.molecule);
 
     const buttons = document.querySelectorAll('.btn');
-    console.info(buttons);
     const select = (target) => {
       for (const btn of buttons) {
         btn.setAttribute('class', 'btn');
@@ -54,6 +53,7 @@ root.position.add(new THREE.Vector3(0.1, 0, 0));
 
     for (const btn of buttons) {
       btn.addEventListener('click', () => {
+        console.info('Loading', btn.getAttribute('data-name'));
         loadMolecule(btn.getAttribute('data-name') + '.pdb');
         select(btn);
       });

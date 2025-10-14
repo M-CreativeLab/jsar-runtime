@@ -7,6 +7,7 @@
 #include <shared_mutex>
 #include <mutex>
 #include <condition_variable>
+#include <thread>
 
 #include <node/uv.h>
 #include <client/scripting_base/v8_object_wrap.hpp>
@@ -76,8 +77,10 @@ namespace script_bindings
 
   private:
     std::vector<std::string> registered_event_types_;
-    std::unique_ptr<uv_async_t> async_handle_;
     std::shared_ptr<dom::Event> pending_event_;
+    std::unique_ptr<uv_async_t> async_handle_;                // libuv async handle for event dispatching if dispatcher is on another thread
+    std::optional<std::thread::id> creating_async_thread_id_; // Thread that created the async handle
+
     std::mutex dispatch_mutex_;
     std::condition_variable dispatch_cv_;
     std::shared_mutex event_listeners_mutex_;

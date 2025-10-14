@@ -27,6 +27,7 @@ namespace scripting_base
     }
 
     // Creates a new instance of the Iterator class, with a vector of data source.
+    // TODO(yorkie): remove the dependency on napi_env
     static v8::Local<v8::Value> NewInstance(napi_env napiEnv,
                                             const std::vector<std::shared_ptr<ValueType>> &dataSource)
     {
