@@ -19,6 +19,8 @@ namespace script_bindings
      */
     class ImageData : public ImageDataBase
     {
+      using ImageDataBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
@@ -42,6 +44,9 @@ namespace script_bindings
       void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void DataGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void ColorSpaceGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+
+    private:
+      v8::Global<v8::Value> data_value_handle_;
     };
   }
 }

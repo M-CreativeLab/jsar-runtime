@@ -11,6 +11,7 @@
 
 #include "./v8_object_holder.hpp"
 #include "./v8_object_wrap_base.hpp"
+#include "./v8_utils.hpp"
 
 namespace scripting_base
 {
@@ -155,6 +156,27 @@ namespace scripting_base
     }
 
     /**
+     * Check if the constructor call is from native code, such as called from `NewInstance()`.
+     * 
+     * @param args The function callback info.
+     * @return true if the constructor call is from native code, false otherwise.
+     */
+    static bool IsNativeConstructCall(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      if (args.Length() < 1)
+        return false;
+      if (!args[0]->IsExternal())
+        return false;
+
+      v8::HandleScope scope(args.GetIsolate());
+      v8::Local<v8::External> external = args[0].As<v8::External>();
+      ConstructingContext *context = static_cast<ConstructingContext *>(external->Value());
+      if (context == nullptr)
+        return false;
+      return context->isNativeCall();
+    }
+
+    /**
      * Create the instance of the class T and wrap it in a v8::Object
      *
      * @tparam Args The types of the arguments to pass to the constructor of T
@@ -201,14 +223,24 @@ namespace scripting_base
       v8::Local<v8::External> option = v8::External::New(isolate,
                                                          new ConstructingContext(ConstructingContext::kNative));
       args.push_back(option);
-      v8::Local<v8::Object> jsThis = constructor->NewInstance(context,
-                                                              args.size(),
-                                                              args.data())
-                                       .ToLocalChecked();
-      if (jsThis.IsEmpty()) [[unlikely]]
+
+      v8::TryCatch tryCatch(isolate);
+      v8::Local<v8::Object> jsThis;
+      v8::MaybeLocal<v8::Object> maybeResult = constructor->NewInstance(context, args.size(), args.data());
+      if (maybeResult.IsEmpty() || tryCatch.HasCaught())
       {
-        std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
+        std::cerr << "Failed to create new instance of " << T::Name() << "(): "
+                  << scripting_base::ReportExceptionToString(isolate, tryCatch.Exception()) << std::endl;
         return scope.Escape(v8::Local<v8::Object>());
+      }
+      else
+      {
+        jsThis = maybeResult.ToLocalChecked();
+        if (jsThis.IsEmpty() || !jsThis->IsObject()) [[unlikely]]
+        {
+          std::cerr << "Failed to create new instance of " << T::Name() << "(): Empty this object" << std::endl;
+          return scope.Escape(v8::Local<v8::Object>());
+        }
       }
 
       // Unwrap and check if the instance is valid
@@ -770,21 +802,29 @@ namespace scripting_base
         constructingContext = static_cast<ConstructingContext *>(firstArg->Value());
       }
 
-      // If `NativeConstructorRequired` is true, only allow native construction
-      if (T::NativeConstructorRequired() && (constructingContext == nullptr ||
-                                             constructingContext->isScriptCall())) [[unlikely]]
+      T *instance = nullptr;
+      if (constructingContext == nullptr ||
+          constructingContext->isScriptCall())
       {
-        isolate->ThrowException(v8::Exception::TypeError(MakeConstructorError(isolate,
-                                                                              "Illegal constructor")));
+        // If `NativeConstructorRequired` is true, only allow native construction
+        if (T::NativeConstructorRequired())
+        {
+          isolate->ThrowException(v8::Exception::TypeError(MakeConstructorError(isolate,
+                                                                                "Illegal constructor")));
+          return;
+        }
+        instance = new T(isolate, args);
       }
+      else
+      {
+        // Use the default constructor
+        instance = new T(isolate);
+      }
+      assert(instance != nullptr && "Failed to create instance");
 
       // Delete the constructing context if it was created
       if (constructingContext != nullptr)
         delete constructingContext;
-      // TODO(yorkie): support call parent's JavaScript constructor?
-
-      T *instance = new T(isolate, args);
-      assert(instance != nullptr && "Failed to create instance");
 
       auto jsThis = args.This();
       Wrap(isolate, jsThis, instance);

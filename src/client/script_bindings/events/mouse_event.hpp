@@ -22,6 +22,8 @@ namespace script_bindings::event_bindings
    */
   class MouseEvent : public MouseEventBase
   {
+    using MouseEventBase::ObjectWrap;
+
   public:
     static std::string Name()
     {

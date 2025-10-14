@@ -24,6 +24,7 @@ namespace script_bindings::canvas_bindings
 
     // Paths
     InstanceMethod(isolate, prototype, "beginPath", &CanvasRenderingContext2D::BeginPath);
+    InstanceMethod(isolate, prototype, "closePath", &CanvasRenderingContext2D::ClosePath);
     InstanceMethod(isolate, prototype, "moveTo", &CanvasRenderingContext2D::MoveTo);
     InstanceMethod(isolate, prototype, "lineTo", &CanvasRenderingContext2D::LineTo);
     InstanceMethod(isolate, prototype, "bezierCurveTo", &CanvasRenderingContext2D::BezierCurveTo);
@@ -52,6 +53,15 @@ namespace script_bindings::canvas_bindings
     // State management
     InstanceMethod(isolate, prototype, "save", &CanvasRenderingContext2D::Save);
     InstanceMethod(isolate, prototype, "restore", &CanvasRenderingContext2D::Restore);
+
+    // Line dash
+    InstanceAccessor(isolate,
+                     instance,
+                     "lineDashOffset",
+                     &CanvasRenderingContext2D::LineDashOffsetGetter,
+                     &CanvasRenderingContext2D::LineDashOffsetSetter);
+    InstanceMethod(isolate, prototype, "getLineDash", &CanvasRenderingContext2D::GetLineDash);
+    InstanceMethod(isolate, prototype, "setLineDash", &CanvasRenderingContext2D::SetLineDash);
 
     // Properties
     InstanceReadonlyAccessor(isolate, instance, "canvas", &CanvasRenderingContext2D::CanvasGetter);
@@ -258,6 +268,15 @@ namespace script_bindings::canvas_bindings
     HandleScope scope(isolate);
 
     handle()->beginPath();
+    args.GetReturnValue().SetUndefined();
+  }
+
+  void CanvasRenderingContext2D::ClosePath(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    handle()->closePath();
     args.GetReturnValue().SetUndefined();
   }
 
@@ -612,16 +631,34 @@ namespace script_bindings::canvas_bindings
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
 
-    if (args.Length() < 2)
+    if (args.Length() < 1)
     {
       isolate->ThrowException(Exception::TypeError(
-        MakeMethodArgCountError(isolate, "createImageData", 2, args.Length())));
+        MakeMethodArgCountError(isolate, "createImageData", 1, args.Length())));
       return;
     }
 
     Local<Context> context = isolate->GetCurrentContext();
-    auto width = args[0]->ToNumber(context).ToLocalChecked()->Value();
-    auto height = args[1]->ToNumber(context).ToLocalChecked()->Value();
+    int width, height;
+
+    if (args.Length() == 1)
+    {
+      if (!ImageData::IsInstanceOf(isolate, args[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "createImageData", 0, "ImageData", args[0])));
+        return;
+      }
+      auto imageDataBinding = ImageData::Unwrap(isolate, args[0].As<Object>());
+      auto imageDataHandle = imageDataBinding->handle();
+      width = imageDataHandle->width();
+      height = imageDataHandle->height();
+    }
+    else
+    {
+      width = args[0]->ToNumber(context).ToLocalChecked()->Value();
+      height = args[1]->ToNumber(context).ToLocalChecked()->Value();
+    }
 
     if (width <= 0 || height <= 0)
     {
@@ -630,7 +667,7 @@ namespace script_bindings::canvas_bindings
       return;
     }
 
-    auto imageData = handle()->createImageData(static_cast<int>(width), static_cast<int>(height));
+    auto imageData = handle()->createImageData(width, height);
     args.GetReturnValue().Set(ImageData::NewInstance(isolate, imageData));
   }
 
@@ -720,6 +757,82 @@ namespace script_bindings::canvas_bindings
     handle()->restore();
     args.GetReturnValue().SetUndefined();
   }
+
+  void CanvasRenderingContext2D::LineDashOffsetGetter(const PropertyCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "lineDashOffset", "Not implemented")));
+  }
+
+  void CanvasRenderingContext2D::LineDashOffsetSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (!value->IsNumber())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8Literal(isolate, "lineDashOffset must be a number")));
+      return;
+    }
+
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "lineDashOffset", "Not implemented")));
+  }
+
+  void CanvasRenderingContext2D::GetLineDash(const FunctionCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    auto lineDash = handle()->getLineDash();
+    Local<Array> result = Array::New(isolate, lineDash.size());
+    for (size_t i = 0; i < lineDash.size(); ++i)
+    {
+      result->Set(context,
+                  static_cast<uint32_t>(i),
+                  Number::New(isolate, lineDash[i]))
+        .Check();
+    }
+    info.GetReturnValue().Set(result);
+  }
+
+  void CanvasRenderingContext2D::SetLineDash(const FunctionCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (info.Length() < 1 || !info[0]->IsArray())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8Literal(isolate, "setLineDash requires an array of numbers")));
+      return;
+    }
+
+    Local<Context> context = isolate->GetCurrentContext();
+    Local<Array> dashArray = info[0].As<Array>();
+    std::vector<float> segments;
+
+    for (uint32_t i = 0; i < dashArray->Length(); ++i)
+    {
+      Local<Value> element = dashArray->Get(context, i).ToLocalChecked();
+      if (!element->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8Literal(isolate, "setLineDash array must contain only numbers")));
+        return;
+      }
+      segments.push_back(element->ToNumber(context).ToLocalChecked()->Value());
+    }
+
+    handle()->setLineDash(segments);
+    info.GetReturnValue().SetUndefined();
+  }
+
 
   // Property getters/setters
   void CanvasRenderingContext2D::CanvasGetter(const PropertyCallbackInfo<Value> &info)

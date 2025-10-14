@@ -16,6 +16,8 @@ namespace script_bindings
 
     class HTMLDivElement : public HTMLDivElementBase
     {
+      using HTMLDivElementBase::ObjectWrap;
+
     public:
       /**
        * The name of the HTMLDivElement class for V8.

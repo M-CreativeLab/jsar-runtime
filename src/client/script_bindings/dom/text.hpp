@@ -21,6 +21,8 @@ namespace script_bindings
      */
     class Text : public TextBase
     {
+      using TextBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

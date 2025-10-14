@@ -95,6 +95,7 @@ namespace canvas
     void stroke();
     void strokeRect(float x, float y, float width, float height);
     void clearRect(float x, float y, float width, float height);
+    const std::vector<float> &getLineDash();
     void setLineDash(const std::vector<float> &segments);
     void beginPath();
     void closePath();

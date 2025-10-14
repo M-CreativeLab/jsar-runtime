@@ -14,6 +14,8 @@ namespace script_bindings
 
     class HTMLHtmlElement : public HTMLHtmlElementBase
     {
+      using HTMLHtmlElementBase::ObjectWrap;
+
     public:
       /**
        * The name of the HTMLHtmlElement class for V8.

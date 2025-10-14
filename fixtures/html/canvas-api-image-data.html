@@ -110,6 +110,9 @@
       console.log('Testing createImageData operations...');
 
       try {
+        const f = new ImageData(100, 50); // Basic check to ensure ImageData constructor works
+        console.info(f);
+
         // Create blank image data
         const imageData1 = ctx.createImageData(100, 50);
         console.log('Created ImageData 100x50:', imageData1);

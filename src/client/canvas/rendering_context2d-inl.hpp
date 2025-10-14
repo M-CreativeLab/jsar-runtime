@@ -435,6 +435,12 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  const std::vector<float> &CanvasRenderingContext2D<CanvasType>::getLineDash()
+  {
+    return lineDash;
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::setLineDash(const std::vector<float> &segments)
   {
     auto count = segments.size();

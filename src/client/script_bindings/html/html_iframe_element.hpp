@@ -14,6 +14,8 @@ namespace script_bindings
 
     class HTMLIframeElement : public HTMLIframeElementBase
     {
+      using HTMLIframeElementBase::ObjectWrap;
+
     public:
       /**
        * The name of the HTMLIframeElement class for V8.

@@ -19,6 +19,8 @@ namespace script_bindings
      */
     class Path2D : public Path2DBase
     {
+      using Path2DBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

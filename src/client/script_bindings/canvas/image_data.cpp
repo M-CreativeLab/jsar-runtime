@@ -11,21 +11,20 @@ namespace script_bindings
     void ImageData::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
 
       // Properties (read-only)
-      InstanceReadonlyAccessor(isolate, instanceTemplate, "width", &ImageData::WidthGetter);
-      InstanceReadonlyAccessor(isolate, instanceTemplate, "height", &ImageData::HeightGetter);
-      InstanceReadonlyAccessor(isolate, instanceTemplate, "data", &ImageData::DataGetter);
-      InstanceReadonlyAccessor(isolate, instanceTemplate, "colorSpace", &ImageData::ColorSpaceGetter);
+      InstanceReadonlyAccessor(isolate, instance, "width", &ImageData::WidthGetter);
+      InstanceReadonlyAccessor(isolate, instance, "height", &ImageData::HeightGetter);
+      InstanceReadonlyAccessor(isolate, instance, "data", &ImageData::DataGetter);
+      InstanceReadonlyAccessor(isolate, instance, "colorSpace", &ImageData::ColorSpaceGetter);
     }
 
-    Local<Object> ImageData::NewInstance(Isolate *isolate, shared_ptr<::canvas::ImageData> nativeImageData)
+    Local<Object> ImageData::NewInstance(Isolate *isolate, shared_ptr<::canvas::ImageData> imageData)
     {
       EscapableHandleScope scope(isolate);
-      return nativeImageData == nullptr
-               ? scope.Escape(Local<Object>())
-               : scope.Escape(ImageDataBase::NewInstance(isolate, nativeImageData).As<Object>());
+      assert(imageData != nullptr && "ImageData requires a valid native ImageData instance");
+      return scope.Escape(ImageDataBase::NewInstance(isolate, imageData).As<Object>());
     }
 
     Local<Object> ImageData::NewInstance(Isolate *isolate, int width, int height, const string &colorSpace)
@@ -37,116 +36,118 @@ namespace script_bindings
     ImageData::ImageData(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : ImageDataBase(isolate, args)
     {
-      // Constructor implementation
-      if (args.Length() >= 2 && args[0]->IsNumber() && args[1]->IsNumber())
-      {
-        int width = args[0]->Int32Value(isolate->GetCurrentContext()).FromJust();
-        int height = args[1]->Int32Value(isolate->GetCurrentContext()).FromJust();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-        string colorSpace = "srgb";
-        if (args.Length() >= 3 && args[2]->IsString())
-        {
-          String::Utf8Value colorSpaceValue(isolate, args[2]);
-          colorSpace = *colorSpaceValue;
-        }
-        // auto nativeImageData = make_shared<::canvas::ImageData>(width, height, colorSpace);
-        // SetNativeInstance(nativeImageData);
+      if (args.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeConstructorError(isolate, "Requires at least 2 arguments")));
+        return;
       }
-      else if (args.Length() >= 3 && args[0]->IsUint8Array() && args[1]->IsNumber() && args[2]->IsNumber())
-      {
-        // Constructor with Uint8Array data
-        Local<Uint8Array> dataArray = args[0].As<Uint8Array>();
-        int width = args[1]->Int32Value(isolate->GetCurrentContext()).FromJust();
-        int height = args[2]->Int32Value(isolate->GetCurrentContext()).FromJust();
 
-        string colorSpace = "srgb";
-        if (args.Length() >= 4 && args[3]->IsString())
+      // TODO(yorkie): support colorSpace argument
+      string colorSpace = "srgb";
+
+      auto firstArg = args[0];
+      if (firstArg->IsNumber() && args[1]->IsNumber())
+      {
+        int width = firstArg->ToNumber(context).ToLocalChecked()->Value();
+        int height = args[1]->ToNumber(context).ToLocalChecked()->Value();
+        setData(make_shared<::canvas::ImageData>(width, height, colorSpace));
+      }
+      else if (firstArg->IsUint8ClampedArray() || firstArg->IsFloat32Array())
+      {
+        vector<char> dataArray;
         {
-          String::Utf8Value colorSpaceValue(isolate, args[3]);
-          colorSpace = *colorSpaceValue;
+          auto data = firstArg.As<TypedArray>();
+          auto buffer = data->Buffer();
+          if (buffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeConstructorError(isolate, "Invalid Uint8ClampedArray or Float32Array")));
+            return;
+          }
+          char *dataPtr = static_cast<char *>(buffer->GetBackingStore()->Data()) + data->ByteOffset();
+          size_t length = data->ByteLength();
+          dataArray.assign(dataPtr, dataPtr + length);
         }
 
-        // Create ImageData with provided data
-        // auto nativeImageData = make_shared<::canvas::ImageData>(width, height, colorSpace);
-        // TODO: Copy data from Uint8Array to native ImageData
-        // SetNativeInstance(nativeImageData);
+        int width = args[1]->ToNumber(context).ToLocalChecked()->Value();
+        if (width <= 0)
+        {
+          isolate->ThrowException(Exception::RangeError(
+            String::NewFromUtf8Literal(isolate, "Width must be a positive number")));
+          return;
+        }
+
+        int height;
+        if (args.Length() >= 3 && args[2]->IsNumber())
+        {
+          height = args[2]->ToNumber(context).ToLocalChecked()->Value();
+        }
+        else
+        {
+          // Infer height from data length
+          height = static_cast<int>(dataArray.size()) / (width * 4);
+        }
+        setData(make_shared<::canvas::ImageData>(dataArray, width, height, colorSpace));
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeConstructorError(isolate, "Invalid argument types")));
+        return;
       }
     }
 
     void ImageData::WidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(isolate, info.This());
-
-      if (imageData && imageData->handle())
-      {
-        int width = imageData->handle()->width();
-        info.GetReturnValue().Set(Number::New(isolate, width));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(Number::New(isolate, handle()->width()));
     }
 
     void ImageData::HeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(isolate, info.This());
-
-      if (imageData && imageData->handle())
-      {
-        int height = imageData->handle()->height();
-        info.GetReturnValue().Set(Number::New(isolate, height));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(Number::New(isolate, handle()->height()));
     }
 
     void ImageData::DataGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(isolate, info.This());
+      HandleScope scope(isolate);
 
-      if (imageData && imageData->handle())
+      if (data_value_handle_.IsEmpty())
       {
-        // TODO: Return Uint8ClampedArray with image data
-        // For now, return an empty Uint8ClampedArray
-        size_t dataLength = imageData->handle()->width() * imageData->handle()->height() * 4;
-        Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, dataLength);
-        Local<Uint8ClampedArray> dataArray = Uint8ClampedArray::New(buffer, 0, dataLength);
-        info.GetReturnValue().Set(dataArray);
+        void *data = handle()->addr();
+        size_t size = handle()->computeByteSize();
+
+        auto backing_deleter = [](void *data, size_t length, void *deleterData)
+        {
+          // Do nothing, as the memory is managed by `ImageData` class itself
+        };
+        shared_ptr<BackingStore> backing = ArrayBuffer::NewBackingStore(data, size, backing_deleter, nullptr);
+        auto arrayBuffer = v8::ArrayBuffer::New(isolate, backing);
+
+        // TODO(yorkie): Support Float32Array for rgba-float16
+        auto uint8ClampedArray = Uint8ClampedArray::New(arrayBuffer, 0, size);
+        data_value_handle_.Reset(isolate, uint8ClampedArray);
       }
-      else
-      {
-        Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, 0);
-        Local<Uint8ClampedArray> dataArray = Uint8ClampedArray::New(buffer, 0, 0);
-        info.GetReturnValue().Set(dataArray);
-      }
+
+      // Returns the cached typed array
+      info.GetReturnValue().Set(data_value_handle_.Get(isolate));
     }
 
     void ImageData::ColorSpaceGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(isolate, info.This());
+      HandleScope scope(isolate);
 
-      string colorSpaceStr = "srgb"; // Default to "srgb"
-      if (imageData && imageData->handle())
-      {
-        SkColorSpace *colorSpace = imageData->handle()->colorSpace();
-        if (colorSpace)
-        {
-          if (colorSpace->isSRGB())
-            colorSpaceStr = "srgb";
-          else if (colorSpace->gammaIsLinear())
-            colorSpaceStr = "linear";
-          else
-            colorSpaceStr = "custom"; // Fallback for unsupported color spaces
-        }
-      }
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, colorSpaceStr.c_str()).ToLocalChecked());
+      const string &colorSpace = handle()->colorSpaceName();
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, colorSpace.c_str()).ToLocalChecked());
     }
   }
 }

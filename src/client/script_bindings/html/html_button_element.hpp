@@ -21,6 +21,8 @@ namespace script_bindings
      */
     class HTMLButtonElement : public HTMLButtonElementBase
     {
+      using HTMLButtonElementBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

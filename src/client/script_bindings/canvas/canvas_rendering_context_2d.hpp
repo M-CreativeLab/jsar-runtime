@@ -113,9 +113,14 @@ namespace script_bindings
       void Save(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Restore(const v8::FunctionCallbackInfo<v8::Value> &info);
 
+      // Line Dash
+      void LineDashOffsetGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void LineDashOffsetSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void GetLineDash(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetLineDash(const v8::FunctionCallbackInfo<v8::Value> &info);
+
       // Canvas element property
       void CanvasGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-
       void LineWidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void LineWidthSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
       void LineCapGetter(const v8::PropertyCallbackInfo<v8::Value> &info);

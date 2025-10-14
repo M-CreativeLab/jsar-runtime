@@ -14,6 +14,8 @@ namespace script_bindings
 
     class HTMLParagraphElement : public HTMLParagraphElementBase
     {
+      using HTMLParagraphElementBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

@@ -18,6 +18,8 @@ namespace scripting_base
   template <typename T, typename ValueType>
   class Iterator : public ObjectWrap<T>
   {
+    using ObjectWrap<T>::ObjectWrap;
+
   public:
     static std::string Name()
     {
@@ -151,6 +153,8 @@ namespace scripting_base
   template <typename T, typename ValueType>
   class Iterable : public Iterator<T, ValueType>
   {
+    using Iterator<T, ValueType>::Iterator;
+
   public:
     /**
      * Creates a new instance of the Iterable class.

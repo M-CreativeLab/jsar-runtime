@@ -36,6 +36,11 @@ namespace script_bindings
                             FunctionTemplate::New(isolate, Clear));
     }
 
+    Console::Console(Isolate *isolate)
+        : scripting_base::ObjectWrap<Console, void>(isolate)
+    {
+    }
+
     Console::Console(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : scripting_base::ObjectWrap<Console, void>(isolate, args)
     {

@@ -23,7 +23,13 @@ namespace scripting_base
     return local;
   }
 
-  inline napi_value Value(v8::Local<v8::Value> v8Value)
+  /**
+   * Converts a V8 Local value to a N-API value, this value must be created from the Node.js Context.
+   * 
+   * @param v8Value The V8 Local value
+   * @returns The N-API value
+   */
+  inline napi_value ToNapiValue(v8::Local<v8::Value> v8Value)
   {
     napi_value napiValue;
     memcpy(&napiValue, &v8Value, sizeof(v8Value));

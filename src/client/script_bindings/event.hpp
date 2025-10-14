@@ -19,6 +19,8 @@ namespace script_bindings
    */
   class Event : public EventBase
   {
+    using EventBase::ObjectWrap;
+
   public:
     /**
      * The name of the Event class for V8.

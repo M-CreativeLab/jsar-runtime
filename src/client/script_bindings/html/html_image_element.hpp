@@ -14,6 +14,8 @@ namespace script_bindings
 
     class HTMLImageElement : public HTMLImageElementBase
     {
+      using HTMLImageElementBase::ObjectWrap;
+
     public:
       /**
        * The name of the HTMLImageElement class for V8.

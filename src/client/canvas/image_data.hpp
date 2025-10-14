@@ -34,23 +34,23 @@ namespace canvas
     }
 
   public:
-    inline SkColorSpace *colorSpace()
+    inline SkColorSpace *colorSpace() const
     {
       return pixmap.colorSpace();
     }
-    inline std::string colorSpaceName()
+    inline std::string colorSpaceName() const
     {
       return colorSpaceName_;
     }
-    inline void *addr()
+    inline void *addr() const
     {
       return pixmap.writable_addr();
     }
-    inline size_t rowBytes()
+    inline size_t rowBytes() const
     {
       return pixmap.rowBytes();
     }
-    inline size_t computeByteSize()
+    inline size_t computeByteSize() const
     {
       return pixmap.computeByteSize();
     }

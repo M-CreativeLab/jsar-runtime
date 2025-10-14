@@ -21,6 +21,8 @@ namespace script_bindings
      */
     class Element : public ElementBase
     {
+      using ElementBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

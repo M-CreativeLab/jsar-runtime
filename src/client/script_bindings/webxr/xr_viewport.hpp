@@ -20,6 +20,8 @@ namespace script_bindings
      */
     class XRViewport : public XRViewportBase
     {
+      using XRViewportBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

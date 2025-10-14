@@ -14,6 +14,8 @@ namespace script_bindings
 
     class HTMLHeadingElement : public HTMLHeadingElementBase
     {
+      using HTMLHeadingElementBase::ObjectWrap;
+
     public:
       /**
        * The name of the HTMLHeadingElement class for V8.

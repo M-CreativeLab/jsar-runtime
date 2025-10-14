@@ -20,6 +20,8 @@ namespace script_bindings
      */
     class Comment : public CommentBase
     {
+      using CommentBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

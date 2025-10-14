@@ -20,9 +20,12 @@ namespace script_bindings::dom_bindings
     virtual void unset(const std::string &key) = 0;
   };
 
-  class DOMStringMap : public scripting_base::ObjectWrap<DOMStringMap, DOMStringMapSource>
+  class DOMStringMap;
+  using DOMStringMapBase = scripting_base::ObjectWrap<DOMStringMap, DOMStringMapSource>;
+
+  class DOMStringMap : public DOMStringMapBase
   {
-    using Base = scripting_base::ObjectWrap<DOMStringMap, DOMStringMapSource>;
+    using DOMStringMapBase::ObjectWrap;
 
   public:
     static std::string Name()
@@ -66,14 +69,14 @@ namespace script_bindings::dom_bindings
       }
       else
       {
-        v8::Local<v8::Object> instance = Base::NewInstance(isolate, base_source);
+        v8::Local<v8::Object> instance = DOMStringMapBase::NewInstance(isolate, base_source);
         return scope.Escape(instance);
       }
     }
 
   public:
     DOMStringMap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-        : Base(isolate, args)
+        : DOMStringMapBase(isolate, args)
     {
     }
 

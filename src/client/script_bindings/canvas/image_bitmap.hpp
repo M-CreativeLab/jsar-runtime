@@ -19,6 +19,8 @@ namespace script_bindings
      */
     class ImageBitmap : public ImageBitmapBase
     {
+      using ImageBitmapBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

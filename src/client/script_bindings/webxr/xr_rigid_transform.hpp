@@ -20,6 +20,8 @@ namespace script_bindings
      */
     class XRRigidTransform : public XRRigidTransformBase
     {
+      using XRRigidTransformBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

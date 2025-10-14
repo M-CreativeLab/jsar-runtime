@@ -20,6 +20,8 @@ namespace script_bindings
      */
     class DocumentFragment : public DocumentFragmentBase
     {
+      using DocumentFragmentBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

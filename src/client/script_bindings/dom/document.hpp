@@ -21,6 +21,7 @@ namespace script_bindings
      */
     class Document : public DocumentBase
     {
+      using DocumentBase::ObjectWrap;
 
     public:
       /**

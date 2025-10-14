@@ -20,6 +20,8 @@ namespace script_bindings
      */
     class XRHand : public XRHandBase
     {
+      using XRHandBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
