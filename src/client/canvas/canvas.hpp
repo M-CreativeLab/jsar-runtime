@@ -7,7 +7,7 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
-#include <client/scripting_base/v8_object_holder.hpp>
+#include <client/dom/dom_event_target.hpp>
 
 #include "./rendering_context.hpp"
 #include "./image_source.hpp"
@@ -22,7 +22,7 @@ namespace canvas
    */
   template <typename T>
   class CanvasBase : public ImageSource,
-                     public scripting_base::JSObjectHolder,
+                     public dom::DOMEventTarget,
                      public std::enable_shared_from_this<T>
   {
   public:
@@ -39,12 +39,14 @@ namespace canvas
     CanvasBase(std::optional<int> width = std::nullopt,
                std::optional<int> height = std::nullopt)
         : ImageSource()
+        , dom::DOMEventTarget()
         , widthToSet(width.has_value() ? static_cast<uint32_t>(width.value()) : DEFAULT_CANVAS_WIDTH)
         , heightToSet(height.has_value() ? static_cast<uint32_t>(height.value()) : DEFAULT_CANVAS_HEIGHT)
         , bitmap_(std::make_shared<SkBitmap>())
     {
       resetSkSurface();
     }
+    virtual ~CanvasBase() = default;
 
   public:
     /**

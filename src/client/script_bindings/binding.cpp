@@ -48,10 +48,11 @@
 #include "./html/html_video_element.hpp"
 
 // Canvas bindings
-#include "./canvas/canvas.hpp"
 #include "./canvas/image_bitmap.hpp"
 #include "./canvas/image_data.hpp"
 #include "./canvas/canvas_rendering_context_2d.hpp"
+#include "./canvas/canvas.hpp"
+#include "./canvas/offscreen_canvas_rendering_context_2d.hpp"
 #include "./canvas/path2d.hpp"
 
 // WebGL bindings
@@ -127,10 +128,11 @@ namespace script_bindings
 #define ADD_CANVAS_TYPE(X) \
   global->Set(context, NAME(#X), canvas_bindings::X::Initialize(isolate)).Check();
     {
-      ADD_CANVAS_TYPE(OffscreenCanvas)
       ADD_CANVAS_TYPE(ImageBitmap)
       ADD_CANVAS_TYPE(ImageData)
       ADD_CANVAS_TYPE(CanvasRenderingContext2D)
+      ADD_CANVAS_TYPE(OffscreenCanvas)
+      ADD_CANVAS_TYPE(OffscreenCanvasRenderingContext2D)
       ADD_CANVAS_TYPE(Path2D)
     }
 #undef ADD_CANVAS_TYPE

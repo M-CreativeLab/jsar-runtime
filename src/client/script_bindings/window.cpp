@@ -1,4 +1,7 @@
 #include <memory>
+#include <client/scripting_base/threadsafe_function.hpp>
+#include <client/scripting_base/v8_utils.hpp>
+
 #include "./window.hpp"
 #include "./location.hpp"
 #include "./navigator.hpp"
@@ -234,16 +237,39 @@ namespace script_bindings
     info.GetReturnValue().SetNull();
   }
 
-  void Window::RequestAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info)
+  void Window::RequestAnimationFrame(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    auto callback = [](uint32_t time)
+    Local<Function> callback = info[0].As<Function>();
+    scripting_base::ThreadSafeFunction *tsfn = new scripting_base::ThreadSafeFunction(isolate, info.This(), callback);
+
+    auto frame_callback = [tsfn](uint32_t time)
     {
-      cout << "Animation frame at time: " << time << " ms" << endl;
+      auto custom_call = [time](Isolate *isolate,
+                                Local<Value> recv,
+                                Local<Function> callback)
+      {
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+        Local<Value> argv[] = {Number::New(isolate, time)};
+
+        TryCatch try_catch(isolate);
+        auto r = callback->Call(context, recv, 1, argv);
+        if (r.IsEmpty() || try_catch.HasCaught())
+        {
+          string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
+          cerr << "Failed to execute frame callback at 'Window': " << message << endl;
+        }
+        else
+        {
+          r.ToLocalChecked();
+        }
+      };
+      tsfn->nonBlockingCall(custom_call);
     };
-    auto frame_handle = handle()->requestAnimationFrame(callback);
+    auto frame_handle = handle()->requestAnimationFrame(frame_callback);
     info.GetReturnValue().Set(Integer::New(isolate, frame_handle));
   }
 

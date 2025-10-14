@@ -20,5 +20,6 @@ namespace dom
   {
   public:
     DOMEventTarget() = default;
+    virtual ~DOMEventTarget() = default;
   };
 }

@@ -33,6 +33,10 @@
     window.open('http://www.example.com', '_blankClassic');
     console.info(window);
 
+    window.requestAnimationFrame((timestamp) => {
+      console.info('requestAnimationFrame callback, timestamp:', timestamp);
+    });
+
     window['foo'] = 1;
   </script>
   <script>
