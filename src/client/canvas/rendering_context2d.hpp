@@ -107,6 +107,7 @@ namespace canvas
     TextMetrics measureText(const std::string &text);
     void transform(float a, float b, float c, float d, float e, float f);
     void setTransform(float a, float b, float c, float d, float e, float f);
+    void resetTransform();
     void scale(float sx, float sy);
     void rotate(float angle);
     void translate(float tx, float ty);
@@ -168,7 +169,7 @@ namespace canvas
     TextAlign textAlign = TextAlign::Start;
     TextBaseline textBaseline = TextBaseline::Alphabetic;
 
-  private: // style
+  public: // style
     SkColor fillStyle = SK_ColorBLACK;
     SkColor strokeStyle = SK_ColorBLACK;
 

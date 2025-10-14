@@ -576,6 +576,13 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::resetTransform()
+  {
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->resetMatrix();
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::scale(float sx, float sy)
   {
     if (TR_LIKELY(skCanvas != nullptr))

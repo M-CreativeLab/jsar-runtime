@@ -295,7 +295,6 @@ namespace script_bindings
     handle()->cancelAnimationFrame(frame_handle);
   }
 
-
   void Window::CreateImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
