@@ -22,12 +22,6 @@ namespace script_bindings
   {
   public:
     EventListenersList() = default;
-    ~EventListenersList()
-    {
-      for (auto &listener : *this)
-        listener->Reset();
-      this->clear();
-    }
 
   public:
     size_t count() const;
@@ -69,6 +63,7 @@ namespace script_bindings
     void listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event);
     void setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners);
     void didDispatchPendingEvent();
+    void didDispatchEvent(v8::Isolate *isolate, std::shared_ptr<dom::Event> event);
 
     // Exposed Event methods
     void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);

@@ -13,23 +13,24 @@ namespace script_bindings
 {
   size_t EventListenersList::count() const
   {
-    return this->size();
+    return size();
   }
 
-  void EventListenersList::addListener(v8::Isolate *isolate, v8::Local<v8::Function> listener)
+  void EventListenersList::addListener(Isolate *isolate, Local<Function> listener)
   {
-    auto persistent = make_shared<v8::Global<v8::Function>>(isolate, listener);
-    this->emplace_back(persistent);
+    HandleScope scope(isolate);
+    auto persistent = make_shared<Global<Function>>(isolate, listener);
+    emplace_back(persistent);
   }
 
-  void EventListenersList::removeListener(v8::Isolate *isolate, v8::Local<v8::Function> listener)
+  void EventListenersList::removeListener(Isolate *isolate, Local<Function> listener)
   {
-    for (auto it = this->begin(); it != this->end();)
+    for (auto it = begin(); it != end();)
     {
       if (it->get()->Get(isolate) == listener)
       {
         it->get()->Reset();
-        it = this->erase(it);
+        it = erase(it);
       }
       else
       {
@@ -38,9 +39,9 @@ namespace script_bindings
     }
   }
 
-  void EventListenersList::dispatchEvent(v8::Isolate *isolate, v8::Local<Value> recv, shared_ptr<dom::Event> event)
+  void EventListenersList::dispatchEvent(Isolate *isolate, Local<Value> recv, shared_ptr<dom::Event> event)
   {
-    if (size() == 0 || event == nullptr)
+    if (count() == 0 || event == nullptr)
       return;
 
     HandleScope scope(isolate);
@@ -92,7 +93,7 @@ namespace script_bindings
     self->didDispatchPendingEvent();
   }
 
-  EventTarget::EventTarget(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+  EventTarget::EventTarget(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : EventTargetBase(isolate, args)
       , async_handle_(nullptr)
   {
@@ -152,11 +153,14 @@ namespace script_bindings
   void EventTarget::listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event)
   {
     shared_lock<shared_mutex> lock(event_listeners_mutex_);
+    string event_type = event->typeStr();
+
     if (event_listeners_.size() == 0 &&
         registered_event_types_.size() == 0)
+    {
       return;
+    }
 
-    string event_type = event->typeStr();
     bool is_event_registered = false;
     bool is_listener_found = false;
 
@@ -167,7 +171,7 @@ namespace script_bindings
       is_event_registered = true;
 
     // Check if there are listeners for the event type
-    auto listeners = event_listeners_.find(event_type);
+    const auto &listeners = event_listeners_.find(event_type);
     if (listeners != event_listeners_.end() &&
         listeners->second.count() > 0)
       is_listener_found = true;
@@ -175,7 +179,9 @@ namespace script_bindings
     // Skip if the event is neither registered nor has listeners
     if (!is_event_registered &&
         !is_listener_found)
+    {
       return;
+    }
 
     // Dispatch the event to the found listeners
     setPendingEventAndDispatch(event, listeners->second);
@@ -185,9 +191,8 @@ namespace script_bindings
   {
     if (this_thread::get_id() == creating_async_thread_id_)
     {
-      // Directly set and dispatch if on the same thread as async handle creation
-      pending_event_ = event;
-      didDispatchPendingEvent();
+      // Directly call if on the same thread as async handle creation
+      didDispatchEvent(current_isolate_, event);
     }
     else
     {
@@ -219,46 +224,57 @@ namespace script_bindings
 
     {
       Isolate::Scope isolate_scope(current_isolate_);
-      HandleScope handle_scope(current_isolate_);
-
-      Local<Context> context = current_isolate_->GetCurrentContext();
-      string event_type = pending_event_->typeStr();
-
-      // Dispatch the registered event first
-      if (matchRegisteredEvent(event_type))
-      {
-        Local<String> event_handler_name = String::NewFromUtf8(current_isolate_, ("on" + event_type).c_str())
-                                             .ToLocalChecked();
-        Local<Value> event_handler_val = This()->Get(context, event_handler_name).ToLocalChecked();
-        if (event_handler_val->IsFunction())
-        {
-          Local<Function> event_handler = event_handler_val.As<Function>();
-          Local<Object> event = Event::GetOrNewInstance(current_isolate_, pending_event_);
-          if (!event.IsEmpty())
-          {
-            Local<Value> argv[] = {event};
-            event_handler->Call(context, This(), 1, argv).ToLocalChecked();
-          }
-        }
-      }
-
-      // Dispatch the event to the listeners
-      {
-        // A copy of the found listeners to avoid holding the lock during dispatch
-        EventListenersList found_listeners;
-        {
-          shared_lock<shared_mutex> lock(event_listeners_mutex_);
-          auto listeners = event_listeners_.find(event_type);
-          if (listeners != event_listeners_.end())
-            found_listeners = listeners->second;
-        }
-
-        // Dispatch to the found listeners
-        found_listeners.dispatchEvent(current_isolate_, value(), pending_event_);
-      }
+      didDispatchEvent(current_isolate_, pending_event_);
     }
     pending_event_.reset();
     dispatch_cv_.notify_all();
+  }
+
+  void EventTarget::didDispatchEvent(Isolate *isolate, shared_ptr<dom::Event> event)
+  {
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+    string event_type = event->typeStr();
+
+    // Dispatch the registered event first
+    if (matchRegisteredEvent(event_type))
+    {
+      Local<String> event_handler_name = String::NewFromUtf8(isolate, ("on" + event_type).c_str())
+                                           .ToLocalChecked();
+      Local<Value> event_handler_val = This()->Get(context, event_handler_name).ToLocalChecked();
+      if (event_handler_val->IsFunction())
+      {
+        Local<Function> event_handler = event_handler_val.As<Function>();
+        Local<Object> event_object = Event::GetOrNewInstance(isolate, event);
+        if (!event_object.IsEmpty())
+        {
+          Local<Value> argv[] = {event_object};
+          // TODO(yorkie): Handle exceptions
+          event_handler->Call(context, This(), 1, argv).ToLocalChecked();
+        }
+      }
+    }
+
+    // Dispatch the event to the listeners
+    {
+      // A copy of the found listeners to avoid holding the lock during dispatch
+      EventListenersList found_listeners;
+      {
+        shared_lock<shared_mutex> lock(event_listeners_mutex_);
+        const auto &listeners = event_listeners_.find(event_type);
+        if (listeners != event_listeners_.end())
+        {
+          found_listeners = listeners->second;
+        }
+        else
+        {
+          cerr << "No listeners found for event type: " << event_type << endl;
+        }
+      }
+
+      // Dispatch to the found listeners
+      found_listeners.dispatchEvent(isolate, value(), event);
+    }
   }
 
   void EventTarget::AddEventListener(const FunctionCallbackInfo<Value> &info)
