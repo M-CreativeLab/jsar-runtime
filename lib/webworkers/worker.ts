@@ -1,11 +1,11 @@
 import path from 'node:path';
 import * as WorkerThreads from 'node:worker_threads';
-import { resolveObjectURL } from 'node:buffer';
+import { type Blob, resolveObjectURL } from 'node:buffer';
 
 export type WorkerRequest = {
   baseURI: string;
   requestUrl: string;
-  scriptSource?: Blob;
+  scriptSource?: Blob | undefined;
   options?: WorkerOptions;
 };
 

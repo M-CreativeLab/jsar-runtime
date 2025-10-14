@@ -22,6 +22,7 @@ namespace script_bindings
       Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
+      InstanceReadonlyAccessor(isolate, instance, "documentURI", &Document::DocumentURIGetter);
       InstanceReadonlyAccessor(isolate, instance, "documentElement", &Document::DocumentElementGetter);
       InstanceReadonlyAccessor(isolate, instance, "head", &Document::HeadGetter);
       InstanceAccessor(isolate, instance, "body", &Document::BodyGetter, &Document::BodySetter);
@@ -69,6 +70,17 @@ namespace script_bindings
 
     // Property getters and setters
 
+    void Document::DocumentURIGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto documentURI = handle()->documentURI();
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    documentURI.c_str())
+                                  .ToLocalChecked());
+    }
+
     void Document::DocumentElementGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -92,9 +104,15 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       auto bodyElement = handle()->body();
-      assert(bodyElement != nullptr && "Document::BodyGetter: bodyElement is null");
-      auto jsValue = html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement);
-      info.GetReturnValue().Set(jsValue);
+      if (bodyElement == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        auto jsValue = html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement);
+        info.GetReturnValue().Set(jsValue);
+      }
     }
 
     void Document::BodySetter(Local<Value> value, const PropertyCallbackInfo<void> &info)

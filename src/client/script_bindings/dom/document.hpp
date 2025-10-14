@@ -40,6 +40,13 @@ namespace script_bindings
 
     private:
       // Property getters
+      void CompatModeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ContentTypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DesignModeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DesignModeSetter(v8::Local<v8::Value> value,
+                            const v8::PropertyCallbackInfo<void> &info);
+
+      void DocumentURIGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void DocumentElementGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void BodyGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void BodySetter(v8::Local<v8::Value> value,

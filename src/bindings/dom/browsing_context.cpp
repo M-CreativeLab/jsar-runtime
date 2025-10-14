@@ -1,3 +1,4 @@
+#include <client/scripting_base/v8_utils.hpp>
 #include "./browsing_context.hpp"
 
 using namespace std;
@@ -81,9 +82,19 @@ namespace dombinding
         contextImpl->setBaseURI(doc->baseURI);
 
         // Make sure the scripting context is created.
-        contextImpl->scriptingContext->makeMainContext(doc, client_context_->window);
+        auto scriptingContext = contextImpl->scriptingContext;
+        scriptingContext->makeMainContext(doc, client_context_->window);
         contextImpl->open(doc);
-        return env.Undefined();
+
+        auto documentValue = scriptingContext->getGlobalProperty(v8::Isolate::GetCurrent(), "document");
+        if (documentValue.IsEmpty() || !documentValue->IsObject())
+        {
+          return env.Undefined();
+        }
+        else
+        {
+          return Napi::Value(env, scripting_base::ToNapiValue(documentValue));
+        }
       }
       catch (const exception &e)
       {

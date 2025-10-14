@@ -189,6 +189,11 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
+
+    inline std::string documentURI() const
+    {
+      return document_uri_;
+    }
     inline std::shared_ptr<HTMLHeadElement> head() const
     {
       return head_element_;
@@ -221,6 +226,7 @@ namespace dom
 
   protected:
     bool auto_connect_;
+    std::string document_uri_ = "about:blank";
     std::weak_ptr<browser::Window> default_view_;
     std::shared_ptr<pugi::xml_document> doc_internal_;
     std::shared_ptr<HTMLHeadElement> head_element_;

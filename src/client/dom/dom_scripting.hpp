@@ -161,6 +161,22 @@ namespace dom
     }
 
     /**
+     * Get the global object of the scripting context.
+     */
+    inline v8::Local<v8::Value> getGlobalProperty(v8::Isolate *isolate, const char *name) const
+    {
+      assert(!v8ContextHandle.IsEmpty() && "The V8 context is not initialized.");
+      v8::EscapableHandleScope scope(isolate);
+      v8::Local<v8::Context> context = v8ContextHandle.Get(isolate);
+
+      v8::Local<v8::Object> global = context->Global();
+      v8::Local<v8::Value> value;
+      if (global->Get(context, v8::String::NewFromUtf8(isolate, name).ToLocalChecked()).ToLocal(&value))
+        return scope.Escape(value);
+      return v8::Undefined(isolate);
+    }
+
+    /**
      * Enable the dynamic import for the script.
      *
      * Internally it will call `v8::Isolate`'s `SetHostImportModuleDynamicallyCallback` to set the dynamic import callback, it causes the
@@ -303,7 +319,7 @@ namespace dom
 
   private:
     v8::Isolate *isolate_;
-    v8::Global<v8::Context> v8ContextStore;
+    v8::Global<v8::Context> v8ContextHandle;
     v8::Persistent<v8::Object> windowHandle;
 
     std::shared_ptr<RuntimeContext> runtimeContext;

@@ -60,6 +60,9 @@ namespace dom
       cerr << "The URL: " << url << endl;
     }
 
+    // Set the document URI from the Node interface.
+    document_uri_ = baseURI;
+
     if (loadSource)
       browsingContext->fetchTextSourceResource(url, [this](const string &source)
                                                { setSource(source); });

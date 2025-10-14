@@ -190,15 +190,15 @@ namespace dom
                                             shared_ptr<browser::Window> nativeWindow)
   {
     assert(!isContextInitialized);
-    assert(v8ContextStore.IsEmpty());
+    assert(v8ContextHandle.IsEmpty() && "Each scripting context can only be initialized once.");
     assert(nativeDocument != nullptr && nativeDocument->isHTMLDocument() &&
            "The document must be an HTML document.");
     assert(nativeWindow != nullptr && "The window must not be null.");
 
-    auto mainContext = isolate_->GetCurrentContext();
+    auto hostContext = isolate_->GetCurrentContext();
     {
       Isolate::Scope isolateScope(isolate_);
-      Context::Scope contextScope(mainContext);
+      Context::Scope contextScope(hostContext);
       HandleScope handleScope(isolate_);
 
       // Initialize the Window firstly
@@ -262,7 +262,7 @@ namespace dom
   do                                                                                                                  \
   {                                                                                                                   \
     Local<Value> valueToSet;                                                                                          \
-    auto maybeValue = mainContext->Global()->Get(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
+    auto maybeValue = hostContext->Global()->Get(hostContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
     if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                                     \
     {                                                                                                                 \
       if (valueToSet->IsUndefined() || valueToSet->IsNull())                                                          \
@@ -318,8 +318,8 @@ namespace dom
 
       ContextEmbedderTag::TagMyContext(scriptingContext);
       scriptingContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
-      scriptingContext->SetSecurityToken(mainContext->GetSecurityToken());
-      v8ContextStore.Reset(isolate_, scriptingContext);
+      scriptingContext->SetSecurityToken(hostContext->GetSecurityToken());
+      v8ContextHandle.Reset(isolate_, scriptingContext);
     }
     isContextInitialized = true;
   }
@@ -327,7 +327,7 @@ namespace dom
   void DOMScriptingContext::makeWorkerContext()
   {
     assert(!isContextInitialized);
-    assert(v8ContextStore.IsEmpty());
+    assert(v8ContextHandle.IsEmpty());
     auto mainContext = isolate_->GetCurrentContext();
     {
       Isolate::Scope isolateScope(isolate_);
@@ -419,11 +419,11 @@ namespace dom
       workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal,
                                      External::New(isolate_, this));
       workerContext->SetSecurityToken(mainContext->GetSecurityToken());
-      v8ContextStore.Reset(isolate_, workerContext);
+      v8ContextHandle.Reset(isolate_, workerContext);
     }
 
     {
-      auto newContext = v8ContextStore.Get(isolate_);
+      auto newContext = v8ContextHandle.Get(isolate_);
       Context::Scope contextScope(newContext);
       HandleScope handleScope(isolate_);
       Local<Value> selfProxy = createWorkerSelfProxy(newContext);
@@ -465,7 +465,7 @@ namespace dom
     Isolate::Scope isolateScope(isolate_);
     HandleScope handleScope(isolate_);
 
-    Local<Context> context = v8ContextStore.Get(isolate_);
+    Local<Context> context = v8ContextHandle.Get(isolate_);
     Context::Scope contextScope(context);
 
     if (!script->compile(isolate_, source, isTypeScript))
@@ -488,7 +488,7 @@ namespace dom
     // Create a handle scope to store the context, that is a `Local<Context>`.
     EscapableHandleScope handleScope(isolate_);
 
-    Local<Context> context = v8ContextStore.Get(isolate_);
+    Local<Context> context = v8ContextHandle.Get(isolate_);
     Context::Scope contextScope(context);
 
     // Wrap the handler code in a function that accepts an event parameter
@@ -537,7 +537,7 @@ namespace dom
     Isolate::Scope isolateScope(isolate_);
     HandleScope handleScope(isolate_);
 
-    auto context = v8ContextStore.Get(isolate_);
+    auto context = v8ContextHandle.Get(isolate_);
     Context::Scope contextScope(context);
 
     if (!module->compileAsSyntheticModule(isolate_, type, sourceData, sourceByteLength))
@@ -554,7 +554,7 @@ namespace dom
     Isolate::Scope isolateScope(isolate_);
     HandleScope handleScope(isolate_);
 
-    Local<Context> context = v8ContextStore.Get(isolate_);
+    Local<Context> context = v8ContextHandle.Get(isolate_);
     Context::Scope contextScope(context);
     {
       script->evaluate(isolate_);
@@ -694,9 +694,9 @@ namespace dom
   bool DOMScriptingContext::dispatchEvent(Local<Object> event)
   {
     assert(isContextInitialized);
-    assert(!v8ContextStore.IsEmpty());
+    assert(!v8ContextHandle.IsEmpty());
 
-    auto context = v8ContextStore.Get(isolate_);
+    auto context = v8ContextHandle.Get(isolate_);
     Isolate::Scope isolateScope(isolate_);
     Context::Scope contextScope(context);
 
