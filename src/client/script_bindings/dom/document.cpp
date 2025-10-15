@@ -22,9 +22,13 @@ namespace script_bindings
       Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
+      InstanceReadonlyAccessor(isolate, instance, "compatMode", &Document::CompatModeGetter);
+      InstanceReadonlyAccessor(isolate, instance, "contentType", &Document::ContentTypeGetter);
       InstanceReadonlyAccessor(isolate, instance, "documentURI", &Document::DocumentURIGetter);
       InstanceReadonlyAccessor(isolate, instance, "documentElement", &Document::DocumentElementGetter);
       InstanceReadonlyAccessor(isolate, instance, "head", &Document::HeadGetter);
+
+      InstanceAccessor(isolate, instance, "designMode", &Document::DesignModeGetter, &Document::DesignModeSetter);
       InstanceAccessor(isolate, instance, "body", &Document::BodyGetter, &Document::BodySetter);
       InstanceAccessor(isolate, instance, "title", &Document::TitleGetter, &Document::TitleSetter);
 
@@ -70,7 +74,57 @@ namespace script_bindings
 
     // Property getters and setters
 
-    void Document::DocumentURIGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+    void Document::CompatModeGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto compatMode = handle()->compatMode;
+      switch (compatMode)
+      {
+      case dom::DocumentCompatMode::QUIRKS:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "BackCompat").ToLocalChecked());
+        break;
+      case dom::DocumentCompatMode::LIMITED_QUIRKS:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "LimitedQuirks").ToLocalChecked());
+        break;
+      case dom::DocumentCompatMode::NO_QUIRKS:
+      default:
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "CSS1Compat").ToLocalChecked());
+        break;
+      }
+    }
+
+    void Document::ContentTypeGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto contentType = handle()->contentType;
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    contentType.c_str())
+                                  .ToLocalChecked());
+    }
+
+    void Document::DesignModeGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      // TODO: Implement proper designMode retrieval logic
+      info.GetReturnValue().Set(false);
+    }
+
+    void Document::DesignModeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "designMode", "Setting designMode is not implemented")));
+    }
+
+    void Document::DocumentURIGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -158,7 +212,7 @@ namespace script_bindings
 
     // Methods
 
-    void Document::Append(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::Append(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -167,7 +221,7 @@ namespace script_bindings
         MakeMethodError(isolate, "append", "Not implemented")));
     }
 
-    void Document::AdoptNode(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::AdoptNode(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -176,7 +230,7 @@ namespace script_bindings
         MakeMethodError(isolate, "adoptNode", "Not implemented")));
     }
 
-    void Document::ImportNode(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::ImportNode(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -227,7 +281,7 @@ namespace script_bindings
       }
     }
 
-    void Document::CreateAttribute(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::CreateAttribute(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -236,7 +290,7 @@ namespace script_bindings
         MakeMethodError(isolate, "createAttribute", "Not implemented")));
     }
 
-    void Document::CreateAttributeNS(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::CreateAttributeNS(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -245,7 +299,7 @@ namespace script_bindings
         MakeMethodError(isolate, "createAttributeNS", "Not implemented")));
     }
 
-    void Document::CreateCDATASection(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::CreateCDATASection(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -254,7 +308,7 @@ namespace script_bindings
         MakeMethodError(isolate, "createCDATASection", "Not implemented")));
     }
 
-    void Document::CreateDocumentFragment(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::CreateDocumentFragment(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -522,7 +576,7 @@ namespace script_bindings
       }
     }
 
-    void Document::Close(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::Close(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -531,7 +585,7 @@ namespace script_bindings
         MakeMethodError(isolate, "close", "Not implemented")));
     }
 
-    void Document::Write(const v8::FunctionCallbackInfo<v8::Value> &info, bool newLine)
+    void Document::Write(const FunctionCallbackInfo<Value> &info, bool newLine)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -575,12 +629,12 @@ namespace script_bindings
       info.GetReturnValue().SetUndefined();
     }
 
-    void Document::Write(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::Write(const FunctionCallbackInfo<Value> &info)
     {
       Write(info, false);
     }
 
-    void Document::Writeln(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void Document::Writeln(const FunctionCallbackInfo<Value> &info)
     {
       Write(info, true);
     }

@@ -11,15 +11,10 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "detail").ToLocalChecked(),
-                                   DetailGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
+    InstanceReadonlyAccessor(isolate, prototype, "detail", &UIEvent::DetailGetter);
   }
 
   v8::Local<v8::Object> UIEvent::NewInstance(v8::Isolate *isolate,
@@ -31,19 +26,10 @@ namespace script_bindings::event_bindings
              : scope.Escape(UIEventBase::NewInstance(isolate, nativeEvent).As<Object>());
   }
 
-  void UIEvent::DetailGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+  void UIEvent::DetailGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    UIEvent *event = Unwrap(isolate, info.This());
-    if (event == nullptr || event->handle() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    // long detail = event->inner()->detail();
-    // info.GetReturnValue().Set(Number::New(isolate, detail));
+    info.GetReturnValue().SetUndefined();
   }
 }

@@ -37,6 +37,6 @@ namespace script_bindings::event_bindings
 
   private:
     // Property getters
-    static void DetailGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void DetailGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
   };
 }

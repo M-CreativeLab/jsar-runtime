@@ -5,6 +5,8 @@
 #include <client/scripting_base/v8_utils.hpp>
 #include <client/script_bindings/window.hpp>
 #include <client/script_bindings/dom/document.hpp>
+#include <client/script_bindings/events/all_events.hpp>
+#include <client/script_bindings/workers/worker_global_scope.hpp>
 #include <client/script_bindings/binding.hpp>
 
 #include "./dom_scripting.hpp"
@@ -216,6 +218,48 @@ namespace dom
         Local<Object> global = scriptingContext->Global();
         script_bindings::Window::MakeAndWrap(isolate_, global, nativeWindow);
 
+        /**
+         * Configure the global objects and functions.
+         */
+
+#define V8_SET_GLOBAL_FROM_VALUE(name, value)                             \
+  if (!global->Set(scriptingContext,                                      \
+                   String::NewFromUtf8(isolate_, #name).ToLocalChecked(), \
+                   value)                                                 \
+         .FromMaybe(false))                                               \
+    cerr << "Failed to set the global object(" << #name << ") for scripting v8::Context." << endl;
+
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                        \
+  try                                                                                                          \
+  {                                                                                                            \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                               \
+  }                                                                                                            \
+  catch (const exception &e)                                                                                   \
+  {                                                                                                            \
+    cerr << "Failed to set the global object(" << #name << ") for main context, reason: " << e.what() << endl; \
+  }
+
+#define V8_SET_GLOBAL_FROM_HOST(name)                                                                                 \
+  do                                                                                                                  \
+  {                                                                                                                   \
+    Local<Value> valueToSet;                                                                                          \
+    auto maybeValue = hostContext->Global()->Get(hostContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
+    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                                     \
+    {                                                                                                                 \
+      if (valueToSet->IsUndefined() || valueToSet->IsNull())                                                          \
+      {                                                                                                               \
+        cerr << "Warning: The global object(" << #name << ") is undefined or null in the main context." << endl;      \
+      }                                                                                                               \
+      else                                                                                                            \
+      {                                                                                                               \
+        V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                                   \
+      }                                                                                                               \
+    }                                                                                                                 \
+  } while (0)
+
+        // Dependents for the following globals
+        V8_SET_GLOBAL_FROM_HOST(__WorkerImpl);
+
         // Initialize the scripting context from script bindings
         script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);
 
@@ -241,24 +285,102 @@ namespace dom
                     document)
           .Check();
 
+        // Baisc objects
+        V8_SET_GLOBAL_FROM_HOST(performance);
+        V8_SET_GLOBAL_FROM_HOST(console);
+
+        // Basic constructors
+        V8_SET_GLOBAL_FROM_HOST(URL);
+        V8_SET_GLOBAL_FROM_HOST(Blob);
+        V8_SET_GLOBAL_FROM_HOST(FormData);
+        V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
+        V8_SET_GLOBAL_FROM_HOST(WebSocket);
+        V8_SET_GLOBAL_FROM_HOST(EventSource);
+        V8_SET_GLOBAL_FROM_HOST(TextDecoder);
+        V8_SET_GLOBAL_FROM_HOST(AbortController);
+        V8_SET_GLOBAL_FROM_HOST(AbortSignal);
+
+        // Global functions
+        V8_SET_GLOBAL_FROM_HOST(atob);
+        V8_SET_GLOBAL_FROM_HOST(btoa);
+        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(scriptingContext));
+        V8_SET_GLOBAL_FROM_HOST(setTimeout);
+        V8_SET_GLOBAL_FROM_HOST(clearTimeout);
+        V8_SET_GLOBAL_FROM_HOST(setInterval);
+        V8_SET_GLOBAL_FROM_HOST(clearInterval);
+        V8_SET_GLOBAL_FROM_HOST(queueMicrotask);
+
+        // Fetch API related objects
+        V8_SET_GLOBAL_FROM_HOST(Headers);
+        V8_SET_GLOBAL_FROM_HOST(Request);
+        V8_SET_GLOBAL_FROM_HOST(Response);
+
+#undef V8_SET_GLOBAL_FROM_HOST
+#undef V8_TRY_SET_GLOBAL_FROM_VALUE
+#undef V8_SET_GLOBAL_FROM_VALUE
+      }
+
+      ContextEmbedderTag::TagMyContext(scriptingContext);
+      scriptingContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
+      scriptingContext->SetSecurityToken(hostContext->GetSecurityToken());
+      v8ContextHandle.Reset(isolate_, scriptingContext);
+    }
+    isContextInitialized = true;
+  }
+
+  void DOMScriptingContext::makeWorkerContext()
+  {
+    assert(!isContextInitialized);
+    assert(v8ContextHandle.IsEmpty());
+
+    Isolate::Scope isolateScope(isolate_);
+    HandleScope handleScope(isolate_);
+    Local<Context> hostContext = isolate_->GetCurrentContext();
+    {
+      using namespace script_bindings;
+      Context::Scope contextScope(hostContext);
+
+      // Initialize the `WorkerGlobalScope` firstly
+      auto WorkerGlobalScope = workers_bindings::WorkerGlobalScope::Initialize(isolate_);
+      event_bindings::UIEvent::Initialize(isolate_);
+
+      // Initialize the `v8::Context`.
+      Local<Context> workerContext = Context::New(isolate_,
+                                                  nullptr,
+                                                  workers_bindings::WorkerGlobalScope::GetInstanceTemplate(isolate_));
+      assert(!workerContext.IsEmpty() && "Created v8::Context must not be empty.");
+      {
+        Context::Scope contextScope(workerContext);
+        HandleScope handleScope(isolate_);
+
+        // Setup the global object
+        Local<Object> global = workerContext->Global();
+        workers_bindings::WorkerGlobalScope::MakeAndWrap(isolate_,
+                                                         global,
+                                                         make_shared<client_workers::WorkerGlobalScope>());
+
+        /**
+         * Configure the global objects and functions.
+         */
+
 #define V8_SET_GLOBAL_FROM_VALUE(name, value)                             \
-  if (!global->Set(scriptingContext,                                      \
+  if (!global->Set(workerContext,                                         \
                    String::NewFromUtf8(isolate_, #name).ToLocalChecked(), \
                    value)                                                 \
          .FromMaybe(false))                                               \
-    cerr << "Failed to set the global object(" << #name << ") for scripting v8::Context." << endl;
+    cerr << "Failed to set the global object(" << #name << ") for worker v8::Context." << endl;
 
-#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                        \
-  try                                                                                                          \
-  {                                                                                                            \
-    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                               \
-  }                                                                                                            \
-  catch (const exception &e)                                                                                   \
-  {                                                                                                            \
-    cerr << "Failed to set the global object(" << #name << ") for main context, reason: " << e.what() << endl; \
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                          \
+  try                                                                                                            \
+  {                                                                                                              \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                 \
+  }                                                                                                              \
+  catch (const exception &e)                                                                                     \
+  {                                                                                                              \
+    cerr << "Failed to set the global object(" << #name << ") for worker context, reason: " << e.what() << endl; \
   }
 
-#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                                 \
+#define V8_SET_GLOBAL_FROM_HOST(name)                                                                                 \
   do                                                                                                                  \
   {                                                                                                                   \
     Local<Value> valueToSet;                                                                                          \
@@ -277,158 +399,67 @@ namespace dom
   } while (0)
 
         /**
-         * Configure the global objects and functions for the DOM scripting.
-         */
-
-        // Baisc objects
-        V8_SET_GLOBAL_FROM_MAIN(performance);
-        V8_SET_GLOBAL_FROM_MAIN(console);
-
-        // Basic constructors
-        V8_SET_GLOBAL_FROM_MAIN(URL);
-        V8_SET_GLOBAL_FROM_MAIN(Blob);
-        V8_SET_GLOBAL_FROM_MAIN(FormData);
-        V8_SET_GLOBAL_FROM_MAIN(XMLHttpRequest);
-        V8_SET_GLOBAL_FROM_MAIN(WebSocket);
-        V8_SET_GLOBAL_FROM_MAIN(EventSource);
-        V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
-        V8_SET_GLOBAL_FROM_MAIN(AbortController);
-        V8_SET_GLOBAL_FROM_MAIN(AbortSignal);
-        V8_SET_GLOBAL_FROM_MAIN(Worker);
-
-        // Global functions
-        V8_SET_GLOBAL_FROM_MAIN(atob);
-        V8_SET_GLOBAL_FROM_MAIN(btoa);
-        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(scriptingContext));
-        V8_SET_GLOBAL_FROM_MAIN(setTimeout);
-        V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
-        V8_SET_GLOBAL_FROM_MAIN(setInterval);
-        V8_SET_GLOBAL_FROM_MAIN(clearInterval);
-        V8_SET_GLOBAL_FROM_MAIN(queueMicrotask);
-
-        // Fetch API related objects
-        V8_SET_GLOBAL_FROM_MAIN(Headers);
-        V8_SET_GLOBAL_FROM_MAIN(Request);
-        V8_SET_GLOBAL_FROM_MAIN(Response);
-
-#undef V8_SET_GLOBAL_FROM_MAIN
-#undef V8_TRY_SET_GLOBAL_FROM_VALUE
-#undef V8_SET_GLOBAL_FROM_VALUE
-      }
-
-      ContextEmbedderTag::TagMyContext(scriptingContext);
-      scriptingContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
-      scriptingContext->SetSecurityToken(hostContext->GetSecurityToken());
-      v8ContextHandle.Reset(isolate_, scriptingContext);
-    }
-    isContextInitialized = true;
-  }
-
-  void DOMScriptingContext::makeWorkerContext()
-  {
-    assert(!isContextInitialized);
-    assert(v8ContextHandle.IsEmpty());
-    auto mainContext = isolate_->GetCurrentContext();
-    {
-      Isolate::Scope isolateScope(isolate_);
-      Context::Scope contextScope(mainContext);
-      HandleScope handleScope(isolate_);
-
-      Local<FunctionTemplate> globalFuncTemplate = FunctionTemplate::New(isolate_);
-      Local<ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
-
-      NamedPropertyHandlerConfiguration namedConfig(
-        PropertyGetterCallback,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        {},
-        PropertyHandlerFlags::kHasNoSideEffect);
-      globalObjectTemplate->SetHandler(namedConfig);
-
-      auto workerContext = Context::New(isolate_, nullptr, globalObjectTemplate);
-      auto global = mainContext->Global();
-      auto sandbox = Object::New(isolate_);
-      {
-#define V8_SET_GLOBAL_FROM_VALUE(name, value) \
-  sandbox->Set(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked(), value).FromJust()
-#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                          \
-  try                                                                                                            \
-  {                                                                                                              \
-    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                 \
-  }                                                                                                              \
-  catch (const exception &e)                                                                                     \
-  {                                                                                                              \
-    cerr << "Failed to set the global object(" << #name << ") for worker context, reason: " << e.what() << endl; \
-  }
-#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                  \
-  do                                                                                                   \
-  {                                                                                                    \
-    Local<Value> valueToSet;                                                                           \
-    auto maybeValue = global->Get(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
-    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                      \
-    {                                                                                                  \
-      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                      \
-    }                                                                                                  \
-  } while (0)
-
-        /**
          * Configure the WorkerGlobalScope objects and functions.
          *
          * See https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope
          */
 
+        // Private classes
+        V8_SET_GLOBAL_FROM_HOST(__WorkerImpl);
+
         // Update context globals from script bindings
-        // script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
+        script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
+
+        // Set the `WorkerGlobalScope` and `self` properties to refer to the global object itself
+        global->Set(workerContext,
+                    String::NewFromUtf8(isolate_, "WorkerGlobalScope").ToLocalChecked(),
+                    WorkerGlobalScope)
+          .Check();
+        global->Set(workerContext,
+                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
+                    global)
+          .Check();
 
         // Baisc objects
-        // Create custom console object with CDP integration using the Console binding
-        // V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate_, workerContext));
+        V8_SET_GLOBAL_FROM_HOST(performance);
+        V8_SET_GLOBAL_FROM_HOST(console);
 
         // Basic constructors
-        V8_SET_GLOBAL_FROM_MAIN(URL);
-        V8_SET_GLOBAL_FROM_MAIN(Blob);
-        V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
-        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
-        V8_SET_GLOBAL_FROM_MAIN(Worker);
+        V8_SET_GLOBAL_FROM_HOST(URL);
+        V8_SET_GLOBAL_FROM_HOST(Blob);
+        V8_SET_GLOBAL_FROM_HOST(FormData);
+        V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
+        V8_SET_GLOBAL_FROM_HOST(WebSocket);
+        V8_SET_GLOBAL_FROM_HOST(EventSource);
+        V8_SET_GLOBAL_FROM_HOST(TextDecoder);
+        V8_SET_GLOBAL_FROM_HOST(AbortController);
+        V8_SET_GLOBAL_FROM_HOST(AbortSignal);
 
         // Global functions
-        V8_SET_GLOBAL_FROM_MAIN(atob);
-        V8_SET_GLOBAL_FROM_MAIN(btoa);
+        V8_SET_GLOBAL_FROM_HOST(atob);
+        V8_SET_GLOBAL_FROM_HOST(btoa);
         V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(workerContext));
-        V8_SET_GLOBAL_FROM_MAIN(setTimeout);
-        V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
-        V8_SET_GLOBAL_FROM_MAIN(setInterval);
-        V8_SET_GLOBAL_FROM_MAIN(clearInterval);
-        V8_SET_GLOBAL_FROM_MAIN(postMessage);
+        V8_SET_GLOBAL_FROM_HOST(setTimeout);
+        V8_SET_GLOBAL_FROM_HOST(clearTimeout);
+        V8_SET_GLOBAL_FROM_HOST(setInterval);
+        V8_SET_GLOBAL_FROM_HOST(clearInterval);
+        V8_SET_GLOBAL_FROM_HOST(queueMicrotask);
+        V8_SET_GLOBAL_FROM_HOST(postMessage);
 
         // Fetch API related objects
-        V8_SET_GLOBAL_FROM_MAIN(Headers);
-        V8_SET_GLOBAL_FROM_MAIN(Request);
-        V8_SET_GLOBAL_FROM_MAIN(Response);
+        V8_SET_GLOBAL_FROM_HOST(Headers);
+        V8_SET_GLOBAL_FROM_HOST(Request);
+        V8_SET_GLOBAL_FROM_HOST(Response);
 
-#undef V8_SET_GLOBAL_FROM_MAIN
+#undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_SET_GLOBAL_FROM_VALUE
+#undef V8_TRY_SET_GLOBAL_FROM_VALUE
       }
 
       ContextEmbedderTag::TagMyContext(workerContext);
-      workerContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
-      workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal,
-                                     External::New(isolate_, this));
-      workerContext->SetSecurityToken(mainContext->GetSecurityToken());
+      workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
+      workerContext->SetSecurityToken(hostContext->GetSecurityToken());
       v8ContextHandle.Reset(isolate_, workerContext);
-    }
-
-    {
-      auto newContext = v8ContextHandle.Get(isolate_);
-      Context::Scope contextScope(newContext);
-      HandleScope handleScope(isolate_);
-      Local<Value> selfProxy = createWorkerSelfProxy(newContext);
-      auto global = newContext->Global();
-      global->Set(newContext, String::NewFromUtf8(isolate_, "self").ToLocalChecked(), selfProxy).FromJust();
     }
     isContextInitialized = true;
   }

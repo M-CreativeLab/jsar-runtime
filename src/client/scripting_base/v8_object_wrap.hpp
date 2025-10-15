@@ -1,5 +1,6 @@
 #pragma once
 
+#include <thread>
 #include <memory>
 #include <vector>
 #include <assert.h>
@@ -334,12 +335,20 @@ namespace scripting_base
 
       // Return the existing constructor if already initialized
       if (T::initialized_ == true)
+      {
         return T::GetConstructorFunction(isolate);
+      }
 
       v8::EscapableHandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
       v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, T::Constructor);
+      if (tpl.IsEmpty()) [[unlikely]]
+      {
+        std::cerr << "Failed to create function template for " << T::Name()
+                  << std::endl;
+        assert(false && "Failed to create function template");
+      }
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -358,7 +367,14 @@ namespace scripting_base
       T::ConfigureFunctionTemplate(isolate, tpl);
 
       // Update the persistent handles
-      v8::Local<v8::Function> constructor = tpl->GetFunction(context).ToLocalChecked();
+      v8::Local<v8::Function> constructor;
+      if (tpl->GetFunction(context).ToLocal(&constructor) != true || constructor.IsEmpty()) [[unlikely]]
+      {
+        std::cerr << "Failed to get constructor `v8::Function` from function template for " << T::Name()
+                  << std::endl;
+        assert(false && "Failed to get constructor function");
+      }
+
       T::constructor_handle_.Reset(isolate, constructor);
       T::function_template_.Reset(isolate, tpl);
       T::initialized_ = true;
@@ -865,7 +881,7 @@ namespace scripting_base
       return data_handle;
     }
 
-  private:
+  public:
     static thread_local inline bool initialized_ = false;
     static thread_local inline v8::Persistent<v8::FunctionTemplate> function_template_;
     static thread_local inline v8::Persistent<v8::Function> constructor_handle_;

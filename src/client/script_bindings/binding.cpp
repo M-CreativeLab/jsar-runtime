@@ -82,6 +82,9 @@
 #include "./webxr/xr_input_source.hpp"
 #include "./webxr/xr_hand.hpp"
 
+// Workers bindings
+#include "./workers/worker.hpp"
+
 using namespace std;
 using namespace v8;
 
@@ -107,6 +110,7 @@ namespace script_bindings
 #define ADD_EVENT(X) \
   global->Set(context, NAME(#X), event_bindings::X::Initialize(isolate)).Check();
 
+    ADD_EVENT(MessageEvent)
     ADD_EVENT(UIEvent)
     ADD_EVENT(MouseEvent)
     ADD_EVENT(PointerEvent)
@@ -127,15 +131,22 @@ namespace script_bindings
 
 #define ADD_CANVAS_TYPE(X) \
   global->Set(context, NAME(#X), canvas_bindings::X::Initialize(isolate)).Check();
-    {
-      ADD_CANVAS_TYPE(ImageBitmap)
-      ADD_CANVAS_TYPE(ImageData)
-      ADD_CANVAS_TYPE(CanvasRenderingContext2D)
-      ADD_CANVAS_TYPE(OffscreenCanvas)
-      ADD_CANVAS_TYPE(OffscreenCanvasRenderingContext2D)
-      ADD_CANVAS_TYPE(Path2D)
-    }
+
+    ADD_CANVAS_TYPE(ImageBitmap)
+    ADD_CANVAS_TYPE(ImageData)
+    ADD_CANVAS_TYPE(CanvasRenderingContext2D)
+    ADD_CANVAS_TYPE(OffscreenCanvas)
+    ADD_CANVAS_TYPE(OffscreenCanvasRenderingContext2D)
+    ADD_CANVAS_TYPE(Path2D)
+
 #undef ADD_CANVAS_TYPE
+
+    // Initialize Worker class
+#define ADD_WORKER_TYPE(X) \
+  global->Set(context, NAME(#X), workers_bindings::X::Initialize(isolate)).Check();
+
+    ADD_WORKER_TYPE(Worker)
+#undef ADD_WORKER_TYPE
 
     // Initialize classes and objects for scripting context only
     if (type == ContextType::kScripting)

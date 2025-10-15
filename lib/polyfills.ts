@@ -14,12 +14,14 @@ export function loadPolyfills() {
 
   /**
    * Web Workers
+   * 
+   * TODO(yorkie): implement the worker based on v8 itself without using Node.js WorkerThreads.
    */
   Object.defineProperties(globalThis, {
-    'Worker': {
+    '__WorkerImpl': {
       value: WorkerImpl,
       writable: false,
-      enumerable: true,
+      enumerable: false,
       configurable: false,
     },
   });

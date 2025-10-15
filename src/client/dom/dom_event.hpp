@@ -18,6 +18,7 @@ namespace dom
 
 #define DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX) \
   XX(Event)                                \
+  XX(MessageEvent)                         \
   XX(MouseEvent)                           \
   XX(PointerEvent)                         \
   XX(XRSessionEvent)                       \
@@ -191,6 +192,10 @@ namespace dom
   XX(WebGLContextLost, "webglcontextlost")                   \
   XX(WebGLContextRestored, "webglcontextrestored")
 
+#define WORKERS_EVENT_TYPES_MAP(XX) \
+  XX(Message, "message")            \
+  XX(MessageError, "messageerror")
+
 #define WEBXR_EVENT_TYPES_MAP(XX)                             \
   XX(XRDeviceChange, "devicechange")                          \
   XX(XRSessionEnd, "XRSession.end")                           \
@@ -210,6 +215,7 @@ namespace dom
   HTMLMEDIAELEMENT_EVENT_TYPES_MAP(XX) \
   DOCUMENT_EVENT_TYPES_MAP(XX)         \
   CANVAS_EVENT_TYPES_MAP(XX)           \
+  WORKERS_EVENT_TYPES_MAP(XX)          \
   WEBXR_EVENT_TYPES_MAP(XX)
 
   enum class DOMEventType
@@ -373,6 +379,10 @@ namespace dom
     }
 
   public:
+    virtual bool isMessageEvent() const
+    {
+      return false;
+    }
     virtual bool isUIEvent() const
     {
       return false;

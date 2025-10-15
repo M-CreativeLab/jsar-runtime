@@ -1,5 +1,5 @@
-#include "./all_events.hpp"
 #include <client/xr/webxr_session_events.hpp>
+#include "./all_events.hpp"
 
 namespace script_bindings::event_bindings
 {
@@ -9,6 +9,7 @@ namespace script_bindings::event_bindings
   void Initialize(Isolate *isolate)
   {
     // Initialize all event class constructors
+    MessageEvent::Initialize(isolate);
     UIEvent::Initialize(isolate);
     MouseEvent::Initialize(isolate);
     PointerEvent::Initialize(isolate);
@@ -21,25 +22,28 @@ namespace script_bindings::event_bindings
   {
     assert(nativeEvent != nullptr && "nativeEvent must not be null");
 
+    if (nativeEvent->isMessageEvent())
+    {
+      auto mTypedEvent = static_cast<dom::events::MessageEvent *>(nativeEvent);
+      return MessageEvent::NewInstance(isolate, make_shared<dom::events::MessageEvent>(*mTypedEvent));
+    }
     if (nativeEvent->isPointerEvent())
     {
       auto pTypedEvent = static_cast<dom::events::PointerEvent *>(nativeEvent);
       return PointerEvent::NewInstance(isolate, make_shared<dom::events::PointerEvent>(*pTypedEvent));
     }
-    else if (nativeEvent->isMouseEvent())
+    if (nativeEvent->isMouseEvent())
     {
       auto mTypedEvent = static_cast<dom::events::MouseEvent *>(nativeEvent);
       return MouseEvent::NewInstance(isolate, make_shared<dom::events::MouseEvent>(*mTypedEvent));
     }
-    else if (nativeEvent->isUIEvent())
+    if (nativeEvent->isUIEvent())
     {
       auto uiTypedEvent = static_cast<dom::events::UIEvent *>(nativeEvent);
       return UIEvent::NewInstance(isolate, make_shared<dom::events::UIEvent>(*uiTypedEvent));
     }
-    else
-    {
-      return Event::NewInstance(isolate, make_shared<dom::Event>(*nativeEvent));
-    }
+
+    return Event::NewInstance(isolate, make_shared<dom::Event>(*nativeEvent));
   }
 
   Local<Object> MakeXREvent(Isolate *isolate, void *nativeEvent, const string &eventType)

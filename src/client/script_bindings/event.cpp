@@ -13,14 +13,13 @@ namespace script_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instance = tpl->InstanceTemplate();
     Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    InstanceReadonlyAccessor(isolate, instance, "type", &Event::TypeGetter);
-    InstanceReadonlyAccessor(isolate, instance, "bubbles", &Event::BubblesGetter);
-    InstanceReadonlyAccessor(isolate, instance, "cancelable", &Event::CancelableGetter);
-    InstanceReadonlyAccessor(isolate, instance, "composed", &Event::ComposedGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "type", &Event::TypeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "bubbles", &Event::BubblesGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "cancelable", &Event::CancelableGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "composed", &Event::ComposedGetter);
 
     // Add methods
     InstanceMethod(isolate, prototype, "preventDefault", &Event::PreventDefault);
@@ -45,6 +44,7 @@ namespace script_bindings
   CHECK_AND_RETURN_INSTANCE_OF(NAME, client_xr::NAME)
 
     // DOM Events
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(MessageEvent)
     CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(PointerEvent)
     CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(MouseEvent)
     CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(UIEvent)
