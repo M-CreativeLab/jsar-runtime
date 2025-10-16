@@ -135,12 +135,6 @@ namespace dom
     static DOMScriptingContext *GetCurrent(v8::Local<v8::Context> context);
 
   private:
-    static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void PropertySetterCallback(v8::Local<v8::Name> property,
-                                       v8::Local<v8::Value> value,
-                                       const v8::PropertyCallbackInfo<v8::Value> &info);
-
-    static void WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
                                                                        v8::Local<v8::Value> resourceName,
@@ -162,19 +156,10 @@ namespace dom
 
     /**
      * Get the global object of the scripting context.
+     * 
+     * @returns The global object of the scripting context.
      */
-    inline v8::Local<v8::Value> getGlobalProperty(v8::Isolate *isolate, const char *name) const
-    {
-      assert(!v8ContextHandle.IsEmpty() && "The V8 context is not initialized.");
-      v8::EscapableHandleScope scope(isolate);
-      v8::Local<v8::Context> context = v8ContextHandle.Get(isolate);
-
-      v8::Local<v8::Object> global = context->Global();
-      v8::Local<v8::Value> value;
-      if (global->Get(context, v8::String::NewFromUtf8(isolate, name).ToLocalChecked()).ToLocal(&value))
-        return scope.Escape(value);
-      return v8::Undefined(isolate);
-    }
+    v8::Local<v8::Value> getGlobalProperty(v8::Isolate *isolate, const char *name) const;
 
     /**
      * Enable the dynamic import for the script.
@@ -208,7 +193,9 @@ namespace dom
      * @param type The type of the script: classic or module.
      * @returns The new DOM script object.
      */
-    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext, const std::string &url, SourceTextType type);
+    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext,
+                                      const std::string &url,
+                                      SourceTextType type);
 
     /**
      * Compile the given script.
@@ -307,15 +294,6 @@ namespace dom
      * @param event The event object to dispatch.
      */
     bool dispatchEvent(v8::Local<v8::Object> event);
-
-  private:
-    /**
-     * Create the `WorkerGlobalScope.self` proxy object.
-     *
-     * @param context The v8 context to create this object.
-     * @returns The `WorkerGlobalScope.self` proxy object.
-     */
-    v8::Local<v8::Value> createWorkerSelfProxy(v8::Local<v8::Context> context);
 
   private:
     v8::Isolate *isolate_;

@@ -15,9 +15,7 @@
   console.info('WebGL vendor:', gl.getParameter(gl.VENDOR));
   console.info('WebGL renderer:', gl.getParameter(gl.RENDERER));
   console.info('is WebGL2: ', typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext);
-
-  const glCanvas = gl._screenCanvas;
-  console.info('WebGL canvas:', glCanvas, glCanvas.width, glCanvas.height);
+  console.info('WEBGL_POINTS', gl.POINTS);
 </script>
 
 </html>

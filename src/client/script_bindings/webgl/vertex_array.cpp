@@ -16,8 +16,6 @@ namespace script_bindings
     WebGLVertexArray::WebGLVertexArray(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLVertexArrayBase(isolate, args)
     {
-      // WebGLVertexArray objects are created by WebGL context, not by user code
     }
-
   } // namespace webgl
 } // namespace script_bindings

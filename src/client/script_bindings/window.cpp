@@ -300,6 +300,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
+    cerr << "Window::CreateImageBitmap: Not implemented." << endl;
     isolate->ThrowException(Exception::TypeError(
       MakeMethodError(isolate, "createImageBitmap", "Not implemented.")));
     return;

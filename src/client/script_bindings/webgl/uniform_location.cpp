@@ -10,8 +10,13 @@ namespace script_bindings
 
     void WebGLUniformLocation::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      // WebGLUniformLocation objects don't have any public properties or methods
-      // They are opaque handles used by the WebGL context for uniform locations
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+
+      InstanceReadonlyAccessor(isolate,
+                               instanceTemplate,
+                               "name",
+                               &WebGLUniformLocation::NameGetter);
     }
 
     Local<Object> WebGLUniformLocation::NewInstance(Isolate *isolate,
@@ -26,6 +31,17 @@ namespace script_bindings
     WebGLUniformLocation::WebGLUniformLocation(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLUniformLocationBase(isolate, args)
     {
+    }
+
+    void WebGLUniformLocation::NameGetter(const PropertyCallbackInfo<Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+
+      const auto &name = handle()->name;
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    name.c_str())
+                                  .ToLocalChecked());
     }
 
   } // namespace webgl

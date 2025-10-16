@@ -4441,7 +4441,15 @@ namespace script_bindings
 
       auto name_utf8 = String::Utf8Value(isolate, info[0]);
       string name = *name_utf8 ? *name_utf8 : "";
-      info.GetReturnValue().Set(WebGLExtensions::GetExtension(isolate, name));
+
+      if (handle()->supportsExtension(name))
+      {
+        info.GetReturnValue().Set(WebGLExtensions::GetExtension(isolate, name));
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
     }
 
     void WebGLRenderingContext::GetSupportedExtensions(const FunctionCallbackInfo<Value> &info)

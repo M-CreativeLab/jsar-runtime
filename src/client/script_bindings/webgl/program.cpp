@@ -11,20 +11,6 @@ namespace script_bindings
     {
     }
 
-    Local<Object> WebGLProgram::NewInstance(Isolate *isolate,
-                                            shared_ptr<client_graphics::WebGLProgram> nativeProgram)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeProgram != nullptr
-               ? scope.Escape(WebGLProgramBase::NewInstance(isolate, nativeProgram).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
-
-    Local<Function> WebGLProgram::Initialize(Isolate *isolate)
-    {
-      return WebGLProgramBase::Initialize(isolate);
-    }
-
     WebGLProgram::WebGLProgram(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLProgramBase(isolate, args)
     {

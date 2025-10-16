@@ -30,65 +30,6 @@ namespace dom
       return nullptr;
   }
 
-  void DOMScriptingContext::PropertyGetterCallback(Local<Name> property, const PropertyCallbackInfo<Value> &info)
-  {
-    auto isolate = info.GetIsolate();
-    auto context = isolate->GetCurrentContext();
-    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<Object>();
-
-    MaybeLocal<Value> maybeValue = sandbox->GetRealNamedProperty(context, property);
-    if (maybeValue.IsEmpty())
-      maybeValue = context->Global()->GetRealNamedProperty(context, property);
-
-    Local<Value> resultValue;
-    if (maybeValue.ToLocal(&resultValue))
-    {
-      if (resultValue == sandbox)
-        resultValue = context->Global();
-
-      info.GetReturnValue().Set(resultValue);
-    }
-    else
-    {
-      info.GetReturnValue().SetUndefined();
-    }
-  }
-
-  void DOMScriptingContext::PropertySetterCallback(Local<Name> property,
-                                                   Local<Value> value,
-                                                   const PropertyCallbackInfo<Value> &info)
-  {
-    auto isolate = info.GetIsolate();
-    auto context = isolate->GetCurrentContext();
-    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<Object>();
-
-    cout << "Setting property: " << *String::Utf8Value(isolate, property) << endl;
-    if (sandbox->Set(context, property, value).IsNothing())
-    {
-      // Handle error case - property couldn't be set
-      return;
-    }
-    info.GetReturnValue().Set(value);
-  }
-
-  void DOMScriptingContext::WorkerSelfProxyPropertyGetterCallback(Local<Name> property, const PropertyCallbackInfo<Value> &info)
-  {
-    auto isolate = info.GetIsolate();
-    auto context = isolate->GetCurrentContext();
-    auto globalObject = context->Global();
-
-    MaybeLocal<Value> maybeValue = globalObject->Get(context, property);
-    /**
-     * TODO: add new an embedder data for the window-only properties.
-     */
-
-    Local<Value> resultValue;
-    if (maybeValue.ToLocal(&resultValue))
-      info.GetReturnValue().Set(resultValue);
-    else
-      info.GetReturnValue().SetUndefined();
-  }
-
   MaybeLocal<Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(Local<Context> context,
                                                                            Local<Data> hostDefinedOptions,
                                                                            Local<Value> resourceName,
@@ -177,7 +118,7 @@ namespace dom
     assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
 
     // Enable stack trace for uncaught exceptions
-    isolate_->SetCaptureStackTraceForUncaughtExceptions(true, 20, v8::StackTrace::kDetailed);
+    isolate_->SetCaptureStackTraceForUncaughtExceptions(true, 20, StackTrace::kDetailed);
   }
 
   void DOMScriptingContext::enableDynamicImport()
@@ -186,6 +127,19 @@ namespace dom
     Isolate::Scope isolateScope(isolate_);
     Context::Scope contextScope(mainContext);
     isolate_->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
+  }
+
+  Local<Value> DOMScriptingContext::getGlobalProperty(Isolate *isolate, const char *name) const
+  {
+    assert(!v8ContextHandle.IsEmpty() && "The V8 context is not initialized.");
+    EscapableHandleScope scope(isolate);
+    Local<Context> context = v8ContextHandle.Get(isolate);
+
+    Local<Object> global = context->Global();
+    Local<Value> value;
+    if (global->Get(context, String::NewFromUtf8(isolate, name).ToLocalChecked()).ToLocal(&value))
+      return scope.Escape(value);
+    return Undefined(isolate);
   }
 
   void DOMScriptingContext::makeMainContext(shared_ptr<dom::Node> nativeDocument,
@@ -206,7 +160,7 @@ namespace dom
       // Initialize the Window firstly
       auto Window = script_bindings::Window::Initialize(isolate_);
 
-      // Initialize the `v8::Context` with the window object.
+      // Initialize the `Context` with the window object.
       Local<Context> scriptingContext = Context::New(isolate_,
                                                      nullptr,
                                                      script_bindings::Window::GetInstanceTemplate(isolate_));
@@ -227,7 +181,7 @@ namespace dom
                    String::NewFromUtf8(isolate_, #name).ToLocalChecked(), \
                    value)                                                 \
          .FromMaybe(false))                                               \
-    cerr << "Failed to set the global object(" << #name << ") for scripting v8::Context." << endl;
+    cerr << "Failed to set the global object(" << #name << ") for scripting Context." << endl;
 
 #define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                        \
   try                                                                                                          \
@@ -344,11 +298,11 @@ namespace dom
       auto WorkerGlobalScope = workers_bindings::WorkerGlobalScope::Initialize(isolate_);
       event_bindings::UIEvent::Initialize(isolate_);
 
-      // Initialize the `v8::Context`.
+      // Initialize the `Context`.
       Local<Context> workerContext = Context::New(isolate_,
                                                   nullptr,
                                                   workers_bindings::WorkerGlobalScope::GetInstanceTemplate(isolate_));
-      assert(!workerContext.IsEmpty() && "Created v8::Context must not be empty.");
+      assert(!workerContext.IsEmpty() && "Created Context must not be empty.");
       {
         Context::Scope contextScope(workerContext);
         HandleScope handleScope(isolate_);
@@ -368,7 +322,7 @@ namespace dom
                    String::NewFromUtf8(isolate_, #name).ToLocalChecked(), \
                    value)                                                 \
          .FromMaybe(false))                                               \
-    cerr << "Failed to set the global object(" << #name << ") for worker v8::Context." << endl;
+    cerr << "Failed to set the global object(" << #name << ") for worker Context." << endl;
 
 #define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                          \
   try                                                                                                            \
@@ -761,30 +715,6 @@ namespace dom
     }
     // TODO: call dispatchEvent?
     return true;
-  }
-
-  Local<Value> DOMScriptingContext::createWorkerSelfProxy(Local<Context> context)
-  {
-    Context::Scope contextScope(context);
-    EscapableHandleScope handleScope(isolate_);
-
-    Local<FunctionTemplate> selfProxyFunctionTemplate = FunctionTemplate::New(isolate_);
-    Local<ObjectTemplate> selfProxyTemplate = selfProxyFunctionTemplate->InstanceTemplate();
-
-    NamedPropertyHandlerConfiguration namedConfig(
-      WorkerSelfProxyPropertyGetterCallback,
-      nullptr,
-      nullptr,
-      nullptr,
-      nullptr,
-      nullptr,
-      nullptr,
-      {},
-      PropertyHandlerFlags::kHasNoSideEffect);
-    selfProxyTemplate->SetHandler(namedConfig);
-
-    auto selfProxy = selfProxyTemplate->NewInstance(context).ToLocalChecked();
-    return handleScope.Escape(selfProxy);
   }
 
   DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext)

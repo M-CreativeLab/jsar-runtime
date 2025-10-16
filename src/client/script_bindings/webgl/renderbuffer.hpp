@@ -20,18 +20,11 @@ namespace script_bindings
       using WebGLRenderbufferBase::ObjectWrap;
 
     public:
-      /**
-       * The name of the WebGLRenderbuffer class for V8.
-       */
       static std::string Name()
       {
         return "WebGLRenderbuffer";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<client_graphics::WebGLRenderbuffer> nativeRenderbuffer);
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       WebGLRenderbuffer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

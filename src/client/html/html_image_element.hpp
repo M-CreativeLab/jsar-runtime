@@ -81,6 +81,7 @@ namespace dom
       is_src_image_loaded_ = false;
       is_src_image_decoded_ = false;
 
+      cout << "HTMLImageElement::setSrc: " << src << endl;
       setAttribute("src", src, false);
       if (loading_ == LoadingHint::kLoadingEager)
         loadImage();

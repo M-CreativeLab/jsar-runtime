@@ -67,6 +67,7 @@
 #include "./webgl/vertex_array.hpp"
 #include "./webgl/webgl_rendering_context.hpp"
 #include "./webgl/webgl2_rendering_context.hpp"
+#include "./webgl/extensions/all.hpp"
 
 // WebXR bindings
 #include "./webxr/xr_space.hpp"
@@ -236,6 +237,9 @@ namespace script_bindings
       ADD_WEBGL_TYPE(WebGLVertexArray)
       ADD_WEBGL_TYPE(WebGLRenderingContext)
       ADD_WEBGL_TYPE(WebGL2RenderingContext)
+
+      // WebGL extensions
+      webgl_bindings::WebGLExtensions::Initialize(isolate);
 #undef ADD_WEBGL_TYPE
 
       // WebXR classes

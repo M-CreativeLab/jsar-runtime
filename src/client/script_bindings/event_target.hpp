@@ -24,10 +24,11 @@ namespace script_bindings
     EventListenersList() = default;
 
   public:
+    void reset();
     size_t count() const;
     void addListener(v8::Isolate *isolate, v8::Local<v8::Function> listener);
     void removeListener(v8::Isolate *isolate, v8::Local<v8::Function> listener);
-    void dispatchEvent(v8::Isolate *isolate, v8::Local<v8::Value> recv, std::shared_ptr<dom::Event> event);
+    void dispatchEvent(v8::Isolate *isolate, v8::Local<v8::Value> recv, std::shared_ptr<dom::Event> event) const;
   };
 
   class EventTarget : public EventTargetBase
@@ -63,7 +64,9 @@ namespace script_bindings
     void listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event);
     void setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners);
     void didDispatchPendingEvent();
-    void didDispatchEvent(v8::Isolate *isolate, std::shared_ptr<dom::Event> event);
+    void didDispatchEvent(v8::Isolate *isolate,
+                          std::shared_ptr<dom::Event> event,
+                          const EventListenersList &listeners);
 
     // Exposed Event methods
     void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -73,6 +76,7 @@ namespace script_bindings
   private:
     std::vector<std::string> registered_event_types_;
     std::shared_ptr<dom::Event> pending_event_;
+    EventListenersList pending_listeners_;
     std::unique_ptr<uv_async_t> async_handle_;                // libuv async handle for event dispatching if dispatcher is on another thread
     std::optional<std::thread::id> creating_async_thread_id_; // Thread that created the async handle
 

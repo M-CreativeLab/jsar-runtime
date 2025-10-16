@@ -11,6 +11,11 @@ using namespace v8;
 
 namespace script_bindings
 {
+  void EventListenersList::reset()
+  {
+    clear();
+  }
+
   size_t EventListenersList::count() const
   {
     return size();
@@ -39,7 +44,7 @@ namespace script_bindings
     }
   }
 
-  void EventListenersList::dispatchEvent(Isolate *isolate, Local<Value> recv, shared_ptr<dom::Event> event)
+  void EventListenersList::dispatchEvent(Isolate *isolate, Local<Value> recv, shared_ptr<dom::Event> event) const
   {
     if (count() == 0 || event == nullptr)
       return;
@@ -152,29 +157,35 @@ namespace script_bindings
 
   void EventTarget::listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event)
   {
-    shared_lock<shared_mutex> lock(event_listeners_mutex_);
     string event_type = event->typeStr();
-
-    if (event_listeners_.size() == 0 &&
-        registered_event_types_.size() == 0)
-    {
-      return;
-    }
 
     bool is_event_registered = false;
     bool is_listener_found = false;
+    EventListenersList listeners;
+    {
+      shared_lock<shared_mutex> lock(event_listeners_mutex_);
 
-    // Check if the event type is registered
-    if (find(registered_event_types_.begin(),
-             registered_event_types_.end(),
-             event_type) != registered_event_types_.end())
-      is_event_registered = true;
+      if (event_listeners_.size() == 0 &&
+          registered_event_types_.size() == 0)
+      {
+        return;
+      }
 
-    // Check if there are listeners for the event type
-    const auto &listeners = event_listeners_.find(event_type);
-    if (listeners != event_listeners_.end() &&
-        listeners->second.count() > 0)
-      is_listener_found = true;
+      // Check if the event type is registered
+      if (find(registered_event_types_.begin(),
+               registered_event_types_.end(),
+               event_type) != registered_event_types_.end())
+        is_event_registered = true;
+
+      // Check if there are listeners for the event type
+      const auto &it = event_listeners_.find(event_type);
+      if (it != event_listeners_.end() &&
+          it->second.count() > 0)
+      {
+        is_listener_found = true;
+        listeners = it->second; // Copy the listeners to avoid holding the lock during dispatch
+      }
+    }
 
     // Skip if the event is neither registered nor has listeners
     if (!is_event_registered &&
@@ -184,7 +195,7 @@ namespace script_bindings
     }
 
     // Dispatch the event to the found listeners
-    setPendingEventAndDispatch(event, listeners->second);
+    setPendingEventAndDispatch(event, listeners);
   }
 
   void EventTarget::setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners)
@@ -192,7 +203,7 @@ namespace script_bindings
     if (this_thread::get_id() == creating_async_thread_id_)
     {
       // Directly call if on the same thread as async handle creation
-      didDispatchEvent(current_isolate_, event);
+      didDispatchEvent(current_isolate_, event, listeners);
     }
     else
     {
@@ -201,10 +212,10 @@ namespace script_bindings
         if (pending_event_ != nullptr)
         {
           dispatch_cv_.wait(lock, [this]()
-                            { cerr << "Waiting for previous event to be dispatched..., pending event?" << (pending_event_ == nullptr ? "y" : "n") << endl;
-                            return pending_event_ == nullptr; });
+                            { return pending_event_ == nullptr; });
         }
         pending_event_ = event;
+        pending_listeners_ = listeners;
       }
 
       // Send async signal to the event loop to process the event
@@ -216,21 +227,20 @@ namespace script_bindings
   void EventTarget::didDispatchPendingEvent()
   {
     unique_lock<mutex> lock(dispatch_mutex_);
-    if (!pending_event_) [[unlikely]]
-    {
-      dispatch_cv_.notify_all();
-      return;
-    }
-
+    if (pending_event_) [[likely]]
     {
       Isolate::Scope isolate_scope(current_isolate_);
-      didDispatchEvent(current_isolate_, pending_event_);
+      didDispatchEvent(current_isolate_, pending_event_, pending_listeners_);
+
+      pending_event_.reset();
+      pending_listeners_.reset();
     }
-    pending_event_.reset();
     dispatch_cv_.notify_all();
   }
 
-  void EventTarget::didDispatchEvent(Isolate *isolate, shared_ptr<dom::Event> event)
+  void EventTarget::didDispatchEvent(Isolate *isolate,
+                                     shared_ptr<dom::Event> event,
+                                     const EventListenersList &listeners)
   {
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
@@ -256,25 +266,7 @@ namespace script_bindings
     }
 
     // Dispatch the event to the listeners
-    {
-      // A copy of the found listeners to avoid holding the lock during dispatch
-      EventListenersList found_listeners;
-      {
-        shared_lock<shared_mutex> lock(event_listeners_mutex_);
-        const auto &listeners = event_listeners_.find(event_type);
-        if (listeners != event_listeners_.end())
-        {
-          found_listeners = listeners->second;
-        }
-        else
-        {
-          cerr << "No listeners found for event type: " << event_type << endl;
-        }
-      }
-
-      // Dispatch to the found listeners
-      found_listeners.dispatchEvent(isolate, value(), event);
-    }
+    listeners.dispatchEvent(isolate, value(), event);
   }
 
   void EventTarget::AddEventListener(const FunctionCallbackInfo<Value> &info)
@@ -305,15 +297,14 @@ namespace script_bindings
 
     String::Utf8Value typeString(isolate, info[0]);
     Local<Function> listener = info[1].As<Function>();
+    string eventType = *typeString;
 
+    // Initialize the async handle if not already done
+    initAsyncHandle();
+
+    // Add the listener to the list for the event type
     {
       unique_lock<shared_mutex> lock(event_listeners_mutex_);
-      string eventType = *typeString;
-
-      // Initialize the async handle if not already done
-      initAsyncHandle();
-
-      // Add the listener to the list for the event type
       if (event_listeners_.find(eventType) == event_listeners_.end())
         event_listeners_[eventType] = EventListenersList();
       event_listeners_[eventType].addListener(isolate, listener);

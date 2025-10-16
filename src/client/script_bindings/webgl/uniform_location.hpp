@@ -36,6 +36,9 @@ namespace script_bindings
       {
         return *handle();
       }
+
+    private:
+      void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
     };
 
   } // namespace webgl

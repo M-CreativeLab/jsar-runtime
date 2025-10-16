@@ -116,7 +116,7 @@ namespace script_bindings::html_bindings
     else
     {
       String::Utf8Value utf8Value(isolate, value);
-      std::string newSrc(*utf8Value);
+      string newSrc(*utf8Value);
 
       handle()->setSrc(newSrc);
     }

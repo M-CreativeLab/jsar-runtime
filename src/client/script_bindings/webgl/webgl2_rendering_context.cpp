@@ -347,6 +347,7 @@ namespace script_bindings
   InstanceMethod(isolate, prototype, NAME, &WebGL2RenderingContext::CALLBACK);
 
       // WebGL 2.0 specific methods
+      ADD_WEBGL2_METHOD("readBuffer", ReadBuffer)
       ADD_WEBGL2_METHOD("drawBuffers", DrawBuffers)
       ADD_WEBGL2_METHOD("clearBufferfv", ClearBufferfv)
       ADD_WEBGL2_METHOD("clearBufferiv", ClearBufferiv)
@@ -388,9 +389,16 @@ namespace script_bindings
       ADD_WEBGL2_METHOD("pauseTransformFeedback", PauseTransformFeedback)
       ADD_WEBGL2_METHOD("resumeTransformFeedback", ResumeTransformFeedback)
 
-      // Uniform buffer objects
+      // Buffer objects
       ADD_WEBGL2_METHOD("bindBufferBase", BindBufferBase)
       ADD_WEBGL2_METHOD("bindBufferRange", BindBufferRange)
+      ADD_WEBGL2_METHOD("vertexAttribIPointer", VertexAttribIPointer)
+      ADD_WEBGL2_METHOD("vertexAttribI4i", VertexAttribI4i)
+      ADD_WEBGL2_METHOD("vertexAttribI4ui", VertexAttribI4ui)
+      ADD_WEBGL2_METHOD("vertexAttribI4iv", VertexAttribI4iv)
+      ADD_WEBGL2_METHOD("vertexAttribI4uiv", VertexAttribI4uiv)
+
+      // Uniform buffer objects
       ADD_WEBGL2_METHOD("getUniformIndices", GetUniformIndices)
       ADD_WEBGL2_METHOD("getActiveUniforms", GetActiveUniforms)
       ADD_WEBGL2_METHOD("getUniformBlockIndex", GetUniformBlockIndex)
@@ -435,6 +443,30 @@ namespace script_bindings
     }
 
     // WebGL 2.0 specific methods
+    void WebGL2RenderingContext::ReadBuffer(const FunctionCallbackInfo<Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "readBuffer", 1, args.Length())));
+        return;
+      }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "readBuffer", 0, "number", args[0])));
+        return;
+      }
+
+      int src = args[0]->Int32Value(context).ToChecked();
+      handle()->readBuffer(src);
+      args.GetReturnValue().SetUndefined();
+    }
+
     void WebGL2RenderingContext::DrawBuffers(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
@@ -1096,6 +1128,92 @@ namespace script_bindings
 
       handle()->bindBufferRange(target, index, bufferBinding->handle(), offset, size);
       args.GetReturnValue().SetUndefined();
+    }
+
+    void WebGL2RenderingContext::VertexAttribIPointer(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 4)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "vertexAttribIPointer", 4, args.Length())));
+        return;
+      }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "vertexAttribIPointer", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "vertexAttribIPointer", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "vertexAttribIPointer", 2, "number", args[2])));
+        return;
+      }
+      if (!args[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "vertexAttribIPointer", 3, "number", args[3])));
+        return;
+      }
+
+      uint32_t index = args[0]->Uint32Value(context).ToChecked();
+      int size = args[1]->Int32Value(context).ToChecked();
+      int type = args[2]->Int32Value(context).ToChecked();
+      int stride = args[3]->Int32Value(context).ToChecked();
+      int offset = 0;
+
+      if (args.Length() > 4 && args[4]->IsNumber())
+        offset = args[4]->Int32Value(context).ToChecked();
+
+      handle()->vertexAttribIPointer(index, size, type, stride, offset);
+      args.GetReturnValue().SetUndefined();
+    }
+
+    void WebGL2RenderingContext::VertexAttribI4i(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "vertexAttribI4i", "Not implemented")));
+    }
+
+    void WebGL2RenderingContext::VertexAttribI4ui(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "vertexAttribI4ui", "Not implemented")));
+    }
+
+    void WebGL2RenderingContext::VertexAttribI4iv(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "vertexAttribI4iv", "Not implemented")));
+    }
+
+    void WebGL2RenderingContext::VertexAttribI4uiv(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "vertexAttribI4uiv", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetUniformIndices(const FunctionCallbackInfo<Value> &args)

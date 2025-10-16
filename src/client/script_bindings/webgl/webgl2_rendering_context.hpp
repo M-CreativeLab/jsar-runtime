@@ -30,6 +30,7 @@ namespace script_bindings
 
     private:
       // WebGL 2.0 specific methods
+      void ReadBuffer(const v8::FunctionCallbackInfo<v8::Value> &args);
       void DrawBuffers(const v8::FunctionCallbackInfo<v8::Value> &args);
       void ClearBufferfv(const v8::FunctionCallbackInfo<v8::Value> &args);
       void ClearBufferiv(const v8::FunctionCallbackInfo<v8::Value> &args);
@@ -71,9 +72,16 @@ namespace script_bindings
       void PauseTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
       void ResumeTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
 
-      // Uniform buffer objects
+      // Buffer objects
       void BindBufferBase(const v8::FunctionCallbackInfo<v8::Value> &args);
       void BindBufferRange(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void VertexAttribIPointer(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void VertexAttribI4i(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void VertexAttribI4ui(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void VertexAttribI4iv(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void VertexAttribI4uiv(const v8::FunctionCallbackInfo<v8::Value> &args);
+
+      // Uniform objects
       void GetUniformIndices(const v8::FunctionCallbackInfo<v8::Value> &args);
       void GetActiveUniforms(const v8::FunctionCallbackInfo<v8::Value> &args);
       void GetUniformBlockIndex(const v8::FunctionCallbackInfo<v8::Value> &args);

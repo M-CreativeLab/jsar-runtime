@@ -20,14 +20,10 @@ namespace script_bindings
       using WebGLVertexArrayBase::ObjectWrap;
 
     public:
-      /**
-       * The name of the WebGLVertexArray class for V8.
-       */
       static std::string Name()
       {
         return "WebGLVertexArray";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
     public:

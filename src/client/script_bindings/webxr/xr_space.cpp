@@ -1,5 +1,6 @@
-#include "./xr_space.hpp"
 #include <iostream>
+#include "./xr_space.hpp"
+#include "./xr_rigid_transform.hpp"
 
 using namespace std;
 using namespace v8;
@@ -41,6 +42,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
       if (info.Length() < 1)
       {
@@ -49,16 +51,27 @@ namespace script_bindings
         return;
       }
 
-      XRReferenceSpace *referenceSpace = Unwrap(isolate, info.This());
-      if (referenceSpace == nullptr || referenceSpace->handle() == nullptr)
+      // Validate the argument type
+      if (!XRRigidTransform::IsInstanceOf(isolate, info[0]))
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Argument must be an XRRigidTransform object").ToLocalChecked()));
         return;
       }
 
-      // TODO: Implement getOffsetReferenceSpace with proper XRRigidTransform handling
-      cout << "getOffsetReferenceSpace called" << endl;
-      info.GetReturnValue().SetNull();
+      // Extract the offset transform from the argument
+      auto offsetTransform = XRRigidTransform::Unwrap(isolate, info[0].As<Object>());
+      if (offsetTransform == nullptr || !offsetTransform->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Invalid XRRigidTransform object").ToLocalChecked()));
+        return;
+      }
+
+      auto offsetSpace = handle()->getOffsetReferenceSpace(offsetTransform->handle()->matrix());
+      info.GetReturnValue().Set(
+        XRReferenceSpace::NewInstance(isolate,
+                                      make_shared<client_xr::XRReferenceSpace>(offsetSpace)));
     }
   }
 }
