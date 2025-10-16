@@ -43,7 +43,7 @@ namespace script_bindings
         InstanceMethod(isolate, prototype, "createCDATASection", &Document::CreateCDATASection);
         InstanceMethod(isolate, prototype, "createDocumentFragment", &Document::CreateDocumentFragment);
         InstanceMethod(isolate, prototype, "createElement", &Document::CreateElement);
-        InstanceMethod(isolate, prototype, "createElementNS", &Document::CreateElement);
+        InstanceMethod(isolate, prototype, "createElementNS", &Document::CreateElementNS);
         InstanceMethod(isolate, prototype, "createTextNode", &Document::CreateTextNode);
         InstanceMethod(isolate, prototype, "createComment", &Document::CreateComment);
 
@@ -79,8 +79,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      auto compatMode = handle()->compatMode;
-      switch (compatMode)
+      switch (handle()->compatMode)
       {
       case dom::DocumentCompatMode::QUIRKS:
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "BackCompat").ToLocalChecked());
@@ -185,9 +184,15 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       auto headElement = handle()->head();
-      return headElement == nullptr
-               ? info.GetReturnValue().SetNull()
-               : info.GetReturnValue().Set(html_bindings::HTMLHeadElement::GetOrNewInstance(isolate, headElement));
+      if (headElement == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        auto jsValue = html_bindings::HTMLHeadElement::GetOrNewInstance(isolate, headElement);
+        info.GetReturnValue().Set(jsValue);
+      }
     }
 
     void Document::TitleGetter(const PropertyCallbackInfo<Value> &info)

@@ -706,16 +706,10 @@ namespace script_bindings
           MakeMethodArgTypeError(isolate, "pixelStorei", "pname", "number", info[0])));
         return;
       }
-      if (!info[1]->IsNumber())
-      {
-        isolate->ThrowException(Exception::TypeError(
-          MakeMethodArgTypeError(isolate, "pixelStorei", "param", "number", info[1])));
-        return;
-      }
 
       Local<Context> context = isolate->GetCurrentContext();
       int pname = info[0]->Int32Value(context).FromMaybe(0);
-      int param = info[1]->Int32Value(context).FromMaybe(0);
+      int param = info[1]->ToNumber(context).ToLocalChecked()->Int32Value(context).FromMaybe(0);
       handle()->pixelStorei(static_cast<client_graphics::WebGLPixelStorageParameterName>(pname), param);
       info.GetReturnValue().SetUndefined();
     }
@@ -3069,11 +3063,212 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      cerr << "WebGLRenderingContext::texSubImage2D: Not implemented yet" << endl;
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "texSubImage2D", "Not implemented yet")));
-      info.GetReturnValue().SetUndefined();
+      if (info.Length() < 7)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texSubImage2D", "7 arguments required, but fewer were provided")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texSubImage2D", "target", "number", info[0])));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texSubImage2D", "level", "number", info[1])));
+        return;
+      }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texSubImage2D", "xoffset", "number", info[2])));
+        return;
+      }
+      if (!info[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texSubImage2D", "yoffset", "number", info[3])));
+        return;
+      }
+
+      client_graphics::WebGLTexture2DTarget target;
+      {
+        int value = info[0]->Int32Value(context).FromMaybe(0);
+        target = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int level = info[1]->Int32Value(context).FromMaybe(0);
+      int xoffset = info[2]->Int32Value(context).FromMaybe(0);
+      int yoffset = info[3]->Int32Value(context).FromMaybe(0);
+
+      if (info.Length() == 7)
+      {
+        if (!info[4]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "format", "number", info[4])));
+          return;
+        }
+        if (!info[5]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "type", "number", info[5])));
+          return;
+        }
+
+        client_graphics::WebGLTextureFormat format;
+        client_graphics::WebGLPixelType pixelType;
+        {
+          int value = info[4]->Int32Value(context).FromMaybe(0);
+          format = static_cast<client_graphics::WebGLTextureFormat>(value);
+        }
+        {
+          int value = info[5]->Int32Value(context).FromMaybe(0);
+          pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+        }
+
+        auto sourceValue = info[6];
+        auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, sourceValue);
+        if (imageSource == nullptr)
+        {
+          auto msg =
+            "ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, ImageBitmap, OffscreenCanvas"
+            " or null object";
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "pixels", msg, sourceValue)));
+          return;
+        }
+
+        SkPixmap imagePixmap;
+        if (!imageSource->readPixels(imagePixmap))
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "texSubImage2D", "Failed to read pixels from the image source")));
+          return;
+        }
+
+        handle()->texSubImage2D(target,
+                                level,
+                                xoffset,
+                                yoffset,
+                                imagePixmap.width(),
+                                imagePixmap.height(),
+                                format,
+                                pixelType,
+                                reinterpret_cast<unsigned char *>(imagePixmap.writable_addr()));
+      }
+      else if (info.Length() >= 9)
+      {
+        if (!info[4]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "width", "number", info[4])));
+          return;
+        }
+        if (!info[5]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "height", "number", info[5])));
+          return;
+        }
+        if (!info[6]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "format", "number", info[6])));
+          return;
+        }
+        if (!info[7]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage2D", "type", "number", info[7])));
+          return;
+        }
+
+        int width = info[4]->Int32Value(context).FromMaybe(0);
+        int height = info[5]->Int32Value(context).FromMaybe(0);
+        client_graphics::WebGLTextureFormat format;
+        client_graphics::WebGLPixelType pixelType;
+        {
+          int value = info[6]->Int32Value(context).FromMaybe(0);
+          format = static_cast<client_graphics::WebGLTextureFormat>(value);
+        }
+        {
+          int value = info[7]->Int32Value(context).FromMaybe(0);
+          pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+        }
+
+        SkPixmap imagePixmap;
+        unsigned char *pixels = nullptr;
+
+        if (info[8]->IsNull())
+        {
+          pixels = nullptr;
+        }
+        else if (info[8]->IsArrayBufferView())
+        {
+          auto data = info[8].As<ArrayBufferView>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "texSubImage2D", "Invalid ArrayBufferView")));
+            return;
+          }
+          pixels = static_cast<uint8_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset();
+        }
+
+        // WebGL2 supports:
+        //  texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, srcData, srcOffset)
+        //  texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, source)
+        //  texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, offset)
+        if (handle()->isWebGL2())
+        {
+          if (info[8]->IsNumber())  // offset
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "texSubImage2D", "Offset source is not supported")));
+            return;
+          }
+          else if (info[8]->IsArrayBufferView() && info.Length() >= 10)  // srcData, srcOffset
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "texSubImage2D", "srcData with srcOffset is not supported")));
+            return;
+          }
+
+          // source
+          auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, info[8]);
+          if (imageSource != nullptr)
+          {
+            if (imageSource->readPixels(imagePixmap))
+            {
+              pixels = reinterpret_cast<unsigned char *>(imagePixmap.writable_addr());
+              width = imagePixmap.width();
+              height = imagePixmap.height();
+            }
+          }
+        }
+
+        handle()->texSubImage2D(target,
+                                level,
+                                xoffset,
+                                yoffset,
+                                width,
+                                height,
+                                format,
+                                pixelType,
+                                pixels);
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texSubImage2D", "Either 7 or 9 arguments must be provided")));
+        return;
+      }
     }
 
     void WebGLRenderingContext::TexParameterf(const FunctionCallbackInfo<Value> &info)
