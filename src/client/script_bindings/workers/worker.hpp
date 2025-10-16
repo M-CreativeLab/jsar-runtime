@@ -13,6 +13,7 @@ namespace script_bindings
 
     class Worker : public WorkerBase
     {
+      friend class scripting_base::ObjectWrap<Worker, client_workers::Worker, EventTarget>;
       using WorkerBase::ObjectWrap;
 
     public:

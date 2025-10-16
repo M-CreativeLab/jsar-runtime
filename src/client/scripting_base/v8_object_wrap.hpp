@@ -834,10 +834,11 @@ namespace scripting_base
           return;
         }
         instance = new T(isolate, args);
+        instance->onCreated();
       }
       else
       {
-        // Use the default constructor
+        // Native constructing will use the default constructor, and call `onCreated` later
         instance = new T(isolate);
       }
       assert(instance != nullptr && "Failed to create instance");

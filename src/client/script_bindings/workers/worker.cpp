@@ -259,6 +259,28 @@ namespace script_bindings::workers_bindings
 
   void Worker::OnError(const FunctionCallbackInfo<Value> &args)
   {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Worker *instance;
+    string error;
+    if (!ValidateAndUnwrap(args, &instance, error))
+    {
+      cerr << "Worker::OnMessageError: " << error << endl;
+      args.GetReturnValue().SetUndefined();
+      return;
+    }
+
+    if (args.Length() < 1 || !args[0]->IsObject()) [[unlikely]]
+    {
+      cerr << "Worker::OnMessageError: Invalid arguments" << endl;
+      args.GetReturnValue().SetUndefined();
+      return;
+    }
+
+    instance->handle()->dispatchEvent(make_shared<dom::Event>(dom::DOMEventConstructorType::kEvent,
+                                                              dom::DOMEventType::Error));
   }
 
   // static
