@@ -30,6 +30,20 @@
       });
 
       console.info('isPromise?', fetch('https://example.com') instanceof Promise);
+
+      {
+        // test blob response
+        const blob = new Blob(['Hello, world!'], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        fetch(url)
+          .then(retrievedBlob => {
+            console.info('retrieved blob:', retrievedBlob);
+            URL.revokeObjectURL(url);
+          }, err => {
+            console.error('failed to fetch blob URL:', err);
+          });
+        console.info('sent blob URL:', url);
+      }
   </script>
 </head>
 
