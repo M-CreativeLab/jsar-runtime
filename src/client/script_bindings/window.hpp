@@ -36,6 +36,7 @@ namespace script_bindings
     void LocationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     void LocationSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
+    void Fetch(const v8::FunctionCallbackInfo<v8::Value> &info);
     void Alert(const v8::FunctionCallbackInfo<v8::Value> &info);
     void Blur(const v8::FunctionCallbackInfo<v8::Value> &info);
     void Close(const v8::FunctionCallbackInfo<v8::Value> &info);

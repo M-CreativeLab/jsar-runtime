@@ -8,10 +8,11 @@ namespace script_bindings::workers_bindings
   void WorkerGlobalScope::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     HandleScope scope(isolate);
-    auto context = isolate->GetCurrentContext();
+    Local<Context> context = isolate->GetCurrentContext();
     auto prototype = tpl->PrototypeTemplate();
     auto instance = tpl->InstanceTemplate();
-    // No additional properties or methods for now.
+
+    InstanceMethod(isolate, prototype, "fetch", &WorkerGlobalScope::Fetch);
   }
 
   Local<ObjectTemplate> WorkerGlobalScope::GetInstanceTemplate(Isolate *isolate)
@@ -36,5 +37,15 @@ namespace script_bindings::workers_bindings
   {
     setData(data_handle);
     assert(handle() != nullptr && "Native WorkerGlobalScope must not be null.");
+  }
+
+  void WorkerGlobalScope::Fetch(const FunctionCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::TypeError(
+      MakeMethodError(isolate, "fetch", "Not implemented.")));
+    return;
   }
 }

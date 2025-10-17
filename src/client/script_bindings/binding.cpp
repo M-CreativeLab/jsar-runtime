@@ -55,6 +55,9 @@
 #include "./canvas/offscreen_canvas_rendering_context_2d.hpp"
 #include "./canvas/path2d.hpp"
 
+// Fetch bindings
+#include "./fetch/response.hpp"
+
 // WebGL bindings
 #include "./webgl/active_info.hpp"
 #include "./webgl/buffer.hpp"
@@ -141,6 +144,9 @@ namespace script_bindings
     ADD_CANVAS_TYPE(Path2D)
 
 #undef ADD_CANVAS_TYPE
+
+    // Initialize Fetch classes
+    global->Set(context, NAME("Response"), Response::Initialize(isolate)).Check();
 
     // Initialize Worker class
 #define ADD_WORKER_TYPE(X) \

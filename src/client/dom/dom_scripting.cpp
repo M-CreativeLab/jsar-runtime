@@ -235,7 +235,6 @@ namespace dom
         // Global functions
         V8_SET_GLOBAL_FROM_HOST(atob);
         V8_SET_GLOBAL_FROM_HOST(btoa);
-        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(scriptingContext));
         V8_SET_GLOBAL_FROM_HOST(setTimeout);
         V8_SET_GLOBAL_FROM_HOST(clearTimeout);
         V8_SET_GLOBAL_FROM_HOST(setInterval);
@@ -245,7 +244,6 @@ namespace dom
         // Fetch API related objects
         V8_SET_GLOBAL_FROM_HOST(Headers);
         V8_SET_GLOBAL_FROM_HOST(Request);
-        V8_SET_GLOBAL_FROM_HOST(Response);
 
 #undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
@@ -382,7 +380,6 @@ namespace dom
         // Global functions
         V8_SET_GLOBAL_FROM_HOST(atob);
         V8_SET_GLOBAL_FROM_HOST(btoa);
-        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(workerContext));
         V8_SET_GLOBAL_FROM_HOST(setTimeout);
         V8_SET_GLOBAL_FROM_HOST(clearTimeout);
         V8_SET_GLOBAL_FROM_HOST(setInterval);
@@ -393,7 +390,6 @@ namespace dom
         // Fetch API related objects
         V8_SET_GLOBAL_FROM_HOST(Headers);
         V8_SET_GLOBAL_FROM_HOST(Request);
-        V8_SET_GLOBAL_FROM_HOST(Response);
 
 #undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_SET_GLOBAL_FROM_VALUE

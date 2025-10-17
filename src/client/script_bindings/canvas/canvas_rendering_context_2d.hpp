@@ -9,39 +9,100 @@ namespace script_bindings
 {
   namespace canvas_bindings
   {
-    using NativeCanvasRenderingContext2D = ::canvas::CanvasRenderingContext2D<::canvas::Canvas>;
-
-    class CanvasRenderingContext2D;
-    using CanvasRenderingContext2DBase = scripting_base::ObjectWrap<CanvasRenderingContext2D,
-                                                                    NativeCanvasRenderingContext2D>;
-
-    /**
-     * CanvasRenderingContext2D wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps canvas::RenderingContext2D objects for use in V8 JavaScript execution contexts.
-     * It provides the standard Canvas 2D API for drawing operations.
-     */
-    class CanvasRenderingContext2D : public CanvasRenderingContext2DBase
+    template <typename T, typename CanvasType>
+    class CanvasRenderingContext2DBase
+        : public scripting_base::ObjectWrap<T, canvas::CanvasRenderingContext2D<CanvasType>>
     {
-      using CanvasRenderingContext2DBase::ObjectWrap;
+      using scripting_base::ObjectWrap<T, canvas::CanvasRenderingContext2D<CanvasType>>::ObjectWrap;
 
     public:
-      /**
-       * The name of the CanvasRenderingContext2D class for V8.
-       */
-      static std::string Name()
+      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
       {
-        return "CanvasRenderingContext2D";
+        v8::HandleScope scope(isolate);
+        v8::Local<v8::ObjectTemplate> prototype = tpl->PrototypeTemplate();
+        v8::Local<v8::ObjectTemplate> instance = tpl->InstanceTemplate();
+
+        // Drawing rectangles
+        T::InstanceMethod(isolate, prototype, "fillRect", &T::FillRect);
+        T::InstanceMethod(isolate, prototype, "strokeRect", &T::StrokeRect);
+        T::InstanceMethod(isolate, prototype, "clearRect", &T::ClearRect);
+
+        // Drawing text
+        T::InstanceMethod(isolate, prototype, "fillText", &T::FillText);
+        T::InstanceMethod(isolate, prototype, "strokeText", &T::StrokeText);
+        T::InstanceMethod(isolate, prototype, "measureText", &T::MeasureText);
+
+        // Paths
+        T::InstanceMethod(isolate, prototype, "beginPath", &T::BeginPath);
+        T::InstanceMethod(isolate, prototype, "closePath", &T::ClosePath);
+        T::InstanceMethod(isolate, prototype, "moveTo", &T::MoveTo);
+        T::InstanceMethod(isolate, prototype, "lineTo", &T::LineTo);
+        T::InstanceMethod(isolate, prototype, "bezierCurveTo", &T::BezierCurveTo);
+        T::InstanceMethod(isolate, prototype, "quadraticCurveTo", &T::QuadraticCurveTo);
+        T::InstanceMethod(isolate, prototype, "arc", &T::Arc);
+        T::InstanceMethod(isolate, prototype, "ellipse", &T::Ellipse);
+
+        // Drawing paths
+        T::InstanceMethod(isolate, prototype, "fill", &T::Fill);
+        T::InstanceMethod(isolate, prototype, "stroke", &T::Stroke);
+
+        // Transformations
+        T::InstanceMethod(isolate, prototype, "scale", &T::Scale);
+        T::InstanceMethod(isolate, prototype, "rotate", &T::Rotate);
+        T::InstanceMethod(isolate, prototype, "translate", &T::Translate);
+        T::InstanceMethod(isolate, prototype, "transform", &T::Transform);
+        T::InstanceMethod(isolate, prototype, "setTransform", &T::SetTransform);
+        T::InstanceMethod(isolate, prototype, "resetTransform", &T::ResetTransform);
+
+        // Image operations
+        T::InstanceMethod(isolate, prototype, "drawImage", &T::DrawImage);
+        T::InstanceMethod(isolate, prototype, "createImageData", &T::CreateImageData);
+        T::InstanceMethod(isolate, prototype, "getImageData", &T::GetImageData);
+        T::InstanceMethod(isolate, prototype, "putImageData", &T::PutImageData);
+
+        // State management
+        T::InstanceMethod(isolate, prototype, "save", &T::Save);
+        T::InstanceMethod(isolate, prototype, "restore", &T::Restore);
+
+        // Line dash
+        T::InstanceAccessor(isolate,
+                         instance,
+                         "lineDashOffset",
+                         &T::LineDashOffsetGetter,
+                         &T::LineDashOffsetSetter);
+        T::InstanceMethod(isolate, prototype, "getLineDash", &T::GetLineDash);
+        T::InstanceMethod(isolate, prototype, "setLineDash", &T::SetLineDash);
+
+        // Properties
+        T::InstanceReadonlyAccessor(isolate, instance, "canvas", &T::CanvasGetter);
+        T::InstanceAccessor(isolate,
+                         instance,
+                         "fillStyle",
+                         &T::FillStyleGetter,
+                         &T::FillStyleSetter);
+        T::InstanceAccessor(isolate,
+                         instance,
+                         "strokeStyle",
+                         &T::StrokeStyleGetter,
+                         &T::StrokeStyleSetter);
+        T::InstanceAccessor(isolate,
+                         instance,
+                         "lineWidth",
+                         &T::LineWidthGetter,
+                         &T::LineWidthSetter);
+        T::InstanceAccessor(isolate,
+                         instance,
+                         "globalAlpha",
+                         &T::GlobalAlphaGetter,
+                         &T::GlobalAlphaSetter);
+        T::InstanceAccessor(isolate,
+                         instance,
+                         "globalCompositeOperation",
+                         &T::GlobalCompositeOperationGetter,
+                         &T::GlobalCompositeOperationSetter);
       }
 
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<NativeCanvasRenderingContext2D> nativeRenderingContext);
-
-    public:
-      CanvasRenderingContext2D(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
-    private:
+    protected:
       // Drawing rectangles
       void FillRect(const v8::FunctionCallbackInfo<v8::Value> &info);
       void StrokeRect(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -129,6 +190,20 @@ namespace script_bindings
       void GlobalAlphaSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
       void GlobalCompositeOperationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void GlobalCompositeOperationSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+    };
+
+    class CanvasRenderingContext2D : public CanvasRenderingContext2DBase<CanvasRenderingContext2D, canvas::Canvas>
+    {
+      using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
+
+    public:
+      static std::string Name()
+      {
+        return "CanvasRenderingContext2D";
+      }
+
+    public:
+      CanvasRenderingContext2D(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
     };
   }
 }

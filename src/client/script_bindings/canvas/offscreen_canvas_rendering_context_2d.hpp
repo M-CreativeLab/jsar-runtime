@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/canvas/canvas_rendering_context_2d-inl.hpp>
 #include <client/canvas/canvas.hpp>
 #include <client/canvas/rendering_context2d.hpp>
 
@@ -9,21 +10,16 @@ namespace script_bindings
 {
   namespace canvas_bindings
   {
-    class OffscreenCanvasRenderingContext2D;
-    using OffscreenCanvasRenderingContext2DBase = scripting_base::ObjectWrap<
-      OffscreenCanvasRenderingContext2D,
-      ::canvas::CanvasRenderingContext2D<::canvas::OffscreenCanvas>>;
-
-    class OffscreenCanvasRenderingContext2D : public OffscreenCanvasRenderingContext2DBase
+    class OffscreenCanvasRenderingContext2D : public CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D,
+                                                                                  canvas::OffscreenCanvas>
     {
-      using OffscreenCanvasRenderingContext2DBase::ObjectWrap;
+      using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
 
     public:
       static std::string Name()
       {
         return "OffscreenCanvasRenderingContext2D";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
     };
   }

@@ -8,6 +8,28 @@
       .then(response => response.text())
       .then(text => console.log(text))
       .catch(error => console.error(error));
+
+    fetch('https://example.com')
+      .then(response => {
+        console.info(response, response instanceof Response);
+        console.info({
+          url: response.url,
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+          type: response.type,
+          redirected: response.redirected,
+          bodyUsed: response.bodyUsed
+        });
+        console.info(response.body);
+        return response.arrayBuffer();
+      })
+      .then(buffer => {
+        console.log(buffer);
+        console.log(buffer instanceof ArrayBuffer);
+      });
+
+      console.info('isPromise?', fetch('https://example.com') instanceof Promise);
   </script>
 </head>
 

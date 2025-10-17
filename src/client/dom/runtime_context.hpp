@@ -148,6 +148,18 @@ namespace dom
      */
     v8::Local<v8::Value> createWHATWGFetchImpl(v8::Local<v8::Context> context);
 
+    /**
+     * Send a WHATWG Fetch request, it's used in the `fetch` function implementation.
+     * 
+     * @param isolate The V8 isolate.
+     * @param resource The resource to fetch.
+     * @param options The options of the fetch request.
+     * @returns The promise of the fetch request.
+     */
+    v8::Local<v8::Promise> sendWHATWGFetchRequest(v8::Isolate *isolate,
+                                                  v8::Local<v8::Value> resource,
+                                                  v8::Local<v8::Value> options);
+
   protected:
     /**
      * Get the shared pointer of the runtime context.

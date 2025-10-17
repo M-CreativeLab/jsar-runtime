@@ -33,6 +33,9 @@ namespace script_bindings
 
     public:
       WorkerGlobalScope(v8::Isolate *, std::shared_ptr<client_workers::WorkerGlobalScope>);
+
+    private:
+      void Fetch(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

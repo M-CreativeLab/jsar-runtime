@@ -8,6 +8,8 @@ namespace script_bindings::canvas_bindings
 
   void OffscreenCanvasRenderingContext2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
-    CanvasRenderingContext2D::ConfigureFunctionTemplate(isolate, tpl);
+    CanvasRenderingContext2DBase::ConfigureFunctionTemplate(isolate, tpl);
+
+    // TODO(yorkie): Add OffscreenCanvasRenderingContext2D specific methods and properties here.
   }
 }
