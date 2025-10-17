@@ -37,35 +37,35 @@ namespace script_bindings
 
     private:
       // Property getters
-      void BaseURIGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void NodeNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void NodeTypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void NodeValueGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void NodeValueSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void IsConnectedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void ParentNodeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void ParentElementGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void ChildNodesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void FirstChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void LastChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void NextSiblingGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void PreviousSiblingGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void OwnerDocumentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void TextContentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void TextContentSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void BaseURIGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void NodeNameGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void NodeTypeGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void NodeValueGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void NodeValueSetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void IsConnectedGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ParentNodeGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ParentElementGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ChildNodesGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void FirstChildGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void LastChildGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void NextSiblingGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void PreviousSiblingGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void OwnerDocumentGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TextContentGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TextContentSetter(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Methods
-      void AppendChild(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void RemoveChild(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void InsertBefore(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void ReplaceChild(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void CloneNode(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void HasChildNodes(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void Contains(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void IsDefaultNamespace(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void IsEqualNode(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void IsSameNode(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void Normalize(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void AppendChild(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void RemoveChild(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void InsertBefore(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ReplaceChild(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CloneNode(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void HasChildNodes(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void Contains(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void IsDefaultNamespace(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void IsEqualNode(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void IsSameNode(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void Normalize(const v8::FunctionCallbackInfo<v8::Value> &args);
     };
   }
 }

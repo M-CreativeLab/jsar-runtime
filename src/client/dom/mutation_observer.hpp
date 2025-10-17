@@ -76,6 +76,8 @@ namespace dom
 
   public:
     bool isTarget(std::shared_ptr<Node> node) const;
+    bool hasTarget() const;
+    std::shared_ptr<Node> getTarget() const;
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const MutationRecord &record)

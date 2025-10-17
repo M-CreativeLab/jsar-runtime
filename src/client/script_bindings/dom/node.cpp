@@ -39,20 +39,20 @@ namespace script_bindings::dom_bindings
 #undef NODE_TYPE_MAP
 
     // Add property accessors
-    InstanceReadonlyAccessor(isolate, prototype, "baseURI", &Node::BaseURIGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "isConnected", &Node::IsConnectedGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "parentElement", &Node::ParentElementGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "childNodes", &Node::ChildNodesGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "nextSibling", &Node::NextSiblingGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "previousSibling", &Node::PreviousSiblingGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "ownerDocument", &Node::OwnerDocumentGetter);
-    InstanceAccessor(isolate, prototype, "nodeValue", &Node::NodeValueGetter, &Node::NodeValueSetter);
-    InstanceAccessor(isolate, prototype, "textContent", &Node::TextContentGetter, &Node::TextContentSetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "baseURI", &Node::BaseURIGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "isConnected", &Node::IsConnectedGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "parentElement", &Node::ParentElementGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "childNodes", &Node::ChildNodesGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "nextSibling", &Node::NextSiblingGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "previousSibling", &Node::PreviousSiblingGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "ownerDocument", &Node::OwnerDocumentGetter);
+    InstancePropertyAccessor(isolate, prototype, "nodeValue", &Node::NodeValueGetter, &Node::NodeValueSetter);
+    InstancePropertyAccessor(isolate, prototype, "textContent", &Node::TextContentGetter, &Node::TextContentSetter);
 
     // Add methods
     InstanceMethod(isolate, prototype, "appendChild", &Node::AppendChild);
@@ -101,7 +101,7 @@ namespace script_bindings::dom_bindings
 
   // Property getters
 
-  void Node::BaseURIGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::BaseURIGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -110,7 +110,7 @@ namespace script_bindings::dom_bindings
                                 .ToLocalChecked());
   }
 
-  void Node::NodeNameGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::NodeNameGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -121,7 +121,7 @@ namespace script_bindings::dom_bindings
                                 .ToLocalChecked());
   }
 
-  void Node::NodeTypeGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::NodeTypeGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -130,7 +130,7 @@ namespace script_bindings::dom_bindings
     info.GetReturnValue().Set(Integer::New(isolate, nodeType));
   }
 
-  void Node::NodeValueGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::NodeValueGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -144,10 +144,11 @@ namespace script_bindings::dom_bindings
                                   .ToLocalChecked());
   }
 
-  void Node::NodeValueSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void Node::NodeValueSetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
+    Local<Value> value = info[0];
 
     if (value->IsNull() || value->IsUndefined())
     {
@@ -160,14 +161,14 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::IsConnectedGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  void Node::IsConnectedGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
     info.GetReturnValue().Set(Boolean::New(isolate, handle()->connected));
   }
 
-  void Node::ParentNodeGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::ParentNodeGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -184,7 +185,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::ParentElementGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::ParentElementGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -201,7 +202,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::ChildNodesGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  void Node::ChildNodesGetter(const v8::FunctionCallbackInfo<v8::Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -217,7 +218,7 @@ namespace script_bindings::dom_bindings
     info.GetReturnValue().Set(resultArray);
   }
 
-  void Node::FirstChildGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::FirstChildGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -234,7 +235,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::LastChildGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::LastChildGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -251,7 +252,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::NextSiblingGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::NextSiblingGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -268,7 +269,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::PreviousSiblingGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::PreviousSiblingGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -285,7 +286,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::OwnerDocumentGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::OwnerDocumentGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -301,7 +302,7 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  void Node::TextContentGetter(const PropertyCallbackInfo<Value> &info)
+  void Node::TextContentGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -312,12 +313,12 @@ namespace script_bindings::dom_bindings
                                 .ToLocalChecked());
   }
 
-  void Node::TextContentSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void Node::TextContentSetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    String::Utf8Value utf8Value(isolate, value);
+    String::Utf8Value utf8Value(isolate, info[0]);
     handle()->setTextContent(string(*utf8Value));
   }
 

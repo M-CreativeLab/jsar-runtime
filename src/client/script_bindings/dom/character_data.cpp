@@ -1,4 +1,6 @@
 #include <iostream>
+#include <client/script_bindings/dom/document.hpp>
+
 #include "./character_data.hpp"
 #include "./comment.hpp"
 #include "./text.hpp"
@@ -20,11 +22,15 @@ namespace script_bindings
       InstanceAccessor(isolate, prototype, "data", &CharacterData::DataGetter, &CharacterData::DataSetter);
 
       // Add methods
+      InstanceMethod(isolate, prototype, "after", &CharacterData::After);
+      InstanceMethod(isolate, prototype, "before", &CharacterData::Before);
+      InstanceMethod(isolate, prototype, "remove", &CharacterData::Remove);
       InstanceMethod(isolate, prototype, "substringData", &CharacterData::SubstringData);
       InstanceMethod(isolate, prototype, "appendData", &CharacterData::AppendData);
       InstanceMethod(isolate, prototype, "insertData", &CharacterData::InsertData);
       InstanceMethod(isolate, prototype, "deleteData", &CharacterData::DeleteData);
       InstanceMethod(isolate, prototype, "replaceData", &CharacterData::ReplaceData);
+      InstanceMethod(isolate, prototype, "replaceWith", &CharacterData::ReplaceWith);
     }
 
     Local<Object> CharacterData::NewInstance(Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle)
@@ -77,6 +83,154 @@ namespace script_bindings
     }
 
     // Methods
+
+    void CharacterData::After(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "after", "1 or more arguments required")));
+        return;
+      }
+
+      if (info.Length() == 1)
+      {
+        if (Node::IsInstanceOf(isolate, info[0]))
+        {
+          auto nodeBinding = Node::Unwrap(isolate, info[0].As<Object>());
+          if (nodeBinding != nullptr && nodeBinding->hasData())
+          {
+            handle()->after(nodeBinding->handle());
+          }
+          info.GetReturnValue().SetUndefined();
+          return;
+        }
+        else if (info[0]->IsString())
+        {
+          String::Utf8Value utf8Value(isolate, info[0]);
+          handle()->after(string(*utf8Value));
+          info.GetReturnValue().SetUndefined();
+          return;
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "after", "Argument must be a Node or string")));
+          return;
+        }
+      }
+      else
+      {
+        vector<shared_ptr<dom::Node>> nodes;
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (Node::IsInstanceOf(isolate, info[i]))
+          {
+            auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
+            if (nodeBinding != nullptr && nodeBinding->hasData())
+            {
+              nodes.push_back(nodeBinding->handle());
+            }
+          }
+          else if (info[i]->IsString())
+          {
+            String::Utf8Value utf8Value(isolate, info[i]);
+            shared_ptr<dom::Text> textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
+            nodes.push_back(textNode);
+          }
+          else
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "after", "All arguments must be Node or string")));
+            return;
+          }
+        }
+        handle()->after(nodes);
+        info.GetReturnValue().SetUndefined();
+      }
+    }
+
+    void CharacterData::Before(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "before", "1 or more arguments required")));
+        return;
+      }
+
+      if (info.Length() == 1)
+      {
+        if (Node::IsInstanceOf(isolate, info[0]))
+        {
+          auto nodeBinding = Node::Unwrap(isolate, info[0].As<Object>());
+          if (nodeBinding != nullptr && nodeBinding->hasData())
+          {
+            handle()->before(nodeBinding->handle());
+          }
+          info.GetReturnValue().SetUndefined();
+          return;
+        }
+        else if (info[0]->IsString())
+        {
+          String::Utf8Value utf8Value(isolate, info[0]);
+          handle()->before(string(*utf8Value));
+          info.GetReturnValue().SetUndefined();
+          return;
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "before", "Argument must be a Node or string")));
+          return;
+        }
+      }
+      else
+      {
+        vector<shared_ptr<dom::Node>> nodes;
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (Node::IsInstanceOf(isolate, info[i]))
+          {
+            auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
+            if (nodeBinding != nullptr && nodeBinding->hasData())
+            {
+              nodes.push_back(nodeBinding->handle());
+            }
+          }
+          else if (info[i]->IsString())
+          {
+            String::Utf8Value utf8Value(isolate, info[i]);
+            shared_ptr<dom::Text> textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
+            nodes.push_back(textNode);
+          }
+          else
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "before", "All arguments must be Node or string")));
+            return;
+          }
+        }
+        handle()->before(nodes);
+        info.GetReturnValue().SetUndefined();
+      }
+    }
+
+    void CharacterData::Remove(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      handle()->remove();
+      info.GetReturnValue().SetUndefined();
+    }
+
 
     void CharacterData::SubstringData(const FunctionCallbackInfo<Value> &info)
     {
@@ -211,6 +365,40 @@ namespace script_bindings
       String::Utf8Value utf8Value(isolate, info[2]);
       handle()->replaceData(offset, count, string(*utf8Value));
       return info.GetReturnValue().SetUndefined();
+    }
+
+    void CharacterData::ReplaceWith(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      vector<shared_ptr<dom::Node>> nodes;
+      for (int i = 0; i < info.Length(); ++i)
+      {
+        if (Node::IsInstanceOf(isolate, info[i]))
+        {
+          auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
+          if (nodeBinding != nullptr && nodeBinding->hasData())
+          {
+            nodes.push_back(nodeBinding->handle());
+          }
+        }
+        else if (info[i]->IsString())
+        {
+          String::Utf8Value utf8Value(isolate, info[i]);
+          shared_ptr<dom::Text> textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
+          nodes.push_back(textNode);
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "replaceWith", "All arguments must be Node or string")));
+          return;
+        }
+      }
+
+      handle()->replaceWith(nodes);
+      info.GetReturnValue().SetUndefined();
     }
   }
 }

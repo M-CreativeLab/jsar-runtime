@@ -34,6 +34,8 @@ namespace script_bindings
 
     private:
       // Methods
+      void Append(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Prepend(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementById(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementsByTagName(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementsByClassName(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -41,9 +43,10 @@ namespace script_bindings
       void QuerySelectorAll(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Property getters
-      void ChildElementCountGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void FirstElementChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void LastElementChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ChildElementCountGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ChildrenGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void FirstElementChildGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LastElementChildGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

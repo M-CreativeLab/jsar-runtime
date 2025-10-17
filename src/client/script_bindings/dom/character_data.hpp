@@ -38,11 +38,15 @@ namespace script_bindings
       void LengthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Methods
+      void After(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Before(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Remove(const v8::FunctionCallbackInfo<v8::Value> &info);
       void SubstringData(const v8::FunctionCallbackInfo<v8::Value> &info);
       void AppendData(const v8::FunctionCallbackInfo<v8::Value> &info);
       void InsertData(const v8::FunctionCallbackInfo<v8::Value> &info);
       void DeleteData(const v8::FunctionCallbackInfo<v8::Value> &info);
       void ReplaceData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ReplaceWith(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

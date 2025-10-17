@@ -217,28 +217,6 @@ namespace dom
         // Initialize the scripting context from script bindings
         script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);
 
-        // Set the `window` and `self` properties to refer to the global object itself
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "Window").ToLocalChecked(),
-                    Window)
-          .Check();
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "window").ToLocalChecked(),
-                    global)
-          .Check();
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
-                    global)
-          .Check();
-
-        // Set the `document` property to refer to the document object
-        auto document = script_bindings::dom_bindings::Document::NewInstance(
-          isolate_, static_pointer_cast<dom::Document>(nativeDocument));
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "document").ToLocalChecked(),
-                    document)
-          .Check();
-
         // Baisc objects
         V8_SET_GLOBAL_FROM_HOST(performance);
         V8_SET_GLOBAL_FROM_HOST(console);
@@ -272,6 +250,28 @@ namespace dom
 #undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
 #undef V8_SET_GLOBAL_FROM_VALUE
+
+        // Set the `window` and `self` properties to refer to the global object itself
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "Window").ToLocalChecked(),
+                    Window)
+          .Check();
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "window").ToLocalChecked(),
+                    global)
+          .Check();
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
+                    global)
+          .Check();
+
+        // Set the `document` property to refer to the document object
+        auto document = script_bindings::dom_bindings::Document::NewInstance(
+          isolate_, static_pointer_cast<dom::Document>(nativeDocument));
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "document").ToLocalChecked(),
+                    document)
+          .Check();
       }
 
       ContextEmbedderTag::TagMyContext(scriptingContext);
@@ -364,16 +364,6 @@ namespace dom
         // Update context globals from script bindings
         script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
 
-        // Set the `WorkerGlobalScope` and `self` properties to refer to the global object itself
-        global->Set(workerContext,
-                    String::NewFromUtf8(isolate_, "WorkerGlobalScope").ToLocalChecked(),
-                    WorkerGlobalScope)
-          .Check();
-        global->Set(workerContext,
-                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
-                    global)
-          .Check();
-
         // Baisc objects
         V8_SET_GLOBAL_FROM_HOST(performance);
         V8_SET_GLOBAL_FROM_HOST(console);
@@ -408,6 +398,16 @@ namespace dom
 #undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_SET_GLOBAL_FROM_VALUE
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
+
+        // Set the `WorkerGlobalScope` and `self` properties to refer to the global object itself
+        global->Set(workerContext,
+                    String::NewFromUtf8(isolate_, "WorkerGlobalScope").ToLocalChecked(),
+                    WorkerGlobalScope)
+          .Check();
+        global->Set(workerContext,
+                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
+                    global)
+          .Check();
       }
 
       ContextEmbedderTag::TagMyContext(workerContext);

@@ -39,16 +39,16 @@ namespace script_bindings::html_bindings
     Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    InstanceReadonlyAccessor(isolate, prototype, "dataset", &HTMLElement::DatasetGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "style", &HTMLElement::StyleGetter);
-    InstanceAccessor(isolate, prototype, "dir", &HTMLElement::DirGetter, &HTMLElement::DirSetter);
-    InstanceAccessor(isolate,
-                     prototype,
-                     "innerText",
-                     &HTMLElement::InnerTextGetter,
-                     &HTMLElement::InnerTextSetter,
-                     PropertyAttribute::DontEnum);
-    InstanceAccessor(isolate, prototype, "hidden", &HTMLElement::HiddenGetter, &HTMLElement::HiddenSetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "dataset", &HTMLElement::DatasetGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "style", &HTMLElement::StyleGetter);
+    InstancePropertyAccessor(isolate, prototype, "dir", &HTMLElement::DirGetter, &HTMLElement::DirSetter);
+    InstancePropertyAccessor(isolate,
+                             prototype,
+                             "innerText",
+                             &HTMLElement::InnerTextGetter,
+                             &HTMLElement::InnerTextSetter,
+                             PropertyAttribute::DontEnum);
+    InstancePropertyAccessor(isolate, prototype, "hidden", &HTMLElement::HiddenGetter, &HTMLElement::HiddenSetter);
 
     // Add methods
     InstanceMethod(isolate, prototype, "click", &HTMLElement::Click);
@@ -114,7 +114,7 @@ namespace script_bindings::html_bindings
 
   // Property getters and setters
 
-  void HTMLElement::DatasetGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  void HTMLElement::DatasetGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -122,7 +122,7 @@ namespace script_bindings::html_bindings
     info.GetReturnValue().Set(HTMLElementDataset::NewInstance(isolate, handle()));
   }
 
-  void HTMLElement::DirGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  void HTMLElement::DirGetter(const FunctionCallbackInfo<Value> &info)
   {
     using Dir = ::dom::HTMLElementDirection;
     Isolate *isolate = info.GetIsolate();
@@ -145,11 +145,12 @@ namespace script_bindings::html_bindings
     }
   }
 
-  void HTMLElement::DirSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+  void HTMLElement::DirSetter(const FunctionCallbackInfo<Value> &info)
   {
     using Dir = ::dom::HTMLElementDirection;
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
+    Local<Value> value = info[0];
 
     if (!value.IsEmpty() && value->IsString())
     {
@@ -168,7 +169,7 @@ namespace script_bindings::html_bindings
     }
   }
 
-  void HTMLElement::StyleGetter(const PropertyCallbackInfo<Value> &info)
+  void HTMLElement::StyleGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -186,7 +187,7 @@ namespace script_bindings::html_bindings
   }
 
   // static
-  void HTMLElement::InnerTextGetter(const PropertyCallbackInfo<Value> &info)
+  void HTMLElement::InnerTextGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -203,7 +204,7 @@ namespace script_bindings::html_bindings
   }
 
   // static
-  void HTMLElement::InnerTextSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLElement::InnerTextSetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -214,12 +215,12 @@ namespace script_bindings::html_bindings
       return;
     }
 
-    String::Utf8Value utf8Value(isolate, value);
+    String::Utf8Value utf8Value(isolate, info[0]);
     element->handle()->setInnerText(string(*utf8Value));
   }
 
   // static
-  void HTMLElement::HiddenGetter(const PropertyCallbackInfo<Value> &info)
+  void HTMLElement::HiddenGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -236,7 +237,7 @@ namespace script_bindings::html_bindings
   }
 
   // static
-  void HTMLElement::HiddenSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLElement::HiddenSetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -247,7 +248,7 @@ namespace script_bindings::html_bindings
       return;
     }
 
-    bool hidden = value->BooleanValue(isolate);
+    bool hidden = info[0]->BooleanValue(isolate);
     element->handle()->setHidden(hidden);
   }
 

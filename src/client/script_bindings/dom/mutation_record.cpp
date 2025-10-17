@@ -1,5 +1,7 @@
-#include "./mutation_record.hpp"
 #include <iostream>
+#include "./mutation_record.hpp"
+#include "./node.hpp"
+#include "./node_list.hpp"
 
 using namespace std;
 using namespace v8;
@@ -8,46 +10,19 @@ namespace script_bindings::dom_bindings
 {
   void MutationRecord::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+    HandleScope scope(isolate);
+    Local<ObjectTemplate> prototype = tpl->InstanceTemplate();
 
     // Add read-only properties
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "type").ToLocalChecked(),
-                                  TypeGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "target").ToLocalChecked(),
-                                  TargetGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "addedNodes").ToLocalChecked(),
-                                  AddedNodesGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "removedNodes").ToLocalChecked(),
-                                  RemovedNodesGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "previousSibling").ToLocalChecked(),
-                                  PreviousSiblingGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nextSibling").ToLocalChecked(),
-                                  NextSiblingGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "attributeName").ToLocalChecked(),
-                                  AttributeNameGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "attributeNamespace").ToLocalChecked(),
-                                  AttributeNamespaceGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "oldValue").ToLocalChecked(),
-                                  OldValueGetter);
-  }
-
-  Local<Object> MutationRecord::NewInstance(Isolate *isolate, shared_ptr<dom::MutationRecord> nativeRecord)
-  {
-    EscapableHandleScope scope(isolate);
-
-    if (nativeRecord == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-    else
-    {
-      return scope.Escape(MutationRecordBase::NewInstance(isolate, nativeRecord).As<Object>());
-    }
-  }
-
-  Local<Function> MutationRecord::Initialize(Isolate *isolate)
-  {
-    return MutationRecord::ObjectWrap::Initialize(isolate);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "type", &MutationRecord::TypeGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "target", &MutationRecord::TargetGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "addedNodes", &MutationRecord::AddedNodesGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "removedNodes", &MutationRecord::RemovedNodesGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "previousSibling", &MutationRecord::PreviousSiblingGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "nextSibling", &MutationRecord::NextSiblingGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "attributeName", &MutationRecord::AttributeNameGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "attributeNamespace", &MutationRecord::AttributeNamespaceGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "oldValue", &MutationRecord::OldValueGetter);
   }
 
   MutationRecord::MutationRecord(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -57,66 +32,142 @@ namespace script_bindings::dom_bindings
   }
 
   // Property getters
-  void MutationRecord::TypeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::TypeGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.type getter called" << endl;
-    // TODO: Return the mutation type ("attributes", "childList", "characterData")
-    info.GetReturnValue().Set(String::NewFromUtf8(info.GetIsolate(), "childList").ToLocalChecked());
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    switch (handle()->type)
+    {
+    case dom::MutationType::Attributes:
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate, "attributes").ToLocalChecked());
+      break;
+    case dom::MutationType::CharacterData:
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate, "characterData").ToLocalChecked());
+      break;
+    case dom::MutationType::ChildList:
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate, "childList").ToLocalChecked());
+      break;
+    default:
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate, "unknown").ToLocalChecked());
+      break;
+    }
   }
 
-  void MutationRecord::TargetGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::TargetGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.target getter called" << endl;
-    // TODO: Return the target node that was mutated
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (handle()->hasTarget())
+    {
+      args.GetReturnValue().Set(Node::GetOrNewInstance(isolate,
+                                                       handle()->getTarget()));
+    }
+    else
+    {
+      args.GetReturnValue().SetNull();
+    }
   }
 
-  void MutationRecord::AddedNodesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::AddedNodesGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.addedNodes getter called" << endl;
-    // TODO: Return NodeList of added nodes
-    info.GetReturnValue().Set(Array::New(info.GetIsolate()));
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    auto nodes = make_unique<dom::NodeList<dom::Node>>(handle()->addedNodes);
+    args.GetReturnValue().Set(NodeList::NewInstance(isolate, move(nodes)));
   }
 
-  void MutationRecord::RemovedNodesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::RemovedNodesGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.removedNodes getter called" << endl;
-    // TODO: Return NodeList of removed nodes
-    info.GetReturnValue().Set(Array::New(info.GetIsolate()));
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    auto nodes = make_unique<dom::NodeList<dom::Node>>(handle()->removedNodes);
+    args.GetReturnValue().Set(NodeList::NewInstance(isolate, move(nodes)));
   }
 
-  void MutationRecord::PreviousSiblingGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::PreviousSiblingGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.previousSibling getter called" << endl;
-    // TODO: Return the previous sibling of added/removed nodes
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (handle()->previousSibling.expired())
+    {
+      args.GetReturnValue().SetNull();
+    }
+    else
+    {
+      args.GetReturnValue().Set(Node::GetOrNewInstance(isolate,
+                                                       handle()->previousSibling.lock()));
+    }
   }
 
-  void MutationRecord::NextSiblingGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::NextSiblingGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.nextSibling getter called" << endl;
-    // TODO: Return the next sibling of added/removed nodes
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (handle()->nextSibling.expired())
+    {
+      args.GetReturnValue().SetNull();
+    }
+    else
+    {
+      args.GetReturnValue().Set(Node::GetOrNewInstance(isolate,
+                                                       handle()->nextSibling.lock()));
+    }
   }
 
-  void MutationRecord::AttributeNameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::AttributeNameGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.attributeName getter called" << endl;
-    // TODO: Return the local name of the changed attribute
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (handle()->attributeName.has_value())
+    {
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->attributeName->c_str())
+                                  .ToLocalChecked());
+    }
+    else
+    {
+      args.GetReturnValue().SetNull();
+    }
   }
 
-  void MutationRecord::AttributeNamespaceGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::AttributeNamespaceGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.attributeNamespace getter called" << endl;
-    // TODO: Return the namespace of the changed attribute
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (handle()->attributeNamespace.has_value())
+    {
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->attributeNamespace->c_str())
+                                  .ToLocalChecked());
+    }
+    else
+    {
+      args.GetReturnValue().SetNull();
+    }
   }
 
-  void MutationRecord::OldValueGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void MutationRecord::OldValueGetter(const FunctionCallbackInfo<Value> &args)
   {
-    cout << "MutationRecord.oldValue getter called" << endl;
-    // TODO: Return the old value (for attributes and characterData)
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (handle()->oldValue.has_value())
+    {
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->oldValue->c_str())
+                                  .ToLocalChecked());
+    }
+    else
+    {
+      args.GetReturnValue().SetNull();
+    }
   }
 }

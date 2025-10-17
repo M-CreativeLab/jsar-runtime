@@ -46,14 +46,14 @@ namespace script_bindings
 
     private:
       // Property getters and setters
-      void DatasetGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void DirGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void DirSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void StyleGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void InnerTextGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void InnerTextSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void HiddenGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void HiddenSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void DatasetGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void DirGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void DirSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void StyleGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void InnerTextGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void InnerTextSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void HiddenGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void HiddenSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Methods
       void Click(const v8::FunctionCallbackInfo<v8::Value> &info);

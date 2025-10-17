@@ -20,25 +20,22 @@ namespace script_bindings
       {
         return "MutationRecord";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::MutationRecord> nativeRecord);
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       MutationRecord(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void TargetGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void AddedNodesGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void RemovedNodesGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void PreviousSiblingGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NextSiblingGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void AttributeNameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void AttributeNamespaceGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OldValueGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TypeGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TargetGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void AddedNodesGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void RemovedNodesGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void PreviousSiblingGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void NextSiblingGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void AttributeNameGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void AttributeNamespaceGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void OldValueGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
     };
   }
 }

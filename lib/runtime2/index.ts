@@ -126,7 +126,7 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     // Start the browsing context.
-    const document = globalThis.document = this.#browsingContext.start(codeOrUrl, 'text/html', inputType, urlBase);
-    console.info(`Content(#${this.id}): the document is loaded successfully.`, document);
+    globalThis.document = this.#browsingContext.start(codeOrUrl, 'text/html', inputType, urlBase);
+    console.info(`Content(#${this.id}): the document is loaded successfully.`);
   }
 }

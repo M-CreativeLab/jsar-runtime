@@ -91,7 +91,7 @@
     </button>
 
     <!-- Test both attribute and property -->
-    <button id="btn3" onclick="logEvent('btn3', 'Inline handler (should be overridden)')">
+    <button id="btn3" onclick="logEvent('btn3', 'Inline handler (should be overridden)', event)">
       Click me (both handlers)
     </button>
 
@@ -130,7 +130,7 @@
     }
 
     function logEvent(name, message, event) {
-      console.info('event=', event, String(event.constructor), event.type);
+      console.info('event=', event, event instanceof PointerEvent, event.type);
       console.info(String(event.__proto__.__proto__.constructor));
       addLog(`✅ SUCCESS: ${name} - ${message}`, 'success');
       
@@ -253,7 +253,7 @@
     }
 
     // Initialize the test page
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('load', () => {
       addLog('📄 Page loaded successfully', 'info');
       addLog('👆 Click buttons above to test onclick handlers', 'info');
       addLog('🤖 Or click "Run Automated Tests" for comprehensive testing', 'info');

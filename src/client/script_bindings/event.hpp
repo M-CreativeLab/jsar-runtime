@@ -38,10 +38,10 @@ namespace script_bindings
 
   private:
     // Property getters
-    void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-    void BubblesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-    void CancelableGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-    void ComposedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void TypeGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void BubblesGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void CancelableGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void ComposedGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
 
     // Methods
     void PreventDefault(const v8::FunctionCallbackInfo<v8::Value> &info);

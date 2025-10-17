@@ -36,26 +36,39 @@ namespace script_bindings
 
     private:
       // Property getters and setters
-      void TagNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void IdGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void IdSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void ClassListGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void ClassNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void ClassNameSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void ChildrenGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void FirstElementChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void LastElementChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void InnerHTMLGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void InnerHTMLSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void OuterHTMLGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void OuterHTMLSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void TagNameGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IdGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IdSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ClassListGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ClassNameGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ClassNameSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ChildrenGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void FirstElementChildGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LastElementChildGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void InnerHTMLGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void InnerHTMLSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void OuterHTMLGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void OuterHTMLSetter(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Methods
+      void After(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Animate(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Append(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void AttachShadow(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Before(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CheckVisibility(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Closest(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void SetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void RemoveAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetAttributeNames(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetBoundingClientRect(const v8::FunctionCallbackInfo<v8::Value> &info);
       void HasAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void HasAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Remove(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void RemoveAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetAttributeNode(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetAttributeNodeNS(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetAttributeNS(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementsByTagName(const v8::FunctionCallbackInfo<v8::Value> &info);
       void GetElementsByClassName(const v8::FunctionCallbackInfo<v8::Value> &info);
       void QuerySelector(const v8::FunctionCallbackInfo<v8::Value> &info);

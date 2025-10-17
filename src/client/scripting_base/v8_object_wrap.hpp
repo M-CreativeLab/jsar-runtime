@@ -17,7 +17,7 @@
 namespace scripting_base
 {
   template <typename T, typename TCallback>
-  struct MethodCallbackData
+  struct FunctionCallbackData
   {
     TCallback callback;
     void *data;
@@ -83,9 +83,15 @@ namespace scripting_base
     friend class ObjectWrap<T, TData, TBase>;
 
   protected:
-    using InstanceMethodCallback = void (T::*)(const v8::FunctionCallbackInfo<v8::Value> &);
-    using InstanceMethodCallbackData = MethodCallbackData<T, InstanceMethodCallback>;
+    /**
+     * Instance function are used to define the instance methods and property getters/setters functions.
+     */
+    using InstanceFunctionCallback = void (T::*)(const v8::FunctionCallbackInfo<v8::Value> &);
+    using InstanceFunctionCallbackData = FunctionCallbackData<T, InstanceFunctionCallback>;
 
+    /**
+     * Instance accessor callbacks are used to define the instance's value getters/setters.
+     */
     using InstanceGetterCallback = void (T::*)(const v8::PropertyCallbackInfo<v8::Value> &);
     using InstanceSetterCallback = void (T::*)(v8::Local<v8::Value>, const v8::PropertyCallbackInfo<void> &);
     using InstanceAccessorCallbackData = AccessorCallbackData<T, InstanceGetterCallback, InstanceSetterCallback>;
@@ -318,6 +324,13 @@ namespace scripting_base
     static T *Unwrap(v8::Isolate *isolate, v8::Local<v8::Object> object)
     {
       v8::HandleScope scope(isolate);
+      if (object.IsEmpty() ||
+          !object->IsObject() ||
+          object->InternalFieldCount() <= 0) [[unlikely]]
+      {
+        return nullptr;
+      }
+
       auto externalValue = object->GetInternalField(0);
       if (externalValue.IsEmpty())
         return nullptr;
@@ -382,6 +395,8 @@ namespace scripting_base
     }
 
   protected:
+    /// Convienience helpers to define values, constants, methods, properties and accessors.
+
     /**
      * Sets a read-only instance property with the specified name and value on a V8 ObjectTemplate.
      *
@@ -418,18 +433,18 @@ namespace scripting_base
     static void InstanceMethod(v8::Isolate *isolate,
                                v8::Local<v8::ObjectTemplate> objectTemplate,
                                v8::Local<v8::Name> name,
-                               InstanceMethodCallback callback)
+                               InstanceFunctionCallback callback)
     {
       v8::HandleScope scope(isolate);
 
-      InstanceMethodCallbackData *callbackData = new InstanceMethodCallbackData{callback, nullptr};
+      auto callbackData = new InstanceFunctionCallbackData{callback, nullptr};
       v8::Local<v8::External> dataValue = v8::External::New(isolate, callbackData);
 
       // Manage the lifetime of the callback data
       auto handle = std::make_unique<v8::Persistent<v8::External>>(isolate, dataValue);
-      auto releaseCallback = [](const v8::WeakCallbackInfo<InstanceMethodCallbackData> &data)
+      auto releaseCallback = [](const v8::WeakCallbackInfo<InstanceFunctionCallbackData> &data)
       {
-        InstanceMethodCallbackData *callbackData = data.GetParameter();
+        InstanceFunctionCallbackData *callbackData = data.GetParameter();
         if (callbackData != nullptr)
           delete callbackData;
       };
@@ -444,7 +459,7 @@ namespace scripting_base
     static void InstanceMethod(v8::Isolate *isolate,
                                v8::Local<v8::ObjectTemplate> objectTemplate,
                                const char *name,
-                               InstanceMethodCallback callback)
+                               InstanceFunctionCallback callback)
     {
       v8::HandleScope scope(isolate);
       T::InstanceMethod(isolate,
@@ -512,6 +527,106 @@ namespace scripting_base
                                   v8::AccessControl::DEFAULT,
                                   attributes);
     }
+    /**
+     * Create a standardized property accessor for given object template. This is same to define getter/setter at 
+     * JavaScript side via:
+     * 
+     * ```
+     * class Foo {
+     *   get bar() { ...}
+     * }
+     * ```
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param tpl The object template to which the property accessor will be added.
+     * @param name The name of the property.
+     * @param getterCallback The getter callback function.
+     * @param setterCallback The setter callback function.
+     * @param attributes The property attributes.
+     */
+    static void InstancePropertyAccessor(v8::Isolate *isolate,
+                                         v8::Local<v8::ObjectTemplate> tpl,
+                                         const char *name,
+                                         InstanceFunctionCallback getterCallback,
+                                         InstanceFunctionCallback setterCallback,
+                                         v8::PropertyAttribute attributes = v8::PropertyAttribute::None)
+    {
+      auto releaseCallback = [](const v8::WeakCallbackInfo<InstanceFunctionCallbackData> &data)
+      {
+        InstanceFunctionCallbackData *callbackData = data.GetParameter();
+        if (callbackData != nullptr)
+          delete callbackData;
+      };
+
+      v8::Local<v8::FunctionTemplate> getterTpl = v8::Local<v8::FunctionTemplate>();
+      if (getterCallback)
+      {
+        auto callbackData = new InstanceFunctionCallbackData{getterCallback, nullptr};
+        auto dataValue = v8::External::New(isolate, callbackData);
+        {
+          auto handle = std::make_unique<v8::Persistent<v8::External>>(isolate, dataValue);
+          handle->SetWeak(callbackData, releaseCallback, v8::WeakCallbackType::kParameter);
+          T::callback_data_handles_.emplace_back(std::move(handle));
+        }
+
+        std::string funcName = std::string("get ") + name;
+        getterTpl = v8::FunctionTemplate::New(isolate,
+                                              PropertyGetterWrapper,
+                                              dataValue,
+                                              v8::Local<v8::Signature>(),
+                                              0,
+                                              v8::ConstructorBehavior::kThrow,
+                                              v8::SideEffectType::kHasNoSideEffect);
+        getterTpl->SetClassName(v8::String::NewFromUtf8(isolate, funcName.c_str()).ToLocalChecked());
+      }
+
+      v8::Local<v8::FunctionTemplate> setterTpl = v8::Local<v8::FunctionTemplate>();
+      if (setterCallback)
+      {
+        auto callbackData = new InstanceFunctionCallbackData{setterCallback, nullptr};
+        auto dataValue = v8::External::New(isolate, callbackData);
+        {
+          auto handle = std::make_unique<v8::Persistent<v8::External>>(isolate, dataValue);
+          handle->SetWeak(callbackData, releaseCallback, v8::WeakCallbackType::kParameter);
+          T::callback_data_handles_.emplace_back(std::move(handle));
+        }
+
+        std::string funcName = std::string("set ") + name;
+        setterTpl = v8::FunctionTemplate::New(isolate,
+                                              PropertySetterWrapper,
+                                              dataValue,
+                                              v8::Local<v8::Signature>(),
+                                              1,
+                                              v8::ConstructorBehavior::kThrow,
+                                              v8::SideEffectType::kHasSideEffect);
+        setterTpl->SetClassName(v8::String::NewFromUtf8(isolate, funcName.c_str()).ToLocalChecked());
+      }
+
+      tpl->SetAccessorProperty(v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
+                               getterTpl,
+                               setterTpl,
+                               attributes);
+    }
+    /**
+     * A convenience method to create a read-only property accessor.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param tpl The object template to which the property accessor will be added.
+     * @param name The name of the property.
+     * @param getter The getter callback function.
+     * @param attributes The property attributes.
+     */
+    static void InstanceReadonlyPropertyAccessor(v8::Isolate *isolate,
+                                                 v8::Local<v8::ObjectTemplate> tpl,
+                                                 const char *name,
+                                                 InstanceFunctionCallback getter,
+                                                 v8::PropertyAttribute attributes = v8::PropertyAttribute::ReadOnly)
+    {
+      InstancePropertyAccessor(isolate, tpl, name, getter, nullptr, attributes);
+    }
+
+    /// Error creation helpers
+
     /**
      * Create a standardized error message for method failures.
      *
@@ -624,12 +739,16 @@ namespace scripting_base
      */
     static void Log(v8::Isolate *isolate, const char *method, v8::Local<v8::Value> value)
     {
-      v8::HandleScope scope(isolate);
+      v8::HandleScope handleScope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::Local<v8::String> consoleKey = v8::String::NewFromUtf8(isolate, "console").ToLocalChecked();
-      v8::Local<v8::Value> consoleValue = context->Global()->Get(context, consoleKey).ToLocalChecked();
+      v8::Context::Scope contextScope(context);
 
-      if (consoleValue->IsObject())
+      v8::Local<v8::String> consoleKey = v8::String::NewFromUtf8(isolate, "console").ToLocalChecked();
+      v8::Local<v8::Value> consoleValue;
+      v8::Local<v8::Object> global = context->Global();
+
+      if (global->Get(context, consoleKey).ToLocal(&consoleValue) &&
+          consoleValue->IsObject())
       {
         v8::Local<v8::Object> console = consoleValue.As<v8::Object>();
         v8::Local<v8::Value> methodValue = console->Get(context,
@@ -639,14 +758,23 @@ namespace scripting_base
         if (methodValue->IsFunction())
         {
           v8::Local<v8::Function> logFunction = methodValue.As<v8::Function>();
-          v8::Local<v8::Value> args[] = {value};
-          logFunction->Call(context, console, 1, args).ToLocalChecked();
+
+          if (value.IsEmpty())
+          {
+            v8::Local<v8::Value> args[] = {Undefined(isolate)};
+            logFunction->Call(context, console, 1, args).ToLocalChecked();
+          }
+          else
+          {
+            v8::Local<v8::Value> args[] = {value};
+            logFunction->Call(context, console, 1, args).ToLocalChecked();
+          }
           return;
         }
       }
 
       // Fallback: console.log is not available
-      assert(false && "console.log is not available");
+      assert(false && "console.[method] is not available");
     }
     static inline void Log(v8::Isolate *isolate, v8::Local<v8::Value> value)
     {
@@ -705,7 +833,7 @@ namespace scripting_base
       v8::Isolate *isolate = info.GetIsolate();
       v8::HandleScope scope(isolate);
 
-      auto callbackData = T::template GetCallbackData<InstanceMethodCallbackData>(info);
+      auto callbackData = T::template GetCallbackData<InstanceFunctionCallbackData>(info);
       if (callbackData != nullptr)
       {
         assert(callbackData->callback != nullptr && "callback must not be null");
@@ -732,7 +860,7 @@ namespace scripting_base
       auto callbackData = T::template GetCallbackData<InstanceAccessorCallbackData>(info);
       if (callbackData != nullptr && callbackData->getterCallback) [[likely]]
       {
-        T *instance = T::Unwrap(info.GetIsolate(), info.This());
+        T *instance = T::Unwrap(isolate, info.This());
         if (instance == nullptr) [[unlikely]]
         {
           isolate->ThrowException(v8::Exception::TypeError(
@@ -761,7 +889,7 @@ namespace scripting_base
       auto callbackData = T::template GetCallbackData<InstanceAccessorCallbackData>(info);
       if (callbackData != nullptr && callbackData->setterCallback) [[likely]]
       {
-        T *instance = T::Unwrap(info.GetIsolate(), info.This());
+        T *instance = T::Unwrap(isolate, info.This());
         if (instance == nullptr) [[unlikely]]
         {
           isolate->ThrowException(v8::Exception::TypeError(
@@ -774,6 +902,66 @@ namespace scripting_base
                   instance,
                   std::placeholders::_1,
                   std::placeholders::_2)(value, info);
+        return;
+      }
+    }
+
+    static void PropertyGetterWrapper(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      v8::Isolate *isolate = info.GetIsolate();
+      v8::HandleScope scope(isolate);
+
+      auto callbackData = T::template GetCallbackData<InstanceFunctionCallbackData>(info);
+      if (callbackData != nullptr)
+      {
+        assert(callbackData->callback != nullptr && "callback must not be null");
+
+        T *instance = T::Unwrap(isolate, info.This());
+        if (instance == nullptr) [[unlikely]]
+        {
+          isolate->ThrowException(v8::Exception::TypeError(
+            v8::String::NewFromUtf8(isolate, "Illegal invocation").ToLocalChecked()));
+          return;
+        }
+
+        // Call the method callback
+        std::bind(callbackData->callback, instance, std::placeholders::_1)(info);
+        return;
+      }
+    }
+
+    static void PropertySetterWrapper(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      v8::Isolate *isolate = info.GetIsolate();
+      v8::HandleScope scope(isolate);
+
+      if (info.Length() < 1) [[unlikely]]
+      {
+        isolate->ThrowException(v8::Exception::TypeError(
+          v8::String::NewFromUtf8(isolate, "Failed to set property: 1 argument required, but only 0 present.")
+            .ToLocalChecked()));
+        return;
+      }
+
+      // Setter does not return a value
+      info.GetReturnValue().SetUndefined();
+
+      // Call the actual setter
+      auto callbackData = T::template GetCallbackData<InstanceFunctionCallbackData>(info);
+      if (callbackData != nullptr)
+      {
+        assert(callbackData->callback != nullptr && "callback must not be null");
+
+        T *instance = T::Unwrap(isolate, info.This());
+        if (instance == nullptr) [[unlikely]]
+        {
+          isolate->ThrowException(v8::Exception::TypeError(
+            v8::String::NewFromUtf8(isolate, "Illegal invocation").ToLocalChecked()));
+          return;
+        }
+
+        // Call the method callback
+        std::bind(callbackData->callback, instance, std::placeholders::_1)(info);
         return;
       }
     }

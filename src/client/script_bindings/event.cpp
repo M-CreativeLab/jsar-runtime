@@ -16,10 +16,10 @@ namespace script_bindings
     Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    InstanceReadonlyAccessor(isolate, prototype, "type", &Event::TypeGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "bubbles", &Event::BubblesGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "cancelable", &Event::CancelableGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "composed", &Event::ComposedGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "type", &Event::TypeGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "bubbles", &Event::BubblesGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "cancelable", &Event::CancelableGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "composed", &Event::ComposedGetter);
 
     // Add methods
     InstanceMethod(isolate, prototype, "preventDefault", &Event::PreventDefault);
@@ -69,34 +69,39 @@ namespace script_bindings
 
   // Property getters
 
-  void Event::TypeGetter(const PropertyCallbackInfo<Value> &info)
+  void Event::TypeGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
     string type = handle()->typeStr();
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked());
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  type.c_str())
+                                .ToLocalChecked());
   }
 
-  void Event::BubblesGetter(const PropertyCallbackInfo<Value> &info)
+  void Event::BubblesGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-    info.GetReturnValue().Set(Boolean::New(isolate, handle()->bubbles()));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->bubbles()));
   }
 
-  void Event::CancelableGetter(const PropertyCallbackInfo<Value> &info)
+  void Event::CancelableGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-    info.GetReturnValue().Set(Boolean::New(isolate, handle()->cancelable()));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->cancelable()));
   }
 
-  void Event::ComposedGetter(const PropertyCallbackInfo<Value> &info)
+  void Event::ComposedGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-    info.GetReturnValue().Set(Boolean::New(isolate, handle()->composed()));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->composed()));
   }
 
   // Methods
