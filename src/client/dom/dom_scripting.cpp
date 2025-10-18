@@ -222,8 +222,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_HOST(console);
 
         // Basic constructors
-        V8_SET_GLOBAL_FROM_HOST(URL);
-        V8_SET_GLOBAL_FROM_HOST(Blob);
         V8_SET_GLOBAL_FROM_HOST(FormData);
         V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
         V8_SET_GLOBAL_FROM_HOST(WebSocket);
@@ -367,8 +365,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_HOST(console);
 
         // Basic constructors
-        V8_SET_GLOBAL_FROM_HOST(URL);
-        V8_SET_GLOBAL_FROM_HOST(Blob);
         V8_SET_GLOBAL_FROM_HOST(FormData);
         V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
         V8_SET_GLOBAL_FROM_HOST(WebSocket);

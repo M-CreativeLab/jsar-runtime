@@ -15,6 +15,8 @@ file(GLOB_RECURSE TR_CLIENT_LIBRARY_SOURCE
     "src/client/script_bindings/*.cpp"
     "src/client/scripting_base/*.cpp"
     "src/client/scroll/*.cpp"
+    "src/client/storage/*.cpp"
+    "src/client/url/*.cpp"
     "src/client/workers/*.cpp"
     "src/client/xr/*.cpp"
     "src/client/logger.cpp"

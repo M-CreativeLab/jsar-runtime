@@ -1,0 +1,57 @@
+#include <optional>
+#include <client/url/url.hpp>
+#include <crates/bindings.hpp>
+
+using namespace std;
+
+namespace client_url
+{
+  URL::URL()
+      : href_("")
+      , origin_("")
+  {
+  }
+
+  URL::URL(const std::string &url, const std::string &base)
+  {
+    parse(url, base);
+  }
+
+  void URL::parse(const std::string &url, const std::string &base)
+  {
+    optional<holocron::WHATWGUrl> parsed;
+    try
+    {
+      parsed = crates::parseWHATWGUrl(url, base);
+    }
+    catch (const exception &e)
+    {
+      auto msg = "Invalid URL(" + url + ", '" + base + "'): " + string(e.what());
+      throw runtime_error(msg);
+    }
+
+    if (parsed.has_value())
+    {
+      host = string(parsed->host);
+      hostname = string(parsed->hostname);
+      href_ = string(parsed->href);
+      origin_ = string(parsed->origin);
+      username = string(parsed->username);
+      password = string(parsed->password);
+      pathname = string(parsed->pathname);
+      port = to_string(parsed->port);
+      protocol = string(parsed->protocol);
+      search = string(parsed->search);
+    }
+  }
+
+  void URL::setHref(const string &url)
+  {
+    parse(url, "");
+  }
+
+  URLSearchParams URL::searchParams() const
+  {
+    return URLSearchParams(search);
+  }
+}

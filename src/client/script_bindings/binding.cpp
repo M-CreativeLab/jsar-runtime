@@ -55,8 +55,15 @@
 #include "./canvas/offscreen_canvas_rendering_context_2d.hpp"
 #include "./canvas/path2d.hpp"
 
+// Storage bindings
+#include "./storage/blob.hpp"
+
 // Fetch bindings
 #include "./fetch/response.hpp"
+
+// URL bindings
+#include "./url/url.hpp"
+#include "./url/url_search_params.hpp"
 
 // WebGL bindings
 #include "./webgl/active_info.hpp"
@@ -145,8 +152,23 @@ namespace script_bindings
 
 #undef ADD_CANVAS_TYPE
 
+    // Initialize Storage classes
+#define ADD_STORAGE_TYPE(X) \
+  global->Set(context, NAME(#X), storage_bindings::X::Initialize(isolate)).Check();
+
+    ADD_STORAGE_TYPE(Blob)
+#undef ADD_STORAGE_TYPE
+
     // Initialize Fetch classes
     global->Set(context, NAME("Response"), Response::Initialize(isolate)).Check();
+
+    // Initialize URL classes
+#define ADD_URL_TYPE(X) \
+  global->Set(context, NAME(#X), url_bindings::X::Initialize(isolate)).Check();
+
+    ADD_URL_TYPE(URL)
+    ADD_URL_TYPE(URLSearchParams)
+#undef ADD_URL_TYPE
 
     // Initialize Worker class
 #define ADD_WORKER_TYPE(X) \

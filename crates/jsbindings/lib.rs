@@ -72,7 +72,7 @@ mod ffi {
 
   extern "Rust" {
     #[cxx_name = "parseWHATWGUrl"]
-    fn parse_whatwg_url(input: &CxxString) -> Result<WHATWGUrl>;
+    fn parse_whatwg_url(input: &CxxString, base: &CxxString) -> Result<WHATWGUrl>;
 
     #[cxx_name = "parseURLToModuleExtension"]
     fn parse_url_to_module_extension(url: &str) -> ModuleExtensionIndex;
@@ -109,8 +109,13 @@ impl std::fmt::Debug for ffi::ModuleExtensionIndex {
   }
 }
 
-fn parse_whatwg_url_impl(input_str: &str) -> anyhow::Result<ffi::WHATWGUrl> {
-  let url = Url::parse(input_str)?;
+fn parse_whatwg_url_impl(input_str: &str, base_str: &str) -> anyhow::Result<ffi::WHATWGUrl> {
+  let url: Url;
+  if base_str != "" {
+    url = Url::parse(base_str)?.join(input_str)?;
+  } else {
+    url = Url::parse(input_str)?;
+  }
 
   let hostname = url.host_str().unwrap_or("").to_string();
   let port = url.port().unwrap_or(0);
@@ -133,8 +138,8 @@ fn parse_whatwg_url_impl(input_str: &str) -> anyhow::Result<ffi::WHATWGUrl> {
   })
 }
 
-fn parse_whatwg_url(input: &CxxString) -> anyhow::Result<ffi::WHATWGUrl> {
-  parse_whatwg_url_impl(input.to_str()?)
+fn parse_whatwg_url(input: &CxxString, base: &CxxString) -> anyhow::Result<ffi::WHATWGUrl> {
+  parse_whatwg_url_impl(input.to_str()?, base.to_str()?)
 }
 
 fn parse_url_to_module_extension(url_str: &str) -> ffi::ModuleExtensionIndex {
@@ -201,7 +206,7 @@ mod tests {
   #[test]
   fn test_parse_whatwg_url() {
     let input_str = "https://example.com:8080/path?query#fragment";
-    let url = parse_whatwg_url_impl(input_str).unwrap();
+    let url = parse_whatwg_url_impl(input_str, "").unwrap();
     assert_eq!(url.host, "example.com:8080");
     assert_eq!(url.hostname, "example.com");
     assert_eq!(url.port, 8080);
@@ -213,6 +218,24 @@ mod tests {
     assert_eq!(url.search, "query");
     assert_eq!(url.username, "");
     assert_eq!(url.hash, "fragment");
+  }
+
+  #[test]
+  fn test_parse_whatwg_url_with_base() {
+    let input_str = "/newpath";
+    let base_str = "https://example.com:8080/oldpath";
+    let url = parse_whatwg_url_impl(input_str, base_str).unwrap();
+    assert_eq!(url.host, "example.com:8080");
+    assert_eq!(url.hostname, "example.com");
+    assert_eq!(url.port, 8080);
+    assert_eq!(url.href, "https://example.com:8080/newpath");
+    assert_eq!(url.origin, "https://example.com:8080");
+    assert_eq!(url.password, "");
+    assert_eq!(url.pathname, "/newpath");
+    assert_eq!(url.protocol, "https:");
+    assert_eq!(url.search, "");
+    assert_eq!(url.username, "");
+    assert_eq!(url.hash, "");
   }
 
   #[test]

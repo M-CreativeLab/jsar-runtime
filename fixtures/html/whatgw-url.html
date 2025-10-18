@@ -1,0 +1,180 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>WHATGW URL</title>
+  <script>
+    function log(message, isError = false) {
+      const output = document.getElementById('output');
+      const div = document.createElement('div');
+      div.textContent = message;
+      div.style.color = isError ? 'red' : 'black';
+      div.style.fontFamily = 'monospace';
+      div.style.marginBottom = '5px';
+      output.appendChild(div);
+      console.log(message);
+    }
+
+    function testURL() {
+      log('=== WHATWG URL API Tests ===');
+
+      // Test 1: Basic URL construction
+      try {
+        const url1 = new URL('https://example.com:8080/path/to/page?param1=value1&param2=value2#section1');
+        log(`✓ Basic URL: ${url1.href}`);
+        log(`  protocol: ${url1.protocol}`);
+        log(`  hostname: ${url1.hostname}`);
+        log(`  port: ${url1.port}`);
+        log(`  pathname: ${url1.pathname}`);
+        log(`  search: ${url1.search}`);
+        log(`  hash: ${url1.hash}`);
+      } catch (e) {
+        log(`✗ Basic URL construction failed: ${e.message}`, true);
+      }
+
+      // Test 2: URL with base
+      try {
+        const base = new URL('https://example.com/base/');
+        const url2 = new URL('relative/path', base);
+        log(`✓ Relative URL: ${url2.href}`);
+      } catch (e) {
+        log(`✗ Relative URL construction failed: ${e.message}`, true);
+      }
+
+      // Test 3: URL property modification
+      try {
+        const url3 = new URL('https://example.com/');
+        url3.pathname = '/new/path';
+        url3.search = '?new=param';
+        url3.hash = '#new-hash';
+        log(`✓ Modified URL: ${url3.href}`);
+      } catch (e) {
+        log(`✗ URL modification failed: ${e.message}`, true);
+      }
+
+      // Test 4: URLSearchParams
+      try {
+        const params = new URLSearchParams('?foo=bar&baz=qux&foo=another');
+        log(`✓ URLSearchParams created`);
+        log(`  get('foo'): ${params.get('foo')}`);
+        log(`  getAll('foo'): [${params.getAll('foo').join(', ')}]`);
+        log(`  has('baz'): ${params.has('baz')}`);
+
+        params.append('new', 'value');
+        params.set('foo', 'updated');
+        params.delete('baz');
+        log(`  after modifications: ${params.toString()}`);
+      } catch (e) {
+        log(`✗ URLSearchParams failed: ${e.message}`, true);
+      }
+
+      // Test 5: URL.searchParams integration
+      try {
+        const url4 = new URL('https://example.com/?initial=value');
+        url4.searchParams.set('added', 'parameter');
+        url4.searchParams.append('multi', 'value1');
+        url4.searchParams.append('multi', 'value2');
+        log(`✓ URL.searchParams: ${url4.href}`);
+        log(`  searchParams entries:`);
+        for (const [key, value] of url4.searchParams) {
+          log(`    ${key}: ${value}`);
+        }
+      } catch (e) {
+        log(`✗ URL.searchParams failed: ${e.message}`, true);
+      }
+
+      // Test 6: Error cases
+      try {
+        new URL('invalid-url');
+        log(`✗ Invalid URL should have thrown an error`, true);
+      } catch (e) {
+        log(`✓ Invalid URL correctly threw: ${e.message}`);
+      }
+
+      try {
+        new URL('relative', 'invalid-base');
+        log(`✗ Invalid base URL should have thrown an error`, true);
+      } catch (e) {
+        log(`✓ Invalid base URL correctly threw: ${e.message}`);
+      }
+
+      // Test 7: Special URLs
+      const specialUrls = [
+        'file:///path/to/file.txt',
+        'data:text/plain;base64,SGVsbG8gV29ybGQ=',
+        'blob:https://example.com/blob-id',
+        'javascript:void(0)',
+        'mailto:test@example.com',
+        'tel:+1234567890'
+      ];
+
+      specialUrls.forEach(urlString => {
+        try {
+          const url = new URL(urlString);
+          log(`✓ Special URL ${url.protocol}: ${url.href}`);
+        } catch (e) {
+          log(`✗ Special URL ${urlString} failed: ${e.message}`, true);
+        }
+      });
+
+      // Test 8: URL.canParse (if available)
+      if (typeof URL.canParse === 'function') {
+        log(`✓ URL.canParse('https://example.com'): ${URL.canParse('https://example.com')}`);
+        log(`✓ URL.canParse('invalid'): ${URL.canParse('invalid')}`);
+      } else {
+        log('! URL.canParse not available');
+      }
+
+      // Test 9: Internationalized domain names
+      try {
+        const idnUrl = new URL('https://例え.テスト/path');
+        log(`✓ IDN URL: ${idnUrl.href}`);
+        log(`  hostname: ${idnUrl.hostname}`);
+      } catch (e) {
+        log(`✗ IDN URL failed: ${e.message}`, true);
+      }
+
+      // Test 10: Unicode in paths and queries
+      try {
+        const unicodeUrl = new URL('https://example.com/🦄/path?emoji=🌟&text=café');
+        log(`✓ Unicode URL: ${unicodeUrl.href}`);
+        log(`  pathname: ${unicodeUrl.pathname}`);
+        log(`  search: ${unicodeUrl.search}`);
+      } catch (e) {
+        log(`✗ Unicode URL failed: ${e.message}`, true);
+      }
+
+      log('=== Tests Complete ===');
+    }
+
+    testURL();
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+
+    #output {
+      background-color: white;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>WHATWG URL API Test Suite</h1>
+  <div id="output"></div>
+</body>
+
+</html>

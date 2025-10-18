@@ -144,11 +144,12 @@ namespace crates
      * Parse a URL string into a WHATWGUrl struct.
      *
      * @param url The URL string to parse.
+     * @param base A string representing the base URL to use in cases where url is a relative reference.
      * @returns The parsed WHATWGUrl struct.
      */
-    static inline Url Parse(const std::string &url)
+    static inline Url Parse(const std::string &url, const std::string &base = "")
     {
-      return Url(holocron::parseWHATWGUrl(url));
+      return Url(holocron::parseWHATWGUrl(url, base));
     }
 
   private:
