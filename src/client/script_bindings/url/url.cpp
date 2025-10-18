@@ -8,7 +8,7 @@ using namespace v8;
 namespace script_bindings::url_bindings
 {
   // static
-  void URL::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+  void URL::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
@@ -29,9 +29,14 @@ namespace script_bindings::url_bindings
 
     InstanceMethod(isolate, prototype, "toString", &URL::ToString);
     InstanceMethod(isolate, prototype, "toJSON", &URL::ToJSON);
+
+    StaticMethod(isolate, tpl, "canParse", &URL::CanParse);
+    StaticMethod(isolate, tpl, "parse", &URL::Parse);
+    StaticMethod(isolate, tpl, "createObjectURL", &URL::CreateObjectURL);
+    StaticMethod(isolate, tpl, "revokeObjectURL", &URL::RevokeObjectURL);
   }
 
-  URL::URL(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+  URL::URL(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : URLBase(isolate, args)
   {
     HandleScope scope(isolate);
@@ -75,7 +80,7 @@ namespace script_bindings::url_bindings
     setData(urlData);
   }
 
-  void URL::HashGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HashGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -84,7 +89,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::HashSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HashSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -98,7 +103,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::HostGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HostGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -107,7 +112,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::HostSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HostSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -121,7 +126,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::HostnameGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HostnameGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -130,7 +135,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::HostnameSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HostnameSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -144,7 +149,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::HrefGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HrefGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -153,7 +158,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::HrefSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::HrefSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -167,7 +172,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::OriginGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::OriginGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -176,7 +181,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::PathnameGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::PathnameGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -185,7 +190,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::PathnameSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::PathnameSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -199,7 +204,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::PortGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::PortGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -208,7 +213,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::PortSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::PortSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -222,7 +227,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::ProtocolGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::ProtocolGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -231,7 +236,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::ProtocolSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::ProtocolSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -245,7 +250,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::SearchGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::SearchGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -254,7 +259,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::SearchSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::SearchSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -268,7 +273,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::SearchParamsGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::SearchParamsGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -277,7 +282,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(URLSearchParams::NewInstance(isolate, searchParams));
   }
 
-  void URL::UsernameGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::UsernameGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -286,7 +291,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::UsernameSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::UsernameSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -300,7 +305,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::PasswordGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::PasswordGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -309,7 +314,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::PasswordSetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::PasswordSetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -323,7 +328,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URL::ToString(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::ToString(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -332,12 +337,110 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(value);
   }
 
-  void URL::ToJSON(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URL::ToJSON(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
 
     Local<String> value = String::NewFromUtf8(isolate, handle()->href().c_str()).ToLocalChecked();
     args.GetReturnValue().Set(value);
+  }
+
+  void URL::CanParse(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (args.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "URL.canParse", "Requires at least 1 argument")));
+      return;
+    }
+
+    string url;
+    {
+      String::Utf8Value utf8Value(isolate, args[0]);
+      if (utf8Value.length() == 0)
+      {
+        args.GetReturnValue().Set(Boolean::New(isolate, false));
+        return;
+      }
+      url = string(*utf8Value);
+    }
+
+    string base;
+    if (args.Length() >= 2 && args[1]->IsString())
+    {
+      String::Utf8Value utf8Value(isolate, args[1]);
+      base = string(*utf8Value);
+    }
+
+    args.GetReturnValue().Set(Boolean::New(isolate,
+                                           client_url::URL::CanParse(url, base)));
+  }
+
+  void URL::Parse(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    if (args.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "URL.parse", "Requires at least 1 argument")));
+      return;
+    }
+
+    string url;
+    string base;
+    {
+      String::Utf8Value utf8Value(isolate, args[0]);
+      if (utf8Value.length() == 0)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "URL.parse", "Invalid URL string")));
+        return;
+      }
+      url = string(*utf8Value);
+    }
+
+    if (args.Length() >= 2 && args[1]->IsString())
+    {
+      String::Utf8Value utf8Value(isolate, args[1]);
+      base = string(*utf8Value);
+    }
+
+    shared_ptr<client_url::URL> urlData;
+    try
+    {
+      urlData = make_shared<client_url::URL>(client_url::URL::Parse(url, base));
+    }
+    catch (const exception &e)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "URL.parse", e.what())));
+      return;
+    }
+    args.GetReturnValue().Set(URL::NewInstance(isolate, urlData));
+  }
+
+  void URL::CreateObjectURL(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "URL.createObjectURL", "Not implemented")));
+  }
+
+  void URL::RevokeObjectURL(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "URL.revokeObjectURL", "Not implemented")));
   }
 }

@@ -17,6 +17,24 @@ namespace client_url
     parse(url, base);
   }
 
+  bool URL::CanParse(const std::string &url, const std::string &base)
+  {
+    try
+    {
+      optional<holocron::WHATWGUrl> parsed = crates::parseWHATWGUrl(url, base);
+      return parsed.has_value();
+    }
+    catch (const exception &)
+    {
+      return false;
+    }
+  }
+
+  URL URL::Parse(const std::string &url, const std::string &base)
+  {
+    return URL(url, base);
+  }
+
   void URL::parse(const std::string &url, const std::string &base)
   {
     optional<holocron::WHATWGUrl> parsed;

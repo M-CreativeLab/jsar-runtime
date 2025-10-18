@@ -144,6 +144,45 @@
         log(`✗ Unicode URL failed: ${e.message}`, true);
       }
 
+      // Test 11: URL.parse (if available)
+      try {
+        if (typeof URL.parse === 'function') {
+          const parsed1 = URL.parse('https://example.com/path?x=1#hash');
+          if (parsed1) {
+            log(`✓ URL.parse absolute: ${parsed1.href}`);
+            log(`  protocol: ${parsed1.protocol}`);
+            log(`  hostname: ${parsed1.hostname}`);
+            log(`  pathname: ${parsed1.pathname}`);
+            log(`  search: ${parsed1.search}`);
+            log(`  hash: ${parsed1.hash}`);
+          } else {
+            log('✗ URL.parse returned null for absolute URL', true);
+          }
+
+          const base = new URL('https://example.com/base/');
+          const parsed2 = URL.parse('relative/path', base);
+          if (parsed2) {
+            log(`✓ URL.parse with base: ${parsed2.href}`);
+          } else {
+            log('✗ URL.parse returned null for relative with base', true);
+          }
+
+          const invalid1 = URL.parse('invalid-url');
+          log(invalid1 === null
+            ? '✓ URL.parse invalid returns null'
+            : '✗ URL.parse invalid did not return null', invalid1 !== null);
+
+          const invalid2 = URL.parse('relative', 'invalid-base');
+          log(invalid2 === null
+            ? '✓ URL.parse invalid base returns null'
+            : '✗ URL.parse invalid base did not return null', invalid2 !== null);
+        } else {
+          log('! URL.parse not available');
+        }
+      } catch (e) {
+        log(`✗ URL.parse tests failed: ${e.message}`, true);
+      }
+
       log('=== Tests Complete ===');
     }
 

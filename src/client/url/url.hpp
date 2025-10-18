@@ -12,8 +12,8 @@ namespace client_url
     URL();
     URL(const std::string &url, const std::string &base = "");
 
-    static bool CanParse(const std::string &url);
-    static URL Parse(const std::string &url);
+    static bool CanParse(const std::string &url, const std::string &base = "");
+    static URL Parse(const std::string &url, const std::string &base = "");
 
     // static std::string CreateObjectURL(const std::string &data);
     // static void RevokeObjectURL(const std::string &url);

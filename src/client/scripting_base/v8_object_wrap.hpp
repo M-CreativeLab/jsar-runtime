@@ -625,6 +625,24 @@ namespace scripting_base
       InstancePropertyAccessor(isolate, tpl, name, getter, nullptr, attributes);
     }
 
+    /**
+     * Create a standardized static method callback for the class.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param tpl The function template to which the static method will be added.
+     * @param name The name of the static method.
+     * @param callback The static method callback function.
+     */
+    static void StaticMethod(v8::Isolate *isolate,
+                             v8::Local<v8::FunctionTemplate> tpl,
+                             const char *name,
+                             v8::FunctionCallback callback)
+    {
+      v8::HandleScope scope(isolate);
+      tpl->Set(v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
+               v8::FunctionTemplate::New(isolate, callback));
+    }
+
     /// Error creation helpers
 
     /**
