@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <memory>
+#include <functional>
 #include <node/v8.h>
 #include <node/uv.h>
 
