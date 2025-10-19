@@ -9,10 +9,12 @@ namespace client_url
   URL::URL()
       : href_("")
       , origin_("")
+      , url_search_params_(make_shared<URLSearchParams>())
   {
   }
 
   URL::URL(const std::string &url, const std::string &base)
+      : URL()
   {
     parse(url, base);
   }
@@ -60,16 +62,12 @@ namespace client_url
       port = to_string(parsed->port);
       protocol = string(parsed->protocol);
       search = string(parsed->search);
+      url_search_params_ = make_shared<URLSearchParams>(string(parsed->search));
     }
   }
 
   void URL::setHref(const string &url)
   {
     parse(url, "");
-  }
-
-  URLSearchParams URL::searchParams() const
-  {
-    return URLSearchParams(search);
   }
 }

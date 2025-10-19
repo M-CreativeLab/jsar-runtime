@@ -278,8 +278,7 @@ namespace script_bindings::url_bindings
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
 
-    auto searchParams = make_shared<client_url::URLSearchParams>(handle()->searchParams());
-    args.GetReturnValue().Set(URLSearchParams::NewInstance(isolate, searchParams));
+    args.GetReturnValue().Set(URLSearchParams::GetOrNewInstance(isolate, handle()->searchParams()));
   }
 
   void URL::UsernameGetter(const FunctionCallbackInfo<Value> &args)

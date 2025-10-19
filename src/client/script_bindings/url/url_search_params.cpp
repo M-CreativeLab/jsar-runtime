@@ -7,7 +7,15 @@ using namespace v8;
 namespace script_bindings::url_bindings
 {
   // static
-  void URLSearchParams::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+  Local<Function> URLSearchParams::Initialize(Isolate *isolate)
+  {
+    EscapableHandleScope scope(isolate);
+    URLSearchParamsIterator::Initialize(isolate);
+    return scope.Escape(URLSearchParamsBase::Initialize(isolate));
+  }
+
+  // static
+  void URLSearchParams::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
@@ -23,9 +31,10 @@ namespace script_bindings::url_bindings
     InstanceMethod(isolate, prototype, "toString", &URLSearchParams::ToString);
     InstanceMethod(isolate, prototype, "keys", &URLSearchParams::Keys);
     InstanceMethod(isolate, prototype, "values", &URLSearchParams::Values);
+    InstanceMethod(isolate, prototype, Symbol::GetIterator(isolate), &URLSearchParams::GetIterator);
   }
 
-  URLSearchParams::URLSearchParams(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+  URLSearchParams::URLSearchParams(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : URLSearchParamsBase(isolate, args)
   {
     HandleScope scope(isolate);
@@ -48,7 +57,7 @@ namespace script_bindings::url_bindings
     }
   }
 
-  void URLSearchParams::SizeGetter(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::SizeGetter(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -57,7 +66,7 @@ namespace script_bindings::url_bindings
                                            static_cast<int>(handle()->size())));
   }
 
-  void URLSearchParams::Append(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Append(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -65,7 +74,7 @@ namespace script_bindings::url_bindings
     if (args.Length() < 2)
     {
       isolate->ThrowException(Exception::TypeError(
-        MakeMethodArgCountError(isolate, "URLSearchParams.append", 2, args.Length())));
+        MakeMethodArgCountError(isolate, "append", 2, args.Length())));
       return;
     }
 
@@ -84,7 +93,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URLSearchParams::Delete(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Delete(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -112,7 +121,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URLSearchParams::Get(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Get(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -141,7 +150,7 @@ namespace script_bindings::url_bindings
     }
   }
 
-  void URLSearchParams::GetAll(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::GetAll(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -172,7 +181,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(array);
   }
 
-  void URLSearchParams::Has(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Has(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -194,7 +203,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(Boolean::New(isolate, result));
   }
 
-  void URLSearchParams::Set(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Set(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -221,7 +230,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().SetUndefined();
   }
 
-  void URLSearchParams::ToString(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::ToString(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -232,7 +241,7 @@ namespace script_bindings::url_bindings
                                 .ToLocalChecked());
   }
 
-  void URLSearchParams::Keys(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Keys(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -250,7 +259,7 @@ namespace script_bindings::url_bindings
     args.GetReturnValue().Set(array);
   }
 
-  void URLSearchParams::Values(const v8::FunctionCallbackInfo<v8::Value> &args)
+  void URLSearchParams::Values(const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -266,5 +275,101 @@ namespace script_bindings::url_bindings
         .Check();
     }
     args.GetReturnValue().Set(array);
+  }
+
+  void URLSearchParams::GetIterator(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+
+    args.GetReturnValue().Set(URLSearchParamsIterator::NewInstance(isolate, this));
+  }
+
+  // static
+  void URLSearchParamsIterator::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  {
+    HandleScope scope(isolate);
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
+
+    InstanceMethod(isolate, prototype, "next", &URLSearchParamsIterator::Next);
+    InstanceMethod(isolate, prototype, "return", &URLSearchParamsIterator::Return);
+    InstanceMethod(isolate, prototype, "throw", &URLSearchParamsIterator::Throw);
+  }
+
+  // static
+  Local<Object> URLSearchParamsIterator::NewInstance(Isolate *isolate, URLSearchParams *params)
+  {
+    EscapableHandleScope scope(isolate);
+    auto obj = URLSearchParamsIteratorBase::NewInstance(isolate, nullptr);
+    auto iterator = Unwrap(isolate, obj);
+    assert(iterator != nullptr && "iterator must not be null");
+    iterator->params_handle_.Reset(isolate, params->value());
+    return scope.Escape(obj);
+  }
+
+  void URLSearchParamsIterator::Next(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Object> params_object = params_handle_.Get(isolate).As<Object>();
+    auto params_binding = URLSearchParams::Unwrap(isolate, params_object);
+    assert(params_binding != nullptr && "params_binding must not be null");
+    auto &params = *(params_binding->handle());
+
+    Local<Object> iteratorResult = Object::New(isolate);
+    if (current_index_ == params.size())
+    {
+      iteratorResult->Set(context,
+                          String::NewFromUtf8Literal(isolate, "done"),
+                          Boolean::New(isolate, true))
+        .FromJust();
+      iteratorResult->Set(context,
+                          String::NewFromUtf8Literal(isolate, "value"),
+                          Undefined(isolate))
+        .FromJust();
+    }
+    else
+    {
+      Local<Object> value = Array::New(isolate);
+      {
+        const auto &param = params.at(current_index_);
+        value->Set(context, 0, String::NewFromUtf8(isolate, param.first.c_str()).ToLocalChecked()).ToChecked();
+        value->Set(context, 1, String::NewFromUtf8(isolate, param.second.c_str()).ToLocalChecked()).ToChecked();
+        current_index_++;
+      }
+
+      iteratorResult->Set(context,
+                          String::NewFromUtf8Literal(isolate, "done"),
+                          Boolean::New(isolate, false))
+        .FromJust();
+      iteratorResult->Set(context,
+                          String::NewFromUtf8Literal(isolate, "value"),
+                          value)
+        .FromJust();
+    }
+
+    // Return the iterator result object
+    args.GetReturnValue().Set(iteratorResult);
+  }
+
+  void URLSearchParamsIterator::Return(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::TypeError(
+      MakeMethodError(isolate, "return", "Not implemented yet.")));
+  }
+
+  void URLSearchParamsIterator::Throw(const FunctionCallbackInfo<Value> &args)
+  {
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::TypeError(
+      MakeMethodError(isolate, "throw", "Not implemented yet.")));
   }
 }

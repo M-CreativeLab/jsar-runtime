@@ -40,10 +40,18 @@ namespace client_url
     std::string port;
     std::string protocol;
     std::string search;
-    URLSearchParams searchParams() const;
+    std::shared_ptr<URLSearchParams> searchParams() const
+    {
+      return url_search_params_;
+    }
+    URLSearchParams &searchParamsRef()
+    {
+      return *url_search_params_;
+    }
 
   private:
     std::string href_;
     std::string origin_;
+    std::shared_ptr<URLSearchParams> url_search_params_;
   };
 }

@@ -9,6 +9,35 @@
 
 namespace scripting_base
 {
+  namespace iteration_protocol
+  {
+    class Iterable
+    {
+    public:
+      virtual void GetIterator(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+    };
+
+    class Iterator
+    {
+    public:
+      virtual void Next(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+      virtual void Return(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+      virtual void Throw(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+    };
+
+    struct IteratorResult
+    {
+      /**
+       * A boolean that's `false` if the iterator was able to produce the next value in the sequence.
+       */
+      bool done;
+      /**
+       * Any JavaScript value returned by the iterator. Can be omitted when done is true.
+       */
+      v8::Global<v8::Value> value;
+    };
+  }
+
   /**
    * A base class for implementing the Iterator Protocol in V8.
    *
