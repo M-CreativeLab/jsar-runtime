@@ -1,14 +1,14 @@
 #pragma once
 
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/storage/blob.hpp>
+#include <client/fileapi/blob.hpp>
 
 namespace script_bindings
 {
-  namespace storage_bindings
+  namespace fileapi_bindings
   {
     class Blob;
-    using BlobBase = scripting_base::ObjectWrap<Blob, client_storage::Blob>;
+    using BlobBase = scripting_base::ObjectWrap<Blob, client_fileapi::Blob>;
 
     class Blob : public BlobBase
     {

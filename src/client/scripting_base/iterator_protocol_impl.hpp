@@ -9,6 +9,7 @@
 
 namespace scripting_base
 {
+  // This is new version of the implementation of the Iterator Protocol
   namespace iteration_protocol
   {
     class Iterable

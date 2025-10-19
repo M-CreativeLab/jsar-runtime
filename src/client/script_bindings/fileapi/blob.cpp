@@ -1,9 +1,9 @@
-#include <client/script_bindings/storage/blob.hpp>
+#include <client/script_bindings/fileapi/blob.hpp>
 
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::storage_bindings
+namespace script_bindings::fileapi_bindings
 {
   // static
   void Blob::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)

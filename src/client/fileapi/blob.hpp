@@ -5,7 +5,7 @@
 #include <future>
 #include <client/scripting_base/v8_object_holder.hpp>
 
-namespace client_storage
+namespace client_fileapi
 {
   using Uint8Array = std::vector<uint8_t>;
 

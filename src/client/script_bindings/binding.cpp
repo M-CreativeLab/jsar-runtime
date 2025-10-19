@@ -55,8 +55,8 @@
 #include "./canvas/offscreen_canvas_rendering_context_2d.hpp"
 #include "./canvas/path2d.hpp"
 
-// Storage bindings
-#include "./storage/blob.hpp"
+// File API bindings
+#include "./fileapi/blob.hpp"
 
 // Fetch bindings
 #include "./fetch/response.hpp"
@@ -152,12 +152,12 @@ namespace script_bindings
 
 #undef ADD_CANVAS_TYPE
 
-    // Initialize Storage classes
-#define ADD_STORAGE_TYPE(X) \
-  global->Set(context, NAME(#X), storage_bindings::X::Initialize(isolate)).Check();
+    // Initialize File API classes
+#define ADD_FILE_API_TYPE(X) \
+  global->Set(context, NAME(#X), fileapi_bindings::X::Initialize(isolate)).Check();
 
-    ADD_STORAGE_TYPE(Blob)
-#undef ADD_STORAGE_TYPE
+    ADD_FILE_API_TYPE(Blob)
+#undef ADD_FILE_API_TYPE
 
     // Initialize Fetch classes
     global->Set(context, NAME("Response"), Response::Initialize(isolate)).Check();

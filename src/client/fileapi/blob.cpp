@@ -1,8 +1,8 @@
-#include <client/storage/blob.hpp>
+#include <client/fileapi/blob.hpp>
 
 using namespace std;
 
-namespace client_storage
+namespace client_fileapi
 {
   Blob::Blob()
   {
