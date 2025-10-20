@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 /**
  * @namespace browser
  * The `browser` namespace contains classes related to the browser window,

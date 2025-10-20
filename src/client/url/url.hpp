@@ -2,6 +2,8 @@
 
 #include <string>
 #include <client/url/url_search_params.hpp>
+#include <client/fileapi/blob.hpp>
+#include <client/fileapi/blob_url_registry.hpp>
 #include <client/scripting_base/v8_object_holder.hpp>
 
 namespace client_url
@@ -14,9 +16,8 @@ namespace client_url
 
     static bool CanParse(const std::string &url, const std::string &base = "");
     static URL Parse(const std::string &url, const std::string &base = "");
-
-    // static std::string CreateObjectURL(const std::string &data);
-    // static void RevokeObjectURL(const std::string &url);
+    static std::string CreateObjectURL(std::shared_ptr<client_fileapi::Blob> blob);
+    static void RevokeObjectURL(const std::string &url);
 
   private:
     void parse(const std::string &url, const std::string &base);
@@ -53,5 +54,8 @@ namespace client_url
     std::string href_;
     std::string origin_;
     std::shared_ptr<URLSearchParams> url_search_params_;
+
+  public:
+    static inline client_fileapi::BlobURLRegistry BlobRegistry{};
   };
 }

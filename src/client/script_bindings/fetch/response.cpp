@@ -44,6 +44,15 @@ namespace script_bindings
     return scope.Escape(instance);
   }
 
+  // static
+  Local<Object> Response::NewInstance(Isolate *isolate, shared_ptr<client_fileapi::Blob> blob)
+  {
+    EscapableHandleScope scope(isolate);
+    auto instance = ResponseBase::NewInstance(isolate,
+                                              make_shared<client_fetch::Response>(blob));
+    return scope.Escape(instance);
+  }
+
   void Response::SourcePropertyGetter(const char *name, const FunctionCallbackInfo<Value> &args)
   {
     Isolate *isolate = args.GetIsolate();
@@ -137,83 +146,105 @@ namespace script_bindings
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
-    if (source_response_handle_.IsEmpty())
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    args.GetReturnValue().Set(resolver->GetPromise());
+
+    // If the Response has data from the C++ side, return it directly.
+    if (hasData())
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "arrayBuffer", "Source response is not available.")));
-      return;
-    }
-
-    Local<Object> source_response = source_response_handle_.Get(isolate);
-    Local<String> name_string = String::NewFromUtf8(isolate, "arrayBuffer").ToLocalChecked();
-    Local<Function> func = source_response->Get(context, name_string)
-                             .ToLocalChecked()
-                             .As<Function>();
-
-    Local<Value> result_value = func->Call(context, source_response, 0, nullptr).ToLocalChecked();
-    if (!result_value->IsPromise())
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "arrayBuffer", "Source response.arrayBuffer() did not return a Promise.")));
-      return;
-    }
-
-    Local<Promise> result_promise = result_value.As<Promise>();
-    auto OnResolve = [](const FunctionCallbackInfo<Value> &args)
-    {
-      Isolate *isolate = args.GetIsolate();
-      HandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-
-      Local<Promise::Resolver> resolver = args.Data().As<Promise::Resolver>();
-      Local<Value> result_value;
-      {
-        // Serialize and deserialize the ArrayBuffer to transfer it safely.
-        ValueSerializer serializer(isolate);
-        serializer.WriteHeader();
-        serializer.WriteValue(context, args[0]).ToChecked();
-        auto buffer = serializer.Release();
-
-        ValueDeserializer deserializer(isolate, buffer.first, buffer.second);
-        assert(deserializer.ReadHeader(context).ToChecked() && "Failed to read serialized ArrayBuffer header.");
-        if (!deserializer.ReadValue(context).ToLocal(&result_value)) [[unlikely]]
+      // If the Response has data from the C++ side, create an ArrayBuffer from it.
+      const auto &body_bytes = handle()->body();
+      auto backing_store = ArrayBuffer::NewBackingStore(
+        const_cast<uint8_t *>(body_bytes.data()),
+        body_bytes.size(),
+        [](void *data, size_t length, void *deleter_data)
         {
-          result_value = Local<Value>();
-        }
-      }
+          // No-op deleter since the data is owned by the Response
+        },
+        nullptr);
+      auto arraybuffer_value = ArrayBuffer::New(isolate, move(backing_store));
+      resolver->Resolve(context, arraybuffer_value).ToChecked();
+    }
+    else
+    {
+      // Otherwise, call the source response's arrayBuffer() method.
 
-      if (result_value.IsEmpty())
+      // Check if source response is available
+      if (source_response_handle_.IsEmpty())
       {
-        resolver->Reject(context,
-                         Exception::Error(
-                           MakeMethodError(isolate, "Response.arrayBuffer", "Failed to serialize ArrayBuffer")))
-          .ToChecked();
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "arrayBuffer", "Source response is not available.")));
         return;
       }
-      else
+
+      Local<Object> source_response = source_response_handle_.Get(isolate);
+      Local<String> name_string = String::NewFromUtf8(isolate, "arrayBuffer").ToLocalChecked();
+      Local<Function> func = source_response->Get(context, name_string)
+                               .ToLocalChecked()
+                               .As<Function>();
+
+      Local<Value> result_value = func->Call(context, source_response, 0, nullptr).ToLocalChecked();
+      if (!result_value->IsPromise())
       {
-        resolver->Resolve(context, result_value).ToChecked();
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "arrayBuffer", "Source response.arrayBuffer() did not return a Promise.")));
+        return;
       }
-    };
-    auto OnReject = [](const FunctionCallbackInfo<Value> &args)
-    {
-      Isolate *isolate = args.GetIsolate();
-      HandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
 
-      Local<Promise::Resolver> resolver = args.Data().As<Promise::Resolver>();
-      Local<Value> error = args[0];
-      resolver->Reject(context, error).ToChecked();
-    };
+      Local<Promise> result_promise = result_value.As<Promise>();
+      auto OnResolve = [](const FunctionCallbackInfo<Value> &args)
+      {
+        Isolate *isolate = args.GetIsolate();
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
 
-    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
-    result_promise->Then(context,
-                         Function::New(context, OnResolve, resolver).ToLocalChecked(),
-                         Function::New(context, OnReject, resolver).ToLocalChecked())
-      .ToLocalChecked();
+        Local<Promise::Resolver> resolver = args.Data().As<Promise::Resolver>();
+        Local<Value> result_value;
+        {
+          // Serialize and deserialize the ArrayBuffer to transfer it safely.
+          ValueSerializer serializer(isolate);
+          serializer.WriteHeader();
+          serializer.WriteValue(context, args[0]).ToChecked();
+          auto buffer = serializer.Release();
 
-    // Return the promise
-    args.GetReturnValue().Set(resolver->GetPromise());
+          ValueDeserializer deserializer(isolate, buffer.first, buffer.second);
+          assert(deserializer.ReadHeader(context).ToChecked() && "Failed to read serialized ArrayBuffer header.");
+          if (!deserializer.ReadValue(context).ToLocal(&result_value)) [[unlikely]]
+          {
+            result_value = Local<Value>();
+          }
+        }
+
+        if (result_value.IsEmpty())
+        {
+          resolver->Reject(context,
+                           Exception::Error(
+                             MakeMethodError(isolate, "Response.arrayBuffer", "Failed to serialize ArrayBuffer")))
+            .ToChecked();
+          return;
+        }
+        else
+        {
+          resolver->Resolve(context, result_value).ToChecked();
+        }
+      };
+      auto OnReject = [](const FunctionCallbackInfo<Value> &args)
+      {
+        Isolate *isolate = args.GetIsolate();
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+
+        Local<Promise::Resolver> resolver = args.Data().As<Promise::Resolver>();
+        Local<Value> error = args[0];
+        resolver->Reject(context, error).ToChecked();
+      };
+
+      // Link the fetch promise to the returned resolver
+      result_promise->Then(context,
+                           Function::New(context, OnResolve, resolver).ToLocalChecked(),
+                           Function::New(context, OnReject, resolver).ToLocalChecked())
+        .ToLocalChecked();
+    }
   }
 
   void Response::Blob(const FunctionCallbackInfo<Value> &args)

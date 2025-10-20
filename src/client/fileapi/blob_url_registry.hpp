@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <client/scripting_base/v8_object_holder.hpp>
 #include <client/fileapi/blob.hpp>
 
@@ -13,11 +14,11 @@ namespace client_fileapi
     BlobURLRegistry();
 
   public:
-    std::string createObjectURL(const Blob& blob);
-    void revokeObjectURL(const std::string& url);
+    std::string createObjectURL(std::shared_ptr<Blob> blob);
+    void revokeObjectURL(const std::string &url);
+    std::shared_ptr<Blob> get(const std::string &url) const;
 
   private:
-    std::unordered_map<std::string, Blob> url_to_blob_map_;
-    std::unordered_map<Blob, std::string> blob_to_url_map_;
+    std::unordered_map<std::string, std::shared_ptr<Blob>> url_to_blob_map_;
   };
 }

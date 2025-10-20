@@ -5,12 +5,22 @@ using namespace std;
 namespace client_fileapi
 {
   Blob::Blob()
+      : size_(0)
+      , type_("")
+      , bytes_()
   {
   }
 
-  promise<Uint8Array> Blob::bytes() const
+  Blob::Blob(const Bytes& bytes, const string& type)
+      : size_(bytes.size())
+      , type_(type)
+      , bytes_(bytes)
   {
-    promise<Uint8Array> promise;
+  }
+
+  promise<Blob::Bytes> Blob::bytes() const
+  {
+    promise<Bytes> promise;
     promise.set_value(bytes_);
     return promise;
   }

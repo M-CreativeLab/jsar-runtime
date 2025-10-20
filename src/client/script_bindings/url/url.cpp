@@ -1,6 +1,7 @@
 #include <memory>
 #include <client/script_bindings/url/url.hpp>
 #include <client/script_bindings/url/url_search_params.hpp>
+#include <client/script_bindings/fileapi/blob.hpp>
 
 using namespace std;
 using namespace v8;
@@ -429,9 +430,34 @@ namespace script_bindings::url_bindings
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "URL.createObjectURL", "Not implemented")));
+    if (args.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodArgCountError(isolate, "URL.createObjectURL", 1, args.Length())));
+      return;
+    }
+
+    if (!fileapi_bindings::Blob::IsInstanceOf(isolate, args[0]))
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodArgTypeError(isolate, "URL.createObjectURL", 0, "Blob", args[0])));
+      return;
+    }
+
+    auto blob = fileapi_bindings::Blob::Unwrap(isolate, args[0].As<Object>());
+    if (!blob)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "URL.createObjectURL", "Failed to unwrap Blob object")));
+      return;
+    }
+
+    auto objectUrl = client_url::URL::CreateObjectURL(blob->handle());
+    args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  objectUrl.c_str())
+                                .ToLocalChecked());
   }
 
   void URL::RevokeObjectURL(const FunctionCallbackInfo<Value> &args)
@@ -439,7 +465,25 @@ namespace script_bindings::url_bindings
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
 
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "URL.revokeObjectURL", "Not implemented")));
+    if (args.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodArgCountError(isolate, "URL.revokeObjectURL", 1, args.Length())));
+      return;
+    }
+
+    string url;
+    {
+      String::Utf8Value utf8Value(isolate, args[0]);
+      if (utf8Value.length() == 0)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "URL.revokeObjectURL", 0, "non-empty string", args[0])));
+        return;
+      }
+      url = string(*utf8Value);
+    }
+    client_url::URL::RevokeObjectURL(url);
+    args.GetReturnValue().SetUndefined();
   }
 }

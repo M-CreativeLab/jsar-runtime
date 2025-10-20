@@ -20,6 +20,19 @@ namespace script_bindings
         return "Blob";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+    public:
+      Blob(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+
+    private:
+      void SizeGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TypeGetter(const v8::FunctionCallbackInfo<v8::Value> &args);
+
+      void ArrayBuffer(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void Bytes(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void Stream(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void Text(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void Slice(const v8::FunctionCallbackInfo<v8::Value> &args);
     };
   }
 }

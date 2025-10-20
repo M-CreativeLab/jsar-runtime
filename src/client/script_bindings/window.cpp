@@ -3,6 +3,7 @@
 #include <client/scripting_base/v8_utils.hpp>
 #include <client/dom/document.hpp>
 #include <client/dom/browsing_context.hpp>
+#include <client/script_bindings/fetch/global_fetch.hpp>
 
 #include "./window.hpp"
 #include "./location.hpp"
@@ -116,48 +117,9 @@ namespace script_bindings
       return;
     }
 
-    Local<Value> resourceValue = info[0];
-    Local<Value> optionsValue = Undefined(isolate);
-    if (info.Length() >= 2)
-    {
-      optionsValue = info[1];
-    }
-
     assert(handle()->document() != nullptr && "Window must be associated with a Document.");
-    auto activeDocument = handle()->document();
-    auto responsePromise = activeDocument->browsingContext->sendWHATWGFetchRequest(isolate,
-                                                                                   resourceValue,
-                                                                                   optionsValue);
-
-    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
-    auto OnResolve = [](const FunctionCallbackInfo<Value> &args)
-    {
-      Isolate *isolate = args.GetIsolate();
-      HandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-
-      Local<Promise::Resolver> resolver = args.Data().As<Promise::Resolver>();
-      resolver->Resolve(context, Response::NewInstance(isolate, args[0])).ToChecked();
-    };
-    auto OnReject = [](const FunctionCallbackInfo<Value> &args)
-    {
-      Isolate *isolate = args.GetIsolate();
-      HandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-
-      Local<Promise::Resolver> resolver = args.Data().As<Promise::Resolver>();
-      Local<Value> error = args[0];
-      resolver->Reject(context, error).ToChecked();
-    };
-
-    // Link the fetch promise to the returned resolver
-    responsePromise->Then(context,
-                          Function::New(context, OnResolve, resolver).ToLocalChecked(),
-                          Function::New(context, OnReject, resolver).ToLocalChecked())
-      .ToLocalChecked();
-
-    // Return the promise
-    info.GetReturnValue().Set(resolver->GetPromise());
+    info.GetReturnValue().Set(
+      GlobalFetch::Fetch(handle()->document(), info));
   }
 
   void Window::Alert(const FunctionCallbackInfo<Value> &info)

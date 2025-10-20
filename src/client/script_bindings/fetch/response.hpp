@@ -1,11 +1,12 @@
 #pragma once
 
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/fetch/response.hpp>
 
 namespace script_bindings
 {
   class Response;
-  using ResponseBase = scripting_base::ObjectWrap<Response, void>;
+  using ResponseBase = scripting_base::ObjectWrap<Response, client_fetch::Response>;
 
   class Response : public ResponseBase
   {
@@ -17,7 +18,14 @@ namespace script_bindings
       return "Response";
     }
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+    /**
+     * Creates a new Response instance from a source response JavaScript object.
+     */
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, v8::Local<v8::Value> source_response);
+    /**
+     * Creates a new Response instance from a Blob object.
+     */
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<client_fileapi::Blob> blob);
 
   private:
     void SourcePropertyGetter(const char* name, const v8::FunctionCallbackInfo<v8::Value> &args);

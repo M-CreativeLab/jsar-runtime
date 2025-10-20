@@ -7,20 +7,30 @@
 
 namespace client_fileapi
 {
-  using Uint8Array = std::vector<uint8_t>;
-
   class Blob : public scripting_base::JSObjectHolder
   {
   public:
-    Blob();
+    using Bytes = std::vector<uint8_t>;
 
   public:
-    std::promise<Uint8Array> bytes() const;
+    Blob();
+    Blob(const Bytes &bytes, const std::string &type = "");
+
+  public:
+    size_t size() const
+    {
+      return size_;
+    }
+    std::string type() const
+    {
+      return type_;
+    }
+    std::promise<Bytes> bytes() const;
     std::promise<std::string> text() const;
 
   private:
     size_t size_;
     std::string type_;
-    Uint8Array bytes_;
+    Bytes bytes_;
   };
 }

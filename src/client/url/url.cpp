@@ -1,5 +1,6 @@
 #include <optional>
 #include <client/url/url.hpp>
+#include <client/fileapi/blob.hpp>
 #include <crates/bindings.hpp>
 
 using namespace std;
@@ -13,13 +14,14 @@ namespace client_url
   {
   }
 
-  URL::URL(const std::string &url, const std::string &base)
+  URL::URL(const string &url, const string &base)
       : URL()
   {
     parse(url, base);
   }
 
-  bool URL::CanParse(const std::string &url, const std::string &base)
+  // static
+  bool URL::CanParse(const string &url, const string &base)
   {
     try
     {
@@ -32,12 +34,25 @@ namespace client_url
     }
   }
 
-  URL URL::Parse(const std::string &url, const std::string &base)
+  // static
+  URL URL::Parse(const string &url, const string &base)
   {
     return URL(url, base);
   }
 
-  void URL::parse(const std::string &url, const std::string &base)
+  // static
+  string URL::CreateObjectURL(shared_ptr<client_fileapi::Blob> blob)
+  {
+    return BlobRegistry.createObjectURL(blob);
+  }
+
+  // static
+  void URL::RevokeObjectURL(const string &url)
+  {
+    BlobRegistry.revokeObjectURL(url);
+  }
+
+  void URL::parse(const string &url, const string &base)
   {
     optional<holocron::WHATWGUrl> parsed;
     try
