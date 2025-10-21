@@ -1,4 +1,5 @@
-#include "./response.hpp"
+#include <client/script_bindings/fetch/response.hpp>
+#include <client/script_bindings/fileapi/blob.hpp>
 
 using namespace std;
 using namespace v8;
@@ -72,7 +73,9 @@ namespace script_bindings
       source_response->Get(context, name_string).ToLocalChecked());
   }
 
-  void Response::SourceMethodCall(const char *name, const FunctionCallbackInfo<Value> &args)
+  void Response::SourceMethodCall(const char *name,
+                                  const FunctionCallbackInfo<Value> &args,
+                                  Local<Promise::Resolver> resolver)
   {
     Isolate *isolate = args.GetIsolate();
     HandleScope scope(isolate);
@@ -97,47 +100,168 @@ namespace script_bindings
 
   void Response::BodyGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("body", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      cerr << "Warning: Response.body is not available." << endl;
+      args.GetReturnValue().SetNull();
+    }
+    else
+    {
+      SourcePropertyGetter("body", args);
+    }
   }
 
   void Response::BodyUsedGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("bodyUsed", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      args.GetReturnValue().Set(Boolean::New(isolate, handle()->bodyUsed()));
+    }
+    else
+    {
+      SourcePropertyGetter("bodyUsed", args);
+    }
   }
 
   void Response::HeadersGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("headers", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      // TODO(yorkie): Implement Headers object creation from C++ side.
+      args.GetReturnValue().SetNull();
+    }
+    else
+    {
+      SourcePropertyGetter("headers", args);
+    }
   }
 
   void Response::OkGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("ok", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      args.GetReturnValue().Set(Boolean::New(isolate, handle()->ok()));
+    }
+    else
+    {
+      SourcePropertyGetter("ok", args);
+    }
   }
 
   void Response::RedirectedGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("redirected", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      args.GetReturnValue().Set(Boolean::New(isolate, handle()->redirected()));
+    }
+    else
+    {
+      SourcePropertyGetter("redirected", args);
+    }
   }
 
   void Response::StatusGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("status", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      args.GetReturnValue().Set(Integer::New(isolate, handle()->status()));
+    }
+    else
+    {
+      SourcePropertyGetter("status", args);
+    }
   }
 
   void Response::StatusTextGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("statusText", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->statusText().c_str())
+                                  .ToLocalChecked());
+      return;
+    }
+    else
+    {
+      SourcePropertyGetter("statusText", args);
+    }
   }
 
   void Response::TypeGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("type", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      switch (handle()->type())
+      {
+      case client_fetch::Response::kBasic:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "basic").ToLocalChecked());
+        break;
+      case client_fetch::Response::kCORS:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "cors").ToLocalChecked());
+        break;
+      case client_fetch::Response::kDefault:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "default").ToLocalChecked());
+        break;
+      case client_fetch::Response::kError:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "error").ToLocalChecked());
+        break;
+      case client_fetch::Response::kOpaque:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "opaque").ToLocalChecked());
+        break;
+      case client_fetch::Response::kOpaqueRedirect:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "opaqueredirect").ToLocalChecked());
+        break;
+      default:
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "default").ToLocalChecked());
+        break;
+      }
+    }
+    else
+    {
+      SourcePropertyGetter("type", args);
+    }
   }
 
   void Response::UrlGetter(const FunctionCallbackInfo<Value> &args)
   {
-    SourcePropertyGetter("url", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (hasData())
+    {
+      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->url().c_str())
+                                  .ToLocalChecked());
+      return;
+    }
+    else
+    {
+      SourcePropertyGetter("url", args);
+    }
   }
 
   void Response::ArrayBuffer(const FunctionCallbackInfo<Value> &args)
@@ -249,12 +373,52 @@ namespace script_bindings
 
   void Response::Blob(const FunctionCallbackInfo<Value> &args)
   {
-    SourceMethodCall("blob", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    args.GetReturnValue().Set(resolver->GetPromise());
+
+    if (hasData())
+    {
+      auto blob = make_shared<client_fileapi::Blob>(handle()->body());
+      resolver->Resolve(context, fileapi_bindings::Blob::NewInstance(isolate, blob)).ToChecked();
+    }
+    else
+    {
+      SourceMethodCall("blob", args, resolver);
+    }
   }
 
   void Response::Bytes(const FunctionCallbackInfo<Value> &args)
   {
-    SourceMethodCall("bytes", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    args.GetReturnValue().Set(resolver->GetPromise());
+
+    if (hasData())
+    {
+      const auto &body_bytes = handle()->body();
+      auto backing_store = ArrayBuffer::NewBackingStore(
+        const_cast<uint8_t *>(body_bytes.data()),
+        body_bytes.size(),
+        [](void *data, size_t length, void *deleter_data)
+        {
+          // No-op deleter since the data is owned by the Response
+        },
+        nullptr);
+      auto arraybuffer_value = ArrayBuffer::New(isolate, move(backing_store));
+      auto uint8_array = Uint8Array::New(arraybuffer_value, 0, body_bytes.size());
+      resolver->Resolve(context, uint8_array).ToChecked();
+    }
+    else
+    {
+      SourceMethodCall("bytes", args, resolver);
+    }
   }
 
   void Response::Clone(const FunctionCallbackInfo<Value> &args)
@@ -268,16 +432,83 @@ namespace script_bindings
 
   void Response::FormData(const FunctionCallbackInfo<Value> &args)
   {
-    SourceMethodCall("formData", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    args.GetReturnValue().Set(resolver->GetPromise());
+
+    if (hasData())
+    {
+      resolver->Reject(context,
+                       Exception::Error(
+                         MakeMethodError(isolate, "formData", "Not implemented for C++ Response.")))
+        .ToChecked();
+    }
+    else
+    {
+      SourceMethodCall("formData", args, resolver);
+    }
   }
 
   void Response::Json(const FunctionCallbackInfo<Value> &args)
   {
-    SourceMethodCall("json", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    args.GetReturnValue().Set(resolver->GetPromise());
+
+    if (hasData())
+    {
+      const auto &body_bytes = handle()->body();
+      string text(body_bytes.begin(), body_bytes.end());
+
+      Local<Value> json_value;
+      MaybeLocal<Value> maybe_json_value =
+        JSON::Parse(context, String::NewFromUtf8(isolate, text.c_str()).ToLocalChecked());
+      if (!maybe_json_value.ToLocal(&json_value)) [[unlikely]]
+      {
+        resolver->Reject(
+                  context,
+                  Exception::Error(
+                    MakeMethodError(isolate, "json", "Failed to parse JSON from response body.")))
+          .ToChecked();
+      }
+      else
+      {
+        resolver->Resolve(context, json_value).ToChecked();
+      }
+    }
+    else
+    {
+      SourceMethodCall("json", args, resolver);
+    }
   }
 
   void Response::Text(const FunctionCallbackInfo<Value> &args)
   {
-    SourceMethodCall("text", args);
+    Isolate *isolate = args.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    args.GetReturnValue().Set(resolver->GetPromise());
+
+    if (hasData())
+    {
+      const auto &body_bytes = handle()->body();
+      string text(body_bytes.begin(), body_bytes.end());
+      resolver->Resolve(context,
+                        String::NewFromUtf8(isolate, text.c_str()).ToLocalChecked())
+        .ToChecked();
+      return;
+    }
+    else
+    {
+      SourceMethodCall("text", args, resolver);
+    }
   }
 }

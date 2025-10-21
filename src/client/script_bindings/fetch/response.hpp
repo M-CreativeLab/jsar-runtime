@@ -28,8 +28,10 @@ namespace script_bindings
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<client_fileapi::Blob> blob);
 
   private:
-    void SourcePropertyGetter(const char* name, const v8::FunctionCallbackInfo<v8::Value> &args);
-    void SourceMethodCall(const char* name, const v8::FunctionCallbackInfo<v8::Value> &args);
+    void SourcePropertyGetter(const char *name, const v8::FunctionCallbackInfo<v8::Value> &args);
+    void SourceMethodCall(const char *name,
+                          const v8::FunctionCallbackInfo<v8::Value> &args,
+                          v8::Local<v8::Promise::Resolver> resolver);
 
     // Properties
     void BodyGetter(const v8::FunctionCallbackInfo<v8::Value> &info);

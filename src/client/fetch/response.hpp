@@ -23,14 +23,14 @@ namespace client_fetch
       {
       }
     };
-    enum class Type
+    enum Type
     {
-      Basic,
-      CORS,
-      Default,
-      Error,
-      Opaque,
-      OpaqueRedirect
+      kBasic,
+      kCORS,
+      kDefault,
+      kError,
+      kOpaque,
+      kOpaqueRedirect
     };
 
   public:

@@ -296,7 +296,7 @@ namespace script_bindings
     info.GetReturnValue().Set(Integer::New(isolate, frame_handle));
   }
 
-  void Window::CancelAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info)
+  void Window::CancelAnimationFrame(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -318,7 +318,7 @@ namespace script_bindings
     handle()->cancelAnimationFrame(frame_handle);
   }
 
-  void Window::CreateImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info)
+  void Window::CreateImageBitmap(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
