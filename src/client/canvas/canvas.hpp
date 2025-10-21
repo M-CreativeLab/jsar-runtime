@@ -89,7 +89,22 @@ namespace canvas
     {
       if (skSurface == nullptr)
         return false;
+
+      // TODO: Read the pixels into the bitmap_ as well.
       return skSurface->peekPixels(&dst);
+    }
+
+    /**
+     * Peeks the pixel data from the canvas into the specified `SkPixmap` without copying.
+     * 
+     * @param pixmap The destination `SkPixmap` to store the pixel data.
+     * @returns True if the pixel data was successfully peeked, false otherwise.
+     */
+    bool peekPixels(SkPixmap *pixmap) const override final
+    {
+      if (skSurface == nullptr || pixmap == nullptr)
+        return false;
+      return skSurface->peekPixels(pixmap);
     }
 
     /**

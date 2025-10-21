@@ -4,7 +4,8 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <client/scripting_base/v8_object_holder.hpp>
-#include "./image_source.hpp"
+#include <client/canvas/image_source.hpp>
+#include <client/fileapi/blob.hpp>
 
 namespace canvas
 {
@@ -13,7 +14,12 @@ namespace canvas
                       public scripting_base::JSObjectHolder
   {
   public:
-    static std::shared_ptr<ImageBitmap> CreateImageBitmap(const void *imageData, size_t imageByteLength, float sx, float sy, float sw, float sh);
+    static std::shared_ptr<ImageBitmap> CreateImageBitmap(const void *imageData,
+                                                          size_t imageByteLength,
+                                                          float sx,
+                                                          float sy,
+                                                          float sw,
+                                                          float sh);
     static std::shared_ptr<ImageBitmap> CreateImageBitmap(std::shared_ptr<ImageSource> image,
                                                           float sx,
                                                           float sy,
@@ -25,6 +31,11 @@ namespace canvas
                                                           float sw,
                                                           float sh);
     static std::shared_ptr<ImageBitmap> CreateImageBitmap(std::shared_ptr<ImageData> otherImageData,
+                                                          float sx,
+                                                          float sy,
+                                                          float sw,
+                                                          float sh);
+    static std::shared_ptr<ImageBitmap> CreateImageBitmap(std::shared_ptr<client_fileapi::Blob> imageBitmap,
                                                           float sx,
                                                           float sy,
                                                           float sw,
@@ -45,7 +56,14 @@ namespace canvas
     }
     bool readPixels(SkPixmap &dst) const override
     {
+      dst.reset(skBitmap->info(),
+                skBitmap->getPixels(),
+                skBitmap->rowBytes());
       return skBitmap->readPixels(dst);
+    }
+    bool peekPixels(SkPixmap *pixmap) const override
+    {
+      return skBitmap->peekPixels(pixmap);
     }
 
   public:

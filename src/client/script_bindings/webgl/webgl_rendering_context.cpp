@@ -3146,6 +3146,7 @@ namespace script_bindings
         SkPixmap imagePixmap;
         if (!imageSource->readPixels(imagePixmap))
         {
+          Warn(isolate, sourceValue);
           isolate->ThrowException(Exception::TypeError(
             MakeMethodError(isolate, "texSubImage2D", "Failed to read pixels from the image source")));
           return;
@@ -3227,13 +3228,13 @@ namespace script_bindings
         //  texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, offset)
         if (handle()->isWebGL2())
         {
-          if (info[8]->IsNumber())  // offset
+          if (info[8]->IsNumber()) // offset
           {
             isolate->ThrowException(Exception::TypeError(
               MakeMethodError(isolate, "texSubImage2D", "Offset source is not supported")));
             return;
           }
-          else if (info[8]->IsArrayBufferView() && info.Length() >= 10)  // srcData, srcOffset
+          else if (info[8]->IsArrayBufferView() && info.Length() >= 10) // srcData, srcOffset
           {
             isolate->ThrowException(Exception::TypeError(
               MakeMethodError(isolate, "texSubImage2D", "srcData with srcOffset is not supported")));

@@ -4,6 +4,9 @@
 #include <client/dom/document.hpp>
 #include <client/dom/browsing_context.hpp>
 #include <client/script_bindings/fetch/global_fetch.hpp>
+#include <client/script_bindings/fileapi/blob.hpp>
+#include <client/script_bindings/canvas/image_bitmap.hpp>
+#include <client/script_bindings/canvas/image_source.hpp>
 
 #include "./window.hpp"
 #include "./location.hpp"
@@ -323,9 +326,85 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    cerr << "Window::CreateImageBitmap: Not implemented." << endl;
-    isolate->ThrowException(Exception::TypeError(
-      MakeMethodError(isolate, "createImageBitmap", "Not implemented.")));
-    return;
+    Local<Context> context = isolate->GetCurrentContext();
+    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+    info.GetReturnValue().Set(resolver->GetPromise());
+
+    if (info.Length() < 1)
+    {
+      resolver->Reject(context,
+                       Exception::TypeError(
+                         MakeMethodArgCountError(isolate, "createImageBitmap", 1, info.Length())))
+        .ToChecked();
+      return;
+    }
+
+    float sx = 0, sy = 0, sw = 0, sh = 0;
+    Local<Object> options = Object::New(isolate);
+
+    if (info.Length() == 2 && info[1]->IsObject())
+    {
+      options = info[1].As<Object>();
+    }
+    else if (info.Length() >= 5)
+    {
+      if (!info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber() || !info[4]->IsNumber())
+      {
+        resolver->Reject(context,
+                         Exception::TypeError(
+                           MakeMethodError(isolate, "createImageBitmap", "sx, sy, sw, and sh must be numbers.")))
+          .ToChecked();
+        return;
+      }
+
+      sx = info[1].As<Number>()->Value();
+      sy = info[2].As<Number>()->Value();
+      sw = info[3].As<Number>()->Value();
+      sh = info[4].As<Number>()->Value();
+
+      if (info.Length() == 6 && info[5]->IsObject())
+      {
+        options = info[5].As<Object>();
+      }
+
+      if (sw == 0 || sh == 0)
+      {
+        resolver->Reject(context,
+                         Exception::RangeError(
+                           MakeMethodError(isolate, "createImageBitmap", "sw and sh must be greater than 0.")))
+          .ToChecked();
+        return;
+      }
+    }
+
+    Local<Value> imageValue = info[0];
+    shared_ptr<canvas::ImageBitmap> imageBitmap;
+
+    if (fileapi_bindings::Blob::IsInstanceOf(isolate, imageValue))
+    {
+      auto blob = fileapi_bindings::Blob::Unwrap(isolate, imageValue.As<Object>());
+      imageBitmap = canvas::ImageBitmap::CreateImageBitmap(blob->handle(), sx, sy, sw, sh);
+    }
+    else
+    {
+      auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, imageValue);
+      if (imageSource != nullptr)
+      {
+        imageBitmap = canvas::ImageBitmap::CreateImageBitmap(imageSource, sx, sy, sw, sh);
+      }
+      else
+      {
+        auto msg = "The first argument must be a Blob or an ImageSource";
+        resolver->Reject(context,
+                         Exception::TypeError(
+                           MakeMethodError(isolate, "createImageBitmap", msg)))
+          .ToChecked();
+      }
+    }
+
+    assert(imageBitmap != nullptr && "Failed to create ImageBitmap.");
+    resolver->Resolve(context,
+                      canvas_bindings::ImageBitmap::NewInstance(isolate, imageBitmap))
+      .ToChecked();
   }
 }

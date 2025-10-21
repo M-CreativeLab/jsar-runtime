@@ -27,6 +27,10 @@ namespace client_fileapi
     }
     std::promise<Bytes> bytes() const;
     std::promise<std::string> text() const;
+    const Bytes &data() const
+    {
+      return bytes_;
+    }
 
   private:
     size_t size_;

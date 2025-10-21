@@ -1,7 +1,8 @@
 #include <iostream>
 #include <skia/include/codec/SkCodec.h>
-#include "./image_bitmap.hpp"
-#include "./image_data.hpp"
+#include <client/canvas/image_codec.hpp>
+#include <client/canvas/image_bitmap.hpp>
+#include <client/canvas/image_data.hpp>
 
 using namespace std;
 
@@ -39,6 +40,16 @@ namespace canvas
   {
     auto image = dynamic_pointer_cast<ImageSource>(otherImageData);
     return CreateImageBitmap(image, sx, sy, sw, sh);
+  }
+
+  shared_ptr<ImageBitmap> ImageBitmap::CreateImageBitmap(shared_ptr<client_fileapi::Blob> imageBlob,
+                                                         float sx,
+                                                         float sy,
+                                                         float sw,
+                                                         float sh)
+  {
+    auto bytes = imageBlob->bytes().get_future().get();
+    return CreateImageBitmap(bytes.data(), bytes.size(), sx, sy, sw, sh);
   }
 
   ImageBitmap::ImageBitmap(const void *imageData, size_t imageByteLength, float sx, float sy, float sw, float sh)

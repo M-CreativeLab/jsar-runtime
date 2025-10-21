@@ -32,6 +32,13 @@ namespace canvas
     {
       return pixmap.readPixels(dst, 0, 0);
     }
+    bool peekPixels(SkPixmap *outPixmap) const override
+    {
+      if (outPixmap == nullptr)
+        return false;
+      *outPixmap = pixmap;
+      return true;
+    }
 
   public:
     inline SkColorSpace *colorSpace() const

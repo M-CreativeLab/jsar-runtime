@@ -29,33 +29,17 @@ namespace script_bindings
     void ImageBitmap::WidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
+      HandleScope scope(isolate);
 
-      if (imageBitmap && imageBitmap->handle())
-      {
-        int width = imageBitmap->handle()->width();
-        info.GetReturnValue().Set(Number::New(isolate, width));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
+      info.GetReturnValue().Set(Number::New(isolate, handle()->width()));
     }
 
     void ImageBitmap::HeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
+      HandleScope scope(isolate);
 
-      if (imageBitmap && imageBitmap->handle())
-      {
-        int height = imageBitmap->handle()->height();
-        info.GetReturnValue().Set(Number::New(isolate, height));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
+      info.GetReturnValue().Set(Number::New(isolate, handle()->height()));
     }
 
     void ImageBitmap::Close(const FunctionCallbackInfo<Value> &info)

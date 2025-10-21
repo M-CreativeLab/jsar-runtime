@@ -41,6 +41,14 @@ namespace canvas
     virtual bool readPixels(SkPixmap &dst) const = 0;
 
     /**
+     * Peek the image pixels to the given `SkPixmap` without copying.
+     * 
+     * @param pixmap The SkPixmap to receive the data.
+     * @returns true if the peek is finished, otherwise false.
+     */
+    virtual bool peekPixels(SkPixmap *pixmap) const = 0;
+
+    /**
      * Create a new `SkImage` from this image source.
      */
     inline sk_sp<SkImage> makeSkImage()
