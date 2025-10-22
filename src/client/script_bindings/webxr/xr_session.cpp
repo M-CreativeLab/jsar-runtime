@@ -118,8 +118,8 @@ namespace script_bindings
         // Copy the frame to avoid dangling reference
         const client_xr::XRFrame frame = *frame_ptr;
         auto custom_call = [time, frame](v8::Isolate *isolate,
-                                               v8::Local<Value> recv,
-                                               v8::Local<v8::Function> callback)
+                                         v8::Local<Value> recv,
+                                         v8::Local<v8::Function> callback)
         {
           HandleScope scope(isolate);
           Local<Context> context = isolate->GetCurrentContext();

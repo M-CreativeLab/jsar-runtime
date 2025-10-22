@@ -41,3 +41,17 @@ inline bool isValidPlaceholderId(uint32_t placeholderId)
     return false;
   }
 }
+
+inline std::string to_string(WebGLMatrixPlaceholderId placeholderId)
+{
+  switch (placeholderId)
+  {
+#define XX(id, v)                    \
+  case WebGLMatrixPlaceholderId::id: \
+    return #id;
+    PLACEHOLDER_ID_MAP(XX)
+#undef XX
+  default:
+    return "NotSet";
+  }
+}

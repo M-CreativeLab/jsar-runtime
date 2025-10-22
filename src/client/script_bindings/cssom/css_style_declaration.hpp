@@ -9,7 +9,7 @@ namespace script_bindings::cssom_bindings
 {
   class CSSStyleDeclaration;
   using CSSStyleDeclarationBase = scripting_base::ObjectWrap<CSSStyleDeclaration,
-                                                            client_cssom::CSSStyleDeclaration>;
+                                                             client_cssom::CSSStyleDeclaration>;
 
   class CSSStyleDeclaration : public CSSStyleDeclarationBase
   {

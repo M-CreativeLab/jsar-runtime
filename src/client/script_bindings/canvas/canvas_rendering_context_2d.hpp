@@ -31,6 +31,9 @@ namespace script_bindings
         T::InstanceMethod(isolate, prototype, "fillText", &T::FillText);
         T::InstanceMethod(isolate, prototype, "strokeText", &T::StrokeText);
         T::InstanceMethod(isolate, prototype, "measureText", &T::MeasureText);
+        T::InstanceAccessor(isolate, instance, "font", &T::FontGetter, &T::FontSetter);
+        T::InstanceAccessor(isolate, instance, "textAlign", &T::TextAlignGetter, &T::TextAlignSetter);
+        T::InstanceAccessor(isolate, instance, "textBaseline", &T::TextBaselineGetter, &T::TextBaselineSetter);
 
         // Paths
         T::InstanceMethod(isolate, prototype, "beginPath", &T::BeginPath);
@@ -65,41 +68,21 @@ namespace script_bindings
         T::InstanceMethod(isolate, prototype, "restore", &T::Restore);
 
         // Line dash
-        T::InstanceAccessor(isolate,
-                         instance,
-                         "lineDashOffset",
-                         &T::LineDashOffsetGetter,
-                         &T::LineDashOffsetSetter);
+        T::InstanceAccessor(isolate, prototype, "lineDashOffset", &T::LineDashOffsetGetter, &T::LineDashOffsetSetter);
         T::InstanceMethod(isolate, prototype, "getLineDash", &T::GetLineDash);
         T::InstanceMethod(isolate, prototype, "setLineDash", &T::SetLineDash);
 
         // Properties
         T::InstanceReadonlyAccessor(isolate, instance, "canvas", &T::CanvasGetter);
+        T::InstanceAccessor(isolate, instance, "fillStyle", &T::FillStyleGetter, &T::FillStyleSetter);
+        T::InstanceAccessor(isolate, instance, "strokeStyle", &T::StrokeStyleGetter, &T::StrokeStyleSetter);
+        T::InstanceAccessor(isolate, instance, "lineWidth", &T::LineWidthGetter, &T::LineWidthSetter);
+        T::InstanceAccessor(isolate, instance, "globalAlpha", &T::GlobalAlphaGetter, &T::GlobalAlphaSetter);
         T::InstanceAccessor(isolate,
-                         instance,
-                         "fillStyle",
-                         &T::FillStyleGetter,
-                         &T::FillStyleSetter);
-        T::InstanceAccessor(isolate,
-                         instance,
-                         "strokeStyle",
-                         &T::StrokeStyleGetter,
-                         &T::StrokeStyleSetter);
-        T::InstanceAccessor(isolate,
-                         instance,
-                         "lineWidth",
-                         &T::LineWidthGetter,
-                         &T::LineWidthSetter);
-        T::InstanceAccessor(isolate,
-                         instance,
-                         "globalAlpha",
-                         &T::GlobalAlphaGetter,
-                         &T::GlobalAlphaSetter);
-        T::InstanceAccessor(isolate,
-                         instance,
-                         "globalCompositeOperation",
-                         &T::GlobalCompositeOperationGetter,
-                         &T::GlobalCompositeOperationSetter);
+                            instance,
+                            "globalCompositeOperation",
+                            &T::GlobalCompositeOperationGetter,
+                            &T::GlobalCompositeOperationSetter);
       }
 
     protected:
@@ -112,6 +95,12 @@ namespace script_bindings
       void FillText(const v8::FunctionCallbackInfo<v8::Value> &info);
       void StrokeText(const v8::FunctionCallbackInfo<v8::Value> &info);
       void MeasureText(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void FontGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void FontSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void TextAlignGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TextAlignSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void TextBaselineGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TextBaselineSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Line caps/joins
       void LineCap(const v8::FunctionCallbackInfo<v8::Value> &info);

@@ -52,7 +52,7 @@ namespace client_xr
     {
       return glContext_;
     }
-    XRViewport& getViewport(std::shared_ptr<XRView> view);
+    XRViewport &getViewport(std::shared_ptr<XRView> view);
 
   private:
     std::shared_ptr<client_graphics::WebGLContext> glContext_;

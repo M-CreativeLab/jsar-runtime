@@ -18,6 +18,7 @@
 #include "./rendering_context.hpp"
 #include "./image_source.hpp"
 #include "./image_data.hpp"
+#include "./text_metrics.hpp"
 
 namespace canvas
 {
@@ -38,26 +39,6 @@ namespace canvas
     Alphabetic,
     Ideographic,
     Bottom
-  };
-
-  class TextMetrics final
-  {
-  public:
-    TextMetrics() = default;
-
-  public:
-    float width;
-    float actualBoundingBoxLeft;
-    float actualBoundingBoxRight;
-    float fontBoundingBoxAscent;
-    float fontBoundingBoxDescent;
-    float actualBoundingBoxAscent;
-    float actualBoundingBoxDescent;
-    float emHeightAscent;
-    float emHeightDescent;
-    float hangingBaseline;
-    float alphabeticBaseline;
-    float ideographicBaseline;
   };
 
   template <typename CanvasType>
@@ -81,6 +62,8 @@ namespace canvas
     bool setTextAlign(const std::string &str);
     std::string getTextBaseline();
     bool setTextBaseline(const std::string &str);
+    float getLineDashOffset();
+    float setLineDashOffset(float offset);
     float getLineWidth();
     bool setLineWidth(float width);
     std::string getLineCap();
@@ -182,6 +165,7 @@ namespace canvas
     float strokeWidth = 1.0f;
     SkBlendMode globalCompositeOperation = SkBlendMode::kSrcOver;
     std::vector<float> lineDash;
+    float lineDashOffset = 0.0f;
   };
 }
 

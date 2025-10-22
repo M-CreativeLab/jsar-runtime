@@ -2950,6 +2950,7 @@ namespace script_bindings
           auto msg =
             "ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, ImageBitmap, OffscreenCanvas"
             " or null object";
+          cerr << "Invalid image source for texImage2D: " << string(msg) << endl;
           isolate->ThrowException(Exception::TypeError(
             MakeMethodArgTypeError(isolate, "texImage2D", "pixels", msg, sourceValue)));
           return;
@@ -3138,6 +3139,7 @@ namespace script_bindings
           auto msg =
             "ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, ImageBitmap, OffscreenCanvas"
             " or null object";
+          cerr << "Invalid image source for texSubImage2D: " << string(msg) << endl;
           isolate->ThrowException(Exception::TypeError(
             MakeMethodArgTypeError(isolate, "texSubImage2D", "pixels", msg, sourceValue)));
           return;

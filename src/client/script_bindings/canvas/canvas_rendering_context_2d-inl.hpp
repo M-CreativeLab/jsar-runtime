@@ -1,5 +1,6 @@
 #include "./canvas_rendering_context_2d.hpp"
 #include "./image_data.hpp"
+#include "./text_metrics.hpp"
 
 namespace script_bindings::canvas_bindings
 {
@@ -155,14 +156,85 @@ namespace script_bindings::canvas_bindings
     }
 
     auto metrics = this->handle()->measureText(*text);
+    args.GetReturnValue().Set(TextMetrics::NewInstance(isolate, metrics));
+  }
 
-    v8::Local<v8::Object> result = v8::Object::New(isolate);
-    result->Set(context,
-                v8::String::NewFromUtf8Literal(isolate, "width"),
-                v8::Number::New(isolate, metrics.width))
-      .Check();
-    // TODO: Add other text metrics properties when implemented
-    args.GetReturnValue().Set(result);
+  template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::FontGetter(const v8::PropertyCallbackInfo<v8::Value> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    std::string font = this->handle()->getFont();
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate,
+                                                      font.c_str())
+                                .ToLocalChecked());
+  }
+
+  template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::FontSetter(v8::Local<v8::Value> value,
+                                                               const v8::PropertyCallbackInfo<void> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    if (value->IsString())
+    {
+      v8::String::Utf8Value font(isolate, value);
+      this->handle()->setFont(*font);
+    }
+  }
+
+  template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::TextAlignGetter(const v8::PropertyCallbackInfo<v8::Value> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    std::string value = this->handle()->getTextAlign();
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate,
+                                                      value.c_str())
+                                .ToLocalChecked());
+  }
+
+  template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::TextAlignSetter(v8::Local<v8::Value> value,
+                                                                    const v8::PropertyCallbackInfo<void> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    if (value->IsString())
+    {
+      v8::String::Utf8Value align(isolate, value);
+      this->handle()->setTextAlign(*align);
+    }
+  }
+
+  template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::TextBaselineGetter(const v8::PropertyCallbackInfo<v8::Value> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    std::string value = this->handle()->getTextBaseline();
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate,
+                                                      value.c_str())
+                                .ToLocalChecked());
+  }
+
+  template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::TextBaselineSetter(v8::Local<v8::Value> value,
+                                                                       const v8::PropertyCallbackInfo<void> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    if (value->IsString())
+    {
+      v8::String::Utf8Value baseline(isolate, value);
+      this->handle()->setTextBaseline(*baseline);
+    }
   }
 
   // Paths
@@ -690,8 +762,8 @@ namespace script_bindings::canvas_bindings
     v8::Isolate *isolate = info.GetIsolate();
     v8::HandleScope scope(isolate);
 
-    isolate->ThrowException(v8::Exception::Error(
-      T::MakeMethodError(isolate, "lineDashOffset", "Not implemented")));
+    info.GetReturnValue().Set(v8::Number::New(isolate,
+                                              this->handle()->getLineDashOffset()));
   }
 
   template <typename T, typename CanvasType>
@@ -700,6 +772,7 @@ namespace script_bindings::canvas_bindings
   {
     v8::Isolate *isolate = info.GetIsolate();
     v8::HandleScope scope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
     if (!value->IsNumber())
     {
@@ -708,8 +781,8 @@ namespace script_bindings::canvas_bindings
       return;
     }
 
-    isolate->ThrowException(v8::Exception::Error(
-      T::MakeMethodError(isolate, "lineDashOffset", "Not implemented")));
+    auto offset = value->ToNumber(context).ToLocalChecked()->Value();
+    this->handle()->setLineDashOffset(offset);
   }
 
   template <typename T, typename CanvasType>
@@ -782,9 +855,8 @@ namespace script_bindings::canvas_bindings
     v8::Isolate *isolate = info.GetIsolate();
     v8::HandleScope scope(isolate);
 
-    isolate->ThrowException(v8::Exception::Error(
-      T::MakeMethodError(isolate, "fillStyle", "Not implemented")));
-    info.GetReturnValue().SetUndefined();
+    std::cerr << "CanvasRenderingContext2DBase::FillStyleGetter not implemented yet" << std::endl;
+    info.GetReturnValue().SetNull();
   }
 
   template <typename T, typename CanvasType>
@@ -811,9 +883,8 @@ namespace script_bindings::canvas_bindings
     v8::Isolate *isolate = info.GetIsolate();
     v8::HandleScope scope(isolate);
 
-    isolate->ThrowException(v8::Exception::Error(
-      T::MakeMethodError(isolate, "strokeStyle", "Not implemented")));
-    info.GetReturnValue().SetUndefined();
+    std::cerr << "CanvasRenderingContext2DBase::StrokeStyleGetter not implemented yet" << std::endl;
+    info.GetReturnValue().SetNull();
   }
 
   template <typename T, typename CanvasType>

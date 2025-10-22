@@ -157,8 +157,8 @@ namespace script_bindings
       }
 
       // TODO: Implement convertToBlob method
-      // This should convert the canvas content to a Blob
-      info.GetReturnValue().SetUndefined();
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "convertToBlob", "Not implemented yet")));
     }
 
     void OffscreenCanvas::TransferToImageBitmap(const FunctionCallbackInfo<Value> &info)
@@ -173,8 +173,8 @@ namespace script_bindings
       }
 
       // TODO: Implement transferToImageBitmap method
-      // This should transfer the canvas content to an ImageBitmap
-      info.GetReturnValue().SetUndefined();
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "transferToImageBitmap", "Not implemented yet")));
     }
   }
 }

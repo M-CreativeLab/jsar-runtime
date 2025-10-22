@@ -225,6 +225,19 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getLineDashOffset()
+  {
+    return lineDashOffset;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::setLineDashOffset(float offset)
+  {
+    lineDashOffset = offset;
+    return true;
+  }
+
+  template <typename CanvasType>
   float CanvasRenderingContext2D<CanvasType>::getLineWidth()
   {
     return skPaint->getStrokeWidth();

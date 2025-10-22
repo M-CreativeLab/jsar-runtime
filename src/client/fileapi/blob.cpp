@@ -11,7 +11,7 @@ namespace client_fileapi
   {
   }
 
-  Blob::Blob(const Bytes& bytes, const string& type)
+  Blob::Blob(const Bytes &bytes, const string &type)
       : size_(bytes.size())
       , type_(type)
       , bytes_(bytes)

@@ -41,7 +41,7 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
-    const auto& added = handle()->added();
+    const auto &added = handle()->added();
     Local<Array> array = Array::New(isolate, added.size());
     for (size_t i = 0; i < added.size(); ++i)
     {
@@ -57,7 +57,7 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
-    const auto& removed = handle()->removed();
+    const auto &removed = handle()->removed();
     Local<Array> array = Array::New(isolate, removed.size());
     for (size_t i = 0; i < removed.size(); ++i)
     {
