@@ -70,7 +70,10 @@ namespace endor
       cerr << "unimplemented: setting text content of <script> element" << endl;
     }
 
-    string getText() const;
+    inline string getText() const
+    {
+      return textContent();
+    }
 
     protected:
       void createdCallback(bool from_scripting) override;
