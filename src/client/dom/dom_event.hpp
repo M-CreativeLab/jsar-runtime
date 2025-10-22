@@ -19,6 +19,7 @@ namespace dom
 #define DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX) \
   XX(Event)                                \
   XX(MessageEvent)                         \
+  XX(ErrorEvent)                           \
   XX(MouseEvent)                           \
   XX(PointerEvent)                         \
   XX(XRSessionEvent)                       \
@@ -379,6 +380,10 @@ namespace dom
     }
 
   public:
+    virtual bool isErrorEvent() const
+    {
+      return false;
+    }
     virtual bool isMessageEvent() const
     {
       return false;

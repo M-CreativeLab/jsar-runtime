@@ -61,8 +61,9 @@ namespace client_xr
     }
     else
     {
-      size_t usedViewsCount = device->getDeviceInit().usedViewsCount;
-      for (size_t viewIndex = 0; viewIndex < usedViewsCount; viewIndex++)
+      // TODO(yorkie): Handle usedViewsCount properly.
+      // size_t usedViewsCount = device->getDeviceInit().usedViewsCount;
+      for (size_t viewIndex = 0; viewIndex < xr::TrXRFrameRequest::ViewsCount; viewIndex++)
       {
         const auto &viewData = frameRequestData.views[viewIndex];
         views_.push_back(make_shared<XRView>(viewData, session_, baseReferenceSpace));

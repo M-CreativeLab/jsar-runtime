@@ -1,6 +1,8 @@
 import { workerData, parentPort } from 'node:worker_threads';
 import { ResourceLoaderOnTransmute } from '../runtime2/ResourceLoader';
 import { type WorkerRequest, WorkerImpl } from './worker';
+import { ErrorEvent } from './events';
+
 const { WorkerContext } = process._linkedBinding('transmute:dom');
 
 {
@@ -34,10 +36,14 @@ parentPort.on('message', (message) => {
   workerContext.dispatchEvent(new MessageEvent('message', { data: message }));
 });
 parentPort.on('messageerror', (error) => {
-  workerContext.dispatchEvent(new ErrorEvent('messageerror', { error }));
+  workerContext.dispatchEvent(new MessageEvent('messageerror', { data: error }));
 });
 parentPort.on('error', (error) => {
-  workerContext.dispatchEvent(new ErrorEvent('error', { error }));
+  console.warn('Occurred error in worker thread:', error);
+  workerContext.dispatchEvent(new ErrorEvent('error', {
+    message: error.message,
+    error
+  }));
 });
 
 // Executing the worker script

@@ -1,5 +1,8 @@
+#include <client/canvas/image_source.hpp>
+
 #include "./canvas_rendering_context_2d.hpp"
 #include "./image_data.hpp"
+#include "./image_source.hpp"
 #include "./text_metrics.hpp"
 
 namespace script_bindings::canvas_bindings
@@ -600,23 +603,51 @@ namespace script_bindings::canvas_bindings
     }
 
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    auto image = args[0];
-    auto dx = args[1]->ToNumber(context).ToLocalChecked()->Value();
-    auto dy = args[2]->ToNumber(context).ToLocalChecked()->Value();
+    v8::Local<v8::Value> imageValue = args[0];
 
-    if (!image->IsObject())
+    shared_ptr<canvas::ImageSource> imageSource = canvas_bindings::GetImageSourceFromValue(isolate, imageValue);
+    if (imageSource == nullptr)
     {
       isolate->ThrowException(v8::Exception::TypeError(
-        v8::String::NewFromUtf8Literal(isolate, "The first argument must be an image object")));
+        T::MakeMethodArgTypeError(isolate, "drawImage", 0, "ImageSource", imageValue)));
       return;
     }
 
-    // auto imageObject = image.As<v8::Object>();
-    // Assuming `this->handle()->drawImage` can take an image object and coordinates
-    // this->handle()->drawImage(imageObject, dx, dy);
-    isolate->ThrowException(v8::Exception::Error(
-      T::MakeMethodError(isolate, "drawImage", "Not implemented")));
-    args.GetReturnValue().SetUndefined();
+    if (args.Length() == 3)
+    {
+      // drawImage(image, dx, dy)
+      auto dx = args[1]->ToNumber(context).ToLocalChecked()->Value();
+      auto dy = args[2]->ToNumber(context).ToLocalChecked()->Value();
+      this->handle()->drawImage(imageSource, dx, dy);
+    }
+    else if (args.Length() == 5)
+    {
+      // drawImage(image, dx, dy, dWidth, dHeight)
+      auto dx = args[1]->ToNumber(context).ToLocalChecked()->Value();
+      auto dy = args[2]->ToNumber(context).ToLocalChecked()->Value();
+      auto dWidth = args[3]->ToNumber(context).ToLocalChecked()->Value();
+      auto dHeight = args[4]->ToNumber(context).ToLocalChecked()->Value();
+      this->handle()->drawImage(imageSource, dx, dy, dWidth, dHeight);
+    }
+    else if (args.Length() == 9)
+    {
+      // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      auto sx = args[1]->ToNumber(context).ToLocalChecked()->Value();
+      auto sy = args[2]->ToNumber(context).ToLocalChecked()->Value();
+      auto sWidth = args[3]->ToNumber(context).ToLocalChecked()->Value();
+      auto sHeight = args[4]->ToNumber(context).ToLocalChecked()->Value();
+      auto dx = args[5]->ToNumber(context).ToLocalChecked()->Value();
+      auto dy = args[6]->ToNumber(context).ToLocalChecked()->Value();
+      auto dWidth = args[7]->ToNumber(context).ToLocalChecked()->Value();
+      auto dHeight = args[8]->ToNumber(context).ToLocalChecked()->Value();
+      this->handle()->drawImage(imageSource, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    }
+    else
+    {
+      isolate->ThrowException(v8::Exception::TypeError(
+        T::MakeMethodArgCountError(isolate, "drawImage", 3, args.Length())));
+      return;
+    }
   }
 
   template <typename T, typename CanvasType>

@@ -6,69 +6,43 @@ namespace script_bindings::event_bindings
   using namespace std;
   using namespace v8;
 
-  void Initialize(Isolate *isolate)
-  {
-    // Initialize all event class constructors
-    MessageEvent::Initialize(isolate);
-    UIEvent::Initialize(isolate);
-    MouseEvent::Initialize(isolate);
-    PointerEvent::Initialize(isolate);
-    XRSessionEvent::Initialize(isolate);
-    XRInputSourceEvent::Initialize(isolate);
-    XRInputSourcesChangeEvent::Initialize(isolate);
+#define DOM_EVENT_CLASSES_MAP(XX) \
+  XX(ErrorEvent)                  \
+  XX(MessageEvent)                \
+  XX(UIEvent)                     \
+  XX(MouseEvent)                  \
+  XX(PointerEvent)
+
+#define XR_EVENT_CLASSES_MAP(XX) \
+  XX(XRSessionEvent)             \
+  XX(XRInputSourceEvent)         \
+  XX(XRInputSourcesChangeEvent)
+
+#define ALL_EVENT_CLASSES_MAP(XX) \
+  DOM_EVENT_CLASSES_MAP(XX)       \
+  XR_EVENT_CLASSES_MAP(XX)
+
+  void Initialize(Isolate *isolate){
+#define XX(T) T::Initialize(isolate);
+    ALL_EVENT_CLASSES_MAP(XX)
+#undef XX
   }
 
   Local<Object> MakeEvent(Isolate *isolate, dom::Event *nativeEvent)
   {
     assert(nativeEvent != nullptr && "nativeEvent must not be null");
 
-    if (nativeEvent->isMessageEvent())
-    {
-      auto mTypedEvent = static_cast<dom::events::MessageEvent *>(nativeEvent);
-      return MessageEvent::NewInstance(isolate, make_shared<dom::events::MessageEvent>(*mTypedEvent));
-    }
-    if (nativeEvent->isPointerEvent())
-    {
-      auto pTypedEvent = static_cast<dom::events::PointerEvent *>(nativeEvent);
-      return PointerEvent::NewInstance(isolate, make_shared<dom::events::PointerEvent>(*pTypedEvent));
-    }
-    if (nativeEvent->isMouseEvent())
-    {
-      auto mTypedEvent = static_cast<dom::events::MouseEvent *>(nativeEvent);
-      return MouseEvent::NewInstance(isolate, make_shared<dom::events::MouseEvent>(*mTypedEvent));
-    }
-    if (nativeEvent->isUIEvent())
-    {
-      auto uiTypedEvent = static_cast<dom::events::UIEvent *>(nativeEvent);
-      return UIEvent::NewInstance(isolate, make_shared<dom::events::UIEvent>(*uiTypedEvent));
-    }
-
-    return Event::NewInstance(isolate, make_shared<dom::Event>(*nativeEvent));
+#define XX(T)                                                                  \
+  if (nativeEvent->is##T())                                                    \
+  {                                                                            \
+    auto typed_event = static_cast<dom::events::T *>(nativeEvent);             \
+    return T::NewInstance(isolate, make_shared<dom::events::T>(*typed_event)); \
   }
 
-  Local<Object> MakeXREvent(Isolate *isolate, void *nativeEvent, const string &eventType)
-  {
-    if (!nativeEvent)
-    {
-      return Local<Object>();
-    }
+    DOM_EVENT_CLASSES_MAP(XX)
+#undef XX
 
-    if (eventType == "session")
-    {
-      auto sessionEvent = static_cast<client_xr::XRSessionEvent *>(nativeEvent);
-      return XRSessionEvent::NewInstance(isolate, shared_ptr<client_xr::XRSessionEvent>(sessionEvent, [](client_xr::XRSessionEvent *) {}));
-    }
-    else if (eventType == "inputsource")
-    {
-      auto inputSourceEvent = static_cast<client_xr::XRInputSourceEvent *>(nativeEvent);
-      return XRInputSourceEvent::NewInstance(isolate, shared_ptr<client_xr::XRInputSourceEvent>(inputSourceEvent, [](client_xr::XRInputSourceEvent *) {}));
-    }
-    else if (eventType == "inputsourceschange")
-    {
-      auto inputSourcesChangeEvent = static_cast<client_xr::XRInputSourcesChangeEvent *>(nativeEvent);
-      return XRInputSourcesChangeEvent::NewInstance(isolate, shared_ptr<client_xr::XRInputSourcesChangeEvent>(inputSourcesChangeEvent, [](client_xr::XRInputSourcesChangeEvent *) {}));
-    }
-
-    return Local<Object>();
+    // Fallback to generic Event
+    return Event::NewInstance(isolate, make_shared<dom::Event>(*nativeEvent));
   }
 }

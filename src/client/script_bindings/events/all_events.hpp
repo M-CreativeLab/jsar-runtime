@@ -1,6 +1,7 @@
 #pragma once
 
 #include <client/script_bindings/event.hpp>
+#include "./error_event.hpp"
 #include "./message_event.hpp"
 #include "./mouse_event.hpp"
 #include "./pointer_event.hpp"
@@ -28,14 +29,5 @@ namespace script_bindings
      * @returns A V8 Object representing the event.
      */
     v8::Local<v8::Object> MakeEvent(v8::Isolate *isolate, dom::Event *nativeEvent);
-
-    /**
-     * Create a new XR Event object in V8 from a native XR event.
-     * 
-     * @param isolate The V8 isolate.
-     * @param nativeEvent The native XR event to wrap.
-     * @returns A V8 Object representing the XR event.
-     */
-    v8::Local<v8::Object> MakeXREvent(v8::Isolate *isolate, void *nativeEvent, const std::string &eventType);
   }
 }

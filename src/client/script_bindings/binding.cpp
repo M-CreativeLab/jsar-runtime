@@ -54,6 +54,7 @@
 #include "./canvas/canvas.hpp"
 #include "./canvas/offscreen_canvas_rendering_context_2d.hpp"
 #include "./canvas/path2d.hpp"
+#include "./canvas/text_metrics.hpp"
 
 // File API bindings
 #include "./fileapi/blob.hpp"
@@ -121,6 +122,7 @@ namespace script_bindings
 #define ADD_EVENT(X) \
   global->Set(context, NAME(#X), event_bindings::X::Initialize(isolate)).Check();
 
+    ADD_EVENT(ErrorEvent)
     ADD_EVENT(MessageEvent)
     ADD_EVENT(UIEvent)
     ADD_EVENT(MouseEvent)
@@ -149,6 +151,7 @@ namespace script_bindings
     ADD_CANVAS_TYPE(OffscreenCanvas)
     ADD_CANVAS_TYPE(OffscreenCanvasRenderingContext2D)
     ADD_CANVAS_TYPE(Path2D)
+    ADD_CANVAS_TYPE(TextMetrics)
 
 #undef ADD_CANVAS_TYPE
 

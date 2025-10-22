@@ -1,6 +1,7 @@
 import path from 'node:path';
 import * as WorkerThreads from 'node:worker_threads';
 import { type Blob, resolveObjectURL } from 'node:buffer';
+import { ErrorEvent } from './events';
 
 export type WorkerRequest = {
   baseURI: string;
@@ -64,20 +65,24 @@ export class WorkerImpl {
 
   #initHandle() {
     this.#handle.on('message', (message) => {
-      const event = new MessageEvent('message', { data: message });
       if (typeof this.onmessage === 'function') {
+        const event = new MessageEvent('message', { data: message });
         this.onmessage(event);
       }
     });
     this.#handle.on('messageerror', (error) => {
-      const event = new MessageEvent('messageerror', { data: error });
       if (typeof this.onmessageerror === 'function') {
+        const event = new MessageEvent('messageerror', { data: error });
         this.onmessageerror(event);
       }
     });
     this.#handle.on('error', (error) => {
-      const event = new ErrorEvent('error', { error });
+      console.warn('Occurred error in worker thread:', error);
       if (typeof this.onerror === 'function') {
+        const event = new ErrorEvent('error', {
+          message: error.message,
+          error
+        });
         this.onerror(event);
       }
     });
