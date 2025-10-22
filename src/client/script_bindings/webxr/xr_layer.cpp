@@ -144,9 +144,20 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      // TODO(yorkie): make `framebuffer` in `handle()` return a valid WebGLFramebuffer
-      auto framebufferValue = webgl_bindings::WebGLFramebuffer::NewInstance(isolate,
-                                                                            handle()->framebuffer);
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Value> framebufferValue = Undefined(isolate);
+
+      if (!framebuffer_handle_.IsEmpty())
+      {
+        framebufferValue = framebuffer_handle_.Get(isolate);
+      }
+      else
+      {
+        // TODO(yorkie): make `framebuffer` in `handle()` return a valid WebGLFramebuffer
+        framebufferValue = webgl_bindings::WebGLFramebuffer::NewInstance(isolate,
+                                                                         handle()->framebuffer);
+        framebuffer_handle_.Reset(isolate, framebufferValue);
+      }
       info.GetReturnValue().Set(framebufferValue);
     }
 

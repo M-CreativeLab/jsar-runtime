@@ -70,6 +70,9 @@ namespace script_bindings
 
       // Methods
       void GetViewport(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+    private:
+      v8::Global<v8::Value> framebuffer_handle_;
     };
   }
 }
