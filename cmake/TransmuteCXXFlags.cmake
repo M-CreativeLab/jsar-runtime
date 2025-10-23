@@ -154,8 +154,13 @@ if (APPLE)
         # FIXME: (penguinliong) Workaround the overwhelming truncation errors
         # compiling to iOS.
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32")
+        # Generate dSYM files for debugging in Xcode
+        set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
     endif()
 
+    # Add debug symbols for Debug builds on macOS
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fno-limit-debug-info")
+    
     # Set the -mmacosx-version-min flag to the minimum supported version of macOS.
     # This is required to ensure that the resulting dylib is compatible with older macOS versions.
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "Minimum macOS version to target")
