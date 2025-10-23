@@ -551,6 +551,12 @@ void TrClientContextPerProcess::bootstrap()
   fprintf(stdout, "The client(%d) is bootstrapped at %" PRIu64 ".\n", id, startedAt);
 }
 
+#define SHOULD_STARTED() \
+  if (!startedAt)        \
+  {                      \
+    return nullptr;      \
+  }
+
 void TrClientContextPerProcess::print()
 {
   fprintf(stdout, "ClientContext(%d) url=%s\n", id, url.c_str());
@@ -625,16 +631,22 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
 
 bool TrClientContextPerProcess::sendEvent(shared_ptr<TrNativeEvent> event)
 {
+  assert(eventChanSender != nullptr &&
+         "EventChanSender is not initialized.");
   return eventChanSender->dispatchEvent(event);
 }
 
 TrNativeEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
 {
+  assert(eventChanReceiver != nullptr &&
+         "EventChanReceiver is not initialized.");
   return eventChanReceiver->recvEvent(timeout);
 }
 
 shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer(media_comm::MediaContentType contentType)
 {
+  SHOULD_STARTED()
+
   auto player = make_shared<media_client::MediaPlayer>(contentType);
   mediaPlayers.push_back(player);
   return player;
@@ -642,6 +654,8 @@ shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlay
 
 shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlayer()
 {
+  SHOULD_STARTED()
+
   auto player = make_shared<media_client::AudioPlayer>();
   mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
   return player;
@@ -649,6 +663,8 @@ shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlay
 
 TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::createHostWebGLContext()
 {
+  SHOULD_STARTED()
+
   client_graphics::ContextAttributes contextAttrs;
   contextAttrs.xrCompatible = true;
   auto newContext = client_graphics::WebGL2Context::Make(contextAttrs);
@@ -691,6 +707,8 @@ bool TrClientContextPerProcess::removeHostWebGLContext(uint32_t contextId)
 
 bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush)
 {
+  assert(commandBufferChanSender != nullptr &&
+         "CommandBufferChanSender is not initialized.");
   return commandBufferChanSender->sendCommandBufferRequest(commandBuffer, followsFlush);
 }
 
