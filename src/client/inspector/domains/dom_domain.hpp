@@ -56,7 +56,7 @@ namespace client_inspector::domains
     std::string disable(const CdpMessage &message);
 
     // Helper methods
-    CdpNode convertNodeToCdpNode(std::shared_ptr<dom::Node> node, int depth = 0);
+    CdpNode convertNodeToCdpNode(std::shared_ptr<dom::Node> node, int depth = 1);
     rapidjson::Value cdpNodeToJson(const CdpNode &node, rapidjson::Document::AllocatorType &allocator);
     int getNextNodeId();
     std::shared_ptr<dom::Document> getCurrentDocument();

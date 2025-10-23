@@ -1,4 +1,5 @@
 #include <rapidjson/document.h>
+#include <client/per_process.hpp>
 #include "./dom_domain.hpp"
 
 namespace client_inspector::domains
@@ -37,13 +38,9 @@ namespace client_inspector::domains
     {
       // Get the current document (for now, create a minimal mock document)
       auto document = getCurrentDocument();
-
       if (document)
       {
-        // Convert the document to CDP format
-        CdpNode rootNode = convertNodeToCdpNode(document, 2); // depth 2 to include children
-
-        // Add the root node to the result
+        CdpNode rootNode = convertNodeToCdpNode(document, 2);
         result.AddMember("root", cdpNodeToJson(rootNode, allocator), allocator);
       }
       else
@@ -124,7 +121,7 @@ namespace client_inspector::domains
     // Basic node properties
     cdpNode.nodeType = static_cast<int>(node->nodeType);
     cdpNode.nodeName = node->nodeName;
-    cdpNode.nodeValue = node->nodeValue;
+    cdpNode.nodeValue = node->nodeValue().value_or("");
 
     // Get parent ID if available
     auto parent = node->getParentNode();
@@ -151,7 +148,7 @@ namespace client_inspector::domains
       auto element = dynamic_pointer_cast<dom::Element>(node);
       if (element)
       {
-        cdpNode.localName = element->getLocalName();
+        cdpNode.localName = element->localName;
 
         // Get attributes
         auto attrs = element->getAttributeNames();
@@ -169,8 +166,8 @@ namespace client_inspector::domains
       auto document = dynamic_pointer_cast<dom::Document>(node);
       if (document)
       {
-        cdpNode.documentURL = document->getURL();
-        cdpNode.baseURL = document->getBaseURL();
+        cdpNode.documentURL = document->documentURI();
+        cdpNode.baseURL = document->baseURI;
       }
     }
 
@@ -227,8 +224,6 @@ namespace client_inspector::domains
 
   shared_ptr<dom::Document> CdpDomDomain::getCurrentDocument()
   {
-    // TODO: Implement proper document access mechanism
-    // For now, return nullptr to use mock document
-    return nullptr;
+    return TrClientContextPerProcess::Get()->window->document();
   }
 }
