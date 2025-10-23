@@ -81,7 +81,6 @@ namespace crates::webgl
      * 
      * @param source The GLSL vertex shader source code as a string.
      * @returns A vector of GLSLAttribute structs containing attribute metadata.
-     * @throws rust::Error if the GLSL source cannot be parsed.
      */
     static inline std::vector<GLSLAttribute> ParseAttributes(const std::string &source)
     {
@@ -101,7 +100,7 @@ namespace crates::webgl
 
         return attributes;
       }
-      catch (const rust::Error &e)
+      catch (const std::exception &e)
       {
         // Re-throw with more context
         throw std::runtime_error(std::string("Failed to parse GLSL attributes: ") + e.what());
@@ -114,7 +113,6 @@ namespace crates::webgl
      * @param source The GLSL vertex shader source code as a string.
      * @param name The name of the attribute to look up.
      * @returns An optional containing the attribute location if found, or std::nullopt if not found.
-     * @throws rust::Error if the GLSL source cannot be parsed.
      */
     static inline std::optional<int32_t> GetAttribLocation(const std::string &source, const std::string &name)
     {
@@ -123,7 +121,7 @@ namespace crates::webgl
         auto location = holocron::webgl::getGLSLAttribLocation(source.c_str(), name.c_str());
         return location;
       }
-      catch (const rust::Error &e)
+      catch (const std::exception &e)
       {
         // If attribute not found, return nullopt instead of throwing
         std::string error_msg(e.what());

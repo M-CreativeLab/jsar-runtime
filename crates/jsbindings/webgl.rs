@@ -273,7 +273,8 @@ impl Visitor for GLSLAttributeParser {
   fn visit_single_declaration(&mut self, declaration: &ast::SingleDeclaration) -> Visit {
     // Check if this is an attribute declaration
     if let Some(ref qualifier) = declaration.ty.qualifier {
-      let (is_attribute, layout_location) = self.has_attribute_qualifier(&qualifier.content.qualifiers);
+      let (is_attribute, layout_location) =
+        self.has_attribute_qualifier(&qualifier.content.qualifiers);
 
       if is_attribute {
         if let Some(ref name) = declaration.name {
@@ -314,6 +315,7 @@ mod ffi {
   }
 
   extern "Rust" {
+    /// Patch GLSL source code from string
     #[cxx_name = "patchGLSLSourceFromStr"]
     fn patch_glsl_source_from_str(input: &str) -> String;
 
@@ -482,20 +484,20 @@ void main() {
 "#;
     let mut parser = GLSLAttributeParser::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
-    
+
     let attributes = parser.get_attributes();
     assert_eq!(attributes.len(), 3);
-    
+
     // Check first attribute
     assert_eq!(attributes[0].name, "position");
     assert_eq!(attributes[0].type_name, "vec3");
     assert_eq!(attributes[0].location, 0);
-    
+
     // Check second attribute
     assert_eq!(attributes[1].name, "normal");
     assert_eq!(attributes[1].type_name, "vec3");
     assert_eq!(attributes[1].location, 1);
-    
+
     // Check third attribute
     assert_eq!(attributes[2].name, "uv");
     assert_eq!(attributes[2].type_name, "vec2");
@@ -518,18 +520,18 @@ void main() {
 "#;
     let mut parser = GLSLAttributeParser::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
-    
+
     let attributes = parser.get_attributes();
     assert_eq!(attributes.len(), 3);
-    
+
     assert_eq!(attributes[0].name, "aPos");
     assert_eq!(attributes[0].type_name, "vec3");
     assert_eq!(attributes[0].location, 0);
-    
+
     assert_eq!(attributes[1].name, "aNormal");
     assert_eq!(attributes[1].type_name, "vec3");
     assert_eq!(attributes[1].location, 1);
-    
+
     assert_eq!(attributes[2].name, "aTexCoord");
     assert_eq!(attributes[2].type_name, "vec2");
     assert_eq!(attributes[2].location, 2);
@@ -550,16 +552,16 @@ void main() {
 "#;
     let mut parser = GLSLAttributeParser::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
-    
+
     let attributes = parser.get_attributes();
     assert_eq!(attributes.len(), 3);
-    
+
     assert_eq!(attributes[0].name, "position");
     assert_eq!(attributes[0].type_name, "vec3");
-    
+
     assert_eq!(attributes[1].name, "normal");
     assert_eq!(attributes[1].type_name, "vec3");
-    
+
     assert_eq!(attributes[2].name, "texCoord");
     assert_eq!(attributes[2].type_name, "vec2");
   }
@@ -578,7 +580,7 @@ void main() {
 "#;
     let mut parser = GLSLAttributeParser::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
-    
+
     assert_eq!(parser.get_attrib_location("position"), Some(0));
     assert_eq!(parser.get_attrib_location("normal"), Some(1));
     assert_eq!(parser.get_attrib_location("uv"), Some(2));
@@ -598,7 +600,7 @@ void main() {
 "#;
     let result = parse_glsl_attributes(source_str);
     assert!(result.is_ok());
-    
+
     let list = result.unwrap();
     assert_eq!(list.attributes.len(), 2);
     assert_eq!(list.attributes[0].name, "position");
@@ -619,11 +621,11 @@ void main() {
     let result = get_glsl_attrib_location(source_str, "position");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), 0);
-    
+
     let result = get_glsl_attrib_location(source_str, "normal");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), 1);
-    
+
     let result = get_glsl_attrib_location(source_str, "nonexistent");
     assert!(result.is_err());
   }
