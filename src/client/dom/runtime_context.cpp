@@ -1,6 +1,10 @@
 #include <node/v8.h>
 #include <crates/bindings.hpp>
-#include "./runtime_context.hpp"
+#include <client/dom/runtime_context.hpp>
+#include <client/fileapi/blob.hpp>
+#include <client/fetch/response.hpp>
+#include <client/url/url.hpp>
+#include <client/script_bindings/fetch/response.hpp>
 
 namespace dom
 {
@@ -58,7 +62,7 @@ namespace dom
       baseURI = "about:blank"; // Default base URI if not set.
   }
 
-  void ResolveResource(const FunctionCallbackInfo<Value> &info)
+  void FunctionCallbackWrapper(const FunctionCallbackInfo<Value> &info)
   {
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
@@ -228,6 +232,21 @@ namespace dom
       throw runtime_error("ResourceLoader not set");
     }
 
+    if (resource->IsString())
+    {
+      // Check if the string starts with "blob:"
+      String::Utf8Value utf8Value(isolate, resource);
+      string resourceStr = string(*utf8Value);
+      if (resourceStr.rfind("blob:", 0) == 0)
+      {
+        // It's a blob URL, resolve it to a Blob object
+        Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+        shared_ptr<client_fileapi::Blob> blob = client_url::URL::BlobRegistry.get(resourceStr);
+        resolver->Resolve(context, script_bindings::Response::NewInstance(isolate, blob)).ToChecked();
+        return scope.Escape(resolver->GetPromise());
+      }
+    }
+
     Local<String> methodName = String::NewFromUtf8(isolate, "sendWHATWGFetchRequest").ToLocalChecked();
     Local<Object> resourceLoaderObject = Local<Object>::New(isolate, resourceLoaderValue);
     Local<Function> sendFetchRequestFunc = resourceLoaderObject->Get(context,
@@ -290,26 +309,84 @@ namespace dom
     Local<Context> context = isolate->GetCurrentContext();
     Context::Scope contextScope(context);
 
+    Local<External> resolveCallbackExternal = External::New(isolate, new FunctionCallback(responseCallback));
+    Local<Function> resolve = Function::New(context,
+                                            FunctionCallbackWrapper,
+                                            resolveCallbackExternal)
+                                .ToLocalChecked();
+    Local<Function> reject;
+    if (errorCallback.has_value())
+    {
+      Local<External> rejectCallbackExternal = External::New(isolate, new FunctionCallback(errorCallback.value()));
+      reject = Function::New(context, FunctionCallbackWrapper, rejectCallbackExternal).ToLocalChecked();
+    }
+
+    // If the URL is a blob URL, handle it directly
+    if (url.rfind("blob:", 0) == 0)
+    {
+      // It's a blob URL, resolve it to a Blob object
+      shared_ptr<client_fileapi::Blob> blob = client_url::URL::BlobRegistry.get(url);
+      if (responseType == "string")
+      {
+        string text = blob->text().get_future().get();
+        Local<String> result = String::NewFromUtf8(isolate, text.c_str()).ToLocalChecked();
+        Local<Value> args[] = {result};
+        resolve->Call(context, Undefined(isolate), 1, args).ToLocalChecked();
+      }
+      else if (responseType == "json")
+      {
+        string text = blob->text().get_future().get();
+        Local<String> jsonString = String::NewFromUtf8(isolate, text.c_str()).ToLocalChecked();
+        Local<Value> jsonValue;
+        if (!JSON::Parse(context, jsonString).ToLocal(&jsonValue))
+        {
+          auto msg = "Failed to parse JSON from blob URL: " + url;
+          if (errorCallback.has_value())
+          {
+            Local<Value> args[] = {Exception::TypeError(String::NewFromUtf8(isolate, msg.c_str()).ToLocalChecked())};
+            reject->Call(context, Undefined(isolate), 1, args).ToLocalChecked();
+          }
+          else
+          {
+            cerr << "Uncaught Fetch Error: Failed to parse JSON from blob URL" << endl;
+          }
+        }
+        else
+        {
+          Local<Value> args[] = {jsonValue};
+          resolve->Call(context, Undefined(isolate), 1, args).ToLocalChecked();
+        }
+      }
+      else if (responseType == "arraybuffer")
+      {
+        vector<uint8_t> data = blob->bytes().get_future().get();
+        Local<ArrayBuffer> arrayBuffer = ArrayBuffer::New(isolate, data.size());
+        memcpy(arrayBuffer->GetBackingStore()->Data(), data.data(), data.size());
+        Local<Value> args[] = {arrayBuffer};
+        resolve->Call(context, Undefined(isolate), 1, args).ToLocalChecked();
+      }
+      else
+      {
+        assert(false && "Unsupported responseType for blob URL");
+      }
+      return;
+    }
+
+    // Call to the `fetch` function
     Local<Value> promiseValue = callFetchFunction(normalize(url, baseURI), responseType);
     if (!promiseValue->IsPromise())
       return;
 
     Local<Promise> fetchPromise = promiseValue.As<Promise>();
-    Local<External> resolveCallbackExternal = External::New(isolate, new FunctionCallback(responseCallback));
-    auto resolve = Function::New(context, ResolveResource, resolveCallbackExternal);
 
     // Schedule the callbacks
     if (errorCallback.has_value())
     {
-      Local<External> rejectCallbackExternal = External::New(isolate, new FunctionCallback(errorCallback.value()));
-      auto reject = Function::New(context, ResolveResource, rejectCallbackExternal);
-      fetchPromise->Then(context, resolve.ToLocalChecked(), reject.ToLocalChecked())
-        .ToLocalChecked();
+      fetchPromise->Then(context, resolve, reject).ToLocalChecked();
     }
     else
     {
-      fetchPromise->Then(context, resolve.ToLocalChecked())
-        .ToLocalChecked();
+      fetchPromise->Then(context, resolve).ToLocalChecked();
     }
   }
 
