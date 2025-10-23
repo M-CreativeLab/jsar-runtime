@@ -1,8 +1,42 @@
+#include <crates/bindings.webgl.hpp>
 #include "./webgl_program.hpp"
 
 namespace client_graphics
 {
   using namespace std;
+
+  void WebGLProgram::attachShader(std::shared_ptr<WebGLShader> shader)
+  {
+    if (shader->type == WebGLShaderType::kVertex)
+      vertexShader_ = shader;
+    else if (shader->type == WebGLShaderType::kFragment)
+      fragmentShader_ = shader;
+    else
+      throw runtime_error("Unsupported shader type to attach to program.");
+  }
+
+  void WebGLProgram::detachShader(std::shared_ptr<WebGLShader> shader)
+  {
+    if (shader->type == WebGLShaderType::kVertex)
+      vertexShader_ = nullptr;
+    else if (shader->type == WebGLShaderType::kFragment)
+      fragmentShader_ = nullptr;
+    else
+      throw runtime_error("Unsupported shader type to detach from program.");
+  }
+
+  void WebGLProgram::link()
+  {
+    if (!vertexShader_ || !fragmentShader_)
+      throw runtime_error("Cannot link program without both vertex and fragment shaders.");
+
+    string shaderSource = vertexShader_->source;
+    auto attribsInfo = crates::webgl::GLSLAttributeParser::ParseAttributes(shaderSource);
+    for (const auto &attrib : attribsInfo)
+    {
+      cout << "Attribute found - Name: " << attrib.name << ", Type: " << attrib.type_name << ", Location: " << attrib.location << endl;
+    }
+  }
 
   void WebGLProgram::waitForCompleted(int timeout) const
   {

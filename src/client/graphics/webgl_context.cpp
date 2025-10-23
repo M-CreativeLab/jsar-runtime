@@ -152,6 +152,9 @@ namespace client_graphics
     if (program == nullptr || !program->isValid()) [[unlikely]]
       return;
 
+    // TODO(yorkie): implement the client-side linking checks.
+    program->link();
+
     auto req = LinkProgramCommandBufferRequest(program->id);
     if (!sendCommandBufferRequest(req, true))
       throw LinkProgramException(*program, "Failed to send the command buffer.");
@@ -365,12 +368,14 @@ namespace client_graphics
   {
     auto req = AttachShaderCommandBufferRequest(program->id, shader->id);
     sendCommandBufferRequest(req);
+    program->attachShader(shader);
   }
 
   void WebGLContext::detachShader(shared_ptr<WebGLProgram> program, shared_ptr<WebGLShader> shader)
   {
     auto req = DetachShaderCommandBufferRequest(program->id, shader->id);
     sendCommandBufferRequest(req);
+    program->detachShader(shader);
   }
 
   string WebGLContext::getShaderSource(shared_ptr<WebGLShader> shader)

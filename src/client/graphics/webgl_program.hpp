@@ -9,6 +9,7 @@
 #include <common/command_buffers/details/program.hpp>
 
 #include "./webgl_object.hpp"
+#include "./webgl_shader.hpp"
 #include "./webgl_active_info.hpp"
 #include "./webgl_attrib_location.hpp"
 #include "./webgl_uniform_location.hpp"
@@ -24,6 +25,10 @@ namespace client_graphics
     }
 
   public:
+    void attachShader(std::shared_ptr<WebGLShader> shader);
+    void detachShader(std::shared_ptr<WebGLShader> shader);
+    void link();
+
     // Returns if this program is incomplete, it means the program response has not been received from channel peer.
     bool isIncomplete() const
     {
@@ -223,6 +228,9 @@ namespace client_graphics
     void printInfo() const;
 
   private:
+    std::shared_ptr<WebGLShader> vertexShader_;
+    std::shared_ptr<WebGLShader> fragmentShader_;
+
     std::atomic<bool> incomplete_ = true;
     mutable std::mutex setCompletedMutex_;
     mutable std::condition_variable setCompletedCv_;
