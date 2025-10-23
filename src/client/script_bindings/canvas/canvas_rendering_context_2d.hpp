@@ -43,6 +43,7 @@ namespace script_bindings
         T::InstanceMethod(isolate, prototype, "bezierCurveTo", &T::BezierCurveTo);
         T::InstanceMethod(isolate, prototype, "quadraticCurveTo", &T::QuadraticCurveTo);
         T::InstanceMethod(isolate, prototype, "arc", &T::Arc);
+        T::InstanceMethod(isolate, prototype, "rect", &T::Rect);
         T::InstanceMethod(isolate, prototype, "ellipse", &T::Ellipse);
 
         // Drawing paths
@@ -133,8 +134,8 @@ namespace script_bindings
       void QuadraticCurveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Arc(const v8::FunctionCallbackInfo<v8::Value> &info);
       void ArcTo(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void Ellipse(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Rect(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Ellipse(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Drawing path methods
       void Fill(const v8::FunctionCallbackInfo<v8::Value> &info);

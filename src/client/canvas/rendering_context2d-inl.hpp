@@ -448,6 +448,27 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::rect(float x, float y, float width, float height)
+  {
+    if (currentPath == nullptr)
+      return;
+    currentPath->addRect(SkRect::MakeXYWH(x, y, width, height));
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::ellipse(float x,
+                                                     float y,
+                                                     float radiusX,
+                                                     float radiusY,
+                                                     float rotation,
+                                                     float startAngle,
+                                                     float endAngle,
+                                                     bool ccw)
+  {
+    ellipseToSkPath(currentPath, x, y, radiusX, radiusY, rotation, startAngle, endAngle, ccw);
+  }
+
+  template <typename CanvasType>
   const std::vector<float> &CanvasRenderingContext2D<CanvasType>::getLineDash()
   {
     return lineDash;

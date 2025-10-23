@@ -382,12 +382,35 @@ namespace script_bindings::canvas_bindings
   }
 
   template <typename T, typename CanvasType>
+  void CanvasRenderingContext2DBase<T, CanvasType>::Rect(const v8::FunctionCallbackInfo<v8::Value> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::HandleScope scope(isolate);
+
+    if (args.Length() < 4)
+    {
+      isolate->ThrowException(v8::Exception::TypeError(
+        T::MakeMethodArgCountError(isolate, "rect", 4, args.Length())));
+      return;
+    }
+
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    auto x = args[0]->ToNumber(context).ToLocalChecked()->Value();
+    auto y = args[1]->ToNumber(context).ToLocalChecked()->Value();
+    auto width = args[2]->ToNumber(context).ToLocalChecked()->Value();
+    auto height = args[3]->ToNumber(context).ToLocalChecked()->Value();
+
+    this->handle()->rect(x, y, width, height);
+    args.GetReturnValue().SetUndefined();
+  }
+
+  template <typename T, typename CanvasType>
   void CanvasRenderingContext2DBase<T, CanvasType>::Ellipse(const v8::FunctionCallbackInfo<v8::Value> &args)
   {
     v8::Isolate *isolate = args.GetIsolate();
     v8::HandleScope scope(isolate);
 
-    if (args.Length() < 8)
+    if (args.Length() < 7)
     {
       isolate->ThrowException(v8::Exception::TypeError(
         T::MakeMethodArgCountError(isolate, "ellipse", 8, args.Length())));
@@ -404,14 +427,12 @@ namespace script_bindings::canvas_bindings
     auto endAngle = args[6]->ToNumber(context).ToLocalChecked()->Value();
     bool anticlockwise = false;
 
-    if (args.Length() > 7 && args[7]->IsBoolean())
+    if (args.Length() > 7)
     {
       anticlockwise = args[7]->ToBoolean(isolate)->Value();
     }
 
-    // this->handle()->ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise);
-    isolate->ThrowException(v8::Exception::Error(
-      T::MakeMethodError(isolate, "ellipse", "Not implemented")));
+    this->handle()->ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise);
     args.GetReturnValue().SetUndefined();
   }
 

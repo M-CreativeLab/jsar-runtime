@@ -78,6 +78,17 @@ namespace canvas
     void stroke();
     void strokeRect(float x, float y, float width, float height);
     void clearRect(float x, float y, float width, float height);
+
+    void rect(float x, float y, float width, float height);
+    void ellipse(float x,
+                 float y,
+                 float radiusX,
+                 float radiusY,
+                 float rotation,
+                 float startAngle,
+                 float endAngle,
+                 bool ccw = false);
+
     const std::vector<float> &getLineDash();
     void setLineDash(const std::vector<float> &segments);
     void beginPath();
