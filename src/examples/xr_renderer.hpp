@@ -1,6 +1,10 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <common/xr/types.hpp>
+#include <runtime/embedder.hpp>
+#include <runtime/content.hpp>
+
 #include "./window_ctx.hpp"
 
 namespace jsar::example
@@ -130,6 +134,10 @@ namespace jsar::example
       auto mainController = xrDevice->getMainControllerInputSource();
       if (mainController != nullptr)
         mainController->setTargetRayBaseMatrix(mainControllerTargetRay);
+    }
+    glm::mat4 getMainControllerTargetRay() const
+    {
+      return mainControllerTargetRay;
     }
 
   private:

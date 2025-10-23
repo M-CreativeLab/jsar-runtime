@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <chrono>
 #include <pugixml/pugixml.hpp>
 #include <crates/bindings.hpp>
 #include <client/animation/document_timeline.hpp>
@@ -18,10 +19,14 @@
 #include "./node_list.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
+#include "./comment.hpp"
 #include "./document_fragment.hpp"
 
 namespace dom
 {
+  // Forward declarations
+  class HTMLMetaElement;
+
   enum class DocumentCompatMode
   {
     NO_QUIRKS = 0, // Standards
@@ -80,6 +85,9 @@ namespace dom
     void open();
     std::shared_ptr<DocumentFragment> createDocumentFragment();
     std::shared_ptr<Text> createTextNode(const std::string &data);
+    std::shared_ptr<Comment> createComment(const std::string &data);
+    std::shared_ptr<Element> createElement(const std::string &localName);
+    std::shared_ptr<Element> createElementNS(const std::string &namespaceURI, const std::string &qualifiedName);
     std::shared_ptr<Node> importNode(const std::shared_ptr<Node> node, bool deep);
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
@@ -94,6 +102,11 @@ namespace dom
     // Write
     void write(const std::string &markup);
     void writeln(const std::string &markup);
+
+    /**
+     * Handle viewport meta tag changes and apply them to the window
+     */
+    void onViewportMetaChanged(std::shared_ptr<dom::HTMLMetaElement> meta_element);
 
   protected:
     virtual void onDocumentOpened()
@@ -176,6 +189,11 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
+
+    inline std::string documentURI() const
+    {
+      return document_uri_;
+    }
     inline std::shared_ptr<HTMLHeadElement> head() const
     {
       return head_element_;
@@ -208,6 +226,7 @@ namespace dom
 
   protected:
     bool auto_connect_;
+    std::string document_uri_ = "about:blank";
     std::weak_ptr<browser::Window> default_view_;
     std::shared_ptr<pugi::xml_document> doc_internal_;
     std::shared_ptr<HTMLHeadElement> head_element_;
@@ -352,12 +371,8 @@ namespace dom
         }
       }
     }
-    // Mark the document cache as dirty, the renderer will draw from the body element.
-    inline void invalidateDocumentCache()
-    {
-      dirty_root_text_or_element_ = body();
-    }
-
+    // Mark the document cache as dirty, the renderer will draw from the document element.
+    void invalidateDocumentCache();
     std::optional<builtin_scene::BoundingBox> visualBoundingBox() const;
 
   public:
@@ -371,10 +386,16 @@ namespace dom
     void onDocumentOpened() override;
     void onStyleSheetsDidChange() override;
 
-    void simulateScrollWithOffset(float offsetX, float offsetY);
+    bool simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
+    bool shouldThrottleScrollEvent() const;
+
     std::shared_ptr<client_layout::LayoutView> layout_view_;
     mutable std::weak_ptr<Node> dirty_root_text_or_element_;
+
+    // Scroll performance optimization
+    std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
+    static constexpr std::chrono::milliseconds scroll_throttle_duration_{1000 / 45}; // ~45fps throttling
   };
 }

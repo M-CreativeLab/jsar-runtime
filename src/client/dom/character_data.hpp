@@ -34,6 +34,7 @@ namespace dom
     void deleteData(size_t offset, size_t count);
     void insertData(size_t offset, const std::string &data);
     void replaceData(size_t offset, size_t count, const std::string &data);
+    void replaceWith(std::vector<std::shared_ptr<Node>> nodes);
     std::string substringData(size_t offset, size_t count);
     void before(std::vector<std::shared_ptr<Node>> nodes);
     void before(std::string text);

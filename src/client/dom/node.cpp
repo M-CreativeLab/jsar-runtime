@@ -75,6 +75,7 @@ namespace dom
       , connected(false)
       , nodeName(other.nodeName)
       , nodeType(other.nodeType)
+      , nodeValue_(other.nodeValue_)
       , ownerDocument(other.ownerDocument)
       , parentNode(weak_ptr<Node>())
       , childNodes({})
@@ -112,7 +113,7 @@ namespace dom
     }
   }
 
-  void Node::removeChild(shared_ptr<Node> aChild)
+  shared_ptr<Node> Node::removeChild(shared_ptr<Node> aChild)
   {
     if (aChild == nullptr)
       throw runtime_error("Failed to remove the child node: the node to remove is null.");
@@ -120,8 +121,14 @@ namespace dom
     auto it = find(childNodes.begin(), childNodes.end(), aChild);
     if (it != childNodes.end())
     {
+      shared_ptr<Node> removed = *it;
       it = childNodes.erase(it);
       childRemovedCallback(aChild);
+      return removed;
+    }
+    else
+    {
+      return nullptr;
     }
   }
 
@@ -154,9 +161,29 @@ namespace dom
     auto it = find(childNodes.begin(), childNodes.end(), refChild);
     if (it != childNodes.end())
     {
-      childNodes.insert(it, newChild);
-      childAddedCallback(newChild);
-      return newChild;
+      if (Node::Is<DocumentFragment>(newChild))
+      {
+        // Append all the child nodes if the node is a `DocumentFragment`.
+        auto fragment = Node::As<DocumentFragment>(newChild);
+        for (auto child : fragment->childNodes)
+          insertBefore(child, refChild);
+        return newChild;
+      }
+      else if (Node::Is<Element>(newChild) ||
+               Node::Is<Text>(newChild) ||
+               Node::Is<Comment>(newChild))
+      {
+        childNodes.insert(it, newChild);
+        childAddedCallback(newChild);
+        return newChild;
+      }
+      else
+      {
+        string msg =
+          "Failed to insert the child: "
+          "the new child node is not a DocumentFragment, Text, Comment or Element.";
+        throw runtime_error(msg);
+      }
     }
     return nullptr;
   }
@@ -190,6 +217,8 @@ namespace dom
       cloned = Comment::CloneComment(shared_from_this());
     else if (nodeType == NodeType::TEXT_NODE)
       cloned = Text::CloneText(shared_from_this());
+    else if (nodeType == NodeType::DOCUMENT_FRAGMENT_NODE)
+      cloned = DocumentFragment::CloneDocumentFragment(shared_from_this());
     else
       cloned = make_shared<Node>(*this);
 
@@ -288,6 +317,18 @@ namespace dom
     if (ownerDocument.has_value())
       ref = ownerDocument.value().lock();
     return ref;
+  }
+
+  builtin_scene::RenderQueue Node::getRenderQueue(bool forceCompute) const
+  {
+    if (forceCompute || !renderQueue_.has_value())
+      renderQueue_ = computeRenderQueue();
+    return renderQueue_.value();
+  }
+
+  builtin_scene::RenderQueue Node::computeRenderQueue() const
+  {
+    return builtin_scene::RenderQueue(depth());
   }
 
   void Node::setNodeValue(std::string newValue)

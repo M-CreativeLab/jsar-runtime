@@ -9,7 +9,6 @@ namespace builtin_scene
 {
   // Forward declaration
   class Instance;
-  class RenderableInstancesList;
 
   /**
    * Manages the border data texture for SDF border rendering.
@@ -44,6 +43,12 @@ namespace builtin_scene
      * @param textureUnit The texture unit to bind to (typically 1)
      */
     void bind(client_graphics::WebGLTextureUnit textureUnit);
+
+    /**
+     * Unbind the border data texture from the specified texture unit.
+     * @param textureUnit The texture unit to unbind from (typically 1)
+     */
+    void unbind(client_graphics::WebGLTextureUnit textureUnit);
 
     /**
      * Get the underlying WebGL texture.

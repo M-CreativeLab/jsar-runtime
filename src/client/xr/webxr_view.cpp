@@ -6,7 +6,7 @@
 
 namespace client_xr
 {
-  XRView::XRView(xr::TrXRView &viewData,
+  XRView::XRView(const xr::TrXRView &viewData,
                  std::shared_ptr<XRSession> session,
                  std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
       : index_(viewData.viewIndex)

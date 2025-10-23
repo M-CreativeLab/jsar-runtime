@@ -78,6 +78,8 @@ namespace client_layout
     void slowFirstChild() const = delete;
     void slowLastChild() const = delete;
 
+    bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase) override;
+
   private:
     std::shared_ptr<LayoutObjectChildList> virtualChildren() const override final
     {
@@ -87,6 +89,10 @@ namespace client_layout
     {
       return children();
     }
+
+    // Fast check if `NodeAtPoint` may find a hit based on the bounding box intersection.
+    bool mayIntersect(const HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset) const;
+    bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
 
   private:
     std::shared_ptr<LayoutObjectChildList> children_;

@@ -61,7 +61,7 @@ namespace builtin_scene::materials
 
     auto maxDistanceOpt = glContext->getUniformLocation(program, "maxDistance");
     if (maxDistanceOpt.has_value())
-      glContext->uniform1f(maxDistanceOpt.value(), 2.0f); // Default 1 meters
+      glContext->uniform1f(maxDistanceOpt.value(), 1.5f); // Default 1.5 meters
 
     return true;
   }
@@ -119,7 +119,7 @@ namespace builtin_scene::materials
         splatInstanceCount_ = splatsMesh->getTotalSplatCount();
 
         // Update buffer with sorted indices
-        splatsMesh->updateSplatBuffer(glContext);
+        splatsMesh->updateSplatBuffer(glContext, mesh->vertexArrayObject());
 
         // Bind compressed splat texture to texture unit 0
         auto compressedTexture = splatsMesh->getCompressedSplatsTexture();

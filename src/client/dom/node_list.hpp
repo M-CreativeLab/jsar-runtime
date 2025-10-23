@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace dom
 {
@@ -11,7 +12,7 @@ namespace dom
   /**
    * The base class that provides the common interface for all node lists.
    */
-  class NodeListApi
+  class NodeListApi : public scripting_base::JSObjectHolder
   {
   public:
     virtual ~NodeListApi() = default;

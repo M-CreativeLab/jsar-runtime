@@ -15,6 +15,7 @@ namespace client_cssom::css_value_tokenizer
     kNumber,
     kPercentage,
     kDimension,
+    kHash,
     kDelimiter,
     kComma,
     kLeftParen,
@@ -84,6 +85,7 @@ namespace client_cssom::css_value_tokenizer
     Token consume_number();
     Token consume_url();
     Token consume_function(const std::string &name);
+    Token consume_hash();
     std::string consume_identifier_sequence();
     void consume_escape_sequence(std::string &result);
   };

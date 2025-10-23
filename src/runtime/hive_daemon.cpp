@@ -168,6 +168,7 @@ void TrHiveDaemon::onDeamonProcess()
     xrDeviceObject.AddMember("enabled", xrDevice->enabled(), allocator);
     xrDeviceObject.AddMember("active", true, allocator);
     xrDeviceObject.AddMember("stereoRenderingMode", static_cast<int>(xrDevice->getStereoRenderingMode()), allocator);
+    xrDeviceObject.AddMember("usedViewsCount", static_cast<int>(xrDevice->getUsedViewsCount()), allocator);
     xrDeviceObject.AddMember("commandChanPort", xrDevice->getCommandChanPort(), allocator);
     xrDeviceObject.AddMember("sessionContextZoneDirectory",
                              rapidjson::Value(xrDevice->getSessionContextZoneDirectory().c_str(), allocator),

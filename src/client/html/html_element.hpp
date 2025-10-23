@@ -41,6 +41,9 @@ namespace dom
     void setDataset(const std::string &key, const std::string &value);
     void removeDataset(const std::string &key);
 
+    void setInnerText(const std::string &);
+    void setHidden(bool);
+
   public:
     inline float offsetWidth() const override
     {

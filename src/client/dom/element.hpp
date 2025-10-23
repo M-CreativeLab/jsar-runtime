@@ -240,8 +240,8 @@ namespace dom
       return is_focused_;
     }
 
-    // Overrides the `Node::getRenderQueue()` method to return the render queue of the element.
-    virtual builtin_scene::RenderQueue getRenderQueue() const override;
+    // Overrides the `Node::computeRenderQueue()` method to return the render queue of the element.
+    builtin_scene::RenderQueue computeRenderQueue() const override;
 
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
@@ -255,6 +255,12 @@ namespace dom
     void setInnerHTML(const std::string &markup);
     std::string getOuterHTML();
     void setOuterHTML(const std::string &markup);
+
+    // Generalized event handler methods
+    void setEventHandler(const std::string &type, const std::string &handlerCode);
+    bool hasEventHandler(const std::string &type) const;
+    std::string getEventHandlerCode(const std::string &type) const;
+    void executeEventHandler(const std::string &type, dom::Event *event);
 
   protected: // Node lifecycle callbacks
     void connectedCallback() override;
@@ -325,7 +331,7 @@ namespace dom
     void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
     void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
     void simulateClick(const glm::vec3 &hitPointInWorld);
-    void simulateScrollWithOffset(float offsetX, float offsetY);
+    bool simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
     bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
@@ -375,8 +381,11 @@ namespace dom
     bool is_focused_ = false;
     bool is_active_ = false;
 
+    // Event handlers - generalized storage
+    std::unordered_map<std::string, std::string> event_handler_codes_;
+
     // Scroll performance optimization
     std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
-    static constexpr std::chrono::milliseconds scroll_throttle_duration_{16}; // ~60fps throttling
+    static constexpr std::chrono::milliseconds scroll_throttle_duration_{1000 / 45}; // ~45fps throttling
   };
 }

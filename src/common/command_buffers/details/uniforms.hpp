@@ -30,6 +30,15 @@ namespace commandbuffers
     {
     }
 
+    friend std::ostream &operator<<(std::ostream &os, const MatrixComputationGraph &graph)
+    {
+      os << "Placeholder(" << to_string(graph.placeholderId) << ", "
+         << (graph.handedness == MatrixHandedness::MATRIX_LEFT_HANDED ? "Left" : "Right")
+         << (graph.multiview ? ", multiview" : "")
+         << ")";
+      return os;
+    }
+
   public:
     MatrixHandedness handedness;
     WebGLMatrixPlaceholderId placeholderId;
@@ -892,7 +901,7 @@ namespace commandbuffers
     {
       std::stringstream values_ss;
       values_ss << "float[" << values.size() << "], "
-                << "ComputationGraph=" << (isComputationGraph() ? "Placeholder()" : "None");
+                << "ComputationGraph=" << computationGraph4values;
 
       std::stringstream os;
       os << TrCommandBufferRequest::toString(line_prefix) << "("

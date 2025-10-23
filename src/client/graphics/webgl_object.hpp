@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "idgen.hpp"
 
 namespace client_graphics
@@ -23,7 +24,7 @@ namespace client_graphics
     None
   };
 
-  class WebGLObject
+  class WebGLObject : public scripting_base::JSObjectHolder
   {
   public:
     /**

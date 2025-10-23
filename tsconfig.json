@@ -7,9 +7,14 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "types": [
       "node",
       "nodejs-patch",
+      "webxr",
       "transmute-webapis",
       "transmute-private"
     ],

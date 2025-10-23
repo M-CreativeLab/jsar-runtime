@@ -15,7 +15,8 @@ namespace client_cssom
   public:
     std::shared_ptr<ComputedStyle> findStyle(std::shared_ptr<dom::Node> elementOrTextNode) const;
     std::shared_ptr<ComputedStyle> createStyle(std::shared_ptr<dom::Node> elementOrTextNode,
-                                               bool useElementStyle = true);
+                                               bool useElementStyle = true,
+                                               bool writeCache = true);
     bool resetStyle(std::shared_ptr<dom::Node> elementOrTextNode);
 
     inline void invalidateCache()

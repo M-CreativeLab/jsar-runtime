@@ -1,23 +1,25 @@
 import path from 'node:path';
 import * as WorkerThreads from 'node:worker_threads';
-import { resolveObjectURL } from 'node:buffer';
+import { type Blob, resolveObjectURL } from 'node:buffer';
+import { ErrorEvent } from './events';
 
 export type WorkerRequest = {
   baseURI: string;
   requestUrl: string;
-  scriptSource?: Blob;
+  scriptSource?: Blob | undefined;
   options?: WorkerOptions;
 };
 
-export class WorkerImpl extends EventTarget implements Worker {
+export class WorkerImpl {
   #handle: WorkerThreads.Worker;
+  #request: WorkerRequest;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onmessage: (this: Worker, ev: MessageEvent) => any;
+  onmessage: (ev: MessageEvent) => any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onmessageerror: (this: Worker, ev: MessageEvent) => any;
+  onmessageerror: (ev: MessageEvent) => any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onerror: (this: AbstractWorker, ev: ErrorEvent) => any;
+  onerror: (ev: ErrorEvent) => any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postMessage(message: any, transfer: Transferable[]): void;
@@ -32,25 +34,26 @@ export class WorkerImpl extends EventTarget implements Worker {
   }
 
   constructor(url: string | URL, options?: WorkerOptions) {
-    super();
     if (typeof document === 'undefined' || document.baseURI === undefined) {
       throw new Error('Workers are only supported in the browser environment');
     }
 
     const workerScriptUrl = url instanceof URL ? url.href : url;
-    const workerRequest: WorkerRequest = {
+    this.#request = {
       baseURI: document.baseURI,
       requestUrl: workerScriptUrl,
       options,
     };
     if (workerScriptUrl.startsWith('blob:')) {
-      workerRequest.scriptSource = resolveObjectURL(workerScriptUrl);
+      this.#request.scriptSource = resolveObjectURL(workerScriptUrl);
     }
+  }
 
+  start() {
     const entryPath = path.resolve(__dirname, './jsar-webworkers-entry.js');
     try {
       this.#handle = new WorkerThreads.Worker(entryPath, {
-        workerData: workerRequest,
+        workerData: this.#request,
       });
     } catch (err) {
       console.error('Failed to start a worker:', err);
@@ -62,25 +65,26 @@ export class WorkerImpl extends EventTarget implements Worker {
 
   #initHandle() {
     this.#handle.on('message', (message) => {
-      const event = new MessageEvent('message', { data: message });
       if (typeof this.onmessage === 'function') {
+        const event = new MessageEvent('message', { data: message });
         this.onmessage(event);
       }
-      this.dispatchEvent(event);
     });
     this.#handle.on('messageerror', (error) => {
-      const event = new MessageEvent('messageerror', { data: error });
       if (typeof this.onmessageerror === 'function') {
+        const event = new MessageEvent('messageerror', { data: error });
         this.onmessageerror(event);
       }
-      this.dispatchEvent(event);
     });
     this.#handle.on('error', (error) => {
-      const event = new ErrorEvent('error', { error });
+      console.warn('Occurred error in worker thread:', error);
       if (typeof this.onerror === 'function') {
+        const event = new ErrorEvent('error', {
+          message: error.message,
+          error
+        });
         this.onerror(event);
       }
-      this.dispatchEvent(event);
     });
   }
 }

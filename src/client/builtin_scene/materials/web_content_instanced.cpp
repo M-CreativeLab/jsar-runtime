@@ -94,53 +94,144 @@ namespace builtin_scene::materials
     if (instancedMesh.instanceCount() <= 0)
       return;
 
-    // Update the render queues for opaque and transparent instances.
-    instancedMesh.updateInstancesList();
+    // a) Check isStructureDirty_ and update layeredInstances_ if needed
+    instancedMesh.updateInstancesList(program);
 
     size_t meshIndicesCount = mesh.indices().size();
     CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();
 
-    // Draw the transparent instances
-    RenderableInstancesList &instances = instancedMesh.getTransparentInstancesList();
-    if (instances.count() > 0)
+    // Set the base matrix once (shared uniform), move the transparent objects +z 0.001
+    auto loc = glContext->getUniformLocation(program, "modelMatrix");
+    glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+    glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
+
+    bool inDepthWritePass = false;
+
+    // b) Render layeredInstances_ in order (0-1-2-...)
+    // First render scrollable container masks for each layer, then render regular content with stencil testing
+    auto renderLayer = [&](RenderLayer layer, ContentInstancesList &layerInstancesList)
     {
-      WebGLVertexArrayScope vaoScope(glContext, instances.vao);
+      // c) Switch RenderableInstancesList's vbo to current vao's vbo for this layer
+      WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
 
-      // Set the base matrix, move the transparent objects +z 0.001
-      auto loc = glContext->getUniformLocation(program, "modelMatrix");
-      glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
-      glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
-
-      // Draw
-      instances.beforeInstancedDraw(*glContext, borderDataTexture);
+      // Draw the layer
+      layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
       {
-        // Draw transparent instances to color attachment
-        glContext->depthMask(false);
-        glContext->enable(WEBGL_BLEND);
-        glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+        // Draw layer instances to color attachment
+        if (inDepthWritePass)
+        {
+          // Depth write only pass, disable color writes and enable depth writes
+          glContext->colorMask(false, false, false, false);
+          glContext->depthMask(true);
+          glContext->disable(WEBGL_BLEND);
+        }
+        else
+        {
+          // Normal pass, enable color writes and disable depth writes
+          glContext->colorMask(true, true, true, true);
+          glContext->depthMask(false);
+          glContext->enable(WEBGL_BLEND);
+          glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+        }
+
         glContext->drawElementsInstanced(mesh.primitiveTopology(),
                                          meshIndicesCount,
                                          WEBGL_UNSIGNED_INT,
                                          0,
-                                         instances.count());
+                                         layerInstancesList.count());
+      }
+      layerInstancesList.afterInstancedDraw(*glContext);
+    };
 
-        // Draw transparent instances to depth attachment if depth-only pass is enabled.
-        if (instancedMesh.isDepthOnlyPassEnabled())
+    // Render per-container with individual stencil isolation.
+    // This implements overflow behavior for Web Content by:
+    // 1. Clearing stencil buffer for each container
+    // 2. Rendering this container's mask to the stencil buffer
+    // 3. Rendering content belonging to this container with stencil testing
+    auto renderLayerWithMask = [&](RenderLayer layer,
+                                   ContainerInstance *containerInstance,
+                                   ContentInstancesList *contentInstances)
+    {
+      bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
+      bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;
+
+      if (hasScrollableContainer)
+      {
+        // Step 2: Render scrollable container instance as stencil mask
+        glContext->enable(WEBGL_STENCIL_TEST);
+        glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
+        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
+        glContext->stencilMask(0xff);
+
+        /**
+         * Stencil masking format: [4 bits for container index | 4 bits for layer index]
+         * 
+         * NOTE(yorkie): the container index is reversed as well though it is not used at the moment.
+         * NOTE(yorkie): this stores layer index reversely (0x0f - layer.index()) to work with `LESS` function, so that
+         *               the stencil value zero can be filtered out.
+         */
+        int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0x0f - layer.index()) & 0x0f);
+        if (layer.index() == 0)
         {
-          glContext->colorMask(false, false, false, false);
-          glContext->depthMask(true);
-          glContext->disable(WEBGL_BLEND);
+          glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xff);
+        }
+        else
+        {
+          // When drawing masks based on the parent layer, we need to ensure that the new mask is drawn inside the
+          // parent layer's mask, so we use `LESS` function to compare the layer index bits.
+          glContext->stencilFunc(WEBGL_LESS, maskRef, 0x0f);
+        }
+
+        // Render the container mask
+        {
+          WebGLVertexArrayScope vaoScope(glContext, containerInstance->vao);
+          containerInstance->beforeInstancedDraw(*glContext);
           glContext->drawElementsInstanced(mesh.primitiveTopology(),
                                            meshIndicesCount,
                                            WEBGL_UNSIGNED_INT,
                                            0,
-                                           instances.count());
-
-          // Restore the color mask state
-          glContext->colorMask(true, true, true, true);
+                                           containerInstance->count());
+          containerInstance->afterInstancedDraw(*glContext);
         }
+
+        // Step 3: Render content with stencil testing enabled
+        if (hasContent)
+        {
+          glContext->stencilMask(0);                                // Disable writing to stencil buffer
+          glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
+          glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
+
+          // Render the content instances
+          renderLayer(layer, *contentInstances);
+        }
+
+        // Step 4: Disable stencil testing after rendering this container
+        glContext->disable(WEBGL_STENCIL_TEST);
       }
-      instances.afterInstancedDraw(*glContext);
+      else if (hasContent)
+      {
+        // No container, render content directly
+        renderLayer(layer, *contentInstances);
+      }
+    };
+
+    // Iterate layers and render
+    inDepthWritePass = false;
+    instancedMesh.iterateLayers(renderLayerWithMask);
+
+    // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
+    if (instancedMesh.isDepthOnlyPassEnabled())
+    {
+      // Clear the stencil buffer for later use
+      glContext->clearStencil(0);
+      glContext->clear(WEBGL_STENCIL_BUFFER_BIT);
+
+      // Iterate layers and write depth
+      inDepthWritePass = true;
+      instancedMesh.iterateLayers(renderLayerWithMask);
+
+      // Reset the state
+      glContext->colorMask(true, true, true, true);
     }
   }
 
@@ -176,6 +267,11 @@ namespace builtin_scene::materials
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
   {
+    // Unbind the border data texture
+    if (borderDataTexture_ && borderDataTexture_->isInitialized())
+      borderDataTexture_->unbind(client_graphics::WebGLTextureUnit::kTexture1);
+
+    // Unbind the texture atlas.
     textureAtlas_->onAfterDraw();
   }
 

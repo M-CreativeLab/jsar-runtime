@@ -9,19 +9,22 @@ in vec2 vSplatUv;
 out vec4 fragColor;
 
 void main() {
+  vec4 rgba = vRgba;
+
   // Calculate distance from center - improved Gaussian falloff
-  float dist = dot(vSplatUv, vSplatUv);
-  if (dist > (maxStdDev * maxStdDev)) {
+  float z = dot(vSplatUv, vSplatUv);
+  if (z > (maxStdDev * maxStdDev)) {
     discard;
   }
 
   // Better Gaussian falloff for 3D Gaussian Splatting
-  float alpha = exp(-0.5 * dist) * vRgba.a; // Adjusted for sharper falloff
+  const float falloff = 1.0;
+  rgba.a *= mix(1.0, exp(-1.5 * z), falloff);
 
   // Discard pixels with very low alpha
-  if (alpha < minAlpha) {
+  if (rgba.a < minAlpha) {
     discard;
   }
 
-  fragColor = vec4(vRgba.rgb, alpha);
+  fragColor = rgba;
 }

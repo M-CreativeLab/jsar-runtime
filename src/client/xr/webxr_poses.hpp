@@ -1,12 +1,14 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
+
 #include "./common.hpp"
 #include "./webxr_rigid_transform.hpp"
 
 namespace client_xr
 {
-  class XRPose
+  class XRPose : public scripting_base::JSObjectHolder
   {
   public:
     XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
@@ -19,7 +21,6 @@ namespace client_xr
   protected:
     std::shared_ptr<XRSession> session_;
     std::shared_ptr<XRDeviceClient> device_;
-    xr::TrXRFrameRequest *frameRequestData_;
   };
 
   class XRViewerPose : public XRPose
@@ -35,7 +36,7 @@ namespace client_xr
     }
 
   private:
-    void setupViews(std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+    void setupViews(std::shared_ptr<XRFrame> frame, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
 
   private:
     std::vector<std::shared_ptr<XRView>> views_;

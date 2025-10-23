@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Edge Truncation Test - 图片边缘截断测试</title>
+  <style>
+    :root {
+      --primary-color: #333;
+      --secondary-color: #666;
+      --background-color: #fff;
+      --border-color: #ddd;
+      --highlight-color: #007acc;
+      --warning-color: #ff6b35;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--primary-color);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section {
+      margin: 40px 0;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--highlight-color);
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--highlight-color);
+      padding-bottom: 5px;
+    }
+
+    .test-item {
+      margin: 20px 0;
+      padding: 15px;
+      border-left: 3px solid var(--highlight-color);
+      background: white;
+    }
+
+    .test-label {
+      font-size: 14px;
+      color: var(--secondary-color);
+      margin-bottom: 10px;
+      font-weight: bold;
+      background: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    /* Container tests for edge truncation */
+    .container-100x100 {
+      width: 100px;
+      height: 100px;
+      overflow: hidden;
+      border: 2px solid var(--warning-color);
+      position: relative;
+    }
+
+    .container-200x150 {
+      width: 200px;
+      height: 150px;
+      overflow: hidden;
+      border: 2px solid var(--warning-color);
+      position: relative;
+    }
+
+    .container-300x200 {
+      width: 300px;
+      height: 200px;
+      overflow: hidden;
+      border: 2px solid var(--warning-color);
+      position: relative;
+    }
+
+    /* Image sizing tests */
+    .img-oversized {
+      width: 400px;
+      height: 300px;
+    }
+
+    .img-fit-width {
+      width: 100%;
+      height: auto;
+    }
+
+    .img-fit-height {
+      width: auto;
+      height: 100%;
+    }
+
+    .img-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .img-contain {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .img-fill {
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+    }
+
+    .img-scale-down {
+      width: 100%;
+      height: 100%;
+      object-fit: scale-down;
+    }
+
+    /* Position tests */
+    .img-positioned {
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 200px;
+      height: 200px;
+    }
+
+    /* Border radius tests */
+    .container-rounded {
+      border-radius: 50px;
+    }
+
+    .container-rounded-small {
+      border-radius: 10px;
+    }
+
+    /* Reference guides */
+    .reference-guide {
+      position: absolute;
+      background: rgba(255, 0, 0, 0.3);
+      border: 1px dashed red;
+      pointer-events: none;
+    }
+
+    .guide-horizontal {
+      width: 100%;
+      height: 1px;
+      top: 50%;
+      left: 0;
+    }
+
+    .guide-vertical {
+      width: 1px;
+      height: 100%;
+      top: 0;
+      left: 50%;
+    }
+
+    /* Grid layout for comparison */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .comparison-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .info-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+      color: #856404;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1 style="text-align: center; color: var(--highlight-color); margin-bottom: 30px;">
+        图片边缘截断测试<br>
+        <small style="font-size: 16px; color: var(--secondary-color);">Image Edge Truncation Test</small>
+      </h1>
+      <div class="info-box">
+        <strong>测试目的 Test Purpose:</strong> 验证图片在容器边界处是否正确截断，检查是否出现边缘渲染问题<br>
+        <strong>Expected Behavior:</strong> Images should be cleanly truncated at container boundaries without edge artifacts
+      </div>
+    </header>
+
+    <!-- Basic Overflow Tests -->
+    <section class="section">
+      <h2 class="section-title">基础溢出测试 - Basic Overflow Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">Large image in small container (100x100px) - 大图片小容器</div>
+        <div class="container-100x100">
+          <img src="images/jsar-logo-00.png" class="img-oversized" alt="JSAR Logo">
+          <div class="reference-guide guide-horizontal"></div>
+          <div class="reference-guide guide-vertical"></div>
+        </div>
+        <div class="info-box">
+          Expected: Image should be truncated at container edges. Red lines show center guides.
+        </div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-label">Large image in medium container (200x150px) - 大图片中等容器</div>
+        <div class="container-200x150">
+          <img src="images/jsar-logo-00.png" class="img-oversized" alt="JSAR Logo">
+          <div class="reference-guide guide-horizontal"></div>
+          <div class="reference-guide guide-vertical"></div>
+        </div>
+        <div class="info-box">
+          Expected: Partial image visible, cleanly cut at borders without bleeding.
+        </div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-label">SVG image overflow test - SVG图片溢出测试</div>
+        <div class="container-200x150">
+          <img src="images/react-logo-00.svg" class="img-oversized" alt="React Logo">
+          <div class="reference-guide guide-horizontal"></div>
+          <div class="reference-guide guide-vertical"></div>
+        </div>
+        <div class="info-box">
+          Expected: SVG should be truncated same as raster images.
+        </div>
+      </div>
+    </section>
+
+    <!-- Object-fit Tests -->
+    <section class="section">
+      <h2 class="section-title">对象适配测试 - Object-fit Tests</h2>
+      
+      <div class="comparison-grid">
+        <div class="comparison-item">
+          <div class="test-label">object-fit: cover</div>
+          <div class="container-200x150">
+            <img src="images/jsar-logo-00.png" class="img-cover" alt="JSAR Logo">
+          </div>
+          <div class="info-box">Should cover entire container, may be cropped</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="test-label">object-fit: contain</div>
+          <div class="container-200x150">
+            <img src="images/jsar-logo-00.png" class="img-contain" alt="JSAR Logo">
+          </div>
+          <div class="info-box">Should fit entirely within container</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="test-label">object-fit: fill</div>
+          <div class="container-200x150">
+            <img src="images/jsar-logo-00.png" class="img-fill" alt="JSAR Logo">
+          </div>
+          <div class="info-box">Should stretch to fill container</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="test-label">object-fit: scale-down</div>
+          <div class="container-200x150">
+            <img src="images/jsar-logo-00.png" class="img-scale-down" alt="JSAR Logo">
+          </div>
+          <div class="info-box">Should scale down if needed</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Positioned Images Tests -->
+    <section class="section">
+      <h2 class="section-title">定位图片测试 - Positioned Images Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">Absolutely positioned image extending outside container - 绝对定位超出容器</div>
+        <div class="container-300x200" style="position: relative;">
+          <img src="images/jsar-logo-00.png" class="img-positioned" alt="JSAR Logo">
+          <div class="reference-guide guide-horizontal"></div>
+          <div class="reference-guide guide-vertical"></div>
+        </div>
+        <div class="info-box">
+          Expected: Image positioned at top: -50px, left: -50px should be truncated at container boundaries.
+        </div>
+      </div>
+    </section>
+
+    <!-- Rounded Containers Tests -->
+    <section class="section">
+      <h2 class="section-title">圆角容器测试 - Rounded Containers Tests</h2>
+      
+      <div class="comparison-grid">
+        <div class="comparison-item">
+          <div class="test-label">border-radius: 10px</div>
+          <div class="container-200x150 container-rounded-small">
+            <img src="images/jsar-logo-00.png" class="img-cover" alt="JSAR Logo">
+          </div>
+          <div class="info-box">Image should follow rounded corners</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="test-label">border-radius: 50px (circular)</div>
+          <div class="container-200x150 container-rounded">
+            <img src="images/jsar-logo-00.png" class="img-cover" alt="JSAR Logo">
+          </div>
+          <div class="info-box">Image should be clipped to circular shape</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Edge Cases Tests -->
+    <section class="section">
+      <h2 class="section-title">边界情况测试 - Edge Cases Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">Multiple images in same container - 同一容器多张图片</div>
+        <div class="container-300x200" style="position: relative;">
+          <img src="images/jsar-logo-00.png" style="position: absolute; top: 0; left: 0; width: 200px; height: 150px;" alt="JSAR Logo 1">
+          <img src="images/react-logo-00.svg" style="position: absolute; top: 50px; left: 100px; width: 200px; height: 150px; opacity: 0.7;" alt="React Logo">
+        </div>
+        <div class="info-box">
+          Expected: Both images should be clipped at container boundaries, overlapping areas should blend correctly.
+        </div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-label">Zero-sized container - 零尺寸容器</div>
+        <div style="width: 0; height: 0; overflow: hidden; border: 2px solid var(--warning-color);">
+          <img src="images/jsar-logo-00.png" style="width: 100px; height: 100px;" alt="JSAR Logo">
+        </div>
+        <div class="info-box">
+          Expected: Nothing should be visible (image completely clipped).
+        </div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-label">Very small container (1x1px) - 极小容器</div>
+        <div style="width: 1px; height: 1px; overflow: hidden; border: 2px solid var(--warning-color); transform: scale(20); transform-origin: top left; margin: 20px;">
+          <img src="images/jsar-logo-00.png" style="width: 100px; height: 100px;" alt="JSAR Logo">
+        </div>
+        <div class="info-box">
+          Expected: Only 1 pixel should be visible (scaled up 20x for visibility).
+        </div>
+      </div>
+    </section>
+
+    <!-- Performance Test -->
+    <section class="section">
+      <h2 class="section-title">性能测试 - Performance Test</h2>
+      
+      <div class="test-item">
+        <div class="test-label">Multiple truncated images - 多个截断图片</div>
+        <div id="performanceTestContainer" style="display: grid; grid-template-columns: repeat(10, 50px); gap: 5px;">
+          <!-- Generated by JavaScript -->
+        </div>
+        <div class="info-box">
+          Expected: Smooth rendering of multiple clipped images without performance degradation.
+        </div>
+      </div>
+    </section>
+
+    <footer style="text-align: center; margin-top: 50px; padding: 20px; border-top: 2px solid var(--border-color);">
+      <p style="color: var(--secondary-color);">
+        JSAR Runtime 图片边缘截断测试页面 - Image Edge Truncation Test Page<br>
+        <small>测试完成时间 - Test completed at: <span id="timestamp"></span></small>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Set timestamp
+    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    
+    // Generate performance test grid
+    const perfContainer = document.getElementById('performanceTestContainer');
+    for (let i = 0; i < 50; i++) {
+      const container = document.createElement('div');
+      container.style.cssText = 'width: 50px; height: 50px; overflow: hidden; border: 1px solid #ccc;';
+      
+      const img = document.createElement('img');
+      img.src = i % 2 === 0 ? 'images/jsar-logo-00.png' : 'images/react-logo-00.svg';
+      img.style.cssText = 'width: 80px; height: 80px; transform: translate(-15px, -15px);';
+      img.alt = `Test image ${i + 1}`;
+      
+      container.appendChild(img);
+      perfContainer.appendChild(container);
+    }
+    
+    // Console log for debugging
+    console.log('Image Edge Truncation Test Page loaded successfully');
+    console.log('Total test sections:', document.querySelectorAll('.section').length);
+    console.log('Total test items:', document.querySelectorAll('.test-item').length);
+  </script>
+</body>
+
+</html>

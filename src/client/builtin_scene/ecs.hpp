@@ -15,6 +15,8 @@
 #include <vector>
 #include <unordered_map>
 #include <shared_mutex>
+#include <mutex>
+#include <optional>
 #include <typeindex>
 #include <idgen.hpp>
 #include <common/utility.hpp>
@@ -242,7 +244,7 @@ namespace builtin_scene::ecs
     EntityId id_;
 
   private:
-    inline static thread_local TrIdGenerator idGen_ = TrIdGenerator(0, MAX_ENTITY_ID);
+    inline static thread_local TrIdGenerator idGen_ = TrIdGenerator(0x1, MAX_ENTITY_ID);
   };
 
   /**
@@ -353,6 +355,7 @@ namespace builtin_scene::ecs
      */
     inline bool contains(EntityId entity)
     {
+      std::shared_lock<std::shared_mutex> lock(componentMutex_);
       return entityToIndexMap_.find(entity) != entityToIndexMap_.end();
     }
     /**
@@ -368,9 +371,34 @@ namespace builtin_scene::ecs
     {
       if (newComponent == nullptr)
         throw std::runtime_error("The component to add is null.");
-      if (contains(entity))
-        remove(entity);
-      return insert(entity, newComponent);
+
+      std::unique_lock<std::shared_mutex> lock(componentMutex_);
+
+      // Remove existing component if it exists
+      if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
+      {
+        size_t indexToRemove = entityToIndexMap_[entity];
+        size_t lastIndex = size_ - 1;
+        components_[indexToRemove] = components_[lastIndex];
+
+        EntityId lastEntity = indexToEntityMap_[lastIndex];
+        entityToIndexMap_[lastEntity] = indexToRemove;
+        indexToEntityMap_[indexToRemove] = lastEntity;
+
+        entityToIndexMap_.erase(entity);
+        indexToEntityMap_.erase(lastIndex);
+        entityToComponentCache_.erase(entity);
+        size_ -= 1;
+      }
+
+      // Insert new component
+      auto index = size_;
+      entityToIndexMap_[entity] = index;
+      indexToEntityMap_[index] = entity;
+      components_[index] = newComponent;
+      size_ += 1;
+
+      return newComponent;
     }
 
   private:
@@ -382,6 +410,8 @@ namespace builtin_scene::ecs
     std::unordered_map<size_t, EntityId> indexToEntityMap_;
     std::unordered_map<EntityId, std::weak_ptr<T>> entityToComponentCache_;
     size_t size_ = 0;
+    // Mutex to protect concurrent access to the internal maps during parallel rendering
+    mutable std::shared_mutex componentMutex_;
   };
 
   /**

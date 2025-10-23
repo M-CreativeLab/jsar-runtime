@@ -11,6 +11,11 @@
       }
     }
   </script>
+  <style>
+    body {
+      background: transparent;
+    }
+  </style>
   <script type="module">
     import * as THREE from 'three';
     import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
@@ -24,7 +29,7 @@
     scene.add(light);
 
     const clock = new THREE.Clock();
-    let object, mixer;
+    let object, mixer, loader;
     // Mesh
     {
       const manager = new THREE.LoadingManager();

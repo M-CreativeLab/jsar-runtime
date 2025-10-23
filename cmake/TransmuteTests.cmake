@@ -22,6 +22,7 @@ if (TR_BUILD_TESTS)
         ${TR_COMMON_TESTS_SOURCE}
         tests/runtime.cpp
         tests/math.cpp
+        tests/test_presets.cpp
     )
     target_include_directories(TransmuteUnitTests
         PRIVATE
@@ -29,10 +30,7 @@ if (TR_BUILD_TESTS)
         ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include
     )
     add_dependencies(TransmuteUnitTests TransmuteClientLibrary)
-    target_link_libraries(TransmuteUnitTests
-        PRIVATE
-        TransmuteClientLibrary
-    )
+    target_link_libraries(TransmuteUnitTests PRIVATE TransmuteClientLibrary)
 
     # Add tests
     add_test(NAME CommonTests COMMAND TransmuteCommandBuffersBaseTest)

@@ -50,32 +50,6 @@ namespace client_layout
     return frame_size_;
   }
 
-  math3d::TrPlane LayoutBox::physicalBorderBoxFront() const
-  {
-    auto transformComponent = getSceneComponent<builtin_scene::Transform>();
-    auto latestMatrix = transformComponent->lastComputedMatrix();
-
-    glm::vec4 originalNormal(0, 0, 1, 0);
-    glm::vec4 originalPoint(0, 0, 0, 1);
-
-    glm::vec3 normal = glm::normalize(glm::vec3(
-      glm::inverse(glm::transpose(latestMatrix)) * originalNormal));
-
-    glm::vec3 point = glm::vec3(latestMatrix * originalPoint);
-    float distance = -glm::dot(normal, point);
-
-    math3d::TrPlane plane(normal, distance);
-    return plane;
-  }
-
-  geometry::BoundingBox LayoutBox::physicalBorderBoxRect() const
-  {
-    auto transformComponent = getSceneComponent<builtin_scene::Transform>();
-    auto min = glm::vec3(-0.5, -0.5, -0.5);
-    auto max = min * -1.0f;
-    return geometry::BoundingBox(min, max, transformComponent->lastComputedMatrix());
-  }
-
   geometry::Rect<float> LayoutBox::scrollableOverflowRect() const
   {
     return scrollableOverflowIsSet()
@@ -130,17 +104,6 @@ namespace client_layout
       return true;
     else
       return false;
-  }
-
-  void LayoutBox::updateAfterLayout()
-  {
-    setScrollableOverflowFromLayoutResults();
-
-    if (isScrollContainer())
-    {
-      getScrollableArea()
-        ->updateAfterLayout(formattingContext().liveFragment());
-    }
   }
 
   void LayoutBox::setScrollableOverflowFromLayoutResults()
@@ -201,36 +164,41 @@ namespace client_layout
     // TODO(yorkie): implement the autoscroll
   }
 
-  void LayoutBox::scrollTo(const glm::vec3 &offset)
+  bool LayoutBox::scrollTo(const glm::vec3 &offset)
   {
     if (TR_UNLIKELY(!isScrollContainer()))
-      return;
+      return false;
 
     auto scrollable_area = getScrollableArea();
     // Performance optimization: check if scrolling is actually needed
     if (scrollable_area && scrollable_area->needsScrolling())
     {
       scrollable_area->scrollTo(offset);
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 
-  void LayoutBox::scrollBy(const glm::vec3 &offset)
+  bool LayoutBox::scrollBy(const glm::vec3 &offset)
   {
     if (TR_UNLIKELY(!isScrollContainer()))
-    {
-      cerr << "LayoutBox::scrollBy on " << debugName() << ": "
-           << "The box is not a scroll container, skipping scrollBy." << endl;
-      return;
-    }
+      return false;
 
     // Performance optimization: early exit for zero offset
     if (offset.x == 0.0f && offset.y == 0.0f && offset.z == 0.0f)
-      return;
+      return false;
 
     auto scrollable_area = getScrollableArea();
     if (scrollable_area && scrollable_area->needsScrolling())
     {
-      scrollable_area->scrollBy(offset);
+      return scrollable_area->scrollBy(offset);
+    }
+    else
+    {
+      return false;
     }
   }
 
@@ -318,23 +286,30 @@ namespace client_layout
 
   bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
   {
-    optional<geometry::BoundingBox> overflowBox = nullopt;
+    vector<geometry::BoundingBox> overflowBoxes;
     if (hasHitTestableOverflow())
     {
       // TODO(yorkie): handle the hit test for the box with overflow.
     }
     else
-    {
-      overflowBox = physicalBorderBoxRect();
-    }
+      overflowBoxes = getHitTestableBoundingBoxes();
 
-    if (overflowBox.has_value())
+    if (overflowBoxes.size() > 0)
     {
-      overflowBox->move(accumulatedOffset);
+      bool intersects = false;
+      for (auto box : overflowBoxes)
+      {
+        box.move(accumulatedOffset);
 
-      auto min = overflowBox->minimumWorld;
-      auto max = overflowBox->maximumWorld;
-      return ray.intersectsBoxMinMax(min, max);
+        auto min = box.minimumWorld;
+        auto max = box.maximumWorld;
+        if (ray.intersectsBoxMinMax(min, max))
+        {
+          intersects = true;
+          break;
+        }
+      }
+      return intersects;
     }
     else
     {
@@ -362,12 +337,25 @@ namespace client_layout
     return false;
   }
 
-  bool LayoutBox::computeLayout(const ConstraintSpace &availableSpace)
+  void LayoutBox::didComputeLayout(const ConstraintSpace &availableSpace)
   {
-    auto success = LayoutBoxModelObject::computeLayout(availableSpace);
-    if (success)
-      updateAfterLayout();
-    return success;
+    LayoutBoxModelObject::didComputeLayout(availableSpace);
+
+    // Update the hit-testable bounding box.
+    updateHitTestableBoundingBoxes();
+  }
+
+  void LayoutBox::didComputeLayoutOnce(const ConstraintSpace &availableSpace)
+  {
+    LayoutBoxModelObject::didComputeLayoutOnce(availableSpace);
+
+    // Update the scrollable overflow from the layout results.
+    setScrollableOverflowFromLayoutResults();
+    if (isScrollContainer())
+    {
+      getScrollableArea()
+        ->updateAfterLayout(formattingContext().liveFragment());
+    }
   }
 
   void LayoutBox::updateFromStyle()
@@ -406,5 +394,60 @@ namespace client_layout
   {
     setHasValidCachedGeometry(false);
     // TODO(yorkie): invalidate the cached geometry of the parent.
+  }
+
+  vector<shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
+  {
+    auto children = virtualChildren();
+    if (!children)
+      return {};
+
+    vector<std::shared_ptr<LayoutBox>> childBoxes;
+    for (const auto &child : *children)
+    {
+      if (child->isBox())
+        childBoxes.push_back(static_pointer_cast<LayoutBox>(child));
+    }
+    return childBoxes;
+  }
+
+  void LayoutBox::updateHitTestableBoundingBoxes()
+  {
+    hit_testable_bounding_boxes_.clear();
+
+    geometry::BoundingBox mainBoundingBox = physicalBorderBoxRect();
+    hit_testable_bounding_boxes_.push_back(mainBoundingBox);
+
+    glm::vec3 mainMin = mainBoundingBox.minimumWorld;
+    glm::vec3 mainMax = mainBoundingBox.maximumWorld;
+
+    for (const auto &childBox : getChildBoxes())
+    {
+      if (!childBox->visible())
+        continue;
+
+      for (const auto &childBoundingBox : childBox->getHitTestableBoundingBoxes())
+      {
+        // Skip extending if the child box has no size.
+        if (glm::all(glm::epsilonEqual(childBoundingBox.extendSizeWorld,
+                                       glm::vec3(0.0f),
+                                       glm::epsilon<float>())))
+        {
+          continue;
+        }
+
+        // Check if the child box is fully contained in the main bounding box.
+        glm::vec3 childMin = childBoundingBox.minimumWorld;
+        glm::vec3 childMax = childBoundingBox.maximumWorld;
+        if (childMin.x >= mainMin.x && childMin.y >= mainMin.y && childMin.z >= mainMin.z &&
+            childMax.x <= mainMax.x && childMax.y <= mainMax.y && childMax.z <= mainMax.z)
+        {
+          continue; // Child box is fully contained, skip adding it.
+        }
+        hit_testable_bounding_boxes_.push_back(childBoundingBox);
+      }
+    }
+
+    assert(hit_testable_bounding_boxes_.size() > 0);
   }
 }

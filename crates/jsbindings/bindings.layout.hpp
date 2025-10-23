@@ -174,6 +174,7 @@ namespace crates::layout2
   XX(Absolute, "absolute")
 
 #define BOX_ALIGNMENT_MAP(XX) \
+  XX(Normal, "normal")        \
   XX(Start, "start")          \
   XX(End, "end")              \
   XX(FlexStart, "flex-start") \
@@ -183,6 +184,7 @@ namespace crates::layout2
   XX(Stretch, "stretch")
 
 #define CONTENT_SPACING_MAP(XX)     \
+  XX(Normal, "normal")              \
   XX(Start, "start")                \
   XX(End, "end")                    \
   XX(FlexStart, "flex-start")       \
@@ -203,6 +205,14 @@ namespace crates::layout2
   XX(NoWrap, "nowrap")    \
   XX(Wrap, "wrap")        \
   XX(WrapReverse, "wrap-reverse")
+
+#define TEXT_ALIGN_MAP(XX) \
+  XX(Start, "start")       \
+  XX(End, "end")           \
+  XX(Left, "left")         \
+  XX(Right, "right")       \
+  XX(Center, "center")     \
+  XX(Justify, "justify")
 
     class Display : public CSSKeyword<holocron::layout::Display,
                                       holocron::layout::Display::Block>
@@ -529,7 +539,71 @@ namespace crates::layout2
       }
     };
 
-    template <typename T, typename I, I defaultValue = I::Stretch>
+    class TextAlign : public CSSKeyword<holocron::layout::TextAlign,
+                                        holocron::layout::TextAlign::Start>
+    {
+      using CSSKeyword::CSSKeyword;
+
+    public:
+      static TextAlign Start()
+      {
+        return TextAlign(holocron::layout::TextAlign::Start);
+      }
+      static TextAlign End()
+      {
+        return TextAlign(holocron::layout::TextAlign::End);
+      }
+      static TextAlign Left()
+      {
+        return TextAlign(holocron::layout::TextAlign::Left);
+      }
+      static TextAlign Right()
+      {
+        return TextAlign(holocron::layout::TextAlign::Right);
+      }
+      static TextAlign Center()
+      {
+        return TextAlign(holocron::layout::TextAlign::Center);
+      }
+      static TextAlign Justify()
+      {
+        return TextAlign(holocron::layout::TextAlign::Justify);
+      }
+
+    public:
+      TextAlign(const std::string &input)
+      {
+        handle_ = parse(input).value_or(holocron::layout::TextAlign::Start);
+      }
+
+    private:
+      std::optional<holocron::layout::TextAlign> parse(const std::string &input) override
+      {
+#define XX(tag, str) \
+  if (input == str)  \
+    return holocron::layout::TextAlign::tag;
+        TEXT_ALIGN_MAP(XX)
+#undef XX
+        return std::nullopt;
+      }
+
+    public:
+      friend std::ostream &operator<<(std::ostream &os, const TextAlign &value)
+      {
+        switch (value.handle_)
+        {
+#define XX(tag, str)                     \
+  case holocron::layout::TextAlign::tag: \
+    os << str;                           \
+    break;
+          TEXT_ALIGN_MAP(XX)
+#undef XX
+        }
+        return os;
+      }
+    };
+
+    template <typename T, typename I, I defaultValue = I::Normal>
     class BoxAlignmentProperty : public CSSKeyword<I, defaultValue>
     {
       using CSSKeyword<I, defaultValue>::CSSKeyword;
@@ -580,36 +654,42 @@ namespace crates::layout2
       }
     };
 
-    class AlignItems : public BoxAlignmentProperty<AlignItems, holocron::layout::AlignItems>
+    template <typename T, typename I>
+    class BoxSelfAlignmentProperty : public BoxAlignmentProperty<T, I, I::Auto>
     {
-      using BoxAlignmentProperty::BoxAlignmentProperty;
-    };
-
-    class AlignSelf : public BoxAlignmentProperty<AlignSelf, holocron::layout::AlignSelf, holocron::layout::AlignSelf::Auto>
-    {
-      using BoxAlignmentProperty::BoxAlignmentProperty;
+      using BoxAlignmentProperty<T, I, I::Auto>::BoxAlignmentProperty;
 
     public:
-      static AlignSelf Auto()
+      static T Auto()
       {
-        return AlignSelf(holocron::layout::AlignSelf::Auto);
+        return T(I::Auto);
       }
 
     protected:
-      std::optional<holocron::layout::AlignSelf> parse(const std::string &input) override
+      std::optional<I> parse(const std::string &input) override
       {
         if (input == "auto")
-          return holocron::layout::AlignSelf::Auto;
-        return BoxAlignmentProperty::parse(input);
+          return I::Auto;
+        return BoxAlignmentProperty<T, I, I::Auto>::parse(input);
       }
 
     public:
       std::string stringify() const override
       {
-        if (handle_ == holocron::layout::AlignSelf::Auto)
+        if (this->handle_ == I::Auto)
           return "auto";
-        return BoxAlignmentProperty::stringify();
+        return BoxAlignmentProperty<T, I, I::Auto>::stringify();
       }
+    };
+
+    class AlignItems : public BoxAlignmentProperty<AlignItems, holocron::layout::AlignItems>
+    {
+      using BoxAlignmentProperty::BoxAlignmentProperty;
+    };
+
+    class AlignSelf : public BoxSelfAlignmentProperty<AlignSelf, holocron::layout::AlignSelf>
+    {
+      using BoxSelfAlignmentProperty::BoxSelfAlignmentProperty;
     };
 
     class JustifyItems : public BoxAlignmentProperty<JustifyItems, holocron::layout::JustifyItems>
@@ -617,9 +697,9 @@ namespace crates::layout2
       using BoxAlignmentProperty::BoxAlignmentProperty;
     };
 
-    class JustifySelf : public BoxAlignmentProperty<JustifySelf, holocron::layout::JustifySelf>
+    class JustifySelf : public BoxSelfAlignmentProperty<JustifySelf, holocron::layout::JustifySelf>
     {
-      using BoxAlignmentProperty::BoxAlignmentProperty;
+      using BoxSelfAlignmentProperty::BoxSelfAlignmentProperty;
     };
 
     template <typename T, typename I>
@@ -935,6 +1015,7 @@ namespace crates::layout2
 #undef CONTENT_SPACING_MAP
 #undef FLEX_DIRECTION_MAP
 #undef FLEX_WRAP_MAP
+#undef TEXT_ALIGN_MAP
   }
 
   class LayoutStyle
@@ -1028,6 +1109,8 @@ namespace crates::layout2
             "auto", // grid-row-end
             "auto", // grid-column-start
             "auto", // grid-column-end
+            // text properties
+            styles::TextAlign::Start(),
           })
     {
     }
@@ -1384,6 +1467,16 @@ namespace crates::layout2
       style_.gridColumnEnd = value;
     }
 
+    // Text properties
+    styles::TextAlign textAlign() const
+    {
+      return style_.textAlign;
+    }
+    void setTextAlign(styles::TextAlign value)
+    {
+      style_.textAlign = value;
+    }
+
   public:
     friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)
     {
@@ -1425,6 +1518,7 @@ namespace crates::layout2
          << "         grid-row-end: " << std::string(style.style_.gridRowEnd) << std::endl
          << "    grid-column-start: " << std::string(style.style_.gridColumnStart) << std::endl
          << "      grid-column-end: " << std::string(style.style_.gridColumnEnd) << std::endl
+         << "           text-align: " << style.textAlign() << std::endl
          << "}";
       return os;
     }

@@ -4,14 +4,38 @@
   <meta charset="utf-8" />
   <title>Window</title>
   <script>
+    console.info(Navigator);
+    console.info(Node, Element);
+    console.info(UIEvent, MouseEvent);
+
+    console.info('navigator.xr:', navigator.xr);
+    {
+      navigator.xr?.isSessionSupported('immersive-ar').then((supported) => {
+        console.info('immersive-vr supported?', supported);
+      });
+    }
+    console.info('navigator.gl', navigator.gl);
+    {
+      console.info(WebGLRenderingContext);
+      console.info(WebGL2RenderingContext);
+      console.info('drawingBufferWidth:', navigator.gl.drawingBufferWidth);
+      console.info('drawingBufferHeight:', navigator.gl.drawingBufferHeight);
+      console.info(navigator.gl.texImage2D);
+      console.info('instanceof:', navigator.gl instanceof WebGLRenderingContext);
+    }
+
     console.info('window.URL', window.URL);
     console.info('window.fetch', window.fetch);
 
     console.info('self.URL', self.URL);
     console.info('self.fetch', self.fetch);
 
-    console.info(window.location, window.origin);
     window.open('http://www.example.com', '_blankClassic');
+    console.info(window);
+
+    window.requestAnimationFrame((timestamp) => {
+      console.info('requestAnimationFrame callback, timestamp:', timestamp);
+    });
 
     window['foo'] = 1;
   </script>

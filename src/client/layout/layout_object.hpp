@@ -170,7 +170,7 @@ namespace client_layout
     }
 
     int recalcLayer() const;
-    void updateLayer(bool includeDescendants = true);
+    void updateLayer(std::shared_ptr<const LayoutBlock> scrollContainer, bool includeDescendants = true);
 
     inline std::shared_ptr<dom::Node> node() const
     {
@@ -395,7 +395,6 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlock() const;
     std::shared_ptr<LayoutBlock> containingBlockForFixedPosition() const;
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
-
     std::shared_ptr<const LayoutBlock> containingScrollContainer() const;
 
     bool isHorizontalWritingMode() const
@@ -457,6 +456,7 @@ namespace client_layout
     virtual void sizeDidChange(const Fragment &);
 
     virtual void willComputeLayout(const ConstraintSpace &);
+    virtual void didComputeLayout(const ConstraintSpace &);
     virtual void didComputeLayoutOnce(const ConstraintSpace &);
 
   private:
@@ -477,6 +477,9 @@ namespace client_layout
     {
       return isText() || isSVGChild();
     }
+
+    // Apply transforms from computed style, with optional element size for percentage resolution
+    void applyTransforms(client_cssom::ComputedStyle &style, const glm::vec2 *elementSize = nullptr);
 
     // Resize the layout object with the given size.
     bool resize(const Fragment &newSize);

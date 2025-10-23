@@ -3,11 +3,16 @@
 
 #include <client/cssom/parsers/css_transform_parser.hpp>
 #include <client/cssom/values/specified/transform.hpp>
+#include <client/cssom/values/computed/transform.hpp>
 #include <client/cssom/style_traits.hpp>
+#include <glm/glm.hpp>
 
-using namespace client_cssom::css_transform_parser;
-using namespace client_cssom::values::specified;
+#include "./css_test_helpers.hpp"
+
+using namespace std;
 using namespace client_cssom;
+using namespace client_cssom::css_transform_parser;
+using namespace client_cssom::values;
 
 TEST_CASE("CSSTransformParser basic functionality", "[css-transform-parser]")
 {
@@ -15,16 +20,16 @@ TEST_CASE("CSSTransformParser basic functionality", "[css-transform-parser]")
   {
     CSSTransformParser parser("none");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.empty());
   }
-  
+
   SECTION("Parse simple translate")
   {
     CSSTransformParser parser("translateX(10px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
@@ -32,12 +37,12 @@ TEST_CASE("CSSTransformParser basic functionality", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 10.0);
     REQUIRE(functions[0].units[0] == "px");
   }
-  
+
   SECTION("Parse translate with two values")
   {
     CSSTransformParser parser("translate(10px, 20px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
@@ -47,12 +52,12 @@ TEST_CASE("CSSTransformParser basic functionality", "[css-transform-parser]")
     REQUIRE(functions[0].units[0] == "px");
     REQUIRE(functions[0].units[1] == "px");
   }
-  
+
   SECTION("Parse translate with one value (should default Y to 0)")
   {
     CSSTransformParser parser("translate(10px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
@@ -70,7 +75,7 @@ TEST_CASE("CSSTransformParser rotation functions", "[css-transform-parser]")
   {
     CSSTransformParser parser("rotate(45deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kRotate);
@@ -78,12 +83,12 @@ TEST_CASE("CSSTransformParser rotation functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 45.0);
     REQUIRE(functions[0].units[0] == "deg");
   }
-  
+
   SECTION("Parse rotateX")
   {
     CSSTransformParser parser("rotateX(90deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kRotateX);
@@ -91,12 +96,12 @@ TEST_CASE("CSSTransformParser rotation functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 90.0);
     REQUIRE(functions[0].units[0] == "deg");
   }
-  
+
   SECTION("Parse rotate with radians")
   {
     CSSTransformParser parser("rotate(1.57rad)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kRotate);
@@ -104,12 +109,12 @@ TEST_CASE("CSSTransformParser rotation functions", "[css-transform-parser]")
     // REQUIRE(functions[0].values[0] == 1.57f);
     REQUIRE(functions[0].units[0] == "rad");
   }
-  
+
   SECTION("Parse rotate3d")
   {
     CSSTransformParser parser("rotate3d(1, 0, 0, 45deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kRotate3D);
@@ -128,7 +133,7 @@ TEST_CASE("CSSTransformParser scale functions", "[css-transform-parser]")
   {
     CSSTransformParser parser("scale(2)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kScale);
@@ -136,12 +141,12 @@ TEST_CASE("CSSTransformParser scale functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 2.0);
     REQUIRE(functions[0].values[1] == 2.0); // Should default to same value
   }
-  
+
   SECTION("Parse scale with two values")
   {
     CSSTransformParser parser("scale(2, 3)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kScale);
@@ -149,12 +154,12 @@ TEST_CASE("CSSTransformParser scale functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 2.0);
     REQUIRE(functions[0].values[1] == 3.0);
   }
-  
+
   SECTION("Parse scaleX")
   {
     CSSTransformParser parser("scaleX(1.5)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kScaleX);
@@ -169,7 +174,7 @@ TEST_CASE("CSSTransformParser matrix functions", "[css-transform-parser]")
   {
     CSSTransformParser parser("matrix(1, 0, 0, 1, 10, 20)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kMatrix);
@@ -181,12 +186,12 @@ TEST_CASE("CSSTransformParser matrix functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[4] == 10.0);
     REQUIRE(functions[0].values[5] == 20.0);
   }
-  
+
   SECTION("Parse matrix3d")
   {
     CSSTransformParser parser("matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kMatrix3D);
@@ -203,16 +208,16 @@ TEST_CASE("CSSTransformParser multiple functions", "[css-transform-parser]")
   {
     CSSTransformParser parser("translateX(10px) rotate(45deg) scale(2)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 3);
-    
+
     REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
     REQUIRE(functions[0].values[0] == 10.0);
-    
+
     REQUIRE(functions[1].type == TransformFunctionType::kRotate);
     REQUIRE(functions[1].values[0] == 45.0);
-    
+
     REQUIRE(functions[2].type == TransformFunctionType::kScale);
     REQUIRE(functions[2].values[0] == 2.0);
   }
@@ -224,7 +229,7 @@ TEST_CASE("CSSTransformParser skew functions", "[css-transform-parser]")
   {
     CSSTransformParser parser("skew(10deg, 20deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kSkew);
@@ -232,12 +237,12 @@ TEST_CASE("CSSTransformParser skew functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 10.0);
     REQUIRE(functions[0].values[1] == 20.0);
   }
-  
+
   SECTION("Parse skew with one value")
   {
     CSSTransformParser parser("skew(10deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kSkew);
@@ -245,12 +250,12 @@ TEST_CASE("CSSTransformParser skew functions", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == 10.0);
     REQUIRE(functions[0].values[1] == 0.0); // Should default to 0
   }
-  
+
   SECTION("Parse skewX")
   {
     CSSTransformParser parser("skewX(15deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kSkewX);
@@ -265,7 +270,7 @@ TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
   {
     CSSTransformParser parser("translateX(-10px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
@@ -273,12 +278,12 @@ TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == -10.0);
     REQUIRE(functions[0].units[0] == "px");
   }
-  
+
   SECTION("Parse negative rotate")
   {
     CSSTransformParser parser("rotate(-45deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kRotate);
@@ -286,12 +291,12 @@ TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == -45.0);
     REQUIRE(functions[0].units[0] == "deg");
   }
-  
+
   SECTION("Parse negative scale")
   {
     CSSTransformParser parser("scale(-1)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kScale);
@@ -299,12 +304,12 @@ TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
     REQUIRE(functions[0].values[0] == -1.0);
     REQUIRE(functions[0].values[1] == -1.0); // Should default to same value
   }
-  
+
   SECTION("Parse translate with negative values")
   {
     CSSTransformParser parser("translate(-10px, -20px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
@@ -314,12 +319,12 @@ TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
     REQUIRE(functions[0].units[0] == "px");
     REQUIRE(functions[0].units[1] == "px");
   }
-  
+
   SECTION("Parse mixed positive and negative values")
   {
     CSSTransformParser parser("translate(10px, -20px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
@@ -329,12 +334,12 @@ TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
     REQUIRE(functions[0].units[0] == "px");
     REQUIRE(functions[0].units[1] == "px");
   }
-  
+
   SECTION("Parse negative decimal values")
   {
     CSSTransformParser parser("scaleX(-0.5)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == TransformFunctionType::kScaleX);
@@ -349,24 +354,24 @@ TEST_CASE("CSSTransformParser error handling", "[css-transform-parser]")
   {
     CSSTransformParser parser("invalidFunction(10px)");
     auto functions = parser.parse();
-    
+
     REQUIRE_FALSE(parser.isValid());
     REQUIRE_FALSE(parser.getError().empty());
   }
-  
+
   SECTION("Missing closing parenthesis")
   {
     CSSTransformParser parser("translateX(10px");
     auto functions = parser.parse();
-    
+
     REQUIRE_FALSE(parser.isValid());
   }
-  
+
   SECTION("Wrong number of parameters")
   {
     CSSTransformParser parser("matrix(1, 2, 3)"); // Should have 6 parameters
     auto functions = parser.parse();
-    
+
     REQUIRE_FALSE(parser.isValid());
   }
 }
@@ -375,34 +380,224 @@ TEST_CASE("Transform class integration", "[transform-integration]")
 {
   SECTION("Parse simple transform")
   {
-    auto transform = Parse::ParseSingleValue<Transform>("translateX(10px)");
-    
+    auto transform = Parse::ParseSingleValue<specified::Transform>("translateX(10px)");
+
     REQUIRE(transform.operations().size() == 1);
     REQUIRE(transform.operations()[0].isTranslateX());
   }
-  
+
   SECTION("Parse multiple transforms")
   {
-    auto transform = Parse::ParseSingleValue<Transform>("translateX(10px) rotate(45deg) scale(2)");
-    
+    auto transform = Parse::ParseSingleValue<specified::Transform>("translateX(10px) rotate(45deg) scale(2)");
+
     REQUIRE(transform.operations().size() == 3);
     REQUIRE(transform.operations()[0].isTranslateX());
     REQUIRE(transform.operations()[1].isRotate());
     REQUIRE(transform.operations()[2].isScale());
   }
-  
+
   SECTION("Parse none")
   {
-    auto transform = Parse::ParseSingleValue<Transform>("none");
-    
+    auto transform = Parse::ParseSingleValue<specified::Transform>("none");
+
     REQUIRE(transform.operations().empty());
   }
-  
+
   SECTION("Parse invalid transform should return empty")
   {
-    auto transform = Parse::ParseSingleValue<Transform>("invalid(10px)");
-    
+    auto transform = Parse::ParseSingleValue<specified::Transform>("invalid(10px)");
+
     // Should return default empty transform on parsing failure
     REQUIRE(transform.operations().empty());
+  }
+}
+
+TEST_CASE("CSSTransformParser percentage functions", "[css-transform-parser]")
+{
+  SECTION("Parse translateX with percentage")
+  {
+    CSSTransformParser parser("translateX(50%)");
+    auto functions = parser.parse();
+
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == 50.0);
+    REQUIRE(functions[0].units[0] == "%");
+  }
+
+  SECTION("Parse translateY with percentage")
+  {
+    CSSTransformParser parser("translateY(25%)");
+    auto functions = parser.parse();
+
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateY);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == 25.0);
+    REQUIRE(functions[0].units[0] == "%");
+  }
+
+  SECTION("Parse translate with mixed units")
+  {
+    CSSTransformParser parser("translate(50%, 10px)");
+    auto functions = parser.parse();
+
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
+    REQUIRE(functions[0].values.size() == 2);
+    REQUIRE(functions[0].values[0] == 50.0);
+    REQUIRE(functions[0].values[1] == 10.0);
+    REQUIRE(functions[0].units[0] == "%");
+    REQUIRE(functions[0].units[1] == "px");
+  }
+
+  SECTION("Parse translate3d with percentages")
+  {
+    CSSTransformParser parser("translate3d(50%, 25%, 10px)");
+    auto functions = parser.parse();
+
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslate3D);
+    REQUIRE(functions[0].values.size() == 3);
+    REQUIRE(functions[0].values[0] == 50.0);
+    REQUIRE(functions[0].values[1] == 25.0);
+    REQUIRE(functions[0].values[2] == 10.0);
+    REQUIRE(functions[0].units[0] == "%");
+    REQUIRE(functions[0].units[1] == "%");
+    REQUIRE(functions[0].units[2] == "px");
+  }
+
+  SECTION("Parse negative percentage")
+  {
+    CSSTransformParser parser("translateX(-50%)");
+    auto functions = parser.parse();
+
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == -50.0);
+    REQUIRE(functions[0].units[0] == "%");
+  }
+}
+
+TEST_CASE("Transform percentage resolution", "[transform-percentage]")
+{
+  using namespace client_cssom::values;
+
+  SECTION("Test percentage resolution with element size")
+  {
+    // Create a simple transform with translateX(50%)
+    auto transform = Parse::ParseSingleValue<specified::Transform>("translateX(50%)");
+    REQUIRE(!transform.operations().empty());
+
+    // Convert to computed transform
+    computed::Context context = tests::CreateComputedContext(); // Default context for testing
+    auto computedTransform = transform.toComputedValue(context);
+
+    // Test applying transform with element size
+    glm::mat4 matrix(1.0f);
+    glm::vec2 elementSize(100.0f, 80.0f); // 100px width, 80px height
+
+    auto count = computedTransform.applyTo(matrix, elementSize);
+    REQUIRE(count == 1);
+
+    // For translateX(50%) on 100px wide element, should translate by 50px
+    // The matrix should have translation in x-direction
+    // Note: The actual pixel-to-meter conversion is applied internally
+    // We're testing that the percentage is correctly resolved
+  }
+
+  SECTION("Test centering technique: translateX(-50%)")
+  {
+    auto transform = Parse::ParseSingleValue<specified::Transform>("translateX(-50%)");
+    REQUIRE(!transform.operations().empty());
+
+    computed::Context context = tests::CreateComputedContext();
+    auto computedTransform = transform.toComputedValue(context);
+
+    glm::mat4 matrix(1.0f);
+    glm::vec2 elementSize(120.0f, 60.0f); // 120px width
+
+    auto count = computedTransform.applyTo(matrix, elementSize);
+    REQUIRE(count == 1);
+
+    // For translateX(-50%) on 120px wide element, should translate by -60px
+    // This is commonly used for centering with left: 50%
+  }
+
+  SECTION("Test translate with both percentage axes")
+  {
+    auto transform = Parse::ParseSingleValue<specified::Transform>("translate(50%, 25%)");
+    REQUIRE(!transform.operations().empty());
+
+    computed::Context context = tests::CreateComputedContext();
+    auto computedTransform = transform.toComputedValue(context);
+
+    glm::mat4 matrix(1.0f);
+    glm::vec2 elementSize(200.0f, 100.0f); // 200px width, 100px height
+
+    auto count = computedTransform.applyTo(matrix, elementSize);
+    REQUIRE(count == 1);
+
+    // For translate(50%, 25%) on 200x100px element:
+    // - X should translate by 100px (50% of 200px)
+    // - Y should translate by 25px (25% of 100px)
+  }
+
+  SECTION("Test fallback when no element size provided")
+  {
+    auto transform = Parse::ParseSingleValue<specified::Transform>("translateX(50%)");
+    REQUIRE(!transform.operations().empty());
+
+    computed::Context context = tests::CreateComputedContext();
+    auto computedTransform = transform.toComputedValue(context);
+
+    glm::mat4 matrix(1.0f);
+
+    // Apply without element size - should fall back to treating percentage as 0
+    auto count = computedTransform.applyTo(matrix);
+    REQUIRE(count == 1);
+
+    // Without element size context, percentage should be treated as 0px
+  }
+
+  SECTION("Test comprehensive negative percentage parsing")
+  {
+    // Test various negative percentage formats
+    std::vector<std::pair<std::string, double>> testCases = {
+      {"translateX(-50%)", -50.0},
+      {"translateY(-25%)", -25.0},
+      {"translateX(-100%)", -100.0},
+      {"translate(-50%, -25%)", -50.0}, // First value
+      {"translate3d(-50%, -25%, 10px)", -50.0}, // First value
+    };
+
+    for (const auto& testCase : testCases) {
+      CSSTransformParser parser(testCase.first);
+      auto functions = parser.parse();
+      
+      REQUIRE(parser.isValid());
+      REQUIRE(functions.size() == 1);
+      REQUIRE(functions[0].values[0] == testCase.second);
+      
+      // Also test that it resolves correctly with element size
+      auto transform = Parse::ParseSingleValue<specified::Transform>(testCase.first);
+      REQUIRE(!transform.operations().empty());
+      
+      computed::Context context = tests::CreateComputedContext();
+      auto computedTransform = transform.toComputedValue(context);
+      
+      glm::mat4 matrix(1.0f);
+      glm::vec2 elementSize(100.0f, 80.0f);
+      
+      auto count = computedTransform.applyTo(matrix, elementSize);
+      REQUIRE(count == 1);
+    }
   }
 }

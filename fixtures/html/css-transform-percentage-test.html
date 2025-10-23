@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Transform Percentage Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      background-color: white;
+      border: 2px solid #333;
+      margin: 20px auto;
+    }
+
+    .test-box {
+      position: absolute;
+      width: 100px;
+      height: 80px;
+      background-color: #4CAF50;
+      border: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* Test 1: Simple translateX(50%) - should move element right by 50% of its own width (50px) */
+    .test-translatex-50 {
+      top: 50px;
+      left: 50px;
+      background-color: #ff5722;
+      transform: translateX(50%);
+    }
+
+    /* Test 2: Simple translateY(50%) - should move element down by 50% of its own height (40px) */
+    .test-translatey-50 {
+      top: 200px;
+      left: 50px;
+      background-color: #2196F3;
+      transform: translateY(50%);
+    }
+
+    /* Test 3: translate3d(0, 50%, 0) - same as translateY(50%) */
+    .test-translate3d-y {
+      top: 350px;
+      left: 50px;
+      background-color: #9C27B0;
+      transform: translate3d(0, 50%, 0);
+    }
+
+    /* Test 4: translate(50%, 50%) - should move by 50% width and 50% height */
+    .test-translate-both {
+      top: 50px;
+      left: 250px;
+      background-color: #FF9800;
+      transform: translate(50%, 50%);
+    }
+
+    /* Test 5: Centering technique - left: 50% + translateX(-50%) */
+    .test-centering {
+      top: 200px;
+      left: 50%;
+      background-color: #607D8B;
+      transform: translateX(-50%);
+      width: 120px; /* Different width to test percentage calculation */
+    }
+
+    /* Test 6: Combined transforms - should handle percentage in combination */
+    .test-combined {
+      top: 350px;
+      left: 250px;
+      background-color: #795548;
+      transform: translateX(50%) scale(1.2);
+    }
+
+    /* Test 7: Negative percentages */
+    .test-negative {
+      top: 50px;
+      left: 450px;
+      background-color: #E91E63;
+      transform: translate(-25%, -25%);
+    }
+
+    /* Test 8: Large percentage values */
+    .test-large-percent {
+      top: 200px;
+      left: 450px;
+      background-color: #00BCD4;
+      transform: translateX(100%);
+    }
+
+    /* Reference boxes to show where elements should be without transforms */
+    .reference {
+      opacity: 0.3;
+      background-color: gray !important;
+      border-style: dashed;
+    }
+
+    .description {
+      position: absolute;
+      top: -30px;
+      left: 0;
+      font-size: 11px;
+      color: #666;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>CSS Transform Percentage Test Cases</h1>
+  <p>This page tests percentage-based transforms. According to CSS specs, percentages should be relative to the element's own size.</p>
+  
+  <div class="container">
+    <!-- Reference positions (what positions look like without transforms) -->
+    <div class="test-box reference" style="top: 50px; left: 50px;">
+      <div class="description">Reference</div>
+      REF
+    </div>
+    <div class="test-box reference" style="top: 200px; left: 50px;">REF</div>
+    <div class="test-box reference" style="top: 350px; left: 50px;">REF</div>
+    <div class="test-box reference" style="top: 50px; left: 250px;">REF</div>
+    <div class="test-box reference" style="top: 200px; left: 50%; margin-left: -60px; width: 120px;">REF</div>
+    <div class="test-box reference" style="top: 350px; left: 250px;">REF</div>
+    <div class="test-box reference" style="top: 50px; left: 450px;">REF</div>
+    <div class="test-box reference" style="top: 200px; left: 450px;">REF</div>
+
+    <!-- Actual test elements -->
+    <div class="test-box test-translatex-50">
+      <div class="description">translateX(50%)</div>
+      +50px X
+    </div>
+    
+    <div class="test-box test-translatey-50">
+      <div class="description">translateY(50%)</div>
+      +40px Y
+    </div>
+    
+    <div class="test-box test-translate3d-y">
+      <div class="description">translate3d(0,50%,0)</div>
+      +40px Y
+    </div>
+    
+    <div class="test-box test-translate-both">
+      <div class="description">translate(50%,50%)</div>
+      +50,+40
+    </div>
+    
+    <div class="test-box test-centering">
+      <div class="description">Centering: left:50% + translateX(-50%)</div>
+      CENTERED
+    </div>
+    
+    <div class="test-box test-combined">
+      <div class="description">translateX(50%) + scale</div>
+      +50px X
+    </div>
+    
+    <div class="test-box test-negative">
+      <div class="description">translate(-25%,-25%)</div>
+      -25,-20
+    </div>
+    
+    <div class="test-box test-large-percent">
+      <div class="description">translateX(100%)</div>
+      +100px X
+    </div>
+  </div>
+
+  <div style="margin: 20px;">
+    <h2>Expected Behavior:</h2>
+    <ul>
+      <li><strong>translateX(50%)</strong>: Should move element right by 50% of its width (50px for 100px wide element)</li>
+      <li><strong>translateY(50%)</strong>: Should move element down by 50% of its height (40px for 80px high element)</li>
+      <li><strong>translate3d(0, 50%, 0)</strong>: Same as translateY(50%)</li>
+      <li><strong>translate(50%, 50%)</strong>: Should move by 50% width and 50% height</li>
+      <li><strong>Centering</strong>: left: 50% + translateX(-50%) should center the element horizontally</li>
+      <li><strong>Combined</strong>: Percentage should work with other transforms</li>
+      <li><strong>Negative</strong>: translate(-25%, -25%) should move element up and left</li>
+      <li><strong>Large percent</strong>: translateX(100%) should move element by its full width</li>
+    </ul>
+  </div>
+</body>
+</html>

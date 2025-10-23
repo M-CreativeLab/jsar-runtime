@@ -32,7 +32,11 @@ namespace xr
   {
     m_Enabled = true;
     m_StereoRenderingMode = init.stereoRenderingMode;
+    m_UsedViewsCount = init.usedViewsCount;
+
     DEBUG(LOG_TAG_XR, "configure XRDevice: enabled=%d", m_Enabled);
+    DEBUG(LOG_TAG_XR, "      stereo_rendering_mode=%d", (int)m_StereoRenderingMode.load());
+    DEBUG(LOG_TAG_XR, "      used_views_count=%zu", m_UsedViewsCount.load());
   }
 
   void Device::initialize()
@@ -40,11 +44,11 @@ namespace xr
     // Initialize the input sources related fields.
     auto &opts = m_Constellation->getOptions();
     m_SessionContextZoneDirectory = opts.getZoneDirname("sessions");
-    m_DeviceContextZone = std::make_unique<TrXRDeviceContextZone>(opts.getZoneFilename("device"), TrZoneType::Server);
-    m_InputSourcesZone = std::make_unique<TrXRInputSourcesZone>(opts.getZoneFilename("inputsources"), TrZoneType::Server);
+    m_DeviceContextZone = make_unique<TrXRDeviceContextZone>(opts.getZoneFilename("device"), TrZoneType::Server);
+    m_InputSourcesZone = make_unique<TrXRInputSourcesZone>(opts.getZoneFilename("inputsources"), TrZoneType::Server);
 
     // Update configurations to zone objects
-    m_DeviceContextZone->configure(m_Enabled, m_StereoRenderingMode);
+    m_DeviceContextZone->configure(m_Enabled, m_StereoRenderingMode, m_UsedViewsCount);
 
     // Start command client watcher.
     startCommandClientWatcher();
@@ -146,9 +150,14 @@ namespace xr
     return m_StereoRenderingMode == TrStereoRenderingMode::MultiPass;
   }
 
-  TrStereoRenderingMode Device::getStereoRenderingMode()
+  TrStereoRenderingMode Device::getStereoRenderingMode() const
   {
     return m_StereoRenderingMode;
+  }
+
+  size_t Device::getUsedViewsCount() const
+  {
+    return m_UsedViewsCount;
   }
 
   StereoRenderingFrame *Device::createStereoRenderingFrame(int stereoId)

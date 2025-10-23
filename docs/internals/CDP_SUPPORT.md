@@ -117,8 +117,8 @@ The Runtime domain exposes JavaScript runtime functionality.
   "id": 2,
   "result": {
     "product": "JSAR",
-    "revision": "0.9.0",
-    "userAgent": "JSAR/0.9.0",
+    "revision": "0.10.1",
+    "userAgent": "JSAR/0.10.1",
     "jsVersion": "ES2021"
   }
 }

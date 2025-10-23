@@ -1,0 +1,155 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>DocumentFragment Web API Compliance Test</title>
+  <style>
+    .section {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+    .pass {
+      background-color: #d4edda;
+    }
+
+    .fail {
+      background-color: #f8d7da;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>DocumentFragment Web API Compliance Test</h1>
+  <div id="results"></div>
+</body>
+
+<script>
+  function test(description, fn) {
+    try {
+      const result = fn();
+      logResult(description, result === true);
+    } catch (error) {
+      logResult(description + ` (Error: ${error.message})`, false);
+    }
+  }
+
+  function logResult(description, passed) {
+    const div = document.createElement('div');
+    div.className = `section ${passed ? 'pass' : 'fail'}`;
+    div.innerHTML = `<strong>${passed ? '✅ PASS' : '❌ FAIL'}:</strong> ${description}`;
+    document.getElementById('results').appendChild(div);
+    console.log(`${passed ? 'PASS' : 'FAIL'}: ${description}`);
+  }
+
+  // Web API Compliance Tests based on MDN and DOM Standard
+  console.log('Testing Document.createDocumentFragment() Web API compliance...');
+
+  // Test 1: Method exists and is callable
+  test('document.createDocumentFragment() method exists', () => {
+    return typeof document.createDocumentFragment === 'function';
+  });
+
+  // Test 2: Method takes no parameters (per MDN spec)
+  test('createDocumentFragment() accepts no parameters', () => {
+    const fragment = document.createDocumentFragment();
+    return fragment !== null && fragment !== undefined;
+  });
+
+  // Test 3: Returns DocumentFragment node
+  test('Returns DocumentFragment node', () => {
+    const fragment = document.createDocumentFragment();
+    return fragment.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+  });
+
+  // Test 4: DocumentFragment has correct nodeName
+  test('DocumentFragment has nodeName "#document-fragment"', () => {
+    const fragment = document.createDocumentFragment();
+    return fragment.nodeName === '#document-fragment';
+  });
+
+  // Test 5: DocumentFragment has no parent initially
+  test('DocumentFragment has no parentNode initially', () => {
+    const fragment = document.createDocumentFragment();
+    return fragment.parentNode === null;
+  });
+
+  // Test 6: DocumentFragment is empty initially
+  test('DocumentFragment is empty initially', () => {
+    const fragment = document.createDocumentFragment();
+    return fragment.childNodes.length === 0;
+  });
+
+  // Test 7: DocumentFragment can accept child nodes
+  test('DocumentFragment can accept child nodes', () => {
+    const fragment = document.createDocumentFragment();
+    const div = document.createElement('div');
+    div.id = 'append-test';
+    fragment.appendChild(div);
+    return fragment.childNodes.length === 1 && fragment.childNodes[0].id === 'append-test';
+  });
+
+  // Test 8: Child nodes have DocumentFragment as parent
+  test('Child nodes have DocumentFragment as parent', () => {
+    const fragment = document.createDocumentFragment();
+    const div = document.createElement('div');
+    fragment.appendChild(div);
+    return div.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+  });
+
+  // Test 9: DocumentFragment children are moved when inserted into DOM
+  test('DocumentFragment children are moved when inserted into DOM', () => {
+    const fragment = document.createDocumentFragment();
+    const div1 = document.createElement('div');
+    const div2 = document.createElement('div');
+    fragment.appendChild(div1);
+    fragment.appendChild(div2);
+
+    const container = document.createElement('div');
+    container.appendChild(fragment);
+
+    // Fragment should be empty after insertion
+    return fragment.childNodes.length === 0 && container.childNodes.length === 2;
+  });
+
+  // Test 10: Multiple calls return different instances
+  test('Multiple calls return different instances', () => {
+    const fragment1 = document.createDocumentFragment();
+    const fragment2 = document.createDocumentFragment();
+    return fragment1 !== fragment2;
+  });
+
+  // Test 11: DocumentFragment supports ParentNode interface methods
+  test('DocumentFragment supports querySelector', () => {
+    const fragment = document.createDocumentFragment();
+    const div = document.createElement('div');
+    div.className = 'test-class';
+    fragment.appendChild(div);
+
+    const found = fragment.querySelector('.test-class');
+    return found && found.className === 'test-class';
+  });
+
+  // Test 12: DocumentFragment supports ParentNode interface properties
+  test('DocumentFragment supports childElementCount', () => {
+    const fragment = document.createDocumentFragment();
+    const div = document.createElement('div');
+    fragment.appendChild(div);
+
+    return typeof fragment.childElementCount === 'number' && fragment.childElementCount === 1;
+  });
+
+  // Test 13: DocumentFragment supports append method
+  test('DocumentFragment supports append method', () => {
+    const fragment = document.createDocumentFragment();
+    const div = document.createElement('div');
+    div.id = 'append-test';
+    fragment.append(div);
+    return fragment.childElementCount === 1 && fragment.childNodes[0].id === 'append-test';
+  });
+
+  console.log('Web API compliance tests completed');
+</script>
+
+</html>

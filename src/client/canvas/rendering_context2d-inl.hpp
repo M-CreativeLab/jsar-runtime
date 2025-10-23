@@ -225,6 +225,19 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getLineDashOffset()
+  {
+    return lineDashOffset;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::setLineDashOffset(float offset)
+  {
+    lineDashOffset = offset;
+    return true;
+  }
+
+  template <typename CanvasType>
   float CanvasRenderingContext2D<CanvasType>::getLineWidth()
   {
     return skPaint->getStrokeWidth();
@@ -410,6 +423,18 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::strokeRect(float x, float y, float width, float height)
+  {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    auto strokePaint = getStrokePaint();
+    // TODO: shadow painting
+    skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), strokePaint);
+    this->notifyCanvasUpdated();
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::clearRect(float x, float y, float width, float height)
   {
     skPaint->setStyle(SkPaint::kFill_Style);
@@ -420,6 +445,12 @@ namespace canvas
       this->notifyCanvasUpdated();
     }
     skPaint->setBlendMode(globalCompositeOperation);
+  }
+
+  template <typename CanvasType>
+  const std::vector<float> &CanvasRenderingContext2D<CanvasType>::getLineDash()
+  {
+    return lineDash;
   }
 
   template <typename CanvasType>
@@ -561,6 +592,13 @@ namespace canvas
       skCanvas->resetMatrix();
       skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
     }
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::resetTransform()
+  {
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->resetMatrix();
   }
 
   template <typename CanvasType>

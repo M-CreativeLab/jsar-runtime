@@ -1,86 +1,21 @@
-import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
-import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
-import { type DocumentRequestEvent, reportDocumentEvent } from '@transmute/messaging';
-import { NativeDocumentOnTransmute } from './jsardom/TransmuteImpl';
-import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
+import { type DocumentRequestEvent } from '@transmute/messaging';
+import { ResourceLoaderOnTransmute } from './ResourceLoader';
 
 // viewers
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
-import { Threepio } from './threepio';
-
-Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
-  get: () => getPerformanceNow(),
-});
-
-/**
- * Execute the XSML code or URL.
- * 
- * TODO: XSML will be deprecated.
- * 
- * @param gl the WebGL rendering context.
- * @param codeOrUrl the XSML code or URL.
- * @param urlBase the base URL.
- */
-async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, codeOrUrl: string, urlBase: string) {
-  const nativeDocument = new NativeDocumentOnTransmute(gl);
-  if (isWebXRSupported()) {
-    nativeDocument.configureDefaultXrExperience(gl);
-    await nativeDocument.enterDefaultXrExperience();
-  } else {
-    console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
-  }
-
-  console.info(`loading a JSAR document`, codeOrUrl, { url: urlBase });
-  let dom: JSARDOM<NativeDocumentOnTransmute> = null;
-
-  try {
-    dom = new JSARDOM(codeOrUrl, {
-      url: urlBase,
-      nativeDocument,
-    });
-    await dom.load();
-    reportDocumentEvent(nativeDocument.id, 'loaded');
-
-    const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
-    {
-      await dom.waitForSpaceReady();
-      reportDocumentEvent(nativeDocument.id, 'DOMContentLoaded');
-    }
-    spaceNode.setEnabled(true);
-    nativeDocument.dispatchDocumentLoadedEvent();
-  } catch (err) {
-    if (dom != null) {
-      // Just unload and close the document
-      await dom.unload();
-      dom.nativeDocument.close();
-    }
-    // Report the error
-    throw err;
-  }
-}
+// import { Threepio } from './threepio';
 
 export class TransmuteRuntime2 extends EventTarget {
   #resourceLoader: ResourceLoaderOnTransmute = new ResourceLoaderOnTransmute();
   #browsingContext: Transmute.BrowsingContext;
-  #threepio: Threepio;
+  // #threepio: Threepio;
 
-  constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
+  constructor(private id: number) {
     super();
-    {
-      /**
-       * Print the supported WebGL extensions and versions.
-       */
-      const exts = gl.getSupportedExtensions();
-      console.info(`[WebGL] supported extensions(${exts.length}):`);
-      for (const extName of exts) {
-        console.info(`  - ${extName}`);
-      }
-      console.info(`[JSARDOM] version=${JSARDOM.version}`);
-    }
     {
       /**
        * Initialize the `BrowsingContext` instance.
@@ -89,7 +24,7 @@ export class TransmuteRuntime2 extends EventTarget {
       const browsingContext = new BrowsingContext();
       browsingContext.setResourceLoader(this.#resourceLoader);
       this.#browsingContext = browsingContext;
-      this.#threepio = new Threepio(browsingContext);
+      // this.#threepio = new Threepio(browsingContext);
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
@@ -109,22 +44,18 @@ export class TransmuteRuntime2 extends EventTarget {
     ) {
       await this.load(requestUrl);
     } else {
-      await this.#threepio.request(requestUrl);
+      // await this.#threepio.request(requestUrl);
     }
   }
 
   private async load(codeOrUrl: string, urlBase?: string) {
-    if (!this.gl) {
-      throw new TypeError('The webgl is not ready or lost context state');
-    }
-
     // Override the `codeOrUrl` with the example url if the debug mode is enabled.
     if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_URL) {
       codeOrUrl = process.env.JSAR_EXAMPLE_URL;
     }
 
     let urlObj: URL = null;
-    let loadAsHTML = true; /** If load the content as HTML */
+    let inputType: 'source' | 'url' = 'url';
 
     /**
      * If the input is a path, convert it to a URL.
@@ -140,8 +71,7 @@ export class TransmuteRuntime2 extends EventTarget {
 
     /**
      * Supports the formats to open directly:
-     * 
-     * - [x] `xsml` for mixed reality content.
+     *
      * - [x] `html` for web page preview.
      * - [x] `glb`, `gltf`, `usdz`, etc, for 3D model preview.
      * - [x] `png`, `jpg`, etc, for image preview.
@@ -155,18 +85,26 @@ export class TransmuteRuntime2 extends EventTarget {
      * TODO: implement this via mime type instead of the file extension?
      */
     switch (urlExt) {
-      case '.glb':
-      case '.gltf':
+      // TODO(yorkie): wait for `HTMLModelElement` supports the GLTF format.
+      // case '.glb':
+      // case '.gltf':
+      case '.spz':
+      case '.ksplat':
+      case '.ply':
         codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
+        inputType = 'source';
         urlBase = urlObj.href;
-        loadAsHTML = false;
+        console.info(`Using the following source code:`);
+        console.info(codeOrUrl);
         break;
       case '.png':
       case '.jpg':
       case '.jpeg':
         codeOrUrl = createImage2dViewer(codeOrUrl);
+        inputType = 'source';
         urlBase = urlObj.href;
-        loadAsHTML = false;
+        console.info(`Using the following source code:`);
+        console.info(codeOrUrl);
         break;
       /**
        * TODO: support the following format viewers.
@@ -177,9 +115,6 @@ export class TransmuteRuntime2 extends EventTarget {
       case '.pdf':
       case '.epub':
         throw new Error(`the format is not supported yet: ${urlExt}`);
-      case '.xsml':
-        loadAsHTML = false;
-        break;
       case '.splinecode':
         {
           const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
@@ -191,16 +126,7 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     // Start the browsing context.
-    if (loadAsHTML) {
-      this.#browsingContext.start(codeOrUrl, 'text/html');
-    } else {
-      this.#browsingContext.start('', 'text/html');
-    }
-
-    // If not loading as HTML, evaluate the XSML.
-    if (!loadAsHTML) {
-      await evaluateXSML(this.gl, codeOrUrl, urlBase);
-    }
+    globalThis.document = this.#browsingContext.start(codeOrUrl, 'text/html', inputType, urlBase);
     console.info(`Content(#${this.id}): the document is loaded successfully.`);
   }
 }

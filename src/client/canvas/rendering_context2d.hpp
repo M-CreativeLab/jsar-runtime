@@ -18,6 +18,7 @@
 #include "./rendering_context.hpp"
 #include "./image_source.hpp"
 #include "./image_data.hpp"
+#include "./text_metrics.hpp"
 
 namespace canvas
 {
@@ -38,26 +39,6 @@ namespace canvas
     Alphabetic,
     Ideographic,
     Bottom
-  };
-
-  class TextMetrics final
-  {
-  public:
-    TextMetrics() = default;
-
-  public:
-    float width;
-    float actualBoundingBoxLeft;
-    float actualBoundingBoxRight;
-    float fontBoundingBoxAscent;
-    float fontBoundingBoxDescent;
-    float actualBoundingBoxAscent;
-    float actualBoundingBoxDescent;
-    float emHeightAscent;
-    float emHeightDescent;
-    float hangingBaseline;
-    float alphabeticBaseline;
-    float ideographicBaseline;
   };
 
   template <typename CanvasType>
@@ -81,6 +62,8 @@ namespace canvas
     bool setTextAlign(const std::string &str);
     std::string getTextBaseline();
     bool setTextBaseline(const std::string &str);
+    float getLineDashOffset();
+    float setLineDashOffset(float offset);
     float getLineWidth();
     bool setLineWidth(float width);
     std::string getLineCap();
@@ -93,7 +76,9 @@ namespace canvas
     void fillRect(float x, float y, float width, float height);
     void fillText(const std::string &text, float x, float y);
     void stroke();
+    void strokeRect(float x, float y, float width, float height);
     void clearRect(float x, float y, float width, float height);
+    const std::vector<float> &getLineDash();
     void setLineDash(const std::vector<float> &segments);
     void beginPath();
     void closePath();
@@ -106,6 +91,7 @@ namespace canvas
     TextMetrics measureText(const std::string &text);
     void transform(float a, float b, float c, float d, float e, float f);
     void setTransform(float a, float b, float c, float d, float e, float f);
+    void resetTransform();
     void scale(float sx, float sy);
     void rotate(float angle);
     void translate(float tx, float ty);
@@ -167,7 +153,7 @@ namespace canvas
     TextAlign textAlign = TextAlign::Start;
     TextBaseline textBaseline = TextBaseline::Alphabetic;
 
-  private: // style
+  public: // style
     SkColor fillStyle = SK_ColorBLACK;
     SkColor strokeStyle = SK_ColorBLACK;
 
@@ -179,6 +165,7 @@ namespace canvas
     float strokeWidth = 1.0f;
     SkBlendMode globalCompositeOperation = SkBlendMode::kSrcOver;
     std::vector<float> lineDash;
+    float lineDashOffset = 0.0f;
   };
 }
 

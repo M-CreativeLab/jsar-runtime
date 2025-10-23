@@ -9,6 +9,36 @@
 
 namespace scripting_base
 {
+  // This is new version of the implementation of the Iterator Protocol
+  namespace iteration_protocol
+  {
+    class Iterable
+    {
+    public:
+      virtual void GetIterator(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+    };
+
+    class Iterator
+    {
+    public:
+      virtual void Next(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+      virtual void Return(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+      virtual void Throw(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+    };
+
+    struct IteratorResult
+    {
+      /**
+       * A boolean that's `false` if the iterator was able to produce the next value in the sequence.
+       */
+      bool done;
+      /**
+       * Any JavaScript value returned by the iterator. Can be omitted when done is true.
+       */
+      v8::Global<v8::Value> value;
+    };
+  }
+
   /**
    * A base class for implementing the Iterator Protocol in V8.
    *
@@ -18,6 +48,8 @@ namespace scripting_base
   template <typename T, typename ValueType>
   class Iterator : public ObjectWrap<T>
   {
+    using ObjectWrap<T>::ObjectWrap;
+
   public:
     static std::string Name()
     {
@@ -25,6 +57,7 @@ namespace scripting_base
     }
 
     // Creates a new instance of the Iterator class, with a vector of data source.
+    // TODO(yorkie): remove the dependency on napi_env
     static v8::Local<v8::Value> NewInstance(napi_env napiEnv,
                                             const std::vector<std::shared_ptr<ValueType>> &dataSource)
     {
@@ -34,7 +67,7 @@ namespace scripting_base
 
       v8::Local<v8::Value> jsValue = ObjectWrap<T>::NewInstance(napiEnv);
       v8::Local<v8::Object> jsObject = jsValue->ToObject(context).ToLocalChecked();
-      T *instance = ObjectWrap<T>::Unwrap(jsObject);
+      T *instance = ObjectWrap<T>::Unwrap(isolate, jsObject);
       assert(instance != nullptr && "instance must not be null");
 
       instance->dataSource_ = dataSource;
@@ -83,7 +116,7 @@ namespace scripting_base
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
       v8::HandleScope scope(isolate);
 
-      T *instance = ObjectWrap<T>::Unwrap(info.This());
+      T *instance = ObjectWrap<T>::Unwrap(isolate, info.This());
       if (!instance)
       {
         info.GetReturnValue().Set(v8::Undefined(isolate));
@@ -151,6 +184,8 @@ namespace scripting_base
   template <typename T, typename ValueType>
   class Iterable : public Iterator<T, ValueType>
   {
+    using Iterator<T, ValueType>::Iterator;
+
   public:
     /**
      * Creates a new instance of the Iterable class.

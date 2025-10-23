@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Grid Auto Layout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    h2,
+    h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Container for demos */
+    .demo-section {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f0f0f05f;
+      border-radius: 10px;
+    }
+
+    /* Auto-fit Grid */
+    .grid-auto-fit {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-auto-rows: 150px;
+      background-color: #c9d4df5f;
+      gap: 20px;
+      padding: 20px;
+      margin: 10px 0;
+    }
+
+    /* Auto-fill Grid */
+    .grid-auto-fill {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-auto-rows: minmax(120px, auto);
+      background-color: #c9d4df5f;
+      gap: 15px;
+      padding: 20px;
+      margin: 10px 0;
+    }
+
+    /* Auto-flow Grid */
+    .grid-auto-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-flow: row dense;
+      grid-auto-rows: 100px;
+      background-color: #c9d4df5f;
+      gap: 15px;
+      padding: 20px;
+      margin: 10px 0;
+    }
+
+    /* Auto-sizing Grid */
+    .grid-auto-size {
+      display: grid;
+      grid-template-columns: max-content min-content 1fr;
+      grid-auto-rows: auto;
+      background-color: #c9d4df5f;
+      gap: 20px;
+      padding: 20px;
+      margin: 10px 0;
+    }
+
+    /* Grid Items */
+    .grid-item {
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 15px;
+      padding: 20px;
+      transform: translateZ(10px);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .grid-item:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translateZ(15px);
+    }
+
+    .grid-item:nth-child(2n) {
+      background: rgba(0, 200, 100, 0.85);
+    }
+
+    .grid-item:nth-child(3n) {
+      background: rgba(255, 150, 0, 0.85);
+    }
+
+    .grid-item:nth-child(4n) {
+      background: rgba(150, 0, 255, 0.85);
+    }
+
+    .grid-item:nth-child(5n) {
+      background: rgba(255, 100, 150, 0.85);
+    }
+
+    /* Special items for auto-flow demo */
+    .grid-item.wide {
+      grid-column: span 2;
+      background: rgba(200, 0, 0, 0.85);
+    }
+
+    .grid-item.tall {
+      grid-row: span 2;
+      background: rgba(0, 150, 200, 0.85);
+    }
+
+    /* Special items for auto-size demo */
+    .grid-item.max-content {
+      white-space: nowrap;
+    }
+
+    .grid-item.min-content {
+      word-break: break-all;
+      max-width: 100px;
+    }
+
+    /* Header */
+    header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Grid Auto Layout</h1>
+  </header>
+
+  <div class="demo-section">
+    <h2>Auto-fit (Responsive)</h2>
+    <div class="grid-auto-fit">
+      <div class="grid-item">
+        <h3>Auto-fit 1</h3>
+        <p>Resizes to fit</p>
+      </div>
+      <div class="grid-item">
+        <h3>Auto-fit 2</h3>
+        <p>Dynamic sizing</p>
+      </div>
+      <div class="grid-item">
+        <h3>Auto-fit 3</h3>
+        <p>Responsive grid</p>
+      </div>
+      <div class="grid-item">
+        <h3>Auto-fit 4</h3>
+        <p>Flexible layout</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>Auto-fill (Creates Empty Tracks)</h2>
+    <div class="grid-auto-fill">
+      <div class="grid-item">
+        <h3>Fill 1</h3>
+        <p>Auto-fill creates empty tracks when there's space</p>
+      </div>
+      <div class="grid-item">
+        <h3>Fill 2</h3>
+        <p>Maintains track count</p>
+      </div>
+      <div class="grid-item">
+        <h3>Fill 3</h3>
+        <p>Fixed minimum size</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>Auto-flow Dense</h2>
+    <div class="grid-auto-flow">
+      <div class="grid-item">
+        <h3>1</h3>
+      </div>
+      <div class="grid-item wide">
+        <h3>Wide Item</h3>
+        <p>Spans 2 columns</p>
+      </div>
+      <div class="grid-item">
+        <h3>3</h3>
+      </div>
+      <div class="grid-item">
+        <h3>4</h3>
+      </div>
+      <div class="grid-item tall">
+        <h3>Tall</h3>
+        <p>Spans 2 rows</p>
+      </div>
+      <div class="grid-item">
+        <h3>6</h3>
+      </div>
+      <div class="grid-item">
+        <h3>7</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>Auto-sizing (max-content, min-content, 1fr)</h2>
+    <div class="grid-auto-size">
+      <div class="grid-item max-content">
+        <h3>Max Content Column</h3>
+        <p>This content determines the column width</p>
+      </div>
+      <div class="grid-item min-content">
+        <h3>Min</h3>
+        <p>Smallest possible width</p>
+      </div>
+      <div class="grid-item">
+        <h3>Flexible (1fr)</h3>
+        <p>Takes remaining space</p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -5,9 +5,11 @@
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
 #include <client/html/all_html_elements.hpp>
+#include <client/script_bindings/events/all_events.hpp>
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
+#include "./browsing_context.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
@@ -161,8 +163,8 @@ namespace dom
       auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
       assert(window != nullptr &&
              "The window must not be null in a TextNode().");
-      auto initial_style = window->getComputedStyle(shared_from_this());
-      recalcStyleDirectly(initial_style);
+      auto initial_style = window->createComputedStyle(shared_from_this(), nullopt, false);
+      recalcStyleDirectly(*initial_style);
     }
   }
 
@@ -643,18 +645,41 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
-  builtin_scene::RenderQueue Element::getRenderQueue() const
+  RenderQueue Element::computeRenderQueue() const
   {
-    auto renderQueue = Node::getRenderQueue();
+    auto renderQueue = Node::computeRenderQueue();
+
+    // Update the translateZ from the layout box
+    auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
+    if (layoutBox != nullptr) [[likely]]
+      renderQueue.translateZ = layoutBox->getTranslateZ();
+
+    // Update the zIndex from the adopted style
     if (adopted_style_ != nullptr) [[likely]]
     {
-      renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
+      RenderQueue containerRenderQueue;
+      auto containerBox = principalBox()->containerForAbsolutePosition();
+      if (containerBox != nullptr)
+        containerRenderQueue = containerBox->nodeRef().getRenderQueue();
 
-      // Update the translateZ from the layout box
-      auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
-      if (layoutBox != nullptr) [[likely]]
-        renderQueue.translateZ = layoutBox->getTranslateZ();
+      bool isThisPositioned = adopted_style_->isPositioned();
+      if (isThisPositioned)
+      {
+        if (!adopted_style_->hasZIndex())
+        {
+          renderQueue.zIndex = containerRenderQueue.zIndex + 0.1f;
+        }
+        else
+        {
+          renderQueue.zIndex = adopted_style_->zIndex().value_or(0);
+        }
+      }
+      else
+      {
+        renderQueue.zIndex = containerRenderQueue.zIndex;
+      }
     }
+
     return renderQueue;
   }
 
@@ -721,32 +746,57 @@ namespace dom
 
   void Element::simulateMouseDown(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseDown());
-    dispatchEventInternal(events::PointerEvent::PointerDown());
+    auto mouseEvent = events::MouseEvent::MouseDown();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerDown();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseUp(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseUp());
-    dispatchEventInternal(events::PointerEvent::PointerUp());
+    auto mouseEvent = events::MouseEvent::MouseUp();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerUp();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseMove(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseMove());
-    dispatchEventInternal(events::PointerEvent::PointerMove());
+    auto mouseEvent = events::MouseEvent::MouseMove();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerMove();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseOut(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseOut());
-    dispatchEventInternal(events::PointerEvent::PointerOut());
+    auto mouseEvent = events::MouseEvent::MouseOut();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerOut();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseOver());
-    dispatchEventInternal(events::PointerEvent::PointerOver());
+    auto mouseEvent = events::MouseEvent::MouseOver();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerOver();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
@@ -755,8 +805,13 @@ namespace dom
       return;
     setActionState(is_hovered_, true);
 
-    dispatchEventInternal(events::MouseEvent::MouseEnter());
-    dispatchEventInternal(events::PointerEvent::PointerEnter());
+    auto mouseEvent = events::MouseEvent::MouseEnter();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerEnter();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
@@ -765,39 +820,61 @@ namespace dom
       return;
     setActionState(is_hovered_, false);
 
-    dispatchEventInternal(events::MouseEvent::MouseLeave());
-    dispatchEventInternal(events::PointerEvent::PointerLeave());
+    auto mouseEvent = events::MouseEvent::MouseLeave();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerLeave();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::PointerEvent::Click());
+    // Create a click event object to pass to the handler
+    auto clickEvent = events::PointerEvent::Click();
+    clickEvent->setTarget(shared_from_this());
+
+    // Execute click handler if it exists, passing the event object
+    if (hasEventHandler("click"))
+      executeEventHandler("click", clickEvent.get());
+
+    dispatchEventInternal(std::move(clickEvent));
   }
 
-  void Element::simulateScrollWithOffset(float offsetX, float offsetY)
+  bool Element::simulateScrollWithOffset(float offsetX, float offsetY)
   {
     auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(principalBox());
-    if (layoutBox == nullptr)
-      return;
+    if (layoutBox == nullptr ||
+        !layoutBox->isScrollContainer())
+      return false;
     assert(layoutBox->isBox() && "The layout box is not a box.");
 
-    glm::vec3 offset;
+    glm::vec3 offset = glm::vec3(0, 0, 0);
     if (layoutBox->scrollsOverflowX())
       offset.x = offsetX;
     if (layoutBox->scrollsOverflowY())
       offset.y = offsetY;
+    // TODO(yorkie): support z-axis scrolling
 
     if (offset.x == 0 && offset.y == 0)
-      return;
+      return false;
 
-    layoutBox->scrollBy(offset);
-
-    // Throttle scroll events for better performance
-    if (!shouldThrottleScrollEvent())
+    bool scrolled = layoutBox->scrollBy(offset);
+    if (scrolled)
     {
-      last_scroll_event_time_ = std::chrono::steady_clock::now();
-      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      markAsDirty();
+
+      // Throttle scroll events for better performance
+      if (!shouldThrottleScrollEvent())
+      {
+        last_scroll_event_time_ = chrono::steady_clock::now();
+        auto scrollEvent = make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll);
+        scrollEvent->setTarget(shared_from_this());
+        dispatchEvent(scrollEvent);
+      }
     }
+    return scrolled;
   }
 
   bool Element::setActionState(bool &state, bool value)
@@ -816,7 +893,7 @@ namespace dom
 
   bool Element::shouldThrottleScrollEvent() const
   {
-    auto now = std::chrono::steady_clock::now();
+    auto now = chrono::steady_clock::now();
     return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 
@@ -882,5 +959,105 @@ namespace dom
         return Node::As<Element>(childNode);
     }
     return nullptr;
+  }
+
+  // Generalized event handler methods
+
+  void Element::setEventHandler(const string &type, const string &handlerCode)
+  {
+    if (type.empty() || handlerCode.empty())
+      return;
+    event_handler_codes_[type] = handlerCode;
+  }
+
+  bool Element::hasEventHandler(const string &type) const
+  {
+    // Check if we have handler code for this type
+    auto it = event_handler_codes_.find(type);
+    return it != event_handler_codes_.end() && !it->second.empty();
+  }
+
+  string Element::getEventHandlerCode(const string &type) const
+  {
+    auto it = event_handler_codes_.find(type);
+    if (it != event_handler_codes_.end())
+      return it->second;
+
+    return "";
+  }
+
+  void Element::executeEventHandler(const string &type, Event *event)
+  {
+    // Skip if no event is provided and no handler code exists
+    if (event == nullptr) [[unlikely]]
+      return;
+
+    // Check for handler code
+    string handlerCode = getEventHandlerCode(type);
+    if (handlerCode.empty())
+      return;
+
+    // Get the document and its browsing context to execute the JavaScript
+    auto ownerDoc = getOwnerDocumentReference();
+    if (ownerDoc == nullptr)
+      return;
+
+    auto browsingContext = ownerDoc->browsingContext;
+    if (browsingContext == nullptr || browsingContext->scriptingContext == nullptr)
+      return;
+
+    v8::Isolate *isolate = browsingContext->scriptingContext->isolate();
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+
+    try
+    {
+      // Use the new compileEventHandler method to compile the handler as a function
+      auto maybeFunction = browsingContext->scriptingContext->compileFunction(handlerCode);
+
+      v8::Local<v8::Function> handlerFunction;
+      if (!maybeFunction.ToLocal(&handlerFunction))
+      {
+        cerr << "Failed to compile " << type << " handler: " << handlerCode << endl;
+        return;
+      }
+
+      // Get the V8 context for function execution
+      v8::Isolate *isolate = browsingContext->scriptingContext->isolate();
+      v8::Isolate::Scope isolateScope(isolate);
+      v8::HandleScope handleScope(isolate);
+
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+      v8::Context::Scope contextScope(context);
+
+      // Create a V8 event object using the proper Event wrapper
+      auto eventObject = script_bindings::event_bindings::MakeEvent(isolate, event);
+
+      // Call the compiled handler function with the event object
+      v8::TryCatch tryCatch(isolate);
+      v8::Local<v8::Value> argv[] = {eventObject};
+      v8::Local<v8::Value> result;
+
+      // Use global as 'this' context for now - ideally should be the element
+      v8::Local<v8::Object> global = context->Global();
+
+      if (!handlerFunction->Call(context, global, 1, argv).ToLocal(&result))
+      {
+        if (tryCatch.HasCaught())
+        {
+          v8::Local<v8::Message> message = tryCatch.Message();
+          v8::String::Utf8Value messageUtf8(isolate, message->Get());
+          cerr << "Failed to execute " << type << " handler: " << *messageUtf8 << endl;
+        }
+        else
+        {
+          cerr << "Failed to execute " << type << " handler" << endl;
+        }
+      }
+    }
+    catch (const exception &e)
+    {
+      cerr << "Error executing " << type << " handler: " << e.what() << endl;
+    }
   }
 }

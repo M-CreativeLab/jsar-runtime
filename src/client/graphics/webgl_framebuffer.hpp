@@ -56,8 +56,6 @@ namespace client_graphics
         : WebGLObject(WebGLObjectType::Framebuffer)
     {
     }
-
-  protected:
     /**
      * Create a new `WebGLFramebuffer` with the given id, that is used for the specific framebuffers
      * like the default framebuffer or the host framebuffer.

@@ -1,6 +1,8 @@
 import { workerData, parentPort } from 'node:worker_threads';
-import { ResourceLoaderOnTransmute } from '../runtime2/jsardom/ResourceLoader';
-import type { WorkerRequest } from './worker';
+import { ResourceLoaderOnTransmute } from '../runtime2/ResourceLoader';
+import { type WorkerRequest, WorkerImpl } from './worker';
+import { ErrorEvent } from './events';
+
 const { WorkerContext } = process._linkedBinding('transmute:dom');
 
 {
@@ -9,6 +11,20 @@ const { WorkerContext } = process._linkedBinding('transmute:dom');
     value: parentPort.postMessage.bind(parentPort),
     configurable: true,
     writable: true,
+  });
+
+  /**
+   * Add __WorkerImpl to globalThis to support creating nested workers inside the worker.
+   * 
+   * TODO(yorkie): implement the worker based on v8 itself without using Node.js WorkerThreads.
+   */
+  Object.defineProperties(globalThis, {
+    '__WorkerImpl': {
+      value: WorkerImpl,
+      writable: false,
+      enumerable: false,
+      configurable: false,
+    },
   });
 }
 
@@ -20,10 +36,14 @@ parentPort.on('message', (message) => {
   workerContext.dispatchEvent(new MessageEvent('message', { data: message }));
 });
 parentPort.on('messageerror', (error) => {
-  workerContext.dispatchEvent(new ErrorEvent('messageerror', { error }));
+  workerContext.dispatchEvent(new MessageEvent('messageerror', { data: error }));
 });
 parentPort.on('error', (error) => {
-  workerContext.dispatchEvent(new ErrorEvent('error', { error }));
+  console.warn('Occurred error in worker thread:', error);
+  workerContext.dispatchEvent(new ErrorEvent('error', {
+    message: error.message,
+    error
+  }));
 });
 
 // Executing the worker script

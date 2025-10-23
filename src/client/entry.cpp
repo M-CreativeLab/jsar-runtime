@@ -84,8 +84,16 @@ bool TrClientEntry::parseConfig(string &configJson)
       clientContext->xrDeviceInit.enabled = xrDeviceDoc["enabled"].GetBool();
     if (xrDeviceDoc.HasMember("active") && xrDeviceDoc["active"].IsBool())
       clientContext->xrDeviceInit.active = xrDeviceDoc["active"].GetBool();
-    if (xrDeviceDoc.HasMember("stereoRenderingMode") && xrDeviceDoc["stereoRenderingMode"].IsNumber())
+    if (xrDeviceDoc.HasMember("stereoRenderingMode") &&
+        xrDeviceDoc["stereoRenderingMode"].IsNumber())
+    {
       clientContext->xrDeviceInit.stereoRenderingMode = (xr::TrStereoRenderingMode)xrDeviceDoc["stereoRenderingMode"].GetInt();
+    }
+    if (xrDeviceDoc.HasMember("usedViewsCount") &&
+        xrDeviceDoc["usedViewsCount"].IsUint())
+    {
+      clientContext->xrDeviceInit.usedViewsCount = xrDeviceDoc["usedViewsCount"].GetUint();
+    }
     if (xrDeviceDoc.HasMember("commandChanPort") && xrDeviceDoc["commandChanPort"].IsInt())
       clientContext->xrDeviceInit.commandChanPort = xrDeviceDoc["commandChanPort"].GetInt();
     if (xrDeviceDoc.HasMember("sessionContextZoneDirectory") && xrDeviceDoc["sessionContextZoneDirectory"].IsString())
@@ -137,16 +145,26 @@ int TrClientEntry::onClientMode(TrDocumentRequestInit &init)
     freopen(out_dst.c_str(), "w", stdout);
     freopen(err_dst.c_str(), "w", stderr);
   }
-  clientContext->start();
+  clientContext->bootstrap();
 
-  TrScriptRuntimePerProcess runtime;
-  vector<string> args = {
-    "--url",
-    clientContext->url,
-    "--id",
-    std::to_string(clientContext->id),
-  };
-  runtime.start(args);
-  fprintf(stdout, "The client(%d|%s) is stopped.\n", clientContext->id, clientContext->url.c_str());
+  // Initialize and setup the scripting runtime.
+  {
+    TrScriptRuntimePerProcess script_runtime;
+    vector<string> args = {
+      "--url",
+      clientContext->url,
+      "--id",
+      std::to_string(clientContext->id),
+    };
+    if (!script_runtime.setup(args))
+    {
+      fprintf(stderr, "Exited, reason: failed to setup the scripting runtime.\n");
+      return 1;
+    }
+
+    // Start the scripting runtime(main script).
+    script_runtime.start();
+    fprintf(stdout, "The client(%d|%s) is stopped.\n", clientContext->id, clientContext->url.c_str());
+  }
   return 0;
 }

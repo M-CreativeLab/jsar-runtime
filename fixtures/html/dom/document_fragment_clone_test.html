@@ -1,0 +1,68 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>DocumentFragment cloneNode Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    .result { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .pass { background: #e6ffe6; }
+    .fail { background: #ffe6e6; }
+  </style>
+</head>
+<body>
+  <h1>DocumentFragment cloneNode Test</h1>
+  <div id="results"></div>
+
+  <script>
+    function test(name, condition) {
+      const div = document.createElement('div');
+      div.className = `result ${condition ? 'pass' : 'fail'}`;
+      div.textContent = `${condition ? 'PASS' : 'FAIL'}: ${name}`;
+      document.getElementById('results').appendChild(div);
+      console.log(`${condition ? 'PASS' : 'FAIL'}: ${name}`);
+    }
+
+    console.log('Testing DocumentFragment cloneNode...');
+
+    // Create a DocumentFragment
+    const fragment = document.createDocumentFragment();
+    console.log('Fragment nodeType:', fragment.nodeType);
+    console.log('Fragment nodeName:', fragment.nodeName);
+
+    // Add some content to the fragment
+    const div = document.createElement('div');
+    div.textContent = 'Hello';
+    const span = document.createElement('span');
+    span.textContent = 'World';
+    fragment.appendChild(div);
+    fragment.appendChild(span);
+
+    console.log('Original fragment children count:', fragment.childNodes.length);
+
+    // Test shallow clone
+    const shallowClone = fragment.cloneNode(false);
+    test('Shallow clone preserves DocumentFragment type', shallowClone.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
+    test('Shallow clone has correct nodeName', shallowClone.nodeName === '#document-fragment');
+    test('Shallow clone has no children', shallowClone.childNodes.length === 0);
+    test('Shallow clone is different instance', shallowClone !== fragment);
+
+    // Test deep clone
+    const deepClone = fragment.cloneNode(true);
+    test('Deep clone preserves DocumentFragment type', deepClone.nodeType === Node.DOCUMENT_FRAGMENT_NODE);
+    test('Deep clone has correct nodeName', deepClone.nodeName === '#document-fragment');
+    test('Deep clone has same number of children', deepClone.childNodes.length === fragment.childNodes.length);
+    test('Deep clone children are different instances', deepClone.childNodes[0] !== fragment.childNodes[0]);
+    test('Deep clone children have same content', deepClone.childNodes[0].textContent === fragment.childNodes[0].textContent);
+
+    // Test DocumentFragment specific methods on cloned fragment
+    if (deepClone.querySelector) {
+      test('Cloned fragment supports querySelector', typeof deepClone.querySelector === 'function');
+    }
+    if (deepClone.childElementCount !== undefined) {
+      test('Cloned fragment supports childElementCount', deepClone.childElementCount === 2);
+    }
+
+    console.log('DocumentFragment cloneNode tests completed');
+  </script>
+</body>
+</html>

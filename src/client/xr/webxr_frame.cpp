@@ -9,7 +9,7 @@ using namespace std::chrono;
 namespace client_xr
 {
   XRFrame::XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session)
-      : frameRequestData_(frameRequest)
+      : frameRequestData_(*frameRequest)
       , id_(frameRequest->id)
       , stereoId_(frameRequest->stereoId)
       , timestamp_(frameRequest->time)
@@ -21,19 +21,6 @@ namespace client_xr
   {
   }
 
-  XRFrame::XRFrame(XRFrame &other)
-      : frameRequestData_(other.frameRequestData_)
-      , id_(other.id_)
-      , stereoId_(other.stereoId_)
-      , timestamp_(other.timestamp_)
-      , session_(other.session_)
-      , sessionId_(other.sessionId_)
-      , device_(other.device_)
-      , active_(other.active_)
-      , animationFrame_(other.animationFrame_)
-  {
-  }
-
   void XRFrame::startFrame()
   {
     active_ = true;
@@ -41,12 +28,12 @@ namespace client_xr
     bool isNewStereoFrame = false;
     auto isMultipass = device_->getDeviceInit().renderedAsMultipass();
     if (
-      !isMultipass ||                   /** SinglePass */
-      frameRequestData_->viewIndex == 0 /** MultiPass's right view */
+      !isMultipass ||                  /** SinglePass */
+      frameRequestData_.viewIndex == 0 /** MultiPass's right view */
     )
       isNewStereoFrame = true;
 
-    device_->startFrame(session_, frameRequestData_);
+    device_->startFrame(session_, &frameRequestData_);
     session_->updateFrameTime(isNewStereoFrame);
     startTime_ = session_->frameTime();
   }
@@ -54,7 +41,7 @@ namespace client_xr
   void XRFrame::endFrame()
   {
     active_ = false;
-    device_->endFrame(session_, frameRequestData_);
+    device_->endFrame(session_, &frameRequestData_);
     endTime_ = steady_clock::now();
 
     auto isMultipass = device_->getDeviceInit().renderedAsMultipass();
@@ -66,12 +53,12 @@ namespace client_xr
       threshold /= 2;
     if (frameDuration > threshold)
     {
-      auto viewIndex = frameRequestData_->viewIndex;
-      std::cerr << "Detected a long frame(#" << id() << ") at session(" << sessionId_ << ")'s view(" << viewIndex << ")";
-      std::cerr << " takes " << frameDuration << "ms > " << threshold << "ms" << std::endl;
+      auto viewIndex = frameRequestData_.viewIndex;
+      cerr << "Detected a long frame(#" << id() << ") at session(" << sessionId_ << ")'s view(" << viewIndex << ")";
+      cerr << " takes " << frameDuration << "ms > " << threshold << "ms" << endl;
     }
 
-    if (!isMultipass || frameRequestData_->viewIndex == 1)
+    if (!isMultipass || frameRequestData_.viewIndex == 1)
     {
       // Calculate the Fps and update to fs on the right view
       auto &perfFs = device_->clientContext()->getPerfFs();
@@ -87,7 +74,7 @@ namespace client_xr
     if (baseSpace == nullptr)
       throw std::invalid_argument("`baseSpace` parameter is required");
 
-    auto &frameRequestData = *frameRequestData_;
+    auto &frameRequestData = frameRequestData_;
     baseSpace->ensurePoseUpdated(id_, session_, frameRequestData);
     if (!space->isReferenceSpace() && space->subType != XRSpaceSubType::kUnset)
     {
@@ -110,9 +97,8 @@ namespace client_xr
     auto viewerSpace = session_->viewerSpace();
     assert(viewerSpace != nullptr);
 
-    auto &frameRequestData = *frameRequestData_;
-    referenceSpace->ensurePoseUpdated(id_, session_, frameRequestData);
-    viewerSpace->ensurePoseUpdated(id_, session_, frameRequestData);
+    referenceSpace->ensurePoseUpdated(id_, session_, frameRequestData_);
+    viewerSpace->ensurePoseUpdated(id_, session_, frameRequestData_);
 
     auto viewerTransform /** viewer space to reference space */ = TR_XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
     return std::make_shared<XRViewerPose>(session_, shared_from_this(), viewerTransform, referenceSpace);
@@ -123,11 +109,10 @@ namespace client_xr
     if (jointSpace == nullptr || baseSpace == nullptr)
       return nullptr;
 
-    auto &frameRequestData = *frameRequestData_;
-    jointSpace->ensurePoseUpdated(id_, session_, frameRequestData);
+    jointSpace->ensurePoseUpdated(id_, session_, frameRequestData_);
     if (baseSpace->isReferenceSpace())
     {
-      baseSpace->ensurePoseUpdated(id_, session_, frameRequestData);
+      baseSpace->ensurePoseUpdated(id_, session_, frameRequestData_);
       auto transform /** joint space to base(local/unbound) */ = TR_XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseSpace);
       return std::make_shared<XRJointPose>(session_, shared_from_this(), transform);
     }

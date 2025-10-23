@@ -373,10 +373,7 @@ namespace client_xr
     // - If session’s mode is "inline" and session’s renderState's output canvas is null,
     //   abort these steps.
     // ???
-    /**
-     * TODO: using shared_ptr instead of raw pointer for the frame request?
-     */
-    auto frame = XRFrame::Make(frameRequest.get(), shared_from_this());
+    shared_ptr<XRFrame> frame = XRFrame::Make(frameRequest.get(), shared_from_this());
 
     // Move the pending frame callbacks to current map
     currentFrameCallbacks_.clear();

@@ -23,5 +23,11 @@ namespace dom
 
   public:
     Comment(const std::string &content = "", std::shared_ptr<Document> ownerDocument = nullptr);
+
+  public:
+    bool isComment() const override final
+    {
+      return true;
+    }
   };
 }

@@ -15,6 +15,15 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
+#include <client/browser/location.hpp>
+#include <client/browser/navigator.hpp>
+#include <client/frame/animation_frame_provider.hpp>
+
+// Forward declaration to avoid circular dependency
+namespace dom
+{
+  struct ViewportMeta;
+}
 
 namespace browser
 {
@@ -183,6 +192,14 @@ namespace browser
     {
       return document_;
     }
+    inline std::shared_ptr<browser::Location> location() const
+    {
+      return location_;
+    }
+    inline std::shared_ptr<browser::Navigator> navigator() const
+    {
+      return navigator_;
+    }
 
   public:
     /**
@@ -193,6 +210,16 @@ namespace browser
     inline void alert(const std::string &message)
     {
       client_context_->makeRpcCall("window.alert", {message});
+    }
+
+    /**
+     * Sends a confirmation dialog with the specified message.
+     */
+    inline bool confirm(const std::string &message)
+    {
+      client_context_->makeRpcCall("window.confirm", {message});
+      // TODO(yorkie): Return the actual result from the RPC call.
+      return true;
     }
 
     /**
@@ -226,26 +253,63 @@ namespace browser
       client_context_->makeRpcCall("window.prompt", {message, defaultValue});
     }
 
+    using AnimationFrameCallback = std::function<void(uint32_t time)>;
+
+    /**
+     * Schedules a callback to be invoked before the next repaint.
+     * 
+     * @param AnimationFrameCallback The callback to be invoked.
+     * @return A long integer representing the request ID, which can be used to cancel the request.
+     */
+    long requestAnimationFrame(AnimationFrameCallback);
+
+    /**
+     * Cancels a previously scheduled animation frame request.
+     * 
+     * @param handle The request ID returned by `requestAnimationFrame`.
+     */
+    void cancelAnimationFrame(long handle);
+
+    /**
+     * Starts the animation frame provider if it is not already started.
+     */
+    void startAnimationFrameProvider();
+
     /**
      * Gets an object containing the values of all CSS properties of an element, after applying active stylesheets and 
      * resolving any basic computation those values may contain.
      *
      * @param elementOrTextNode The element or text node to get the computed style.
      * @param pseudoElt The optional pseudo-element to get the computed style.
-     * 
+     *
      * @todo Implement the pseudo-element support.
      */
-    const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
-                                                        std::optional<std::string> pseudoElt = std::nullopt) const;
+    const client_cssom::ComputedStyle &
+    getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
+                     std::optional<std::string> pseudoElt = std::nullopt) const;
+
+    /**
+     * Creates a new computed style for the specified element or text node.
+     *
+     * @param elementOrTextNode The element or text node to create the computed style for.
+     * @param pseudoElt The optional pseudo-element to create the computed style for.
+     * @param writeCache Whether to write the computed style to the cache.
+     *
+     * @return A shared pointer to the created computed style.
+     */
+    const std::shared_ptr<client_cssom::ComputedStyle>
+    createComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
+                        std::optional<std::string> pseudoElt = std::nullopt,
+                        bool writeCache = true) const;
+
+    /**
+     * Apply viewport meta settings to the window dimensions
+     */
+    void applyViewportMeta(const dom::ViewportMeta &viewport_meta);
 
   private:
     // Configure the document to the window.
-    void configureDocument(std::shared_ptr<dom::Document> document)
-    {
-      assert(is_document_configured_ == false);
-      document_ = document;
-      is_document_configured_ = true;
-    }
+    void configureDocument(std::shared_ptr<dom::Document> document);
 
   private: // Window properties
     std::string name_ = "";
@@ -261,6 +325,9 @@ namespace browser
     float scroll_x_ = 0.0f;
     float scroll_y_ = 0.0f;
     std::shared_ptr<dom::Document> document_;
+    std::shared_ptr<browser::Location> location_;
+    std::shared_ptr<browser::Navigator> navigator_;
+    std::shared_ptr<client_frame::AnimationFrameProvider> animation_frame_provider_;
 
   private:
     TrClientContextPerProcess *client_context_; // The client context for making RPC calls

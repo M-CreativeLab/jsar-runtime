@@ -140,6 +140,23 @@ namespace builtin_scene
       layer_ = layer;
     }
 
+    inline bool isScrollableContainer() const
+    {
+      return is_scrollable_container_;
+    }
+    inline void setIsScrollableContainer(bool value)
+    {
+      is_scrollable_container_ = value;
+    }
+    inline ecs::EntityId belongsToScrollableContainer() const
+    {
+      return belongs_to_scrollable_container_;
+    }
+    inline void setBelongsToScrollableContainer(ecs::EntityId container)
+    {
+      belongs_to_scrollable_container_ = container;
+    }
+
     // Returns if the surface is valid.
     bool resetSkSurface(float width, float height);
     SkCanvas *canvas() const;
@@ -244,6 +261,15 @@ namespace builtin_scene
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
 
+    /**
+     * Measure the size of the given text with current text style.
+     * 
+     * @param text The text to measure.
+     * @param max_width The maximum width of the text, if the text exceeds the width, it will be wrapped.
+     * @returns The size of the text in logical pixels.
+     */
+    glm::vec2 measureText(const std::string &text, float max_width) const;
+
     inline void setEnabled(bool enabled)
     {
       enabled_ = enabled;
@@ -328,7 +354,11 @@ namespace builtin_scene
   private:
     sk_sp<SkSurface> surface_;
     std::string name_;
+
     int layer_;
+    bool is_scrollable_container_;
+    ecs::EntityId belongs_to_scrollable_container_;
+
     client_cssom::ComputedStyle style_;
     std::optional<client_layout::Fragment> last_fragment_;
     WebContentStyle content_style_;
@@ -530,6 +560,13 @@ namespace builtin_scene
       void drawImage(SkCanvas *,
                      const sk_sp<SkImage> &,
                      const SkRect &positioningArea,
+                     const SkPaint &,
+                     const client_cssom::ComputedStyle &);
+      // Draw the image with separate positioning and repeatable areas.
+      void drawImage(SkCanvas *,
+                     const sk_sp<SkImage> &,
+                     const SkRect &positioningArea,
+                     const SkRect &repeatableArea,
                      const SkPaint &,
                      const client_cssom::ComputedStyle &);
     };

@@ -91,6 +91,8 @@ createScene(engine).then(scene => {
       }
     }
   }
+  console.log("Instances created");
+
 }).catch(err => {
   console.error(err);
 });

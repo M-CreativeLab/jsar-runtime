@@ -1,15 +1,18 @@
 #include <iostream>
+#include <crates/bindings.hpp>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
-#include <crates/bindings.hpp>
+#include <client/html/html_meta_element.hpp>
+#include <client/cssom/selectors/css_selector_parser.hpp>
+#include <client/cssom/selectors/matching.hpp>
 
 #include "./node_list-inl.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
+#include "./comment.hpp"
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
-#include "../cssom/selectors/matching.hpp"
 
 namespace dom
 {
@@ -53,7 +56,12 @@ namespace dom
     {
       baseURI = "about:blank";
       loadSource = false;
+      cerr << "Warning: The URL is not a valid HTTP or file URL, using about:blank instead." << endl;
+      cerr << "The URL: " << url << endl;
     }
+
+    // Set the document URI from the Node interface.
+    document_uri_ = baseURI;
 
     if (loadSource)
       browsingContext->fetchTextSourceResource(url, [this](const string &source)
@@ -232,9 +240,24 @@ namespace dom
     return make_shared<DocumentFragment>(getPtr<Document>());
   }
 
+  std::shared_ptr<Element> Document::createElement(const string &localName)
+  {
+    return createElementNS("http://www.w3.org/1999/xhtml", localName);
+  }
+
+  std::shared_ptr<Element> Document::createElementNS(const string &namespaceURI, const string &qualifiedName)
+  {
+    return Element::CreateElement(namespaceURI, qualifiedName, getPtr<Document>(), true);
+  }
+
   std::shared_ptr<Text> Document::createTextNode(const string &data)
   {
     return make_shared<Text>(data, getPtr<Document>());
+  }
+
+  std::shared_ptr<Comment> Document::createComment(const string &data)
+  {
+    return make_shared<Comment>(data, getPtr<Document>());
   }
 
   std::shared_ptr<Node> Document::importNode(const std::shared_ptr<Node> node, bool deep)
@@ -299,7 +322,7 @@ namespace dom
 
   shared_ptr<Element> Document::querySelector(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
@@ -316,7 +339,7 @@ namespace dom
 
   NodeList<Element> Document::querySelectorAll(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
@@ -335,7 +358,6 @@ namespace dom
   void Document::appendStyleSheet(shared_ptr<client_cssom::CSSStyleSheet> sheet)
   {
     stylesheets_.push_back(sheet);
-    style_cache_.invalidateCache();
     onStyleSheetsDidChange();
   }
 
@@ -383,6 +405,13 @@ namespace dom
       // Add the element to the element map by id
       if (!element->id.empty())
         element_map_by_id_[element->id] = element;
+
+      // Check if this is a viewport meta element and apply it
+      auto meta_element = std::dynamic_pointer_cast<HTMLMetaElement>(element);
+      if (meta_element && meta_element->isViewportMeta())
+      {
+        onViewportMetaChanged(meta_element);
+      }
     }
 
     if (recursive)
@@ -572,7 +601,17 @@ namespace dom
           return;
         }
 
-        // TODO: Support Comment, ProcessingInstruction and DocumentType.
+        if (Node::Is<Comment>(node))
+        {
+          auto &comment = Node::AsChecked<Comment>(node);
+          s.append("<!--");
+          s.append(comment.data());
+          s.append("-->");
+          isElementNode = false;
+          return;
+        }
+
+        // TODO: Support ProcessingInstruction and DocumentType.
         isElementNode = false;
       };
 
@@ -642,6 +681,12 @@ namespace dom
   {
   }
 
+  void HTMLDocument::invalidateDocumentCache()
+  {
+    styleCache().invalidateCache();
+    dirty_root_text_or_element_ = documentElement();
+  }
+
   std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const
   {
     auto layoutBox = layoutView();
@@ -692,14 +737,51 @@ namespace dom
     invalidateDocumentCache();
   }
 
-  void HTMLDocument::simulateScrollWithOffset(float offsetX, float offsetY)
+  bool HTMLDocument::simulateScrollWithOffset(float offsetX, float offsetY)
   {
     auto layoutBox = layoutView();
     assert(layoutBox != nullptr && "The layout box is not set.");
     if (offsetX == 0 && offsetY == 0)
+      return false;
+
+    bool scrolled = layoutBox->scrollBy(glm::vec3(offsetX, offsetY, 0));
+    if (scrolled)
+    {
+      // TODO(yorkie): no need to invalidate the document cache on scroll, will optimize later that only invalidate
+      // the cache for the affected elements.
+      invalidateDocumentCache();
+
+      // Throttle scroll events for better performance
+      if (!shouldThrottleScrollEvent())
+      {
+        // Dispatch the scroll event.
+        last_scroll_event_time_ = std::chrono::steady_clock::now();
+        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      }
+    }
+    return scrolled;
+  }
+
+  bool HTMLDocument::shouldThrottleScrollEvent() const
+  {
+    auto now = std::chrono::steady_clock::now();
+    return (now - last_scroll_event_time_) < scroll_throttle_duration_;
+  }
+
+  void Document::onViewportMetaChanged(std::shared_ptr<dom::HTMLMetaElement> meta_element)
+  {
+    if (!meta_element || !meta_element->isViewportMeta())
       return;
 
-    layoutBox->scrollBy(glm::vec3(offsetX, offsetY, 0));
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    auto viewport_meta = meta_element->parseViewportMeta();
+    if (!viewport_meta)
+      return;
+
+    // Apply viewport settings to the window
+    auto window = defaultView();
+    if (window)
+    {
+      window->applyViewportMeta(*viewport_meta);
+    }
   }
 }

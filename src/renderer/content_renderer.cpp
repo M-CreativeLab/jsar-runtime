@@ -524,14 +524,14 @@ namespace renderer
           // FIXME(yorkie): this will move the command buffers to the backup frame.
           frame->moveCommandBuffersTo(*stereoFrameForBackup);
 #ifdef TR_RENDERER_ENABLE_VERBOSE
-          DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is idempotent, the backup frame is copied.", id);
+          DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is idempotent, the backup frame is copied.", contentId);
 #endif
         }
         else
         {
           stereoFrameForBackup->clearCommandBuffers();
 #ifdef TR_RENDERER_ENABLE_VERBOSE
-          DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is not idempotent, the backup frame is cleared.", id);
+          DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is not idempotent, the backup frame is cleared.", contentId);
 #endif
         }
       }

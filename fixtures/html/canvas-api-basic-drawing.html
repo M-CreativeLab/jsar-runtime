@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API: Basic Drawing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      background-color: white;
+      margin: 10px;
+      display: block;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .test-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API: Basic Drawing Operations</h1>
+  <p class="description">Tests basic Canvas 2D drawing operations: fillRect, strokeRect, clearRect</p>
+
+  <div class="test-section">
+    <div class="test-title">1. fillRect() - Filled rectangles with different colors</div>
+    <canvas id="fillRectCanvas" width="400" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">2. strokeRect() - Outlined rectangles with different line styles</div>
+    <canvas id="strokeRectCanvas" width="400" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">3. clearRect() - Clearing portions of the canvas</div>
+    <canvas id="clearRectCanvas" width="400" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">4. Combined operations - fillRect + strokeRect + clearRect</div>
+    <canvas id="combinedCanvas" width="400" height="200"></canvas>
+  </div>
+
+  <script>
+    // Test 1: fillRect() with different colors and alpha values
+    function testFillRect() {
+      const canvas = document.getElementById('fillRectCanvas');
+      const ctx = canvas.getContext('2d');
+
+      console.log('Testing fillRect operations...');
+
+      // Red rectangle
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(20, 20, 80, 60);
+
+      // Green rectangle with alpha
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+      ctx.fillRect(120, 20, 80, 60);
+
+      // Blue rectangle
+      ctx.fillStyle = '#0000ff';
+      ctx.fillRect(220, 20, 80, 60);
+
+      // Purple rectangle overlapping
+      ctx.fillStyle = 'rgba(128, 0, 128, 0.5)';
+      ctx.fillRect(60, 50, 80, 60);
+
+      console.log('fillRect test completed');
+    }
+
+    // Test 2: strokeRect() with different line styles
+    function testStrokeRect() {
+      const canvas = document.getElementById('strokeRectCanvas');
+      const ctx = canvas.getContext('2d');
+
+      console.log('Testing strokeRect operations...');
+
+      // Default stroke
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(20, 20, 80, 60);
+
+      // Thick red stroke
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(120, 20, 80, 60);
+
+      // Dashed blue stroke
+      ctx.strokeStyle = '#0000ff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(220, 20, 80, 60);
+
+      // Reset line dash and draw green outline
+      ctx.setLineDash([]);
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(320, 20, 60, 60);
+
+      console.log('strokeRect test completed');
+    }
+
+    // Test 3: clearRect() operations
+    function testClearRect() {
+      const canvas = document.getElementById('clearRectCanvas');
+      const ctx = canvas.getContext('2d');
+
+      console.log('Testing clearRect operations...');
+
+      // Fill entire canvas with background color
+      ctx.fillStyle = '#ffdddd';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw some shapes
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(50, 30, 100, 80);
+      ctx.fillStyle = '#0000ff';
+      ctx.fillRect(200, 30, 100, 80);
+
+      // Clear rectangular areas
+      ctx.clearRect(75, 50, 50, 40);  // Clear hole in red rectangle
+      ctx.clearRect(225, 50, 50, 40); // Clear hole in blue rectangle
+      ctx.clearRect(150, 60, 50, 20); // Clear area between rectangles
+
+      console.log('clearRect test completed');
+    }
+
+    // Test 4: Combined operations
+    function testCombinedOperations() {
+      const canvas = document.getElementById('combinedCanvas');
+      const ctx = canvas.getContext('2d');
+
+      console.log('Testing combined drawing operations...');
+
+      // Create a pattern with filled rectangles
+      ctx.fillStyle = '#ffcccc';
+      ctx.fillRect(20, 20, 120, 80);
+
+      ctx.fillStyle = '#ccffcc';
+      ctx.fillRect(160, 20, 120, 80);
+
+      ctx.fillStyle = '#ccccff';
+      ctx.fillRect(300, 20, 80, 80);
+
+      // Add stroke outlines
+      ctx.strokeStyle = '#333333';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 20, 120, 80);
+      ctx.strokeRect(160, 20, 120, 80);
+      ctx.strokeRect(300, 20, 80, 80);
+
+      // Clear some areas to create windows
+      ctx.clearRect(40, 40, 30, 30);
+      ctx.clearRect(110, 40, 30, 30);
+      ctx.clearRect(180, 40, 30, 30);
+      ctx.clearRect(230, 40, 30, 30);
+      ctx.clearRect(320, 40, 40, 40);
+
+      // Add decorative borders around cleared areas
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(39, 39, 32, 32);
+      ctx.strokeRect(109, 39, 32, 32);
+      ctx.strokeRect(179, 39, 32, 32);
+      ctx.strokeRect(229, 39, 32, 32);
+      ctx.strokeRect(319, 39, 42, 42);
+
+      console.log('Combined operations test completed');
+    }
+
+    // Run all tests
+    function runAllTests() {
+      console.log('Starting Canvas API basic drawing tests...');
+
+      try {
+        testFillRect();
+        testStrokeRect();
+        testClearRect();
+        testCombinedOperations();
+
+        console.log('All basic drawing tests completed successfully!');
+      } catch (error) {
+        console.error('Error during basic drawing tests:', error);
+      }
+    }
+
+    // Run tests when page loads
+    runAllTests();
+  </script>
+
+</body>
+
+</html>

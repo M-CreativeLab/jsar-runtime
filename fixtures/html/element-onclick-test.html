@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>OnClick Handler Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: antiquewhite;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #f0e68c;
+    }
+    
+    .test-section {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .results {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-top: 20px;
+      min-height: 200px;
+    }
+    
+    .log-entry {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    .log-entry.success {
+      color: green;
+    }
+    
+    .log-entry.info {
+      color: blue;
+    }
+    
+    .log-entry.error {
+      color: red;
+    }
+    
+    .status {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    
+    .test-button-clicked {
+      background-color: #90EE90 !important;
+      animation: flash 0.5s;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>OnClick Handler Test</h1>
+
+  <div class="test-section">
+    <h2>Interactive Tests</h2>
+    <p>Click the buttons below to test onclick handlers:</p>
+
+    <!-- Test inline onclick attribute -->
+    <button id="btn1" onclick="logEvent('btn1', 'Inline onclick attribute handler executed', event)">
+      Click me (inline handler)
+    </button>
+
+    <!-- Test property assignment -->
+    <button id="btn2">
+      Click me (property handler)
+    </button>
+
+    <!-- Test both attribute and property -->
+    <button id="btn3" onclick="logEvent('btn3', 'Inline handler (should be overridden)', event)">
+      Click me (both handlers)
+    </button>
+
+    <button id="runAllTests" onclick="runAutomatedTests()" style="background-color: #87CEEB;">
+      Run Automated Tests
+    </button>
+  </div>
+
+  <div class="test-section">
+    <h2>Test Results</h2>
+    <div id="results" class="results">
+      <div class="status" id="status">Ready to test...</div>
+    </div>
+  </div>
+
+  <script>
+    let testCount = 0;
+    let passedTests = 0;
+    let failedTests = 0;
+
+    function addLog(message, type = 'info') {
+      const resultsDiv = document.getElementById('results');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${type}`;
+      logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      resultsDiv.appendChild(logEntry);
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+      
+      // Also log to console for debugging
+      console.log(message);
+    }
+
+    function updateStatus() {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = `Tests: ${testCount} | Passed: ${passedTests} | Failed: ${failedTests}`;
+    }
+
+    function logEvent(name, message, event) {
+      console.info('event=', event, event instanceof PointerEvent, event.type);
+      console.info(String(event.__proto__.__proto__.constructor));
+      addLog(`✅ SUCCESS: ${name} - ${message}`, 'success');
+      
+      // Visual feedback
+      const button = document.getElementById(name);
+      if (button) {
+        button.classList.add('test-button-clicked');
+        setTimeout(() => button.classList.remove('test-button-clicked'), 1000);
+      }
+      
+      passedTests++;
+      updateStatus();
+    }
+
+    function runTest(testName, testFunction) {
+      testCount++;
+      addLog(`🔍 RUNNING: ${testName}`, 'info');
+      
+      try {
+        testFunction();
+        addLog(`✅ PASSED: ${testName}`, 'success');
+        passedTests++;
+      } catch (error) {
+        addLog(`❌ FAILED: ${testName} - ${error.message}`, 'error');
+        failedTests++;
+      }
+      
+      updateStatus();
+    }
+
+    function runAutomatedTests() {
+      // Clear previous results
+      document.getElementById('results').innerHTML = '<div class="status" id="status">Running tests...</div>';
+      testCount = 0;
+      passedTests = 0;
+      failedTests = 0;
+
+      addLog('🚀 Starting OnClick Handler Tests...', 'info');
+
+      // Test 1: Property assignment
+      runTest('Property Assignment', () => {
+        const btn2 = document.getElementById('btn2');
+        if (!btn2) throw new Error('Button 2 not found');
+        
+        btn2.onclick = function() { logEvent('btn2', 'Property assignment handler executed'); };
+        addLog('✓ Set btn2.onclick property', 'info');
+        
+        if (typeof btn2.onclick !== 'function') {
+          throw new Error('onclick property should be a function');
+        }
+      });
+
+      // Test 2: Property override attribute
+      runTest('Property Override Attribute', () => {
+        const btn3 = document.getElementById('btn3');
+        if (!btn3) throw new Error('Button 3 not found');
+        
+        btn3.onclick = function() { logEvent('btn3', 'Property handler executed (overrode attribute)'); };
+        addLog('✓ Set btn3.onclick property to override attribute', 'info');
+        
+        if (typeof btn3.onclick !== 'function') {
+          throw new Error('onclick property should be a function');
+        }
+      });
+
+      // Test 3: Getter verification
+      runTest('Onclick Getter Verification', () => {
+        const btn1 = document.getElementById('btn1');
+        const btn2 = document.getElementById('btn2');
+        const btn3 = document.getElementById('btn3');
+
+        if (btn1) {
+          addLog(`✓ btn1.onclick type: ${typeof btn1.onclick}`, 'info');
+        }
+        if (btn2) {
+          addLog(`✓ btn2.onclick type: ${typeof btn2.onclick}`, 'info');
+        }
+        if (btn3) {
+          addLog(`✓ btn3.onclick type: ${typeof btn3.onclick}`, 'info');
+        }
+      });
+
+      // Test 4: Programmatic clicks
+      setTimeout(() => {
+        addLog('🖱️ Testing programmatic clicks...', 'info');
+
+        runTest('Programmatic Click - Button 1', () => {
+          const btn1 = document.getElementById('btn1');
+          if (!btn1) throw new Error('Button 1 not found');
+          
+          addLog('🖱️ Clicking btn1 programmatically...', 'info');
+          btn1.click();
+        });
+
+        setTimeout(() => {
+          runTest('Programmatic Click - Button 2', () => {
+            const btn2 = document.getElementById('btn2');
+            if (!btn2) throw new Error('Button 2 not found');
+            
+            addLog('🖱️ Clicking btn2 programmatically...', 'info');
+            btn2.click();
+          });
+        }, 500);
+
+        setTimeout(() => {
+          runTest('Programmatic Click - Button 3', () => {
+            const btn3 = document.getElementById('btn3');
+            if (!btn3) throw new Error('Button 3 not found');
+            
+            addLog('🖱️ Clicking btn3 programmatically...', 'info');
+            btn3.click();
+          });
+
+          setTimeout(() => {
+            addLog('🎉 OnClick Handler Tests Completed!', 'success');
+            updateStatus();
+          }, 500);
+        }, 1000);
+      }, 1000);
+    }
+
+    // Initialize the test page
+    document.addEventListener('load', () => {
+      addLog('📄 Page loaded successfully', 'info');
+      addLog('👆 Click buttons above to test onclick handlers', 'info');
+      addLog('🤖 Or click "Run Automated Tests" for comprehensive testing', 'info');
+      updateStatus();
+    });
+  </script>
+</body>
+
+</html>

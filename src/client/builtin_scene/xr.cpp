@@ -45,10 +45,7 @@ namespace builtin_scene
   shared_ptr<XRSession> WebXRExperience::requestSession()
   {
     assert(session_ == nullptr && "WebXRExperience: Session already created");
-
-    auto eventloop = TrClientContextPerProcess::Get()->getScriptingEventLoop();
-    auto xrSystem = client_->getXRSystem(eventloop);
-    session_ = xrSystem->requestSession();
+    session_ = client_->getXRSystem()->requestSession();
 
     // Add event listeners for actions
     auto callback = [this](dom::DOMEventType type, shared_ptr<dom::Event> event)

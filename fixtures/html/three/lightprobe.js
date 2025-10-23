@@ -85,7 +85,7 @@ init(() => {
       console.info(geometry, material);
 
       // mesh
-      mesh = new THREE.Mesh(geometry, material);
+      const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(0, 0, -15);
       scene.add(mesh);
 

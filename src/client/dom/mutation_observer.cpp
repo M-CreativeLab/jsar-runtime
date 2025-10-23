@@ -60,8 +60,19 @@ namespace dom
     return targetRef.get() == node.get();
   }
 
+  bool MutationRecord::hasTarget() const
+  {
+    return !target.expired();
+  }
+
+  shared_ptr<Node> MutationRecord::getTarget() const
+  {
+    return target.lock();
+  }
+
   MutationObserver::MutationObserver(MutationCallback callback)
-      : callback_(callback)
+      : scripting_base::JSObjectHolder()
+      , callback_(callback)
   {
   }
 

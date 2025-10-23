@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Position Absolute Test - Nested Positioning Context</title>
+  <style>
+    :root {
+      --container-width: 500px;
+    }
+
+    body {
+      background-color: #fff;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      width: 100%;
+    }
+
+    h3 {
+      font-size: 30px;
+    }
+
+    .container {
+      position: relative;
+      width: var(--container-width);
+      height: 200px;
+      background-color: lightblue;
+      border: 2px solid blue;
+      margin: 20px;
+    }
+
+    .static-container {
+      position: static;
+      width: var(--container-width);
+      height: 200px;
+      background-color: lightgray;
+      border: 2px solid gray;
+      margin: 20px;
+    }
+
+    .nested-element {
+      width: 400px;
+      height: 50px;
+      background-color: yellow;
+      border: 1px solid orange;
+      margin: 10px;
+    }
+
+    .absolute-child {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 80px;
+      height: 40px;
+      background-color: red;
+      color: white;
+      text-align: center;
+      line-height: 1;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    .description {
+      margin: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-left: 4px solid #333;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Position Absolute Test</h1>
+
+  <div class="description">
+    <strong>Expected Behavior:</strong> The red "ABS" boxes should be positioned relative to their nearest positioned
+    ancestor:
+    <ul>
+      <li>In the <span style="color: blue;">blue container</span> (position: relative), the red box should appear in the
+        top-right corner of the blue area.</li>
+      <li>In the <span style="color: gray;">gray container</span> (position: static), the red box should be positioned
+        relative to the viewport/page, not the gray container.</li>
+    </ul>
+  </div>
+
+  <!-- Container with position: relative - should contain the absolutely positioned child -->
+  <div class="container">
+    <h3>Container with position: relative</h3>
+    <div class="nested-element">Nested element</div>
+    <div class="absolute-child">ABS</div>
+  </div>
+
+  <!-- Container with position: static - should NOT contain the absolutely positioned child -->
+  <div class="static-container">
+    <h3>Container with position: static</h3>
+    <div class="nested-element">Nested element</div>
+    <div class="absolute-child">ABS</div>
+  </div>
+
+  <!-- Nested positioning context example -->
+  <div class="container">
+    <h3>Nested positioning context</h3>
+    <div style="position: relative; background-color: lightgreen; padding: 20px; margin: 10px;">
+      <div class="nested-element">Inner container (position: relative)</div>
+      <div class="absolute-child">ABS</div>
+    </div>
+  </div>
+
+  <div class="description">
+    <strong>Technical Details:</strong> This test validates that the layout engine correctly implements CSS absolute
+    positioning by finding the nearest positioned ancestor (position: relative, absolute, fixed, or sticky) as the
+    containing block, rather than always using the page/viewport as the reference.
+  </div>
+</body>
+
+</html>

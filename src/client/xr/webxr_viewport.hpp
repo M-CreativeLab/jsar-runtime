@@ -1,8 +1,13 @@
 #pragma once
 
-#include "xr/viewport.hpp"
+#include <client/scripting_base/v8_object_holder.hpp>
+#include <xr/viewport.hpp>
 
 namespace client_xr
 {
-  using XRViewport = xr::Viewport;
+  class XRViewport : public xr::Viewport,
+                     public scripting_base::JSObjectHolder
+  {
+    using xr::Viewport::Viewport;
+  };
 }

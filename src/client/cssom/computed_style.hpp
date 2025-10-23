@@ -1,15 +1,19 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include <optional>
 #include <crates/bindings.hpp>
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/computed/classes.hpp>
+#include <client/cssom/values/computed/filter.hpp>
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
+#include "./variable_reference_tracker.hpp"
 
 namespace client_cssom
 {
@@ -41,6 +45,10 @@ namespace client_cssom
     static Difference ComputeDifference(const ComputedStyle &old_style, const ComputedStyle &new_style);
     static bool IsInheritedProperty(const std::string property)
     {
+      // CSS custom properties always inherit by default
+      if (property.length() >= 2 && property.substr(0, 2) == "--")
+        return true;
+
       static const std::unordered_set<std::string> inherited_properties = {
         "font-size",
         "font-weight",
@@ -320,9 +328,15 @@ namespace client_cssom
     {
       return !position_type_.isStatic();
     }
-    inline int zIndex() const
+    inline bool hasZIndex() const
     {
-      return z_index_;
+      return bitfields_.HasZIndex();
+    }
+    inline std::optional<int> zIndex() const
+    {
+      return bitfields_.HasZIndex()
+               ? std::make_optional(z_index_)
+               : std::nullopt;
     }
 
     inline Visibility visibility() const
@@ -362,6 +376,10 @@ namespace client_cssom
     inline const values::computed::Direction &textDirection() const
     {
       return text_direction_;
+    }
+    inline const values::computed::VerticalAlign &verticalAlign() const
+    {
+      return vertical_align_;
     }
 
     inline const values::computed::Color &color() const
@@ -408,6 +426,14 @@ namespace client_cssom
     {
       return background_repeat_;
     }
+    inline const values::computed::BackgroundSize &backgroundSize() const
+    {
+      return background_size_;
+    }
+    inline const values::computed::BackgroundPosition &backgroundPosition() const
+    {
+      return background_position_;
+    }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -428,6 +454,20 @@ namespace client_cssom
     inline const size_t applyTransformTo(glm::mat4 &matrix) const
     {
       return transform_.applyTo(matrix);
+    }
+    inline const size_t applyTransformTo(glm::mat4 &matrix, const glm::vec2 &elementSize) const
+    {
+      return transform_.applyTo(matrix, elementSize);
+    }
+
+    // Visual Effects
+    inline const values::computed::Filter &filter() const
+    {
+      return filter_;
+    }
+    inline const values::computed::Filter &backdropFilter() const
+    {
+      return backdrop_filter_;
     }
 
     // Transitions and animations
@@ -465,6 +505,12 @@ namespace client_cssom
     {
       return !transition_properties_.empty();
     }
+
+    void setCustomProperty(const std::string &name, const std::string &value);
+    std::string getCustomProperty(const std::string &name) const;
+    bool hasCustomProperty(const std::string &name) const;
+    void inheritCustomProperties(const ComputedStyle &parentStyle);
+    std::string resolveVariables(const std::string &value, const values::computed::Context &context) const;
 
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
@@ -533,6 +579,7 @@ namespace client_cssom
     // Text
     values::computed::TextAlign text_align_;
     values::computed::Direction text_direction_;
+    values::computed::VerticalAlign vertical_align_;
 
     // Colors
     values::computed::Color color_ = values::computed::Color::Black();
@@ -544,9 +591,15 @@ namespace client_cssom
     values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
     values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
     values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
+    values::computed::BackgroundSize background_size_ = values::computed::BackgroundSize::Auto();
+    values::computed::BackgroundPosition background_position_ = values::computed::BackgroundPosition::Default();
 
     // 3D Transforms
     values::computed::Transform transform_;
+
+    // Visual Effects
+    values::computed::Filter filter_ = values::computed::Filter::None();
+    values::computed::Filter backdrop_filter_ = values::computed::Filter::None();
 
     // Transitions and animations
     std::vector<values::computed::TransitionProperty> transition_properties_;
@@ -586,10 +639,17 @@ private:                                                \
       ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
       ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
       ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
+      ADD_BOOLEAN_BITFIELD(has_z_index_, HasZIndex);
       ADD_BOOLEAN_BITFIELD(has_transform_, HasTransform);
     };
 #undef ADD_BOOLEAN_BITFIELD
 
     ComputedStyleBitfields bitfields_;
+
+    // CSS Custom Properties (CSS Variables) support
+    std::unordered_map<std::string, std::string> custom_properties_;
+
+    // Variable dependency tracking
+    VariableReferenceTracker variable_tracker_;
   };
 }

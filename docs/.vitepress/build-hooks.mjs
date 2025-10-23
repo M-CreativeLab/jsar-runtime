@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { mergeCompatibilityData } from './merge-compat-data.mjs';
 import { copyChangelogs, copyBrowserCompatData, copyInspector, copyStaticAssets } from './copy-changelogs.mjs';
+import { generateFixturesData } from './generate-fixtures-data.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,9 @@ export const buildStart = () => {
   try {
     // Merge browser compatibility data
     mergeCompatibilityData();
+
+    // Generate fixtures data
+    generateFixturesData();
 
     // Copy changelogs files
     copyChangelogs();

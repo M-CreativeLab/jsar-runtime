@@ -2,18 +2,21 @@
 
 #include <vector>
 #include <memory>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "./common.hpp"
 
 namespace client_xr
 {
+
   /**
    * The `XRHand` interface is pair iterator with the key being the hand joints and the value being an `XRJointSpace`.
    */
-  class XRHand : public std::vector<std::shared_ptr<XRJointSpace>>
+  class XRHand : public std::vector<std::shared_ptr<XRJointSpace>>,
+                 public scripting_base::JSObjectHolder
   {
   public:
-    XRHand(std::shared_ptr<XRInputSource> inputSource);
-    XRHand(XRHand &that);
+    XRHand(std::shared_ptr<XRInputSource> inputSource = nullptr);
+    XRHand(const XRHand &that);
 
   public:
     /**
@@ -33,7 +36,7 @@ namespace client_xr
     /**
      * @returns an array with all the hand joint keys.
      */
-    inline std::vector<std::string> keys();
+    std::vector<std::string> keys();
     /**
      * @returns an array with all the `XRJointSpace` values.
      */

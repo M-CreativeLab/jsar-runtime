@@ -90,8 +90,6 @@ namespace client_layout
     virtual glm::vec3 size() const;
 
     // Returns the front face plane of the box in world space.
-    math3d::TrPlane physicalBorderBoxFront() const;
-    geometry::BoundingBox physicalBorderBoxRect() const;
     geometry::Rect<float> physicalPaddingBoxRect() const
     {
       return geometry::Rect<float>(clientLeft(),
@@ -111,8 +109,6 @@ namespace client_layout
     // (e.g. direction:rtl) or or bottom-to-top (e.g. direction:rtl writing-mode:vertical-rl).
     virtual bool hasTopOverflow() const;
     virtual bool hasLeftOverflow() const;
-
-    virtual void updateAfterLayout();
 
     // Sets the scrollable-overflow from the current set of layout-results.
     void setScrollableOverflowFromLayoutResults();
@@ -176,8 +172,8 @@ namespace client_layout
       return hasScrollableOverflowX() || hasScrollableOverflowY();
     }
     virtual void autoScroll(const glm::vec3 &offset);
-    void scrollTo(const glm::vec3 &offset);
-    void scrollBy(const glm::vec3 &offset);
+    bool scrollTo(const glm::vec3 &offset);
+    bool scrollBy(const glm::vec3 &offset);
     bool scrollsOverflow() const;
 
     bool hasScrollableOverflowX() const
@@ -202,8 +198,9 @@ namespace client_layout
 
   protected:
     virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
+    virtual void didComputeLayout(const ConstraintSpace &) override;
+    virtual void didComputeLayoutOnce(const ConstraintSpace &) override;
 
-    bool computeLayout(const ConstraintSpace &) override;
     void updateFromStyle() override;
 
   private:
@@ -217,8 +214,15 @@ namespace client_layout
     {
       return overflow_ != nullptr && overflow_->visualOverflow;
     }
+    inline const std::vector<geometry::BoundingBox> &getHitTestableBoundingBoxes() const
+    {
+      return hit_testable_bounding_boxes_;
+    }
+    void updateHitTestableBoundingBoxes();
 
     glm::vec3 computeSize() const;
+    vector<std::shared_ptr<LayoutBox>> getChildBoxes() const;
+
     void invalidateCachedGeometry();
 
   protected:
@@ -226,5 +230,6 @@ namespace client_layout
 
   private:
     std::shared_ptr<BoxOverflowModel> overflow_;
+    std::vector<geometry::BoundingBox> hit_testable_bounding_boxes_;
   };
 }

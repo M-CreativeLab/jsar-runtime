@@ -2,10 +2,8 @@ import minimist from 'minimist';
 import * as env from '@transmute/env';
 import { reportDocumentEvent, addDocumentRequestListener } from '@transmute/messaging';
 
-import * as Navigator from './navigator';
 import { connectRenderer } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
-import { getXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 
 const bootstrapStarted = performance.now();
@@ -52,22 +50,17 @@ function bootwait(fn: () => void) {
 bootwait(async function main() {
   try {
     const runtimeStarted = performance.now();
-    const clientContext = env.getClientContext();
     env.printSummary();
 
-    if (!connectRenderer(clientContext)) {
+    if (!connectRenderer()) {
       throw new Error('failed to connect to the renderer.');
     }
-    Navigator.configureXRSystem(getXRSystem());
-
-    const gl = env.getHostWebGLRenderingContext();
-    Navigator.configureGL(gl);
     reportDocumentEvent(id, 'beforeloading');
 
     /**
      * Create the runtime.
      */
-    const runtime = new TransmuteRuntime2(gl, id);
+    const runtime = new TransmuteRuntime2(id);
     const initializedEnded = performance.now();
     console.info('Time summary:', {
       bootstrap: runtimeStarted - bootstrapStarted,

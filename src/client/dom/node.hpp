@@ -136,7 +136,7 @@ namespace dom
      * @param aChild The child node to remove.
      * @returns The removed child node.
      */
-    void removeChild(std::shared_ptr<Node> aChild);
+    std::shared_ptr<Node> removeChild(std::shared_ptr<Node> aChild);
     /**
      * Replace a child node with a new child node.
      *
@@ -297,6 +297,26 @@ namespace dom
     {
       return false;
     }
+    virtual bool isComment() const
+    {
+      return false;
+    }
+    virtual bool isHTMLHeadElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLBodyElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLScriptElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLStyleElement() const
+    {
+      return false;
+    }
     virtual bool isHTMLMeshElement() const
     {
       return false;
@@ -313,10 +333,8 @@ namespace dom
     }
 
     // The render queue of this node.
-    virtual builtin_scene::RenderQueue getRenderQueue() const
-    {
-      return builtin_scene::RenderQueue(depth());
-    }
+    builtin_scene::RenderQueue getRenderQueue(bool forceCompute = false) const;
+    virtual builtin_scene::RenderQueue computeRenderQueue() const;
 
     /**
      * Set the node value.
@@ -338,7 +356,6 @@ namespace dom
      */
     virtual bool enableCustomGeometry() const
     {
-      // TODO: Implement custom geometry node, such as `HTMLCubeElement`, `HTMLPlaneElement`, etc.
       return isHTMLMeshElement();
     }
 
@@ -622,6 +639,7 @@ namespace dom
     std::string nodeValue_;
     // If this node could be rendered, `false` by default.
     std::optional<bool> renderable = std::nullopt;
+    mutable std::optional<builtin_scene::RenderQueue> renderQueue_;
     // The mutation observers of this node.
     std::vector<std::shared_ptr<MutationObserver>> mutationObservers;
 

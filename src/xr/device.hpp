@@ -105,7 +105,8 @@ namespace xr
     /**
      * @returns the mode for stereo rendering.
      */
-    TrStereoRenderingMode getStereoRenderingMode();
+    TrStereoRenderingMode getStereoRenderingMode() const;
+    size_t getUsedViewsCount() const;
     /**
      * It creates a new stereo rendering frame.
      *
@@ -309,6 +310,10 @@ namespace xr
      * The stereo rendering mode, it affects how to use frame callback and execute frame.
      */
     std::atomic<TrStereoRenderingMode> m_StereoRenderingMode = TrStereoRenderingMode::Unknown;
+    /**
+     * The views count, usually 1 for mono and 2 for stereo.
+     */
+    std::atomic<size_t> m_UsedViewsCount = 2;
     /**
      * The viewport for each view.
      */

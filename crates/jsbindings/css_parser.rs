@@ -958,6 +958,9 @@ pub(crate) mod ffi {
     #[cxx_name = "getStyleRuleSelectors"]
     fn get_style_rule_selectors(rule: &CrateStyleRule) -> Box<PrismSelectorList>;
 
+    #[cxx_name = "getStyleRuleSelectorsText"]
+    fn get_style_rule_selectors_text(rule: &CrateStyleRule) -> String;
+
     /// Returns the property declaration block of the style rule.
     #[cxx_name = "getStyleRuleBlock"]
     fn get_style_rule_block(rule: &CrateStyleRule) -> Box<PropertyDeclarationBlock>;
@@ -1429,6 +1432,10 @@ fn get_media_rule_impl(rule: &CrateCssRule) -> Result<Box<CrateMediaRule>, Strin
 
 fn get_style_rule_selectors(rule: &CrateStyleRule) -> Box<PrismSelectorList> {
   Box::new(rule.selectors.clone())
+}
+
+fn get_style_rule_selectors_text(rule: &CrateStyleRule) -> String {
+  rule.selectors_text.clone()
 }
 
 fn get_style_rule_block(rule: &CrateStyleRule) -> Box<PropertyDeclarationBlock> {

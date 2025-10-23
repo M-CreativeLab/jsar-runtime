@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Rendering Test</title>
+  <style>
+    :root {
+      --primary-color: #333;
+      --secondary-color: #666;
+      --background-color: #fff;
+      --border-color: #ddd;
+      --highlight-color: #007acc;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--primary-color);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section {
+      margin: 40px 0;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--highlight-color);
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--highlight-color);
+      padding-bottom: 5px;
+    }
+
+    .test-item {
+      margin: 15px 0;
+      padding: 10px;
+      border-left: 3px solid var(--highlight-color);
+      background: rgb(251, 255, 14);
+    }
+
+    .test-label {
+      font-size: 12px;
+      color: var(--secondary-color);
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    /* Text Alignment Tests */
+    .align-left { text-align: left; }
+    .align-center { text-align: center; }
+    .align-right { text-align: right; }
+    .align-justify { text-align: justify; }
+    .align-start { text-align: start; }
+    .align-end { text-align: end; }
+    .align-match-parent { text-align: match-parent; }
+
+    /* Line Height Tests */
+    .line-height-normal { line-height: normal; }
+    .line-height-1 { line-height: 1; }
+    .line-height-1-5 { line-height: 1.5; }
+    .line-height-2 { line-height: 2; }
+    .line-height-30px { line-height: 30px; }
+    .line-height-150percent { line-height: 150%; }
+
+    /* Font Family Tests */
+    .font-serif { font-family: serif; }
+    .font-sans-serif { font-family: sans-serif; }
+    .font-monospace { font-family: monospace; }
+    .font-cursive { font-family: cursive; }
+    .font-fantasy { font-family: fantasy; }
+    .font-arial { font-family: Arial, sans-serif; }
+    .font-times { font-family: 'Times New Roman', serif; }
+    .font-courier { font-family: 'Courier New', monospace; }
+
+    /* Font Size Tests */
+    .font-size-12px { font-size: 12px; }
+    .font-size-16px { font-size: 16px; }
+    .font-size-20px { font-size: 20px; }
+    .font-size-24px { font-size: 24px; }
+    .font-size-32px { font-size: 32px; }
+    .font-size-1em { font-size: 1em; }
+    .font-size-1-5em { font-size: 1.5em; }
+    .font-size-2em { font-size: 2em; }
+    .font-size-100percent { font-size: 100%; }
+    .font-size-120percent { font-size: 120%; }
+
+    /* Font Weight Tests */
+    .font-weight-normal { font-weight: normal; }
+    .font-weight-bold { font-weight: bold; }
+    .font-weight-lighter { font-weight: lighter; }
+    .font-weight-bolder { font-weight: bolder; }
+    .font-weight-100 { font-weight: 100; }
+    .font-weight-300 { font-weight: 300; }
+    .font-weight-400 { font-weight: 400; }
+    .font-weight-500 { font-weight: 500; }
+    .font-weight-700 { font-weight: 700; }
+    .font-weight-900 { font-weight: 900; }
+
+    /* Font Style Tests */
+    /* .font-style-normal { font-style: normal; }
+    .font-style-italic { font-style: italic; }
+    .font-style-oblique { font-style: oblique; } */
+
+    /* Text Decoration Tests */
+    .text-decoration-none { text-decoration: none; }
+    .text-decoration-underline { text-decoration: underline; }
+    .text-decoration-overline { text-decoration: overline; }
+    .text-decoration-line-through { text-decoration: line-through; }
+    .text-decoration-underline-overline { text-decoration: underline overline; }
+
+    /* Text Transform Tests */
+    .text-transform-none { text-transform: none; }
+    .text-transform-uppercase { text-transform: uppercase; }
+    .text-transform-lowercase { text-transform: lowercase; }
+    .text-transform-capitalize { text-transform: capitalize; }
+
+    /* Letter and Word Spacing Tests */
+    .letter-spacing-normal { letter-spacing: normal; }
+    .letter-spacing-1px { letter-spacing: 1px; }
+    .letter-spacing-2px { letter-spacing: 2px; }
+    .letter-spacing-3px { letter-spacing: 3px; }
+    .letter-spacing--1px { letter-spacing: -1px; }
+    .word-spacing-normal { word-spacing: normal; }
+    .word-spacing-5px { word-spacing: 5px; }
+    .word-spacing-10px { word-spacing: 10px; }
+    .word-spacing-15px { word-spacing: 15px; }
+
+    /* White Space Tests */
+    .white-space-normal { white-space: normal; }
+    .white-space-nowrap { white-space: nowrap; }
+    .white-space-pre { white-space: pre; }
+    .white-space-pre-wrap { white-space: pre-wrap; }
+    .white-space-pre-line { white-space: pre-line; }
+
+    /* Text Overflow Tests */
+    .text-overflow-container {
+      width: 200px;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+    .text-overflow-clip { text-overflow: clip; }
+    .text-overflow-ellipsis { 
+      text-overflow: ellipsis; 
+      white-space: nowrap;
+    }
+
+    /* Vertical Alignment Tests */
+    .vertical-align-container {
+      height: 50px;
+      line-height: 50px;
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+    .vertical-align-baseline { vertical-align: baseline; }
+    .vertical-align-top { vertical-align: top; }
+    .vertical-align-middle { vertical-align: middle; }
+    .vertical-align-bottom { vertical-align: bottom; }
+    .vertical-align-super { vertical-align: super; }
+    .vertical-align-sub { vertical-align: sub; }
+
+    /* Complex Text Tests */
+    .mixed-text {
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .text-shadow-test {
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .direction-ltr { direction: ltr; }
+    .direction-rtl { direction: rtl; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1 style="text-align: center; color: var(--highlight-color); margin-bottom: 30px;">
+        文字渲染综合测试页面<br>
+        <small style="font-size: 16px; color: var(--secondary-color);">Comprehensive Text Rendering Test Page</small>
+      </h1>
+    </header>
+
+    <!-- Text Alignment Tests -->
+    <section class="section">
+      <h2 class="section-title">文本对齐测试 - Text Alignment Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: left</div>
+        <p class="align-left">这是左对齐的文本。This is left-aligned text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: center</div>
+        <p class="align-center">这是居中对齐的文本。This is center-aligned text. Lorem ipsum dolor sit amet.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: right</div>
+        <p class="align-right">这是右对齐的文本。This is right-aligned text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: justify</div>
+        <p class="align-justify">这是两端对齐的文本。This is justified text. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: start</div>
+        <p class="align-start">这是起始对齐的文本。This is start-aligned text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: end</div>
+        <p class="align-end">这是结束对齐的文本。This is end-aligned text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-align: match-parent</div>
+        <p class="align-match-parent">这是匹配父元素对齐的文本。This is match-parent aligned text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </div>
+    </section>
+
+    <!-- Line Height Tests -->
+    <section class="section">
+      <h2 class="section-title">行高测试 - Line Height Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">line-height: normal</div>
+        <p class="line-height-normal">行高设置为normal。Line height set to normal.<br>这是第二行文字。This is the second line of text.<br>这是第三行文字。This is the third line of text.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">line-height: 1</div>
+        <p class="line-height-1">行高设置为1。Line height set to 1.<br>这是第二行文字。This is the second line of text.<br>这是第三行文字。This is the third line of text.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">line-height: 1.5</div>
+        <p class="line-height-1-5">行高设置为1.5。Line height set to 1.5.<br>这是第二行文字。This is the second line of text.<br>这是第三行文字。This is the third line of text.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">line-height: 2</div>
+        <p class="line-height-2">行高设置为2。Line height set to 2.<br>这是第二行文字。This is the second line of text.<br>这是第三行文字。This is the third line of text.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">line-height: 30px</div>
+        <p class="line-height-30px">行高设置为30px。Line height set to 30px.<br>这是第二行文字。This is the second line of text.<br>这是第三行文字。This is the third line of text.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">line-height: 150%</div>
+        <p class="line-height-150percent">行高设置为150%。Line height set to 150%.<br>这是第二行文字。This is the second line of text.<br>这是第三行文字。This is the third line of text.</p>
+      </div>
+    </section>
+
+    <!-- Font Family Tests -->
+    <section class="section">
+      <h2 class="section-title">字体族测试 - Font Family Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: serif</div>
+        <p class="font-serif">这是衬线字体。This is serif font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: sans-serif</div>
+        <p class="font-sans-serif">这是无衬线字体。This is sans-serif font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: monospace</div>
+        <p class="font-monospace">这是等宽字体。This is monospace font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: cursive</div>
+        <p class="font-cursive">这是手写字体。This is cursive font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: fantasy</div>
+        <p class="font-fantasy">这是装饰字体。This is fantasy font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: Arial, sans-serif</div>
+        <p class="font-arial">这是Arial字体。This is Arial font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: 'Times New Roman', serif</div>
+        <p class="font-times">这是Times New Roman字体。This is Times New Roman font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-family: 'Courier New', monospace</div>
+        <p class="font-courier">这是Courier New字体。This is Courier New font. 1234567890 !@#$%^&*()_+</p>
+      </div>
+    </section>
+
+    <!-- Font Size Tests -->
+    <section class="section">
+      <h2 class="section-title">字体大小测试 - Font Size Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 12px</div>
+        <p class="font-size-12px">12像素字体大小。12px font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 16px</div>
+        <p class="font-size-16px">16像素字体大小。16px font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 20px</div>
+        <p class="font-size-20px">20像素字体大小。20px font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 24px</div>
+        <p class="font-size-24px">24像素字体大小。24px font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 32px</div>
+        <p class="font-size-32px">32像素字体大小。32px font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 1em</div>
+        <p class="font-size-1em">1em字体大小。1em font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 1.5em</div>
+        <p class="font-size-1-5em">1.5em字体大小。1.5em font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 2em</div>
+        <p class="font-size-2em">2em字体大小。2em font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 100%</div>
+        <p class="font-size-100percent">100%字体大小。100% font size. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-size: 120%</div>
+        <p class="font-size-120percent">120%字体大小。120% font size. Hello World! 你好世界！</p>
+      </div>
+    </section>
+
+    <!-- Font Weight Tests -->
+    <section class="section">
+      <h2 class="section-title">字体粗细测试 - Font Weight Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: normal</div>
+        <p class="font-weight-normal">正常粗细字体。Normal weight font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: bold</div>
+        <p class="font-weight-bold">粗体字体。Bold font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: lighter</div>
+        <p class="font-weight-lighter">更细字体。Lighter font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: bolder</div>
+        <p class="font-weight-bolder">更粗字体。Bolder font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: 100</div>
+        <p class="font-weight-100">100粗细字体。100 weight font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: 300</div>
+        <p class="font-weight-300">300粗细字体。300 weight font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: 400</div>
+        <p class="font-weight-400">400粗细字体。400 weight font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: 500</div>
+        <p class="font-weight-500">500粗细字体。500 weight font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: 700</div>
+        <p class="font-weight-700">700粗细字体。700 weight font. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-weight: 900</div>
+        <p class="font-weight-900">900粗细字体。900 weight font. Hello World! 你好世界！</p>
+      </div>
+    </section>
+
+    <!-- Font Style Tests -->
+    <section class="section">
+      <h2 class="section-title">字体样式测试 - Font Style Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">font-style: normal</div>
+        <p class="font-style-normal">正常字体样式。Normal font style. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-style: italic</div>
+        <p class="font-style-italic">斜体字体样式。Italic font style. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">font-style: oblique</div>
+        <p class="font-style-oblique">倾斜字体样式。Oblique font style. Hello World! 你好世界！</p>
+      </div>
+    </section>
+
+    <!-- Text Decoration Tests -->
+    <section class="section">
+      <h2 class="section-title">文本装饰测试 - Text Decoration Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">text-decoration: none</div>
+        <p class="text-decoration-none">无装饰文本。No decoration text. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-decoration: underline</div>
+        <p class="text-decoration-underline">下划线文本。Underlined text. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-decoration: overline</div>
+        <p class="text-decoration-overline">上划线文本。Overlined text. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-decoration: line-through</div>
+        <p class="text-decoration-line-through">删除线文本。Strike-through text. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-decoration: underline overline</div>
+        <p class="text-decoration-underline-overline">上下划线文本。Underlined and overlined text. Hello World! 你好世界！</p>
+      </div>
+    </section>
+
+    <!-- Text Transform Tests -->
+    <section class="section">
+      <h2 class="section-title">文本转换测试 - Text Transform Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">text-transform: none</div>
+        <p class="text-transform-none">Normal Text Transform. Hello World! Mixed CaSe TeXt.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-transform: uppercase</div>
+        <p class="text-transform-uppercase">Uppercase Text Transform. Hello World! Mixed CaSe TeXt.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-transform: lowercase</div>
+        <p class="text-transform-lowercase">Lowercase Text Transform. Hello World! Mixed CaSe TeXt.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-transform: capitalize</div>
+        <p class="text-transform-capitalize">capitalize text transform. hello world! mixed case text.</p>
+      </div>
+    </section>
+
+    <!-- Letter and Word Spacing Tests -->
+    <section class="section">
+      <h2 class="section-title">字符和单词间距测试 - Letter and Word Spacing Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">letter-spacing: normal</div>
+        <p class="letter-spacing-normal">正常字符间距。Normal letter spacing. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">letter-spacing: 1px</div>
+        <p class="letter-spacing-1px">1像素字符间距。1px letter spacing. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">letter-spacing: 2px</div>
+        <p class="letter-spacing-2px">2像素字符间距。2px letter spacing. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">letter-spacing: 3px</div>
+        <p class="letter-spacing-3px">3像素字符间距。3px letter spacing. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">letter-spacing: -1px</div>
+        <p class="letter-spacing--1px">负1像素字符间距。-1px letter spacing. Hello World! 你好世界！</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">word-spacing: normal</div>
+        <p class="word-spacing-normal">正常单词间距。Normal word spacing. Hello World from JSAR Runtime!</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">word-spacing: 5px</div>
+        <p class="word-spacing-5px">5像素单词间距。5px word spacing. Hello World from JSAR Runtime!</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">word-spacing: 10px</div>
+        <p class="word-spacing-10px">10像素单词间距。10px word spacing. Hello World from JSAR Runtime!</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">word-spacing: 15px</div>
+        <p class="word-spacing-15px">15像素单词间距。15px word spacing. Hello World from JSAR Runtime!</p>
+      </div>
+    </section>
+
+    <!-- White Space Tests -->
+    <section class="section">
+      <h2 class="section-title">空白符处理测试 - White Space Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">white-space: normal</div>
+        <p class="white-space-normal">正常空白符处理。    多个空格    会被压缩成一个。   Normal white space.    Multiple   spaces   will   be   collapsed.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">white-space: nowrap</div>
+        <p class="white-space-nowrap">不换行空白符处理。这行文本很长，但是不会自动换行。No wrap white space. This line is very long but will not wrap automatically.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">white-space: pre</div>
+        <p class="white-space-pre">预格式化空白符处理。    多个空格    和
+换行
+都会保留。   Pre white space.    Multiple   spaces   and
+line breaks
+are preserved.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">white-space: pre-wrap</div>
+        <p class="white-space-pre-wrap">预格式化换行空白符处理。    多个空格    会保留但会自动换行。   Pre-wrap white space.    Multiple   spaces   are   preserved   but   text   will   wrap   normally.</p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">white-space: pre-line</div>
+        <p class="white-space-pre-line">预格式化行空白符处理。    多个空格    会压缩但
+换行
+会保留。   Pre-line white space.    Multiple   spaces   are   collapsed   but
+line breaks
+are preserved.</p>
+      </div>
+    </section>
+
+    <!-- Text Overflow Tests -->
+    <section class="section">
+      <h2 class="section-title">文本溢出测试 - Text Overflow Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">text-overflow: clip (width: 200px)</div>
+        <div class="text-overflow-container text-overflow-clip">这是一段很长的文本，会被裁剪掉超出容器的部分。This is a very long text that will be clipped.</div>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">text-overflow: ellipsis (width: 200px)</div>
+        <div class="text-overflow-container text-overflow-ellipsis">这是一段很长的文本，会显示省略号。This is a very long text that will show ellipsis.</div>
+      </div>
+    </section>
+
+    <!-- Vertical Alignment Tests -->
+    <section class="section">
+      <h2 class="section-title">垂直对齐测试 - Vertical Alignment Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">vertical-align: baseline</div>
+        <div class="vertical-align-container">基线对齐 <span class="vertical-align-baseline">baseline</span> 文本</div>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">vertical-align: top</div>
+        <div class="vertical-align-container">顶部对齐 <span class="vertical-align-top">top</span> 文本</div>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">vertical-align: middle</div>
+        <div class="vertical-align-container">中间对齐 <span class="vertical-align-middle">middle</span> 文本</div>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">vertical-align: bottom</div>
+        <div class="vertical-align-container">底部对齐 <span class="vertical-align-bottom">bottom</span> 文本</div>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">vertical-align: super</div>
+        <div class="vertical-align-container">上标对齐 <span class="vertical-align-super">super</span> 文本</div>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">vertical-align: sub</div>
+        <div class="vertical-align-container">下标对齐 <span class="vertical-align-sub">sub</span> 文本</div>
+      </div>
+    </section>
+
+    <!-- Complex Text Tests -->
+    <section class="section">
+      <h2 class="section-title">复杂文本测试 - Complex Text Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">Mixed languages and characters</div>
+        <p class="mixed-text">
+          多语言混合文本：English text 中文文本 العربية النص русский текст 日本語のテキスト 
+          한국어 텍스트 Français texto português Deutsch Text italiano testo español texto
+        </p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">Emoji and symbols</div>
+        <p class="mixed-text">
+          表情符号测试：😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚
+          符号测试：★ ☆ ♠ ♣ ♥ ♦ ♪ ♫ ☎ ☏ ☺ ☻ ☼ ♀ ♂ ⚠ ⚡ ❤ ❓ ❗
+        </p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">Text shadow effect</div>
+        <p class="mixed-text text-shadow-test">
+          带阴影的文本效果。Text with shadow effect. 这段文字有阴影效果。
+        </p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">Direction: LTR</div>
+        <p class="mixed-text direction-ltr">
+          从左到右的文本方向。Left-to-right text direction. Hello World! 你好世界！
+        </p>
+      </div>
+      
+      <div class="test-item">
+        <div class="test-label">Direction: RTL</div>
+        <p class="mixed-text direction-rtl">
+          من اليمين إلى اليسار اتجاه النص. Right-to-left text direction. مرحبا بالعالم!
+        </p>
+      </div>
+    </section>
+
+    <!-- Performance Test -->
+    <section class="section">
+      <h2 class="section-title">性能测试 - Performance Test</h2>
+      
+      <div class="test-item">
+        <div class="test-label">Large amount of text</div>
+        <div id="performanceText" class="mixed-text">
+          <!-- Large text content will be generated by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <footer style="text-align: center; margin-top: 50px; padding: 20px; border-top: 2px solid var(--border-color);">
+      <p style="color: var(--secondary-color);">
+        JSAR Runtime 文字渲染测试页面 - Text Rendering Test Page<br>
+        <small>测试完成时间 - Test completed at: <span id="timestamp"></span></small>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Set timestamp
+    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    
+    // Console log for debugging
+    console.log('Text Rendering Test Page loaded successfully');
+    console.log('Total test sections:', document.querySelectorAll('.section').length);
+    console.log('Total test items:', document.querySelectorAll('.test-item').length);
+    
+    // Add interactive functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Highlight sections on hover
+      
+    });
+  </script>
+</body>
+
+</html>

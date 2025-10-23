@@ -52,8 +52,9 @@ namespace client_cssom::css_value_tokenizer
       return token;
     }
 
-    // Numbers
-    if (is_digit(c) || (c == '.' && is_digit(peek_char())))
+    // Numbers (including negative numbers)
+    if (is_digit(c) || (c == '.' && is_digit(peek_char())) ||
+        (c == '-' && (is_digit(peek_char()) || (peek_char() == '.' && position_ + 2 < length_ && is_digit(peek_char(2))))))
     {
       auto token = consume_number();
       token.start_position = token_start;
@@ -100,6 +101,13 @@ namespace client_cssom::css_value_tokenizer
     case ',':
       advance();
       return Token(TokenType::kComma, ",");
+    case '#':
+    {
+      auto token = consume_hash();
+      token.start_position = token_start;
+      token.end_position = position_;
+      return token;
+    }
     default:
       advance();
       return Token(TokenType::kDelimiter, string(1, c));
@@ -214,6 +222,13 @@ namespace client_cssom::css_value_tokenizer
   {
     string number_str;
 
+    // Handle negative sign
+    if (position_ < length_ && current_char() == '-')
+    {
+      number_str += current_char();
+      advance();
+    }
+
     // Consume integer part
     while (position_ < length_ && is_digit(current_char()))
     {
@@ -310,6 +325,33 @@ namespace client_cssom::css_value_tokenizer
   {
     advance(); // Skip '('
     return Token(TokenType::kFunction, name);
+  }
+
+  Token CSSValueTokenizer::consume_hash()
+  {
+    advance(); // Skip '#'
+    string hash_value;
+
+    // Consume hex digits for hex color format
+    while (position_ < length_ && is_hex_digit(current_char()))
+    {
+      hash_value += current_char();
+      advance();
+    }
+
+    // If no hex digits found or invalid length, treat as identifier
+    if (hash_value.empty() || (hash_value.length() != 3 && hash_value.length() != 4 &&
+                               hash_value.length() != 6 && hash_value.length() != 8))
+    {
+      // Continue consuming as identifier characters
+      while (position_ < length_ && is_identifier_char(current_char()))
+      {
+        hash_value += current_char();
+        advance();
+      }
+    }
+
+    return Token(TokenType::kHash, hash_value);
   }
 
   string CSSValueTokenizer::consume_identifier_sequence()

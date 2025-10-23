@@ -165,6 +165,22 @@ function(tr_install_nodejs)
     endif()
 endfunction()
 
+# Function to generate dSYM bundles for Debug builds on macOS
+function(tr_target_generate_dsym TARGET)
+    if (APPLE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        # Use dsymutil to generate dSYM bundle after build
+        add_custom_command(TARGET ${TARGET} POST_BUILD
+            COMMAND dsymutil $<TARGET_FILE:${TARGET}> -o $<TARGET_FILE:${TARGET}>.dSYM
+            COMMENT "Generating dSYM bundle for ${TARGET}"
+            VERBATIM
+        )
+        # Install the dSYM bundle alongside the binary
+        install(DIRECTORY $<TARGET_FILE:${TARGET}>.dSYM 
+                DESTINATION ${TR_RELEASE_DEST}
+                OPTIONAL)
+    endif()
+endfunction()
+
 # Function to set properties
 function(tr_target_set_properties TARGET)
     if (APPLE)
@@ -181,6 +197,8 @@ function(tr_target_set_properties TARGET)
             INSTALL_RPATH "${APPLE_TARGET_INSTALL_RPATH}"
             BUILD_WITH_INSTALL_RPATH TRUE
         )
+        # Generate dSYM bundles for Debug builds
+        tr_target_generate_dsym(${TARGET})
     elseif (ANDROID)
         cmake_parse_arguments(ANDROID_ARG "USE_EXECUTABLE_PATH" "" "" ${ARGN})
         if (ANDROID_ARG_USE_EXECUTABLE_PATH)

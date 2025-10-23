@@ -1,0 +1,74 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug transmute_browser",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/output/release/universal-apple-darwin/transmute_browser",
+      "args": [
+        "${workspaceFolder}/fixtures/html/document.html"
+      ],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": null,
+      "sourceMap": {},
+      "initCommands": [
+        "settings set target.load-script-from-symbol-file true"
+      ],
+      "postRunCommands": [
+        "target symbols add ${workspaceFolder}/build/output/release/universal-apple-darwin/transmute_browser.dSYM"
+      ]
+    },
+    {
+      "name": "Debug transmute_browser (Custom HTML)",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/output/release/universal-apple-darwin/transmute_browser",
+      "args": [
+        "${input:htmlFile}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": null,
+      "sourceMap": {},
+      "initCommands": [
+        "settings set target.load-script-from-symbol-file true"
+      ],
+      "postRunCommands": [
+        "target symbols add ${workspaceFolder}/build/output/release/universal-apple-darwin/transmute_browser.dSYM"
+      ]
+    },
+    {
+      "name": "Debug TransmuteClient",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/output/release/universal-apple-darwin/TransmuteClient",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": null,
+      "sourceMap": {},
+      "initCommands": [
+        "settings set target.load-script-from-symbol-file true"
+      ],
+      "postRunCommands": [
+        "target symbols add ${workspaceFolder}/build/output/release/universal-apple-darwin/TransmuteClient.dSYM"
+      ]
+    },
+    {
+      "name": "Attach to Process",
+      "type": "lldb",
+      "request": "attach",
+      "pid": "${command:pickProcess}",
+      "initCommands": [
+        "settings set target.load-script-from-symbol-file true"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "htmlFile",
+      "type": "promptString",
+      "description": "Path to HTML file to load",
+      "default": "${workspaceFolder}/fixtures/html/document.html"
+    }
+  ]
+}

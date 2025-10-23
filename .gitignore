@@ -36,6 +36,7 @@
 
 # NPM
 node_modules
+.npmrc
 
 # JSAR Runtime
 .cache
@@ -63,3 +64,4 @@ node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
 docs/api/browser-compat-data/all.json
+docs/fixtures-summary.json

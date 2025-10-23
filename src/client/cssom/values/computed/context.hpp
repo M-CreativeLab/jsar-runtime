@@ -166,6 +166,14 @@ namespace client_cssom::values::computed
         return parent_element->adoptedStyleRef();
     }
 
+    // Returns the base URI of the element or document for URL resolution
+    inline std::string getBaseURI() const
+    {
+      if (auto node = element_or_text_node_.lock())
+        return node->baseURI;
+      return "";
+    }
+
   private:
     static const Device &GetDevice(std::shared_ptr<dom::Node> element_or_text_node)
     {

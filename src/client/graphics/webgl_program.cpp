@@ -28,6 +28,13 @@ namespace client_graphics
     return linkStatus_;
   }
 
+  bool WebGLProgram::getValidateStatus(bool sync) const
+  {
+    if (sync)
+      waitForCompleted();
+    return validateStatus_;
+  }
+
   void WebGLProgram::printInfo() const
   {
     cout << "Program " << id << " info:" << endl;

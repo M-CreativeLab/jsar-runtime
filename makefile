@@ -4,7 +4,7 @@ ifeq ($(UNAME), Darwin)  # macOS
 else  # Linux
 		CORES := $(shell nproc)
 endif
-JOBS := $(shell expr $(CORES) / 1)
+JOBS := $(shell [ $(CORES) -gt 2 ] && expr $(CORES) - 2 || echo 1)
 
 # Define the CLEAN flag (default is no) that will clean the build directory
 CLEAN ?= no

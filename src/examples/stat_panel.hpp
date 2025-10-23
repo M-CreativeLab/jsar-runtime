@@ -18,13 +18,14 @@
 #include <common/font/cache.hpp>
 
 #include "./window_ctx.hpp"
+#include "./screen_renderer.hpp"
 
 namespace jsar::example
 {
   /**
    * The panel for rendering scene stats.
    */
-  class StatPanel
+  class StatPanel : public ScreenComponent
   {
     const char *panelVertSource =
       "#version 410 core\n"
@@ -50,6 +51,7 @@ namespace jsar::example
   public:
     StatPanel(WindowContext *windowCtx)
         : windowCtx(windowCtx)
+        , fontMgr(font::FontCacheManager::GetInstance())
     {
       initGLProgram();
       resetCanvas();
@@ -133,7 +135,7 @@ namespace jsar::example
       textPaint.setStyle(SkPaint::kFill_Style);
       textPaint.setColor(0xFF5b8c00);
 
-      auto typeface = fontMgr.getTypeface("monospace");
+      auto typeface = fontMgr->getTypeface("monospace");
       textFont.setTypeface(typeface);
       textFont.setSize(14);
       textFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
@@ -144,7 +146,7 @@ namespace jsar::example
     }
 
   public:
-    void render()
+    void render() override
     {
       auto drawingViewport = windowCtx->drawingViewport();
       glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
@@ -214,7 +216,7 @@ namespace jsar::example
     SkCanvas *canvas;
     SkPaint textPaint;
     SkFont textFont;
-    font::FontCacheManager fontMgr;
+    font::FontCacheManager *fontMgr;
 
     SkImageInfo imageInfo;
     std::vector<uint8_t> pixels;

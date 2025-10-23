@@ -1,13 +1,16 @@
 #pragma once
 
+#include <vector>
+
 /**
  * @namespace browser
  * The `browser` namespace contains classes related to the browser window,
  */
 namespace browser
 {
-  class Location; // Represents the location (URL) of a browser window
-  class Window;   // Represents a browser window
+  class Location;  // Represents the location (URL) of a browser window
+  class Navigator; // Represents the navigator object of a browser window
+  class Window;    // Represents a browser window
 }
 
 /**
@@ -17,6 +20,9 @@ namespace browser
  */
 namespace dom
 {
+  class BrowsingContext;
+  class RuntimeContext;
+
   class Document;    // Represents an HTML or XML document
   class Element;     // Represents an element in the DOM tree
   class SceneObject; // Represents a scene object in the DOM tree

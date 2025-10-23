@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Background Size and Position Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+    }
+
+    .test-container {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: antiquewhite;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #666;
+      font-size: 18px;
+      margin: 15px 0 10px 0;
+    }
+
+    /* Background Size Tests */
+    .bg-size-auto {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-size: auto;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-size-cover {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-size: cover;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-size-contain {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-size: contain;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-size-length {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-size: 100px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-size-percentage {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-size: 50%;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    /* Background Position Tests */
+    .bg-position-center {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: center;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-left {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: left;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-right {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: right;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-top {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: top;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-bottom {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: bottom;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-length {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 10px;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-percentage {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 25%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    /* New test cases for bottom/right alignment fix */
+    .bg-position-right-bottom {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: right bottom;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-100-percent-both {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 100% 100%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-100-0-percent {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 100% 0%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-0-100-percent {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 0% 100%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .test-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .test-description {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 5px;
+      width: 200px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Background Size and Position Properties Test</h1>
+  
+  <div class="test-container">
+    <h2>Background Size Tests</h2>
+    <p>These tests demonstrate how background-size affects the size of background images:</p>
+    <div class="test-row">
+      <div>
+        <div class="bg-size-auto"></div>
+        <div class="test-description">background-size: auto</div>
+      </div>
+      <div>
+        <div class="bg-size-cover"></div>
+        <div class="test-description">background-size: cover</div>
+      </div>
+      <div>
+        <div class="bg-size-contain"></div>
+        <div class="test-description">background-size: contain</div>
+      </div>
+      <div>
+        <div class="bg-size-length"></div>
+        <div class="test-description">background-size: 100px</div>
+      </div>
+      <div>
+        <div class="bg-size-percentage"></div>
+        <div class="test-description">background-size: 50%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Background Position Tests</h2>
+    <p>These tests demonstrate how background-position affects where background images are positioned:</p>
+    <div class="test-row">
+      <div>
+        <div class="bg-position-center"></div>
+        <div class="test-description">background-position: center</div>
+      </div>
+      <div>
+        <div class="bg-position-left"></div>
+        <div class="test-description">background-position: left</div>
+      </div>
+      <div>
+        <div class="bg-position-right"></div>
+        <div class="test-description">background-position: right</div>
+      </div>
+      <div>
+        <div class="bg-position-top"></div>
+        <div class="test-description">background-position: top</div>
+      </div>
+      <div>
+        <div class="bg-position-bottom"></div>
+        <div class="test-description">background-position: bottom</div>
+      </div>
+      <div>
+        <div class="bg-position-length"></div>
+        <div class="test-description">background-position: 10px</div>
+      </div>
+      <div>
+        <div class="bg-position-percentage"></div>
+        <div class="test-description">background-position: 25%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Bottom/Right Alignment Tests (Fixed)</h2>
+    <p>These tests verify that background images align correctly to bottom and right edges.<br>
+    <strong>Fix applied:</strong> Enhanced percentage detection in two-value background-position parsing.</p>
+    <div class="test-row">
+      <div>
+        <div class="bg-position-right-bottom"></div>
+        <div class="test-description">background-position: right bottom<br><strong>Should be in bottom-right corner</strong></div>
+      </div>
+      <div>
+        <div class="bg-position-100-percent-both"></div>
+        <div class="test-description">background-position: 100% 100%<br><strong>Should be in bottom-right corner</strong></div>
+      </div>
+      <div>
+        <div class="bg-position-100-0-percent"></div>
+        <div class="test-description">background-position: 100% 0%<br><strong>Should be in top-right corner</strong></div>
+      </div>
+      <div>
+        <div class="bg-position-0-100-percent"></div>
+        <div class="test-description">background-position: 0% 100%<br><strong>Should be in bottom-left corner</strong></div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

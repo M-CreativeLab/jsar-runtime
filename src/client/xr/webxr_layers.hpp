@@ -2,13 +2,15 @@
 
 #include <memory>
 #include <common/utility.hpp>
-#include <bindings/webxr/common.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
+#include <client/graphics/webgl_context.hpp>
+
 #include "./common.hpp"
-#include "../graphics/webgl_context.hpp"
+#include "./webxr_viewport.hpp"
 
 namespace client_xr
 {
-  class XRLayer
+  class XRLayer : public scripting_base::JSObjectHolder
   {
   public:
     XRLayer(std::shared_ptr<XRSession> session);
@@ -25,8 +27,7 @@ namespace client_xr
   };
 
   class XRWebGLLayer : public XRLayer,
-                       public xr::WebGLLayer,
-                       public JSObjectHolder<bindings::XRWebGLLayer>
+                       public xr::WebGLLayer
   {
   public:
     /**
@@ -51,6 +52,7 @@ namespace client_xr
     {
       return glContext_;
     }
+    XRViewport &getViewport(std::shared_ptr<XRView> view);
 
   private:
     std::shared_ptr<client_graphics::WebGLContext> glContext_;

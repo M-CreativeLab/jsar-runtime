@@ -1,24 +1,27 @@
 console.info('hello script!');
 
 console.info(document.body.childNodes);
+console.info(document.body.childNodes);
+
 console.info(document.createElement('div'));
 console.info(document.createElement('span'));
 console.info(document.createElement('p'));
 
-const image = document.querySelector('img');
-const div = document.getElementById('header');
+// const image = document.querySelector('img');
+// const div = document.getElementById('header');
 
-console.info('querySelector() =>', document.querySelector('.first'));
-{
-  const elements = document.querySelectorAll('p');
-  let index = 0;
-  for (const element of elements) {
-    console.info(`p[${index++}]`, element);
-  }
-}
+// console.info('querySelector() =>', document.querySelector('.first'));
+// {
+//   // const elements = document.querySelectorAll('p');
+//   // let index = 0;
+//   // for (const element of elements) {
+//   //   console.info(`p[${index++}]`, element);
+//   // }
+// }
 
 const main = document.querySelector('main');
-console.info('main.lastChild should be comment node', main.lastElementChild);
+console.info(main);
+console.info('main.lastChild should be comment node', main);
 main.addEventListener('mouseenter', (event) => {
   console.info('main mouseenter', event);
 });
@@ -31,10 +34,10 @@ switchDiv.addEventListener('click', () => {
   // test append style
   const style = document.createElement('style');
   style.textContent = `
-    body {
-      background-color: #87e8de;
-    }
-  `;
+  body {
+    background-color: #87e8de;
+  }
+`;
   document.head.appendChild(style);
 });
 
@@ -51,7 +54,10 @@ async function run(fn) {
 }
 
 run(async () => {
+  console.info('>>>', document);
   await sleep(1000);
+
+  console.info('>>>', document.body);
   const some = document.createElement('div');
   some.style.setProperty('width', '100px');
   some.style.setProperty('height', '100px');
@@ -81,9 +87,14 @@ run(async () => {
   // main.style.setProperty('display', 'none');
 
   // await sleep(1000);
+  // console.info('show main again', document.body);
   // console.info('body html:', document.body.innerHTML);
   // document.body.innerHTML =
   //   '<div style="width:100px;height:100px;background-color:blue;font-size:30px;color:#fff">'
   //   + 'foobar'
   //   + '</div>';
 });
+
+window['foobar'] = Math.random();
+console.info('set global foobar =', window['foobar']);
+console.info('script end');
