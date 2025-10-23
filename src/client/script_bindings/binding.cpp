@@ -97,6 +97,9 @@
 // Workers bindings
 #include "./workers/worker.hpp"
 
+// Notification API
+#include "./notification.hpp"
+
 using namespace std;
 using namespace v8;
 
@@ -206,6 +209,9 @@ namespace script_bindings
       ADD_DOM_TYPE(MutationObserver)
       ADD_DOM_TYPE(MutationRecord)
 #undef ADD_DOM_TYPE
+
+      // Notification API
+      global->Set(context, NAME("Notification"), Notification::Initialize(isolate)).Check();
 
       // CSSOM
 #define ADD_CSSOM_TYPE(X) \
