@@ -1275,6 +1275,8 @@ dependencies = [
  "once_cell",
  "paste",
  "selectors",
+ "serde",
+ "serde_json",
  "smallvec",
  "stylo",
  "stylo_config",

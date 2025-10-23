@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <rapidjson/document.h>
 #include "./holocron_webgl.autogen.hpp"
 
 namespace crates::webgl
@@ -84,27 +85,31 @@ namespace crates::webgl
      */
     static inline std::vector<GLSLAttribute> ParseAttributes(const std::string &source)
     {
-      try
+      auto json_str = holocron::webgl::parseGLSLAttributes(source.c_str());
+      std::vector<GLSLAttribute> attributes;
+
+      rapidjson::Document doc;
+      doc.Parse(std::string(json_str).c_str());
+
+      if (!doc.IsArray())
       {
-        auto result = holocron::webgl::parseGLSLAttributes(source.c_str());
-        std::vector<GLSLAttribute> attributes;
-        attributes.reserve(result.attributes.size());
-
-        for (const auto &attr : result.attributes)
-        {
-          attributes.push_back(GLSLAttribute{
-            std::string(attr.name),
-            std::string(attr.type_name),
-            attr.location});
-        }
-
         return attributes;
       }
-      catch (const std::exception &e)
+
+      attributes.reserve(doc.Size());
+      for (rapidjson::SizeType i = 0; i < doc.Size(); i++)
       {
-        // Re-throw with more context
-        throw std::runtime_error(std::string("Failed to parse GLSL attributes: ") + e.what());
+        const auto &attr = doc[i];
+        if (attr.IsObject() && attr.HasMember("name") && attr.HasMember("type_name") && attr.HasMember("location"))
+        {
+          attributes.push_back(GLSLAttribute{
+            attr["name"].GetString(),
+            attr["type_name"].GetString(),
+            attr["location"].GetInt()});
+        }
       }
+
+      return attributes;
     }
 
     /**
@@ -116,22 +121,15 @@ namespace crates::webgl
      */
     static inline std::optional<int32_t> GetAttribLocation(const std::string &source, const std::string &name)
     {
-      try
+      auto attributes = ParseAttributes(source);
+      for (const auto &attr : attributes)
       {
-        auto location = holocron::webgl::getGLSLAttribLocation(source.c_str(), name.c_str());
-        return location;
-      }
-      catch (const std::exception &e)
-      {
-        // If attribute not found, return nullopt instead of throwing
-        std::string error_msg(e.what());
-        if (error_msg.find("not found") != std::string::npos)
+        if (attr.name == name)
         {
-          return std::nullopt;
+          return attr.location;
         }
-        // Re-throw parsing errors
-        throw std::runtime_error(std::string("Failed to parse GLSL attributes: ") + e.what());
       }
+      return std::nullopt;
     }
   };
 }

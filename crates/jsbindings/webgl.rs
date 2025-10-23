@@ -1,5 +1,6 @@
 use glsl_lang::ast;
 use glsl_lang::visitor::{Host, HostMut, Visit, Visitor, VisitorMut};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 use crate::glsl_transpiler;
@@ -119,7 +120,7 @@ fn patch_glsl_source_from_str(s: &str) -> String {
 }
 
 /// Represents metadata about a vertex attribute in GLSL
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GLSLAttribute {
   /// The name of the attribute (e.g., "position", "normal")
   pub name: String,
@@ -302,59 +303,28 @@ impl Visitor for GLSLAttributeParser {
 
 #[cxx::bridge(namespace = "holocron::webgl")]
 mod ffi {
-  /// Represents a single GLSL attribute for FFI
-  struct GLSLAttributeInfo {
-    name: String,
-    type_name: String,
-    location: i32,
-  }
-
-  /// Container for parsed attributes
-  struct GLSLAttributeList {
-    attributes: Vec<GLSLAttributeInfo>,
-  }
-
   extern "Rust" {
     /// Patch GLSL source code from string
     #[cxx_name = "patchGLSLSourceFromStr"]
     fn patch_glsl_source_from_str(input: &str) -> String;
 
-    /// Parse GLSL vertex shader source and extract attributes
+    /// Parse GLSL vertex shader source and extract attributes as JSON
     #[cxx_name = "parseGLSLAttributes"]
-    fn parse_glsl_attributes(source: &str) -> Result<GLSLAttributeList>;
-
-    /// Get attribute location by name from parsed source
-    #[cxx_name = "getGLSLAttribLocation"]
-    fn get_glsl_attrib_location(source: &str, name: &str) -> Result<i32>;
+    fn parse_glsl_attributes(source: &str) -> String;
   }
 }
 
-/// Parse GLSL source and return all attributes
-fn parse_glsl_attributes(source: &str) -> Result<ffi::GLSLAttributeList, String> {
+/// Parse GLSL source and return all attributes as JSON string
+fn parse_glsl_attributes(source: &str) -> String {
   let mut parser = GLSLAttributeParser::new();
-  parser.parse(source)?;
-
-  let attributes = parser
-    .get_attributes()
-    .iter()
-    .map(|attr| ffi::GLSLAttributeInfo {
-      name: attr.name.clone(),
-      type_name: attr.type_name.clone(),
-      location: attr.location,
-    })
-    .collect();
-
-  Ok(ffi::GLSLAttributeList { attributes })
-}
-
-/// Get attribute location by name
-fn get_glsl_attrib_location(source: &str, name: &str) -> Result<i32, String> {
-  let mut parser = GLSLAttributeParser::new();
-  parser.parse(source)?;
-
-  parser
-    .get_attrib_location(name)
-    .ok_or_else(|| format!("Attribute '{}' not found", name))
+  
+  match parser.parse(source) {
+    Ok(_) => {
+      let attributes = parser.get_attributes();
+      serde_json::to_string(attributes).unwrap_or_else(|_| "[]".to_string())
+    }
+    Err(_) => "[]".to_string(),
+  }
 }
 
 #[cfg(test)]
@@ -599,34 +569,11 @@ void main() {
 }
 "#;
     let result = parse_glsl_attributes(source_str);
-    assert!(result.is_ok());
-
-    let list = result.unwrap();
-    assert_eq!(list.attributes.len(), 2);
-    assert_eq!(list.attributes[0].name, "position");
-    assert_eq!(list.attributes[1].name, "normal");
-  }
-
-  #[test]
-  fn test_get_glsl_attrib_location_ffi() {
-    let source_str = r#"
-#version 300 es
-in vec3 position;
-in vec3 normal;
-
-void main() {
-  gl_Position = vec4(position, 1.0);
-}
-"#;
-    let result = get_glsl_attrib_location(source_str, "position");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), 0);
-
-    let result = get_glsl_attrib_location(source_str, "normal");
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), 1);
-
-    let result = get_glsl_attrib_location(source_str, "nonexistent");
-    assert!(result.is_err());
+    
+    // Parse the JSON result
+    let attributes: Vec<GLSLAttribute> = serde_json::from_str(&result).expect("Failed to parse JSON");
+    assert_eq!(attributes.len(), 2);
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[1].name, "normal");
   }
 }
