@@ -30,7 +30,7 @@ namespace endor
     }
 
     // static
-    Local<Object> Text::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Text> nativeText)
+    Local<Object> Text::NewInstance(Isolate *isolate, std::shared_ptr<::endor::dom::Text> nativeText)
     {
       EscapableHandleScope scope(isolate);
       assert(nativeText != nullptr && "Text instance is null.");

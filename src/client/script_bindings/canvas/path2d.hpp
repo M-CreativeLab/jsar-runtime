@@ -11,7 +11,7 @@ namespace endor
     namespace canvas_bindings
     {
       class Path2D;
-      using Path2DBase = scripting_base::ObjectWrap<Path2D, ::canvas::Path2D>;
+      using Path2DBase = scripting_base::ObjectWrap<Path2D, ::endor::canvas::Path2D>;
 
       /**
      * Path2D wrapper for V8 objects using scripting_base::ObjectWrap.

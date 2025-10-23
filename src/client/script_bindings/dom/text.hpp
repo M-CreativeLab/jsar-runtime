@@ -12,7 +12,7 @@ namespace endor
     namespace dom_bindings
     {
       class Text;
-      using TextBase = scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>;
+      using TextBase = scripting_base::ObjectWrap<Text, ::endor::dom::Text, CharacterData>;
 
       /**
      * Text wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -31,7 +31,7 @@ namespace endor
           return "Text";
         }
         static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Text> nativeText);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::endor::dom::Text> nativeText);
 
       public:
         Text(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

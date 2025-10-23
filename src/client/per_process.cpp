@@ -139,7 +139,7 @@ MaybeLocal<Value> TrScriptRuntimePerProcess::PrepareStackTraceCallback(Local<Con
                                                                        Local<Value> exception,
                                                                        Local<Array> trace)
 {
-  if (::dom::ContextEmbedderTag::IsMyContext(context))
+  if (::endor::dom::ContextEmbedderTag::IsMyContext(context))
   {
     /**
      * Prepare the stack trace for our own context.
@@ -532,7 +532,7 @@ void TrClientContextPerProcess::bootstrap()
     builtinScene->bootstrap();
 
   // Create the window instance
-  window = make_shared<::browser::Window>(this);
+  window = make_shared<::endor::browser::Window>(this);
 
   // Start the service alive listener
   auto keepAlive = []()

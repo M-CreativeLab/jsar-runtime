@@ -59,16 +59,16 @@ namespace endor
     }
 
     // static
-    Local<Object> HTMLElement::NewInstance(Isolate *isolate, std::shared_ptr<::dom::HTMLElement> nativeElement)
+    Local<Object> HTMLElement::NewInstance(Isolate *isolate, std::shared_ptr<::endor::dom::HTMLElement> nativeElement)
     {
       EscapableHandleScope scope(isolate);
       assert(nativeElement != nullptr && "nativeElement should not be null");
 
-#define XX(TAG_NAME_STR, ELEMENT_TYPE)                                    \
-  if (nativeElement->is(TAG_NAME_STR))                                    \
-  {                                                                       \
-    return scope.Escape(html_bindings::ELEMENT_TYPE::NewInstance(         \
-      isolate, static_pointer_cast<::dom::ELEMENT_TYPE>(nativeElement))); \
+#define XX(TAG_NAME_STR, ELEMENT_TYPE)                                           \
+  if (nativeElement->is(TAG_NAME_STR))                                           \
+  {                                                                              \
+    return scope.Escape(html_bindings::ELEMENT_TYPE::NewInstance(                \
+      isolate, static_pointer_cast<::endor::dom::ELEMENT_TYPE>(nativeElement))); \
   }
 
       TYPED_ELEMENT_MAP(XX)
@@ -126,7 +126,7 @@ namespace endor
 
     void HTMLElement::DirGetter(const FunctionCallbackInfo<Value> &info)
     {
-      using Dir = ::dom::HTMLElementDirection;
+      using Dir = ::endor::dom::HTMLElementDirection;
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
@@ -149,7 +149,7 @@ namespace endor
 
     void HTMLElement::DirSetter(const FunctionCallbackInfo<Value> &info)
     {
-      using Dir = ::dom::HTMLElementDirection;
+      using Dir = ::endor::dom::HTMLElementDirection;
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
       Local<Value> value = info[0];

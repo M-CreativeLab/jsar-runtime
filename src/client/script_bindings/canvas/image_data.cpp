@@ -22,7 +22,7 @@ namespace endor
         InstanceReadonlyAccessor(isolate, instance, "colorSpace", &ImageData::ColorSpaceGetter);
       }
 
-      Local<Object> ImageData::NewInstance(Isolate *isolate, shared_ptr<::canvas::ImageData> imageData)
+      Local<Object> ImageData::NewInstance(Isolate *isolate, shared_ptr<::endor::canvas::ImageData> imageData)
       {
         EscapableHandleScope scope(isolate);
         assert(imageData != nullptr && "ImageData requires a valid native ImageData instance");
@@ -31,7 +31,7 @@ namespace endor
 
       Local<Object> ImageData::NewInstance(Isolate *isolate, int width, int height, const string &colorSpace)
       {
-        auto nativeImageData = make_shared<::canvas::ImageData>(width, height, colorSpace);
+        auto nativeImageData = make_shared<::endor::canvas::ImageData>(width, height, colorSpace);
         return NewInstance(isolate, nativeImageData);
       }
 
@@ -56,7 +56,7 @@ namespace endor
         {
           int width = firstArg->ToNumber(context).ToLocalChecked()->Value();
           int height = args[1]->ToNumber(context).ToLocalChecked()->Value();
-          setData(make_shared<::canvas::ImageData>(width, height, colorSpace));
+          setData(make_shared<::endor::canvas::ImageData>(width, height, colorSpace));
         }
         else if (firstArg->IsUint8ClampedArray() || firstArg->IsFloat32Array())
         {
@@ -93,7 +93,7 @@ namespace endor
             // Infer height from data length
             height = static_cast<int>(dataArray.size()) / (width * 4);
           }
-          setData(make_shared<::canvas::ImageData>(dataArray, width, height, colorSpace));
+          setData(make_shared<::endor::canvas::ImageData>(dataArray, width, height, colorSpace));
         }
         else
         {

@@ -7,7 +7,7 @@ namespace endor
     using namespace std;
     using namespace v8;
 
-    Local<Object> HTMLElementDataset::NewInstance(Isolate *isolate, shared_ptr<::dom::HTMLElement> element)
+    Local<Object> HTMLElementDataset::NewInstance(Isolate *isolate, shared_ptr<::endor::dom::HTMLElement> element)
     {
       EscapableHandleScope scope(isolate);
       Local<Object> datasetValue = dom_bindings::DOMStringMap::NewInstance(isolate,
@@ -15,7 +15,7 @@ namespace endor
       return scope.Escape(datasetValue);
     }
 
-    HTMLElementDataset::HTMLElementDataset(std::shared_ptr<::dom::HTMLElement> element)
+    HTMLElementDataset::HTMLElementDataset(std::shared_ptr<::endor::dom::HTMLElement> element)
         : data_source_(element)
     {
     }

@@ -61,7 +61,7 @@ namespace endor
         }
       }
 
-      Local<Object> Document::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Document> nativeDocument)
+      Local<Object> Document::NewInstance(Isolate *isolate, std::shared_ptr<::endor::dom::Document> nativeDocument)
       {
         EscapableHandleScope scope(isolate);
 
@@ -569,7 +569,7 @@ namespace endor
         String::Utf8Value selectors(isolate, info[0]);
         try
         {
-          auto elements = make_unique<::dom::NodeList<::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
+          auto elements = make_unique<::endor::dom::NodeList<::endor::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
           Local<Value> nodeList = NodeList::NewInstance(isolate, std::move(elements));
           info.GetReturnValue().Set(nodeList);
           return;

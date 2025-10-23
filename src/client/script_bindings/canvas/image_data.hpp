@@ -11,7 +11,7 @@ namespace endor
     namespace canvas_bindings
     {
       class ImageData;
-      using ImageDataBase = scripting_base::ObjectWrap<ImageData, ::canvas::ImageData>;
+      using ImageDataBase = scripting_base::ObjectWrap<ImageData, ::endor::canvas::ImageData>;
 
       /**
      * ImageData wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -31,7 +31,7 @@ namespace endor
 
         static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
         static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                                 std::shared_ptr<::canvas::ImageData> nativeImageData);
+                                                 std::shared_ptr<::endor::canvas::ImageData> nativeImageData);
         static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                  int width,
                                                  int height,

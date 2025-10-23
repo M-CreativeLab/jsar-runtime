@@ -58,7 +58,7 @@ namespace endor
 
     Local<Object> Window::MakeAndWrap(Isolate *isolate,
                                       Local<Object> object,
-                                      std::shared_ptr<::browser::Window> nativeWindow)
+                                      std::shared_ptr<::endor::browser::Window> nativeWindow)
     {
       Window *window = new Window(isolate, nativeWindow);
       window->onCreated();
@@ -66,7 +66,7 @@ namespace endor
       return object;
     }
 
-    Window::Window(Isolate *isolate, std::shared_ptr<::browser::Window> nativeWindow)
+    Window::Window(Isolate *isolate, std::shared_ptr<::endor::browser::Window> nativeWindow)
         : WindowBase(isolate)
     {
       setData(nativeWindow);

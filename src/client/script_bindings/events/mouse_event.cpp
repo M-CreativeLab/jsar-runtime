@@ -20,7 +20,7 @@ namespace endor
     }
 
     v8::Local<v8::Object> MouseEvent::NewInstance(v8::Isolate *isolate,
-                                                  std::shared_ptr<::dom::events::MouseEvent> nativeEvent)
+                                                  std::shared_ptr<::endor::dom::events::MouseEvent> nativeEvent)
     {
       EscapableHandleScope scope(isolate);
       assert(nativeEvent != nullptr && "nativeEvent must not be null");
@@ -40,7 +40,7 @@ namespace endor
       }
 
       // TODO(yorkie): implement this.
-      // setInner(make_shared<::dom::events::MouseEvent>());
+      // setInner(make_shared<::endor::dom::events::MouseEvent>());
     }
   }
 } // namespace endor

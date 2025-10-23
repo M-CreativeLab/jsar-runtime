@@ -33,7 +33,7 @@ namespace endor
 
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<::dom::events::PointerEvent> nativeEvent);
+                                               std::shared_ptr<::endor::dom::events::PointerEvent> nativeEvent);
     };
   }
 } // namespace endor

@@ -12,7 +12,7 @@ namespace endor
     namespace dom_bindings
     {
       class Document;
-      using DocumentBase = scripting_base::ObjectWrap<Document, ::dom::Document, Node>;
+      using DocumentBase = scripting_base::ObjectWrap<Document, ::endor::dom::Document, Node>;
 
       /**
      * Document wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -35,7 +35,7 @@ namespace endor
         }
 
         static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Document> nativeDocument);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::endor::dom::Document> nativeDocument);
 
       public:
         Document(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

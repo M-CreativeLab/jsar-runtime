@@ -18,7 +18,7 @@ namespace endor
   namespace script_bindings
   {
     class EventTarget;
-    using EventTargetBase = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>;
+    using EventTargetBase = scripting_base::ObjectWrap<EventTarget, ::endor::dom::DOMEventTarget>;
 
     class EventListenersList : std::vector<std::shared_ptr<v8::Global<v8::Function>>>
     {

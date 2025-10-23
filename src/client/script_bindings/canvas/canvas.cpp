@@ -51,7 +51,7 @@ namespace endor
 
         int width = args[0]->ToInteger(context).ToLocalChecked()->Value();
         int height = args[1]->ToInteger(context).ToLocalChecked()->Value();
-        setData(make_shared<::canvas::OffscreenCanvas>(width, height));
+        setData(make_shared<::endor::canvas::OffscreenCanvas>(width, height));
       }
 
       void OffscreenCanvas::WidthGetter(const PropertyCallbackInfo<Value> &info)

@@ -10,7 +10,7 @@ namespace endor
   namespace script_bindings
   {
     class Event;
-    using EventBase = scripting_base::ObjectWrap<Event, ::dom::Event>;
+    using EventBase = scripting_base::ObjectWrap<Event, ::endor::dom::Event>;
 
     /**
    * Event wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -33,7 +33,7 @@ namespace endor
       }
 
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Event> nativeEvent);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::endor::dom::Event> nativeEvent);
 
     public:
       Event(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

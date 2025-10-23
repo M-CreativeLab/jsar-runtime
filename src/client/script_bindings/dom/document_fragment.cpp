@@ -147,7 +147,7 @@ namespace endor
       String::Utf8Value selectors(isolate, info[0]);
       try
       {
-        auto elements = make_unique<::dom::NodeList<::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
+        auto elements = make_unique<::endor::dom::NodeList<::endor::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
         Local<Value> nodeList = NodeList::NewInstance(isolate, move(elements));
         info.GetReturnValue().Set(nodeList);
         return;

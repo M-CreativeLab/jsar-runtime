@@ -20,7 +20,7 @@ namespace endor
     }
 
     v8::Local<v8::Object> PointerEvent::NewInstance(v8::Isolate *isolate,
-                                                    std::shared_ptr<::dom::events::PointerEvent> nativeEvent)
+                                                    std::shared_ptr<::endor::dom::events::PointerEvent> nativeEvent)
     {
       EscapableHandleScope scope(isolate);
       return nativeEvent == nullptr

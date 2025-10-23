@@ -11,7 +11,7 @@ namespace endor
     namespace canvas_bindings
     {
       class ImageBitmap;
-      using ImageBitmapBase = scripting_base::ObjectWrap<ImageBitmap, ::canvas::ImageBitmap>;
+      using ImageBitmapBase = scripting_base::ObjectWrap<ImageBitmap, ::endor::canvas::ImageBitmap>;
 
       /**
      * ImageBitmap wrapper for V8 objects using scripting_base::ObjectWrap.

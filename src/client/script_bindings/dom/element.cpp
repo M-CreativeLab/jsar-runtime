@@ -69,14 +69,14 @@ namespace endor
         InstanceMethod(isolate, prototype, "querySelectorAll", &Element::QuerySelectorAll);
       }
 
-      Local<Object> Element::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Element> nativeElement)
+      Local<Object> Element::NewInstance(Isolate *isolate, std::shared_ptr<::endor::dom::Element> nativeElement)
       {
         EscapableHandleScope scope(isolate);
         assert(nativeElement != nullptr && "The native element is null.");
 
         if (nativeElement->isHTMLElement())
         {
-          auto htmlElement = static_pointer_cast<::dom::HTMLElement>(nativeElement);
+          auto htmlElement = static_pointer_cast<::endor::dom::HTMLElement>(nativeElement);
           return scope.Escape(html_bindings::HTMLElement::NewInstance(isolate, htmlElement));
         }
         else

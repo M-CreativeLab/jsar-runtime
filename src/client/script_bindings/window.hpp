@@ -27,10 +27,10 @@ namespace endor
      */
       static v8::Local<v8::Object> MakeAndWrap(v8::Isolate *isolate,
                                                v8::Local<v8::Object> object,
-                                               std::shared_ptr<::browser::Window> nativeWindow);
+                                               std::shared_ptr<::endor::browser::Window> nativeWindow);
 
     public:
-      Window(v8::Isolate *isolate, std::shared_ptr<::browser::Window> nativeWindow);
+      Window(v8::Isolate *isolate, std::shared_ptr<::endor::browser::Window> nativeWindow);
       Window(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:

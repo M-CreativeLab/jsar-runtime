@@ -17,7 +17,7 @@ namespace endor
 
       class OffscreenCanvas;
       using OffscreenCanvasBase = scripting_base::ObjectWrap<OffscreenCanvas,
-                                                             ::canvas::OffscreenCanvas,
+                                                             ::endor::canvas::OffscreenCanvas,
                                                              EventTarget>;
 
       /**

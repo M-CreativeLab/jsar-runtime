@@ -540,11 +540,11 @@ namespace endor
     /**
    * The main `BrowsingContext` instance for the client process.
    */
-    std::shared_ptr<::dom::BrowsingContext> browsingContext;
+    std::shared_ptr<::endor::dom::BrowsingContext> browsingContext;
     /**
    * The `Window` instance for the client process.
    */
-    std::shared_ptr<::browser::Window> window;
+    std::shared_ptr<::endor::browser::Window> window;
 
   private: // event fields
     TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;

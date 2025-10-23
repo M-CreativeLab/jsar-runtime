@@ -12,7 +12,7 @@ namespace endor
     namespace dom_bindings
     {
       class Element;
-      using ElementBase = scripting_base::ObjectWrap<Element, ::dom::Element, Node>;
+      using ElementBase = scripting_base::ObjectWrap<Element, ::endor::dom::Element, Node>;
 
       /**
      * Element wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -31,7 +31,7 @@ namespace endor
           return "Element";
         }
         static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Element> nativeElement);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::endor::dom::Element> nativeElement);
 
       public:
         Element(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

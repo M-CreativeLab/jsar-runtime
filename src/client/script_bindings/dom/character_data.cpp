@@ -35,15 +35,15 @@ namespace endor
         InstanceMethod(isolate, prototype, "replaceWith", &CharacterData::ReplaceWith);
       }
 
-      Local<Object> CharacterData::NewInstance(Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle)
+      Local<Object> CharacterData::NewInstance(Isolate *isolate, std::shared_ptr<::endor::dom::CharacterData> handle)
       {
         EscapableHandleScope scope(isolate);
         assert(handle != nullptr && "CharacterData::NewInstance: handle is null");
 
         if (handle->isText())
-          return scope.Escape(Text::NewInstance(isolate, static_pointer_cast<::dom::Text>(handle)));
+          return scope.Escape(Text::NewInstance(isolate, static_pointer_cast<::endor::dom::Text>(handle)));
         else if (handle->isComment())
-          return scope.Escape(Comment::NewInstance(isolate, static_pointer_cast<::dom::Comment>(handle)));
+          return scope.Escape(Comment::NewInstance(isolate, static_pointer_cast<::endor::dom::Comment>(handle)));
         else
           return scope.Escape(CharacterDataBase::NewInstance(isolate, handle));
       }

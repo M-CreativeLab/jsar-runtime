@@ -12,7 +12,7 @@ namespace endor
     namespace dom_bindings
     {
       class CharacterData;
-      using CharacterDataBase = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>;
+      using CharacterDataBase = scripting_base::ObjectWrap<CharacterData, ::endor::dom::CharacterData, Node>;
 
       /**
      * CharacterData wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -31,7 +31,7 @@ namespace endor
           return "CharacterData";
         }
         static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::endor::dom::CharacterData> handle);
 
       private:
         // Property getters and setters

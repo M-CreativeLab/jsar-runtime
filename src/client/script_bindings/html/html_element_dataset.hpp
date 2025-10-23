@@ -11,10 +11,10 @@ namespace endor
     class HTMLElementDataset : public dom_bindings::DOMStringMapSource
     {
     public:
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::HTMLElement> element);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::endor::dom::HTMLElement> element);
 
     public:
-      HTMLElementDataset(std::shared_ptr<::dom::HTMLElement> element);
+      HTMLElementDataset(std::shared_ptr<::endor::dom::HTMLElement> element);
 
     public:
       std::optional<std::string> get(const std::string &key) const override;
@@ -22,7 +22,7 @@ namespace endor
       void unset(const std::string &key) override;
 
     private:
-      std::weak_ptr<::dom::HTMLElement> data_source_;
+      std::weak_ptr<::endor::dom::HTMLElement> data_source_;
     };
   }
 } // namespace endor

@@ -34,7 +34,7 @@ namespace endor
   XX(PROCESSING_INSTRUCTION_NODE) \
   XX(TEXT_NODE)
 #define XX(TYPE) \
-  IntegerConstant(isolate, tpl, #TYPE, ::dom::NodeType::TYPE);
+  IntegerConstant(isolate, tpl, #TYPE, ::endor::dom::NodeType::TYPE);
 
       NODE_TYPE_MAP(XX)
 #undef XX
@@ -70,7 +70,7 @@ namespace endor
       InstanceMethod(isolate, prototype, "normalize", &Node::Normalize);
     }
 
-    Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode)
+    Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::endor::dom::Node> nativeNode)
     {
       EscapableHandleScope scope(isolate);
       assert(nativeNode != nullptr && "The native node is null.");
@@ -78,22 +78,22 @@ namespace endor
       if (nativeNode->isDocument())
       {
         return scope.Escape(Document::NewInstance(
-          isolate, static_pointer_cast<::dom::Document>(nativeNode)));
+          isolate, static_pointer_cast<::endor::dom::Document>(nativeNode)));
       }
       else if (nativeNode->isDocumentFragment())
       {
         return scope.Escape(DocumentFragment::NewInstance(
-          isolate, static_pointer_cast<::dom::DocumentFragment>(nativeNode)));
+          isolate, static_pointer_cast<::endor::dom::DocumentFragment>(nativeNode)));
       }
       else if (nativeNode->isElement())
       {
         return scope.Escape(Element::NewInstance(
-          isolate, static_pointer_cast<::dom::Element>(nativeNode)));
+          isolate, static_pointer_cast<::endor::dom::Element>(nativeNode)));
       }
       else if (nativeNode->isCharacterData())
       {
         return scope.Escape(CharacterData::NewInstance(
-          isolate, static_pointer_cast<::dom::CharacterData>(nativeNode)));
+          isolate, static_pointer_cast<::endor::dom::CharacterData>(nativeNode)));
       }
       else
       {
@@ -293,7 +293,7 @@ namespace endor
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      shared_ptr<::dom::Document> ownerDocument = handle()->getOwnerDocumentReference();
+      shared_ptr<::endor::dom::Document> ownerDocument = handle()->getOwnerDocumentReference();
       if (ownerDocument == nullptr)
       {
         info.GetReturnValue().SetNull();
