@@ -3,12 +3,15 @@ export class ErrorEvent extends Event {
   filename: string | undefined;
   lineno: number | undefined;
   colno: number | undefined;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: any;
   constructor(type: string, eventInitDict: {
     message?: string,
     filename?: string,
     lineno?: number,
     colno?: number,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
   }) {
     super(type);
