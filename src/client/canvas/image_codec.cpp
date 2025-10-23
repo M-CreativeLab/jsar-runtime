@@ -5,6 +5,7 @@
 #include <skia/include/codec/SkPngDecoder.h>
 #include <skia/include/codec/SkJpegDecoder.h>
 #include <skia/include/codec/SkWebpDecoder.h>
+#include <skia/include/codec/SkBmpDecoder.h>
 #include <skia/include/codec/SkGifDecoder.h>
 #include <common/image/image_processor.hpp>
 
@@ -299,6 +300,7 @@ namespace canvas
     }
 
     static constexpr const SkCodecs::Decoder decoders[] = {
+      SkBmpDecoder::Decoder(),
       SkPngDecoder::Decoder(),
       SkJpegDecoder::Decoder(),
       SkWebpDecoder::Decoder(),
