@@ -94,9 +94,9 @@ namespace crates::webgl
         for (const auto &attr : result.attributes)
         {
           attributes.push_back(GLSLAttribute{
-              std::string(attr.name),
-              std::string(attr.type_name),
-              attr.location});
+            std::string(attr.name),
+            std::string(attr.type_name),
+            attr.location});
         }
 
         return attributes;
