@@ -1,5 +1,5 @@
 use glsl_lang::ast;
-use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
+use glsl_lang::visitor::{Host, HostMut, Visit, Visitor, VisitorMut};
 use std::path::Path;
 
 use crate::glsl_transpiler;
@@ -118,18 +118,246 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   s
 }
 
+/// Represents metadata about a vertex attribute in GLSL
+#[derive(Debug, Clone, PartialEq)]
+pub struct GLSLAttribute {
+  /// The name of the attribute (e.g., "position", "normal")
+  pub name: String,
+  /// The GLSL type of the attribute (e.g., "vec3", "vec4", "mat4")
+  pub type_name: String,
+  /// The assigned location of the attribute (0-based index)
+  pub location: i32,
+}
+
+/// Parser for extracting vertex attributes from GLSL source code
+pub struct GLSLAttributeParser {
+  attributes: Vec<GLSLAttribute>,
+  next_location: i32,
+}
+
+impl GLSLAttributeParser {
+  /// Create a new parser
+  pub fn new() -> Self {
+    Self {
+      attributes: Vec::new(),
+      next_location: 0,
+    }
+  }
+
+  /// Parse GLSL source and extract all attribute declarations
+  pub fn parse(&mut self, source: &str) -> Result<(), String> {
+    use glsl_lang::{
+      ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
+    };
+
+    let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
+    let tu: TranslationUnit = processor
+      .open_source(source, Path::new("."))
+      .builder()
+      .parse()
+      .map(|(mut tu, _, iter)| {
+        iter.into_directives().inject(&mut tu);
+        tu
+      })
+      .map_err(|e| format!("Failed to parse GLSL source: {:?}", e))?;
+
+    // Visit the AST to find attributes
+    use glsl_lang::visitor::Host;
+    tu.visit(self);
+    Ok(())
+  }
+
+  /// Get the parsed attributes
+  pub fn get_attributes(&self) -> &[GLSLAttribute] {
+    &self.attributes
+  }
+
+  /// Find attribute location by name
+  pub fn get_attrib_location(&self, name: &str) -> Option<i32> {
+    self
+      .attributes
+      .iter()
+      .find(|attr| attr.name == name)
+      .map(|attr| attr.location)
+  }
+
+  /// Extract type name from TypeSpecifierNonArray
+  fn type_to_string(&self, ty: &ast::TypeSpecifierNonArray) -> String {
+    match &ty.content {
+      ast::TypeSpecifierNonArrayData::Float => "float".to_string(),
+      ast::TypeSpecifierNonArrayData::Double => "double".to_string(),
+      ast::TypeSpecifierNonArrayData::Int => "int".to_string(),
+      ast::TypeSpecifierNonArrayData::UInt => "uint".to_string(),
+      ast::TypeSpecifierNonArrayData::Bool => "bool".to_string(),
+      ast::TypeSpecifierNonArrayData::Vec2 => "vec2".to_string(),
+      ast::TypeSpecifierNonArrayData::Vec3 => "vec3".to_string(),
+      ast::TypeSpecifierNonArrayData::Vec4 => "vec4".to_string(),
+      ast::TypeSpecifierNonArrayData::DVec2 => "dvec2".to_string(),
+      ast::TypeSpecifierNonArrayData::DVec3 => "dvec3".to_string(),
+      ast::TypeSpecifierNonArrayData::DVec4 => "dvec4".to_string(),
+      ast::TypeSpecifierNonArrayData::BVec2 => "bvec2".to_string(),
+      ast::TypeSpecifierNonArrayData::BVec3 => "bvec3".to_string(),
+      ast::TypeSpecifierNonArrayData::BVec4 => "bvec4".to_string(),
+      ast::TypeSpecifierNonArrayData::IVec2 => "ivec2".to_string(),
+      ast::TypeSpecifierNonArrayData::IVec3 => "ivec3".to_string(),
+      ast::TypeSpecifierNonArrayData::IVec4 => "ivec4".to_string(),
+      ast::TypeSpecifierNonArrayData::UVec2 => "uvec2".to_string(),
+      ast::TypeSpecifierNonArrayData::UVec3 => "uvec3".to_string(),
+      ast::TypeSpecifierNonArrayData::UVec4 => "uvec4".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat2 => "mat2".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat3 => "mat3".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat4 => "mat4".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat23 => "mat2x3".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat24 => "mat2x4".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat32 => "mat3x2".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat34 => "mat3x4".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat42 => "mat4x2".to_string(),
+      ast::TypeSpecifierNonArrayData::Mat43 => "mat4x3".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat2 => "dmat2".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat3 => "dmat3".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat4 => "dmat4".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat23 => "dmat2x3".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat24 => "dmat2x4".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat32 => "dmat3x2".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat34 => "dmat3x4".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat42 => "dmat4x2".to_string(),
+      ast::TypeSpecifierNonArrayData::DMat43 => "dmat4x3".to_string(),
+      ast::TypeSpecifierNonArrayData::TypeName(tn) => tn.content.0.to_string(),
+      _ => "unknown".to_string(),
+    }
+  }
+
+  /// Extract explicit location from layout qualifier if present
+  fn extract_layout_location(&self, qualifiers: &[ast::LayoutQualifierSpec]) -> Option<i32> {
+    for qualifier in qualifiers {
+      match &qualifier.content {
+        ast::LayoutQualifierSpecData::Identifier(ident, Some(expr)) => {
+          if ident.content.0.as_str() == "location" {
+            // Try to extract the constant expression value
+            if let ast::ExprData::IntConst(val) = &expr.content {
+              return Some(*val);
+            }
+          }
+        }
+        _ => {}
+      }
+    }
+    None
+  }
+
+  /// Check if a declaration has an attribute/in qualifier
+  fn has_attribute_qualifier(&self, qualifiers: &[ast::TypeQualifierSpec]) -> (bool, Option<i32>) {
+    let mut is_attribute = false;
+    let mut layout_location = None;
+
+    for qualifier in qualifiers {
+      match &qualifier.content {
+        ast::TypeQualifierSpecData::Storage(storage) => match &storage.content {
+          ast::StorageQualifierData::Attribute | ast::StorageQualifierData::In => {
+            is_attribute = true;
+          }
+          _ => {}
+        },
+        ast::TypeQualifierSpecData::Layout(layout) => {
+          layout_location = self.extract_layout_location(&layout.content.ids);
+        }
+        _ => {}
+      }
+    }
+
+    (is_attribute, layout_location)
+  }
+}
+
+impl Visitor for GLSLAttributeParser {
+  fn visit_single_declaration(&mut self, declaration: &ast::SingleDeclaration) -> Visit {
+    // Check if this is an attribute declaration
+    if let Some(ref qualifier) = declaration.ty.qualifier {
+      let (is_attribute, layout_location) = self.has_attribute_qualifier(&qualifier.content.qualifiers);
+
+      if is_attribute {
+        if let Some(ref name) = declaration.name {
+          // Extract type name from the type specifier
+          let type_name = self.type_to_string(&declaration.ty.ty.ty);
+
+          let location = layout_location.unwrap_or_else(|| {
+            let loc = self.next_location;
+            self.next_location += 1;
+            loc
+          });
+
+          self.attributes.push(GLSLAttribute {
+            name: name.content.0.to_string(),
+            type_name,
+            location,
+          });
+        }
+      }
+    }
+
+    Visit::Children
+  }
+}
+
 #[cxx::bridge(namespace = "holocron::webgl")]
 mod ffi {
+  /// Represents a single GLSL attribute for FFI
+  struct GLSLAttributeInfo {
+    name: String,
+    type_name: String,
+    location: i32,
+  }
+
+  /// Container for parsed attributes
+  struct GLSLAttributeList {
+    attributes: Vec<GLSLAttributeInfo>,
+  }
+
   extern "Rust" {
     #[cxx_name = "patchGLSLSourceFromStr"]
     fn patch_glsl_source_from_str(input: &str) -> String;
+
+    /// Parse GLSL vertex shader source and extract attributes
+    #[cxx_name = "parseGLSLAttributes"]
+    fn parse_glsl_attributes(source: &str) -> Result<GLSLAttributeList>;
+
+    /// Get attribute location by name from parsed source
+    #[cxx_name = "getGLSLAttribLocation"]
+    fn get_glsl_attrib_location(source: &str, name: &str) -> Result<i32>;
   }
+}
+
+/// Parse GLSL source and return all attributes
+fn parse_glsl_attributes(source: &str) -> Result<ffi::GLSLAttributeList, String> {
+  let mut parser = GLSLAttributeParser::new();
+  parser.parse(source)?;
+
+  let attributes = parser
+    .get_attributes()
+    .iter()
+    .map(|attr| ffi::GLSLAttributeInfo {
+      name: attr.name.clone(),
+      type_name: attr.type_name.clone(),
+      location: attr.location,
+    })
+    .collect();
+
+  Ok(ffi::GLSLAttributeList { attributes })
+}
+
+/// Get attribute location by name
+fn get_glsl_attrib_location(source: &str, name: &str) -> Result<i32, String> {
+  let mut parser = GLSLAttributeParser::new();
+  parser.parse(source)?;
+
+  parser
+    .get_attrib_location(name)
+    .ok_or_else(|| format!("Attribute '{}' not found", name))
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
-  use std::ffi::CString;
 
   #[test]
   fn test_patch_glsl_source() {
@@ -234,5 +462,169 @@ vec3 test() {
 }
 "#
     )
+  }
+
+  #[test]
+  fn test_parse_glsl_attributes_basic() {
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+in vec3 position;
+in vec3 normal;
+in vec2 uv;
+
+uniform mat4 modelViewMatrix;
+
+void main() {
+  gl_Position = modelViewMatrix * vec4(position, 1.0);
+}
+"#;
+    let mut parser = GLSLAttributeParser::new();
+    parser.parse(source_str).expect("Failed to parse GLSL");
+    
+    let attributes = parser.get_attributes();
+    assert_eq!(attributes.len(), 3);
+    
+    // Check first attribute
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[0].type_name, "vec3");
+    assert_eq!(attributes[0].location, 0);
+    
+    // Check second attribute
+    assert_eq!(attributes[1].name, "normal");
+    assert_eq!(attributes[1].type_name, "vec3");
+    assert_eq!(attributes[1].location, 1);
+    
+    // Check third attribute
+    assert_eq!(attributes[2].name, "uv");
+    assert_eq!(attributes[2].type_name, "vec2");
+    assert_eq!(attributes[2].location, 2);
+  }
+
+  #[test]
+  fn test_parse_glsl_attributes_with_layout() {
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aNormal;
+layout(location = 2) in vec2 aTexCoord;
+
+void main() {
+  gl_Position = vec4(aPos, 1.0);
+}
+"#;
+    let mut parser = GLSLAttributeParser::new();
+    parser.parse(source_str).expect("Failed to parse GLSL");
+    
+    let attributes = parser.get_attributes();
+    assert_eq!(attributes.len(), 3);
+    
+    assert_eq!(attributes[0].name, "aPos");
+    assert_eq!(attributes[0].type_name, "vec3");
+    assert_eq!(attributes[0].location, 0);
+    
+    assert_eq!(attributes[1].name, "aNormal");
+    assert_eq!(attributes[1].type_name, "vec3");
+    assert_eq!(attributes[1].location, 1);
+    
+    assert_eq!(attributes[2].name, "aTexCoord");
+    assert_eq!(attributes[2].type_name, "vec2");
+    assert_eq!(attributes[2].location, 2);
+  }
+
+  #[test]
+  fn test_parse_glsl_attributes_glsl100() {
+    let source_str = r#"
+precision highp float;
+
+attribute vec3 position;
+attribute vec3 normal;
+attribute vec2 texCoord;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+"#;
+    let mut parser = GLSLAttributeParser::new();
+    parser.parse(source_str).expect("Failed to parse GLSL");
+    
+    let attributes = parser.get_attributes();
+    assert_eq!(attributes.len(), 3);
+    
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[0].type_name, "vec3");
+    
+    assert_eq!(attributes[1].name, "normal");
+    assert_eq!(attributes[1].type_name, "vec3");
+    
+    assert_eq!(attributes[2].name, "texCoord");
+    assert_eq!(attributes[2].type_name, "vec2");
+  }
+
+  #[test]
+  fn test_get_attrib_location() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+in vec3 normal;
+in vec2 uv;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+"#;
+    let mut parser = GLSLAttributeParser::new();
+    parser.parse(source_str).expect("Failed to parse GLSL");
+    
+    assert_eq!(parser.get_attrib_location("position"), Some(0));
+    assert_eq!(parser.get_attrib_location("normal"), Some(1));
+    assert_eq!(parser.get_attrib_location("uv"), Some(2));
+    assert_eq!(parser.get_attrib_location("nonexistent"), None);
+  }
+
+  #[test]
+  fn test_parse_glsl_attributes_ffi() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+in vec3 normal;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+"#;
+    let result = parse_glsl_attributes(source_str);
+    assert!(result.is_ok());
+    
+    let list = result.unwrap();
+    assert_eq!(list.attributes.len(), 2);
+    assert_eq!(list.attributes[0].name, "position");
+    assert_eq!(list.attributes[1].name, "normal");
+  }
+
+  #[test]
+  fn test_get_glsl_attrib_location_ffi() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+in vec3 normal;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+"#;
+    let result = get_glsl_attrib_location(source_str, "position");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+    
+    let result = get_glsl_attrib_location(source_str, "normal");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 1);
+    
+    let result = get_glsl_attrib_location(source_str, "nonexistent");
+    assert!(result.is_err());
   }
 }
