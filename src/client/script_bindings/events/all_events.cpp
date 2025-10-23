@@ -22,7 +22,8 @@ namespace script_bindings::event_bindings
   DOM_EVENT_CLASSES_MAP(XX)       \
   XR_EVENT_CLASSES_MAP(XX)
 
-  void Initialize(Isolate *isolate){
+  void Initialize(Isolate *isolate)
+  {
 #define XX(T) T::Initialize(isolate);
     ALL_EVENT_CLASSES_MAP(XX)
 #undef XX
