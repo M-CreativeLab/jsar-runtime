@@ -92,4 +92,48 @@ namespace canvas
       skPath->transform(rotated);
     }
   }
+
+  void Path2D::addPath()
+  {
+  }
+
+  void Path2D::closePath()
+  {
+  }
+
+  void Path2D::moveTo()
+  {
+  }
+
+  void Path2D::lineTo()
+  {
+  }
+
+  void Path2D::bezierCurveTo()
+  {
+  }
+
+  void Path2D::quadraticCurveTo()
+  {
+  }
+
+  void Path2D::arc()
+  {
+  }
+
+  void Path2D::arcTo()
+  {
+  }
+
+  void Path2D::ellipse()
+  {
+  }
+
+  void Path2D::rect()
+  {
+  }
+
+  void Path2D::roundRect()
+  {
+  }
 }

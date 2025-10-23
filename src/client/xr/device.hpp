@@ -24,12 +24,18 @@ namespace client_xr
      */
     static std::shared_ptr<XRDeviceClient> Make(TrClientContextPerProcess *clientContext)
     {
-      return std::make_shared<XRDeviceClient>(clientContext);
+      static std::shared_ptr<XRDeviceClient> s_Instance = nullptr;
+      if (s_Instance == nullptr)
+      {
+        s_Instance = std::make_shared<XRDeviceClient>(clientContext);
+      }
+      return s_Instance;
     }
 
   public:
     explicit XRDeviceClient(TrClientContextPerProcess *clientContext)
         : clientContext_(clientContext)
+        , xrSystem_(nullptr)
     {
     }
 
@@ -58,13 +64,17 @@ namespace client_xr
 
   public:
     /**
+     * Create the `XRSystem` instance.
+     * 
      * @param eventloop The libuv's event loop to use.
+     */
+    std::shared_ptr<XRSystem> createXRSystem(uv_loop_t *eventloop);
+    /**
      * @returns the WebXR `XRSystem` instance.
      */
-    inline std::shared_ptr<XRSystem> getXRSystem(uv_loop_t *eventloop)
+    inline std::shared_ptr<XRSystem> getXRSystem()
     {
-      if (xrSystem_ == nullptr)
-        xrSystem_ = XRSystem::Make(shared_from_this(), eventloop);
+      assert(xrSystem_ != nullptr && "XRSystem is not created yet. Call createXRSystem() first.");
       return xrSystem_;
     }
     /**

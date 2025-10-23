@@ -27,6 +27,7 @@ namespace dom
       defaultStyle_.setProperty("height", "auto");
       defaultStyle_.setProperty("min-width", "100vw");
       defaultStyle_.setProperty("min-height", "100vh");
+      defaultStyle_.setProperty("background-color", "white");
       renderable = true;
 
       HTMLElement::createdCallback(from_scripting);

@@ -7,6 +7,7 @@
 #include <ostream>
 #include <common/utility.hpp>
 #include <crates/bindings.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace client_cssom
 {
@@ -44,7 +45,7 @@ namespace client_cssom
    * The `CSSStyleDeclaration` interface represents an object that is a CSS declaration block, and exposes style information
    * and various style-related methods and properties.
    */
-  class CSSStyleDeclaration
+  class CSSStyleDeclaration : public scripting_base::JSObjectHolder
   {
     using PropertyDeclarationBlock = crates::css2::properties::PropertyDeclarationBlock;
 

@@ -41,7 +41,10 @@ namespace dom
     {
       return canvas_impl_->readPixels(dst);
     }
-
+    inline bool peekPixels(SkPixmap *dst) const override
+    {
+      return canvas_impl_->peekPixels(dst);
+    }
     inline geometry::DOMRect getDrawingClientRect() const
     {
       return geometry::DOMRect(0, 0, width(), height());

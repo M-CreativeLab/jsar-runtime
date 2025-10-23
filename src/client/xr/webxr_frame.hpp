@@ -3,7 +3,8 @@
 #include <memory>
 #include <chrono>
 #include <common/utility.hpp>
-#include <bindings/webxr/common.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
+
 #include "./common.hpp"
 #include "./webxr_poses.hpp"
 
@@ -68,10 +69,11 @@ namespace client_xr
   };
 
   class XRFrame : public std::enable_shared_from_this<XRFrame>,
-                  public JSObjectHolder<bindings::XRFrame>
+                  public scripting_base::JSObjectHolder
   {
     friend class XRSession;
     friend class XRPose;
+    friend class XRViewerPose;
     friend class XRInputSource;
 
   public:
@@ -89,30 +91,29 @@ namespace client_xr
 
   public:
     XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session);
-    XRFrame(XRFrame &other);
+    XRFrame(const XRFrame &other) = default;
 
   public:
-    inline uint32_t id()
+    inline uint32_t id() const
     {
       return id_;
     }
-    inline uint32_t stereoId()
+    inline uint32_t stereoId() const
     {
       return stereoId_;
     }
-    inline bool active()
+    inline bool active() const
     {
       return active_;
     }
-    inline bool animationFrame()
+    inline bool animationFrame() const
     {
       return animationFrame_;
     }
-    inline std::shared_ptr<XRSession> session()
+    inline std::shared_ptr<XRSession> session() const
     {
       return session_;
     }
-
 
   public:
     void startFrame();
@@ -166,7 +167,7 @@ namespace client_xr
     bool animationFrame_;
     std::shared_ptr<XRSession> session_;
     std::shared_ptr<XRDeviceClient> device_;
-    xr::TrXRFrameRequest *frameRequestData_;
+    xr::TrXRFrameRequest frameRequestData_;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime_;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime_;
 

@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 #include <xr/render_state.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
+
 #include "./common.hpp"
 #include "./webxr_layers.hpp"
 
@@ -17,7 +19,7 @@ namespace client_xr
    * When you apply changes using the `XRSession` method `updateRenderState()`, the specified changes take effect after the
    * current animation frame has completed, but before the next one begins.
    */
-  class XRRenderState
+  class XRRenderState : public scripting_base::JSObjectHolder
   {
   public:
     XRRenderState()
@@ -34,7 +36,7 @@ namespace client_xr
         , inlineVerticalFieldOfView(stateData->inlineVerticalFieldOfView)
     {
     }
-    XRRenderState(XRRenderState &state)
+    XRRenderState(const XRRenderState &state)
         : baseLayer(state.baseLayer)
         , depthFar(state.depthFar)
         , depthNear(state.depthNear)

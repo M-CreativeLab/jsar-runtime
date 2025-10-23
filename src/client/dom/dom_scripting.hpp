@@ -7,7 +7,9 @@
 #include <unordered_map>
 #include <node/v8.h>
 #include <node/node.h>
-#include "common/utility.hpp"
+#include <common/utility.hpp>
+#include <client/dom/node.hpp>
+#include <client/browser/window.hpp>
 
 template <typename T>
 inline void USE(T &&)
@@ -133,11 +135,6 @@ namespace dom
     static DOMScriptingContext *GetCurrent(v8::Local<v8::Context> context);
 
   private:
-    static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WindowProxyPropertySetterCallback(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array> &info);
-    static void WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
                                                                        v8::Local<v8::Value> resourceName,
@@ -158,6 +155,13 @@ namespace dom
     }
 
     /**
+     * Get the global object of the scripting context.
+     * 
+     * @returns The global object of the scripting context.
+     */
+    v8::Local<v8::Value> getGlobalProperty(v8::Isolate *isolate, const char *name) const;
+
+    /**
      * Enable the dynamic import for the script.
      *
      * Internally it will call `v8::Isolate`'s `SetHostImportModuleDynamicallyCallback` to set the dynamic import callback, it causes the
@@ -171,10 +175,10 @@ namespace dom
     /**
      * Make a v8::Context for the main script.
      *
-     * @param windowValue The window object to be used in the main script.
-     * @param documentValue The document object to be used in the main script.
+     * @param document The document object to be used in scripting.
+     * @param window The window object to be used in scripting.
      */
-    void makeMainContext(v8::Local<v8::Value> windowValue, v8::Local<v8::Value> documentValue);
+    void makeMainContext(std::shared_ptr<dom::Node>, std::shared_ptr<browser::Window>);
 
     /**
      * Make a v8::Context for the worker script.
@@ -189,7 +193,9 @@ namespace dom
      * @param type The type of the script: classic or module.
      * @returns The new DOM script object.
      */
-    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext, const std::string &url, SourceTextType type);
+    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext,
+                                      const std::string &url,
+                                      SourceTextType type);
 
     /**
      * Compile the given script.
@@ -290,25 +296,10 @@ namespace dom
     bool dispatchEvent(v8::Local<v8::Object> event);
 
   private:
-    /**
-     * Create the `Window` or `WindowProxy` object for the main script.
-     *
-     * @param context The v8 context to create this object.
-     * @returns The `Window` or `WindowProxy` object.
-     */
-    v8::Local<v8::Value> createWindowProxy(v8::Local<v8::Context> context);
-
-    /**
-     * Create the `WorkerGlobalScope.self` proxy object.
-     *
-     * @param context The v8 context to create this object.
-     * @returns The `WorkerGlobalScope.self` proxy object.
-     */
-    v8::Local<v8::Value> createWorkerSelfProxy(v8::Local<v8::Context> context);
-
-  private:
     v8::Isolate *isolate_;
-    v8::Global<v8::Context> v8ContextStore;
+    v8::Global<v8::Context> v8ContextHandle;
+    v8::Persistent<v8::Object> windowHandle;
+
     std::shared_ptr<RuntimeContext> runtimeContext;
     std::unordered_map<int, std::shared_ptr<DOMModule>> hashToModuleMap;
     std::unordered_map<uint32_t, std::shared_ptr<DOMClassicScript>> idToScriptMap;

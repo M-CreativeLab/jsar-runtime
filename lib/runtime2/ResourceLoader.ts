@@ -252,7 +252,7 @@ class CacheStorage {
       return ReadableCache.FromFile(filename);
     } catch (e) {
       if (e?.code !== 'ENOENT') {
-        console.warn(`Failed to get Cache object for "${url}"`, e);
+        console.warn(`Failed to get Cache object for "${url}"`, e?.message || e);
       }
     }
     return null;
@@ -554,6 +554,43 @@ export class ResourceLoaderOnTransmute {
         }
       });
     }
+  }
+
+  /**
+   * Send a WHATWG fetch request, and returns the response promise.
+   */
+  sendWHATWGFetchRequest(baseURI: string, input: RequestInfo, options?: RequestInit): Promise<Response> {
+    /**
+     * TODO(yorkie): Support CORS.
+     */
+    let urlObj: URL;
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.startsWith('http:') || url.startsWith('https:')) {
+      urlObj = new URL(url);
+    } else if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
+      urlObj = new URL(url, baseURI);
+    } else {
+      throw new TypeError(`Failed to fetch: Invalid URL ${input}`);
+    }
+
+    return this.#cacheStorage.requestWithCache(urlObj.href, this.#getRequestInit(options), {
+      readFile: async (filename) => makeResponse(await this.#readFile(filename, 'arraybuffer')),
+      sendRequest: fetch,
+      readResponse: async (info, _url, onContentReady) => {
+        const resp = info.responseData;
+        if (resp.ok) {
+          let arraybuffer: ArrayBuffer;
+          try {
+            arraybuffer = await resp.arrayBuffer();
+            onContentReady(new Uint8Array(arraybuffer), info);
+            return makeResponse(arraybuffer, resp);
+          } catch (err) {
+            console.warn(`Failed to read response body: ${err}`);
+          }
+        }
+        return resp;
+      }
+    });
   }
 
   setDefaultHeaders(rawHeaders: string) {

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <glm/glm.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 #include "./common.hpp"
 #include "./webxr_viewport.hpp"
@@ -16,7 +17,7 @@ namespace client_xr
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/XRView
    */
-  class XRView
+  class XRView : public scripting_base::JSObjectHolder
   {
   public:
     /**
@@ -26,7 +27,7 @@ namespace client_xr
      * @param session The session that the view belongs to.
      * @param baseReferenceSpace The reference space that the view is based on.
      */
-    XRView(xr::TrXRView &viewData,
+    XRView(const xr::TrXRView &viewData,
            std::shared_ptr<XRSession> session,
            std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
 

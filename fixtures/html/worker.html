@@ -5,8 +5,11 @@
   <title>Web Workers</title>
   <script>
     const worker = new Worker('worker.js');
+    worker.addEventListener('message', (event) => {
+      console.log('Received message from listener:', event);
+    });
     worker.onmessage = (event) => {
-      console.log('Received message from worker:', event.data);
+      console.log('Received message from onmessage:', event);
     };
     worker.postMessage({ text: 'foo' });
   </script>

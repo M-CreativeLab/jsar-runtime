@@ -1031,7 +1031,7 @@ namespace dom
       v8::Context::Scope contextScope(context);
 
       // Create a V8 event object using the proper Event wrapper
-      auto eventObject = script_bindings::events::MakeEvent(isolate, event);
+      auto eventObject = script_bindings::event_bindings::MakeEvent(isolate, event);
 
       // Call the compiled handler function with the event object
       v8::TryCatch tryCatch(isolate);

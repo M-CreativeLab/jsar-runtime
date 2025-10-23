@@ -11,6 +11,7 @@
 #include "./per_process.hpp"
 #include "./browser/window.hpp"
 #include "./builtin_scene/scene.hpp"
+#include "./dom/browsing_context.hpp"
 #include "./dom/dom_scripting.hpp"
 #include "./graphics/webgl_context.hpp"
 #include "./media/media_player.hpp"
@@ -40,7 +41,7 @@ using namespace bindings;
 TR_NAPI_MODULE_MAP(XX)
 #undef XX
 
-ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir)
+ScriptEnvironment::ScriptEnvironment(int id, const string &scriptsDir)
     : id(id)
 {
   auto &args = scriptArgs;
@@ -169,74 +170,46 @@ MaybeLocal<Value> TrScriptRuntimePerProcess::PrepareStackTraceCallback(Local<Con
 }
 
 TrScriptRuntimePerProcess::TrScriptRuntimePerProcess()
+    : client_context_(TrClientContextPerProcess::Get())
+    , script_env_(client_context_->createScriptingEnv())
 {
+  if (client_context_->enableV8Profiling)
+  {
+    string logfile = client_context_->applicationCacheDirectory + "/v8.log"; // TODO: support multiple apps
+    auto &envScriptArgs = script_env_.scriptArgs;
+    envScriptArgs.insert(envScriptArgs.begin() + 1, "--prof");
+    envScriptArgs.insert(envScriptArgs.begin() + 1, "--logfile=" + logfile);
+    envScriptArgs.insert(envScriptArgs.begin() + 1, "--no_logfile_per_isolate");
+  }
+  script_env_.initialize();
 }
 
 TrScriptRuntimePerProcess::~TrScriptRuntimePerProcess()
 {
 }
 
-void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
+bool TrScriptRuntimePerProcess::setup(vector<string> &script_args)
 {
-  if (running == true)
-  {
-    DEBUG(LOG_TAG_SCRIPT, "ScriptRuntime is already running.");
-    return;
-  }
-  if (started == true)
-  {
-    DEBUG(LOG_TAG_SCRIPT, "ScriptRuntime is already started.");
-    return;
-  }
-
-  auto clientContext = TrClientContextPerProcess::Get();
-  assert(clientContext != nullptr);
-
-  string scriptsDir = clientContext->applicationCacheDirectory + "/scripts";
-  ScriptEnvironment &scriptEnv = clientContext->createScriptingEnv(clientContext->id, scriptsDir);
-  if (clientContext->enableV8Profiling)
-  {
-    string logfile = clientContext->applicationCacheDirectory + "/v8.log"; // TODO: support multiple apps
-    auto &envScriptArgs = scriptEnv.scriptArgs;
-    envScriptArgs.insert(envScriptArgs.begin() + 1, "--prof");
-    envScriptArgs.insert(envScriptArgs.begin() + 1, "--logfile=" + logfile);
-    envScriptArgs.insert(envScriptArgs.begin() + 1, "--no_logfile_per_isolate");
-  }
-  scriptEnv.initialize();
-
-  clientContext->reportDocumentEvent(TrDocumentEventType::BeforeScripting);
-  executeMainScript(scriptEnv, scriptArgs);
-  scriptEnv.dispose();
-}
-
-void TrScriptRuntimePerProcess::terminate()
-{
-  running = false;
-}
-
-int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<string> &scriptArgs)
-{
-  int exit_code = 0;
-  auto nodePlatform = env.nodePlatform;
-  auto nodeInitResult = env.nodeInitResult;
+  node::MultiIsolatePlatform *nodePlatform = script_env_.nodePlatform;
+  node::InitializationResult *nodeInitResult = script_env_.nodeInitResult;
 
   // Combine the script arguments with the default arguments.
   vector<string> args(nodeInitResult->args());
-  for (uint32_t n = 0; n < scriptArgs.size(); n++)
-    args.push_back(scriptArgs[n]);
+  for (uint32_t n = 0; n < script_args.size(); n++)
+    args.push_back(script_args[n]);
 
   auto &execArgs = nodeInitResult->exec_args();
   {
     // Print the command line arguments and the exec arguments.
-    std::cout << "Command Args: ";
+    cout << "Command Args: ";
     for (auto &arg : args)
-      std::cout << "(" << arg << ") ";
-    std::cout << std::endl;
+      cout << "(" << arg << ") ";
+    cout << endl;
 
-    std::cout << "   Exec Args: ";
+    cout << "   Exec Args: ";
     for (auto &arg : execArgs)
-      std::cout << "(" << arg << ") ";
-    std::cout << std::endl;
+      cout << "(" << arg << ") ";
+    cout << endl;
   }
 
   // Setup up a libuv event loop, v8::Isolate, and Node.js Environment.
@@ -254,8 +227,40 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     return false;
   }
 
-  v8::Isolate *isolate = setup->isolate();
-  node::Environment *nodeEnv = setup->env();
+  script_setup_ = std::move(setup);
+  return true;
+}
+
+void TrScriptRuntimePerProcess::start()
+{
+  assert(running_ == false && started_ == false &&
+         "ScriptRuntime can only be started once.");
+
+  client_context_->reportDocumentEvent(TrDocumentEventType::BeforeScripting);
+  executeMainScript();
+  script_env_.dispose();
+}
+
+void TrScriptRuntimePerProcess::terminate()
+{
+  running_ = false;
+}
+
+v8::Isolate *TrScriptRuntimePerProcess::getIsolate() const
+{
+  assert(script_setup_ != nullptr &&
+         "ScriptEnvironment is not setup.");
+  return script_setup_->isolate();
+}
+
+int TrScriptRuntimePerProcess::executeMainScript()
+{
+  assert(script_setup_ != nullptr &&
+         "ScriptEnvironment is not setup.");
+  int exit_code = 0;
+
+  v8::Isolate *isolate = script_setup_->isolate();
+  node::Environment *nodeEnv = script_setup_->env();
   node::SetProcessExitHandler(nodeEnv, [this](node::Environment *env, int exit_code)
                               { this->onScriptExit(env, exit_code); });
   isolate->SetPrepareStackTraceCallback(PrepareStackTraceCallback);
@@ -264,7 +269,7 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     Locker locker(isolate);
     Isolate::Scope isolateScope(isolate);
     HandleScope handleScope(isolate);
-    Context::Scope contextScope(setup->context());
+    Context::Scope contextScope(script_setup_->context());
 
 #define XX(name) AddLinkedBinding(nodeEnv, transmute_##name##_napi_mod);
     TR_NAPI_MODULE_MAP(XX)
@@ -403,7 +408,7 @@ void TrClientContextPerProcess::preload()
   fontCacheManager = font::FontCacheManager::GetInstance();
 }
 
-void TrClientContextPerProcess::start()
+void TrClientContextPerProcess::bootstrap()
 {
   string pid = to_string(getpid());
   perfFs = make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
@@ -543,8 +548,14 @@ void TrClientContextPerProcess::start()
   startedAt = uv_hrtime();
 
   // Finish the client start.
-  fprintf(stdout, "The client(%d) is started at %" PRIu64 ".\n", id, startedAt);
+  fprintf(stdout, "The client(%d) is bootstrapped at %" PRIu64 ".\n", id, startedAt);
 }
+
+#define SHOULD_STARTED() \
+  if (!startedAt)        \
+  {                      \
+    return nullptr;      \
+  }
 
 void TrClientContextPerProcess::print()
 {
@@ -620,16 +631,22 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
 
 bool TrClientContextPerProcess::sendEvent(shared_ptr<TrNativeEvent> event)
 {
+  assert(eventChanSender != nullptr &&
+         "EventChanSender is not initialized.");
   return eventChanSender->dispatchEvent(event);
 }
 
 TrNativeEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
 {
+  assert(eventChanReceiver != nullptr &&
+         "EventChanReceiver is not initialized.");
   return eventChanReceiver->recvEvent(timeout);
 }
 
 shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer(media_comm::MediaContentType contentType)
 {
+  SHOULD_STARTED()
+
   auto player = make_shared<media_client::MediaPlayer>(contentType);
   mediaPlayers.push_back(player);
   return player;
@@ -637,6 +654,8 @@ shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlay
 
 shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlayer()
 {
+  SHOULD_STARTED()
+
   auto player = make_shared<media_client::AudioPlayer>();
   mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
   return player;
@@ -644,6 +663,8 @@ shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlay
 
 TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::createHostWebGLContext()
 {
+  SHOULD_STARTED()
+
   client_graphics::ContextAttributes contextAttrs;
   contextAttrs.xrCompatible = true;
   auto newContext = client_graphics::WebGL2Context::Make(contextAttrs);
@@ -686,6 +707,8 @@ bool TrClientContextPerProcess::removeHostWebGLContext(uint32_t contextId)
 
 bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush)
 {
+  assert(commandBufferChanSender != nullptr &&
+         "CommandBufferChanSender is not initialized.");
   return commandBufferChanSender->sendCommandBufferRequest(commandBuffer, followsFlush);
 }
 

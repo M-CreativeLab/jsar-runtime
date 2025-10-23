@@ -1,0 +1,55 @@
+#pragma once
+
+#include <memory>
+#include <node/v8.h>
+#include <node/node_api.h>
+#include <node/uv.h>
+
+namespace scripting_base
+{
+  class JSObjectHolder;
+
+  /**
+   * The base class for all JavaScript object wraps.
+   */
+  class BaseObject
+  {
+  protected:
+    BaseObject(v8::Isolate *isolate);
+    BaseObject(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    BaseObject(const BaseObject &);
+
+  public:
+    virtual ~BaseObject();
+
+  public:
+    uv_loop_t *getEventLoop() const;
+    bool hasData() const;
+    void setData(std::shared_ptr<JSObjectHolder>);
+    void setNapiEnv(napi_env env);
+
+    v8::Local<v8::Object> getJSObject(v8::Isolate *) const;
+    v8::Local<v8::Object> This() const;
+    void Reset(v8::Local<v8::Object> object);
+
+  protected:
+    virtual void onCreated()
+    {
+    }
+    virtual void onDataUpdated()
+    {
+    }
+
+  private:
+    static void Finalizer(const v8::WeakCallbackInfo<BaseObject> &);
+    static void Cleanup(const v8::WeakCallbackInfo<BaseObject> &);
+
+  protected:
+    v8::Isolate *current_isolate_ = nullptr;
+    v8::Global<v8::Object> object_handle_;
+    std::shared_ptr<JSObjectHolder> data_handle_;
+
+    // @deprecated
+    napi_env napi_env_;
+  };
+}

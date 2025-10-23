@@ -1,16 +1,23 @@
 #pragma once
 
 #include <client/script_bindings/event.hpp>
-#include "./ui_event.hpp"
+#include "./error_event.hpp"
+#include "./message_event.hpp"
 #include "./mouse_event.hpp"
 #include "./pointer_event.hpp"
+#include "./ui_event.hpp"
+#include "./xr_session_event.hpp"
+#include "./xr_input_source_event.hpp"
+#include "./xr_input_sources_change_event.hpp"
 
 namespace script_bindings
 {
-  namespace events
+  namespace event_bindings
   {
     /**
-     * Initialize all event bindings in the V8 isolate.
+     * Initialize all event bindings with V8.
+     * 
+     * @param isolate The V8 isolate.
      */
     void Initialize(v8::Isolate *isolate);
 

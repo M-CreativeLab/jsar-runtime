@@ -225,6 +225,19 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getLineDashOffset()
+  {
+    return lineDashOffset;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::setLineDashOffset(float offset)
+  {
+    lineDashOffset = offset;
+    return true;
+  }
+
+  template <typename CanvasType>
   float CanvasRenderingContext2D<CanvasType>::getLineWidth()
   {
     return skPaint->getStrokeWidth();
@@ -435,6 +448,12 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  const std::vector<float> &CanvasRenderingContext2D<CanvasType>::getLineDash()
+  {
+    return lineDash;
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::setLineDash(const std::vector<float> &segments)
   {
     auto count = segments.size();
@@ -573,6 +592,13 @@ namespace canvas
       skCanvas->resetMatrix();
       skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
     }
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::resetTransform()
+  {
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->resetMatrix();
   }
 
   template <typename CanvasType>

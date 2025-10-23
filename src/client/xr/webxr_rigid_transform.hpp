@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace client_xr
 {
@@ -17,7 +18,7 @@ namespace client_xr
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/XRRigidTransform
    */
-  class XRRigidTransform
+  class XRRigidTransform : public scripting_base::JSObjectHolder
   {
   public:
     /**

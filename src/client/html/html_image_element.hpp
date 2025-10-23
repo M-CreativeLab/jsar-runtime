@@ -70,6 +70,15 @@ namespace dom
                 sk_bitmap_->rowBytes());
       return sk_bitmap_->readPixels(dst);
     }
+    bool peekPixels(SkPixmap *pixmap) const override
+    {
+      if (pixmap == nullptr)
+        return false;
+      pixmap->reset(sk_bitmap_->info(),
+                    sk_bitmap_->getPixels(),
+                    sk_bitmap_->rowBytes());
+      return true;
+    }
 
     /**
      * Sets the image source URL.

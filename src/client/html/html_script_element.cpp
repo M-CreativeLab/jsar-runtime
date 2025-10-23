@@ -155,12 +155,24 @@ namespace dom
 
   void HTMLScriptElement::executeScript()
   {
-    if (compiledScript == nullptr || !scriptCompiled)
+    if (compiledScript == nullptr ||
+        scriptExecuting ||
+        !scriptCompiled)
       return;
+
     auto browsingContext = ownerDocument->lock()->browsingContext;
-    browsingContext->scriptingContext->evaluate(compiledScript);
-    scriptExecutedOnce = true;
-    scriptExecutionScheduled = false;
+    {
+      // Mark as executing to prevent re-entrance
+      scriptExecuting = true;
+
+      // Execute the script
+      browsingContext->scriptingContext->evaluate(compiledScript);
+
+      // Mark as executed
+      scriptExecutedOnce = true;
+      scriptExecutionScheduled = false;
+      scriptExecuting = false;
+    }
 
     // Notify browsing context if this script was using the execution queue
     if (usesExecutionQueue)
@@ -176,7 +188,7 @@ namespace dom
 
   bool HTMLScriptElement::executeScriptFromQueue()
   {
-    if (isReadyToExecute())
+    if (!scriptExecuting && isReadyToExecute())
     {
       executeScript();
       return true;

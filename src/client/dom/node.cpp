@@ -113,7 +113,7 @@ namespace dom
     }
   }
 
-  void Node::removeChild(shared_ptr<Node> aChild)
+  shared_ptr<Node> Node::removeChild(shared_ptr<Node> aChild)
   {
     if (aChild == nullptr)
       throw runtime_error("Failed to remove the child node: the node to remove is null.");
@@ -121,8 +121,14 @@ namespace dom
     auto it = find(childNodes.begin(), childNodes.end(), aChild);
     if (it != childNodes.end())
     {
+      shared_ptr<Node> removed = *it;
       it = childNodes.erase(it);
       childRemovedCallback(aChild);
+      return removed;
+    }
+    else
+    {
+      return nullptr;
     }
   }
 

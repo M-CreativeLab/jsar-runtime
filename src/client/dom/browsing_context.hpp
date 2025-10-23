@@ -82,6 +82,15 @@ namespace dom
     }
 
     /**
+     * Get the active document, which is the last document in the documents list.
+     */
+    inline std::shared_ptr<Document> getActiveDocument()
+    {
+      assert(activeDocument != nullptr && "The active document is null");
+      return activeDocument;
+    }
+
+    /**
      * Open the given document, it will start loading the document.
      *
      * @param document The document to open.
@@ -89,7 +98,12 @@ namespace dom
     template <typename DocumentType>
     void open(shared_ptr<DocumentType> document)
     {
+      // Open the document to start loading
       document->open();
+
+      // Set the active document if it's an HTML document
+      if constexpr (std::is_same<DocumentType, HTMLDocument>::value)
+        activeDocument = std::static_pointer_cast<HTMLDocument>(document);
     }
 
     /**
@@ -133,6 +147,7 @@ namespace dom
 
   public:
     vector<shared_ptr<Document>> documents;
+    shared_ptr<HTMLDocument> activeDocument = nullptr;
 
   private:
     // Script execution queue using handles to avoid circular dependency

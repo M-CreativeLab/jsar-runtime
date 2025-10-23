@@ -7,6 +7,7 @@
 
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace dom
 {
@@ -17,6 +18,8 @@ namespace dom
 
 #define DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX) \
   XX(Event)                                \
+  XX(MessageEvent)                         \
+  XX(ErrorEvent)                           \
   XX(MouseEvent)                           \
   XX(PointerEvent)                         \
   XX(XRSessionEvent)                       \
@@ -190,6 +193,10 @@ namespace dom
   XX(WebGLContextLost, "webglcontextlost")                   \
   XX(WebGLContextRestored, "webglcontextrestored")
 
+#define WORKERS_EVENT_TYPES_MAP(XX) \
+  XX(Message, "message")            \
+  XX(MessageError, "messageerror")
+
 #define WEBXR_EVENT_TYPES_MAP(XX)                             \
   XX(XRDeviceChange, "devicechange")                          \
   XX(XRSessionEnd, "XRSession.end")                           \
@@ -209,6 +216,7 @@ namespace dom
   HTMLMEDIAELEMENT_EVENT_TYPES_MAP(XX) \
   DOCUMENT_EVENT_TYPES_MAP(XX)         \
   CANVAS_EVENT_TYPES_MAP(XX)           \
+  WORKERS_EVENT_TYPES_MAP(XX)          \
   WEBXR_EVENT_TYPES_MAP(XX)
 
   enum class DOMEventType
@@ -325,7 +333,8 @@ namespace dom
    * @see https://dom.spec.whatwg.org/#event
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Event
    */
-  class Event : public events_comm::TrEvent<DOMEventType>
+  class Event : public events_comm::TrEvent<DOMEventType>,
+                public scripting_base::JSObjectHolder
   {
   public:
     using events_comm::TrEvent<DOMEventType>::TrEvent;
@@ -340,6 +349,7 @@ namespace dom
      */
     Event(DOMEventConstructorType constructor, DOMEventType type, DOMEventInit init = DOMEventInit::Default())
         : events_comm::TrEvent<DOMEventType>(type)
+        , scripting_base::JSObjectHolder()
         , constructor_(constructor)
         , bubbles_(init.bubbles)
         , cancelable_(init.cancelable)
@@ -354,6 +364,7 @@ namespace dom
 
     Event(Event &that)
         : events_comm::TrEvent<DOMEventType>(that)
+        , scripting_base::JSObjectHolder(that)
         , constructor_(that.constructor_)
         , bubbles_(that.bubbles_)
         , cancelable_(that.cancelable_)
@@ -369,6 +380,14 @@ namespace dom
     }
 
   public:
+    virtual bool isErrorEvent() const
+    {
+      return false;
+    }
+    virtual bool isMessageEvent() const
+    {
+      return false;
+    }
     virtual bool isUIEvent() const
     {
       return false;
@@ -386,6 +405,18 @@ namespace dom
       return false;
     }
     virtual bool isPointerEvent() const
+    {
+      return false;
+    }
+    virtual bool isXRSessionEvent() const
+    {
+      return false;
+    }
+    virtual bool isXRInputSourceEvent() const
+    {
+      return false;
+    }
+    virtual bool isXRInputSourcesChangeEvent() const
     {
       return false;
     }

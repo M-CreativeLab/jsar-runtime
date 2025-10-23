@@ -27,7 +27,7 @@
   console.info('Node.DOCUMENT_TYPE_NODE', Node.DOCUMENT_TYPE_NODE);
   console.info('Node.DOCUMENT_FRAGMENT_NODE', Node.DOCUMENT_FRAGMENT_NODE);
 
-  console.info(Node.prototype);
+  console.info(Node.prototype.constructor.name);
   console.info(Object.getOwnPropertyDescriptors(Node.prototype));
 
   function assertProperty(obj, prop) {

@@ -1,5 +1,6 @@
-#include "./event.hpp"
 #include <iostream>
+#include "./event.hpp"
+#include "./events/all_events.hpp"
 
 using namespace std;
 using namespace v8;
@@ -12,164 +13,115 @@ namespace script_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "type").ToLocalChecked(),
-                                  TypeGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
-
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "bubbles").ToLocalChecked(),
-                                  BubblesGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
-
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "cancelable").ToLocalChecked(),
-                                  CancelableGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
-
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "composed").ToLocalChecked(),
-                                  ComposedGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "type", &Event::TypeGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "bubbles", &Event::BubblesGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "cancelable", &Event::CancelableGetter);
+    InstanceReadonlyPropertyAccessor(isolate, prototype, "composed", &Event::ComposedGetter);
 
     // Add methods
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "preventDefault").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, PreventDefault));
-
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "stopPropagation").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, StopPropagation));
+    InstanceMethod(isolate, prototype, "preventDefault", &Event::PreventDefault);
+    InstanceMethod(isolate, prototype, "stopPropagation", &Event::StopPropagation);
   }
 
   // static
-  Local<Object> Event::NewInstance(Isolate *isolate, std::shared_ptr<dom::Event> nativeEvent)
+  Local<Object> Event::NewInstance(Isolate *isolate, std::shared_ptr<dom::Event> event)
   {
     EscapableHandleScope scope(isolate);
+    assert(event != nullptr && "nativeEvent must not be null");
 
-    // Use the ObjectWrap NewInstance method to create the wrapper
-    return scope.Escape(scripting_base::ObjectWrap<Event, dom::Event>::NewInstance(isolate, nativeEvent).As<Object>());
+#define CHECK_AND_RETURN_INSTANCE_OF(EVENT_TYPE, HANDLE_TYPE)                          \
+  if (event->is##EVENT_TYPE())                                                         \
+  {                                                                                    \
+    auto typedEvent = static_pointer_cast<HANDLE_TYPE>(event);                         \
+    return scope.Escape(event_bindings::EVENT_TYPE::NewInstance(isolate, typedEvent)); \
   }
+#define CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(NAME) \
+  CHECK_AND_RETURN_INSTANCE_OF(NAME, dom::events::NAME)
+#define CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(NAME) \
+  CHECK_AND_RETURN_INSTANCE_OF(NAME, client_xr::NAME)
 
-  // static
-  Local<Function> Event::Initialize(Isolate *isolate)
-  {
-    return scripting_base::ObjectWrap<Event, dom::Event>::Initialize(isolate);
+    // DOM Events
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(ErrorEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(MessageEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(PointerEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(MouseEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT(UIEvent)
+
+    // XR Events
+    CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(XRSessionEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(XRInputSourceEvent)
+    CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT(XRInputSourcesChangeEvent)
+
+#undef CHECK_AND_RETURN_INSTANCE_OF_DOM_EVENT
+#undef CHECK_AND_RETURN_INSTANCE_OF_XR_EVENT
+#undef CHECK_AND_RETURN_INSTANCE_OF
+
+    // For other event types, use the base Event class
+    return scope.Escape(EventBase::NewInstance(isolate, event).As<Object>());
   }
 
   Event::Event(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : scripting_base::ObjectWrap<Event, dom::Event>(isolate, args)
+      : EventBase(isolate, args)
   {
   }
 
   // Property getters
 
-  // static
-  void Event::TypeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Event::TypeGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    if (event == nullptr || event->inner() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    string type = event->inner()->typeStr();
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked());
+    string type = handle()->typeStr();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  type.c_str())
+                                .ToLocalChecked());
   }
 
-  // static
-  void Event::BubblesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Event::BubblesGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    if (event == nullptr || event->inner() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    bool bubbles = event->inner()->bubbles();
-    info.GetReturnValue().Set(Boolean::New(isolate, bubbles));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->bubbles()));
   }
 
-  // static
-  void Event::CancelableGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Event::CancelableGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    if (event == nullptr || event->inner() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    bool cancelable = event->inner()->cancelable();
-    info.GetReturnValue().Set(Boolean::New(isolate, cancelable));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->cancelable()));
   }
 
-  // static
-  void Event::ComposedGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Event::ComposedGetter(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    if (event == nullptr || event->inner() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    bool composed = event->inner()->composed();
-    info.GetReturnValue().Set(Boolean::New(isolate, composed));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->composed()));
   }
 
   // Methods
 
-  // static
   void Event::PreventDefault(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    if (event == nullptr || event->inner() == nullptr)
-    {
-      return;
-    }
-
-    event->inner()->preventDefault();
+    handle()->preventDefault();
+    info.GetReturnValue().SetUndefined();
   }
 
-  // static
   void Event::StopPropagation(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    if (event == nullptr || event->inner() == nullptr)
-    {
-      return;
-    }
-
-    event->inner()->stopPropagation();
+    handle()->stopPropagation();
+    info.GetReturnValue().SetUndefined();
   }
 }

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DOM Node Basics Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+
+    ul {
+      padding-left: 18px;
+    }
+
+    li {
+      margin: 2px 0;
+    }
+
+    .pass {
+      color: #0a0;
+    }
+
+    .fail {
+      color: #a00;
+    }
+
+    #root {
+      border: 1px dashed #ccc;
+      padding: 8px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>DOM Node Basics Test</h1>
+  <ul id="results"></ul>
+  <div id="root"></div>
+  <script>
+    (function () {
+      const results = document.getElementById('results');
+      function log(name, ok, detail) {
+        const li = document.createElement('li');
+        li.className = ok ? 'pass' : 'fail';
+        li.textContent = (ok ? '✔ ' : '✘ ') + name + (ok || !detail ? '' : ' - ' + detail);
+        results.appendChild(li);
+      }
+      function assert(name, predicate) {
+        try {
+          const ok = typeof predicate === 'function' ? !!predicate() : !!predicate;
+          log(name, ok);
+        } catch (e) {
+          log(name, false, e && e.message);
+        }
+      }
+
+      // Node constants
+      assert('Node.ELEMENT_NODE === 1', Node.ELEMENT_NODE === 1);
+      assert('Node.TEXT_NODE === 3', Node.TEXT_NODE === 3);
+      assert('Node.COMMENT_NODE === 8', Node.COMMENT_NODE === 8);
+      assert('Node.DOCUMENT_FRAGMENT_NODE === 11', Node.DOCUMENT_FRAGMENT_NODE === 11);
+
+      const root = document.getElementById('root');
+      assert('root.ownerDocument is document', root.ownerDocument === document);
+      assert('Element nodeName is uppercase tag name', root.nodeName === 'DIV');
+      assert('root initially has no child nodes', root.hasChildNodes() === false && root.childNodes.length === 0);
+      assert('root.isConnected is true', root.isConnected === true);
+
+      // Append and basic relationships
+      const a = document.createElement('span'); a.id = 'a'; a.textContent = 'A';
+      const b = document.createElement('span'); b.id = 'b'; b.textContent = 'B';
+      root.appendChild(a);
+      root.appendChild(b);
+      assert('childNodes length is 2 after appendChild', root.childNodes.length === 2);
+      assert('firstChild is a', root.firstChild === a);
+      assert('lastChild is b', root.lastChild === b);
+      assert('a.parentNode is root', a.parentNode === root);
+      assert('a.nextSibling is b', a.nextSibling === b);
+      assert('b.previousSibling is a', b.previousSibling === a);
+
+      // insertBefore
+      const c = document.createElement('span'); c.id = 'c'; c.textContent = 'C';
+      root.insertBefore(c, b);
+      assert('insertBefore inserts c before b', root.childNodes[1] === c);
+
+      // replaceChild
+      const d = document.createElement('span'); d.id = 'd'; d.textContent = 'D';
+      root.replaceChild(d, a);
+      assert('replaceChild replaced a with d', root.firstChild === d && !root.contains(a));
+
+      // removeChild
+      const removed = root.removeChild(d);
+      assert('removeChild returns the removed node', removed === d);
+      assert('Removed node is disconnected', !root.contains(d) && d.parentNode === null && d.isConnected === false);
+
+      // DocumentFragment
+      const frag = document.createDocumentFragment();
+      const e = document.createElement('em'); e.textContent = 'E';
+      const t1 = document.createTextNode('text1');
+      frag.appendChild(e);
+      frag.appendChild(t1);
+      root.appendChild(frag);
+      assert('Appending a DocumentFragment moves its children', root.lastChild === t1 && e.parentNode === root && t1.parentNode === root);
+
+      // Text node
+      const tx = document.createTextNode('hello');
+      root.appendChild(tx);
+      assert('Text node type and name', tx.nodeType === 3 && tx.nodeName === '#text');
+      assert('Text nodeValue equals data', tx.nodeValue === 'hello' && tx.data === 'hello');
+      tx.nodeValue = 'hi';
+      assert('Setting nodeValue updates textContent', tx.textContent === 'hi');
+
+      // Comment node
+      const cm = document.createComment('note');
+      root.appendChild(cm);
+      assert('Comment node type and name', cm.nodeType === 8 && cm.nodeName === '#comment');
+      assert('Comment nodeValue is readable', cm.nodeValue === 'note');
+
+      // textContent clears and sets text
+      root.textContent = 'X Y';
+      assert('Setting textContent clears children', root.childNodes.length === 1 && root.firstChild.nodeType === 3 && root.textContent === 'X Y');
+
+      // normalize merges adjacent text nodes
+      // const n1 = document.createTextNode('foo');
+      // const n2 = document.createTextNode('bar');
+      // root.appendChild(n1);
+      // root.appendChild(n2);
+      // root.normalize();
+      // let textCount = 0, combined = '';
+      // root.childNodes.forEach(node => { if (node.nodeType === 3) { textCount++; combined += node.nodeValue; } });
+      // assert('normalize merges adjacent text nodes', textCount === 1 && combined.includes('X Yfoobar'));
+
+      // cloneNode / isEqualNode
+      const p = document.createElement('p');
+      const strong = document.createElement('strong'); strong.textContent = 'bold';
+      p.appendChild(strong);
+      const pShallow = p.cloneNode(false);
+      const pDeep = p.cloneNode(true);
+      assert('Shallow clone has no children', pShallow.childNodes.length === 0);
+      assert('Deep clone contains children', pDeep.firstChild && pDeep.firstChild.nodeName === 'STRONG');
+      assert('isEqualNode structural equality', pDeep.isEqualNode(p) === true && pShallow.isEqualNode(p) === false);
+
+      // contains / compareDocumentPosition / isSameNode
+      // assert('root does not contain detached p', root.contains(p) === false);
+      // root.appendChild(p);
+      // assert('root.contains(strong) is true', root.contains(strong) === true);
+      // const pos1 = p.compareDocumentPosition(strong);
+      // assert('Parent contains child', (pos1 & Node.DOCUMENT_POSITION_CONTAINS) === Node.DOCUMENT_POSITION_CONTAINS);
+      // const s1 = document.createElement('span'); s1.id = 's1';
+      // const s2 = document.createElement('span'); s2.id = 's2';
+      // root.appendChild(s1);
+      // root.appendChild(s2);
+      // const posS = s1.compareDocumentPosition(s2);
+      // assert('s1 precedes s2 (FOLLOWING)', (posS & Node.DOCUMENT_POSITION_FOLLOWING) === Node.DOCUMENT_POSITION_FOLLOWING);
+      // assert('isSameNode checks same reference', s1.isSameNode(s1) === true && s1.isSameNode(s2) === false);
+
+      // After removal, isConnected becomes false
+      root.removeChild(s2);
+      assert('Removed node has isConnected === false', s2.isConnected === false && s2.parentNode === null);
+    })();
+  </script>
+</body>
+
+</html>

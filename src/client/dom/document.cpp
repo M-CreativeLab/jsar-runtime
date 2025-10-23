@@ -60,6 +60,9 @@ namespace dom
       cerr << "The URL: " << url << endl;
     }
 
+    // Set the document URI from the Node interface.
+    document_uri_ = baseURI;
+
     if (loadSource)
       browsingContext->fetchTextSourceResource(url, [this](const string &source)
                                                { setSource(source); });
@@ -235,6 +238,16 @@ namespace dom
   std::shared_ptr<DocumentFragment> Document::createDocumentFragment()
   {
     return make_shared<DocumentFragment>(getPtr<Document>());
+  }
+
+  std::shared_ptr<Element> Document::createElement(const string &localName)
+  {
+    return createElementNS("http://www.w3.org/1999/xhtml", localName);
+  }
+
+  std::shared_ptr<Element> Document::createElementNS(const string &namespaceURI, const string &qualifiedName)
+  {
+    return Element::CreateElement(namespaceURI, qualifiedName, getPtr<Document>(), true);
   }
 
   std::shared_ptr<Text> Document::createTextNode(const string &data)

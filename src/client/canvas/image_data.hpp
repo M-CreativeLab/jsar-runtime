@@ -6,11 +6,13 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <skia/include/core/SkColorSpace.h>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "./image_source.hpp"
 
 namespace canvas
 {
-  class ImageData : public ImageSource
+  class ImageData : public ImageSource,
+                    public scripting_base::JSObjectHolder
   {
   public:
     ImageData(size_t width, size_t height, std::string colorSpaceName = "srgb");
@@ -30,25 +32,32 @@ namespace canvas
     {
       return pixmap.readPixels(dst, 0, 0);
     }
+    bool peekPixels(SkPixmap *outPixmap) const override
+    {
+      if (outPixmap == nullptr)
+        return false;
+      *outPixmap = pixmap;
+      return true;
+    }
 
   public:
-    inline SkColorSpace *colorSpace()
+    inline SkColorSpace *colorSpace() const
     {
       return pixmap.colorSpace();
     }
-    inline std::string colorSpaceName()
+    inline std::string colorSpaceName() const
     {
       return colorSpaceName_;
     }
-    inline void *addr()
+    inline void *addr() const
     {
       return pixmap.writable_addr();
     }
-    inline size_t rowBytes()
+    inline size_t rowBytes() const
     {
       return pixmap.rowBytes();
     }
-    inline size_t computeByteSize()
+    inline size_t computeByteSize() const
     {
       return pixmap.computeByteSize();
     }

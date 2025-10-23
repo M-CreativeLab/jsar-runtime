@@ -86,6 +86,8 @@ namespace dom
     std::shared_ptr<DocumentFragment> createDocumentFragment();
     std::shared_ptr<Text> createTextNode(const std::string &data);
     std::shared_ptr<Comment> createComment(const std::string &data);
+    std::shared_ptr<Element> createElement(const std::string &localName);
+    std::shared_ptr<Element> createElementNS(const std::string &namespaceURI, const std::string &qualifiedName);
     std::shared_ptr<Node> importNode(const std::shared_ptr<Node> node, bool deep);
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
@@ -187,6 +189,11 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
+
+    inline std::string documentURI() const
+    {
+      return document_uri_;
+    }
     inline std::shared_ptr<HTMLHeadElement> head() const
     {
       return head_element_;
@@ -219,6 +226,7 @@ namespace dom
 
   protected:
     bool auto_connect_;
+    std::string document_uri_ = "about:blank";
     std::weak_ptr<browser::Window> default_view_;
     std::shared_ptr<pugi::xml_document> doc_internal_;
     std::shared_ptr<HTMLHeadElement> head_element_;

@@ -74,7 +74,7 @@ namespace xr
     static const size_t ViewsCount = 2;
 
   public:
-    TrXRFrameRequest(TrXRFrameRequest &that)
+    TrXRFrameRequest(const TrXRFrameRequest &that)
         : TrFrameRequestSimple(that)
         , sessionId(that.sessionId)
         , stereoId(that.stereoId)
@@ -116,21 +116,21 @@ namespace xr
       framebufferWidth = 0;
       framebufferHeight = 0;
     }
-    void setLocalBaseMatrix(float *matrixFloats)
+    void setLocalBaseMatrix(const float *matrixFloats)
     {
       for (int i = 0; i < 16; i++)
         localBaseMatrix[i] = matrixFloats[i];
     }
-    void setLocalBaseMatrix(glm::mat4 matrix)
+    void setLocalBaseMatrix(const glm::mat4 &matrix)
     {
       setLocalBaseMatrix(glm::value_ptr(matrix));
     }
-    void setViewerBaseMatrix(float *matrixFloats)
+    void setViewerBaseMatrix(const float *matrixFloats)
     {
       for (int i = 0; i < 16; i++)
         viewerBaseMatrix[i] = matrixFloats[i];
     }
-    void setViewerBaseMatrix(glm::mat4 matrix)
+    void setViewerBaseMatrix(const glm::mat4 &matrix)
     {
       setViewerBaseMatrix(glm::value_ptr(matrix));
     }

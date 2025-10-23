@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <crates/bindings.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace browser
 {
@@ -10,7 +11,7 @@ namespace browser
    * @class Location
    * The `Location` class represents the URL of the current document and provides methods to interact with it.
    */
-  class Location final
+  class Location final : public scripting_base::JSObjectHolder
   {
   public:
     /**
@@ -26,16 +27,23 @@ namespace browser
      */
     explicit Location(const std::string &input)
     {
-      auto urlObject = crates::Url::Parse(input);
-      host = urlObject.host;
-      hostname = urlObject.hostname;
-      href = urlObject.href;
-      origin = urlObject.origin;
-      pathname = urlObject.pathname;
-      port = urlObject.port;
-      protocol = urlObject.protocol;
-      search = urlObject.search;
-      hash = urlObject.hash;
+      try
+      {
+        auto urlObject = crates::Url::Parse(input);
+        host = urlObject.host;
+        hostname = urlObject.hostname;
+        href = urlObject.href;
+        origin = urlObject.origin;
+        pathname = urlObject.pathname;
+        port = urlObject.port;
+        protocol = urlObject.protocol;
+        search = urlObject.search;
+        hash = urlObject.hash;
+      }
+      catch (const std::exception &e)
+      {
+        throw std::invalid_argument("Invalid URL: " + input);
+      }
     }
 
   public:

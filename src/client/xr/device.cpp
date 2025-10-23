@@ -1,22 +1,33 @@
 #include "./device.hpp"
 #include "./common.hpp"
 
+using namespace std;
+
 namespace client_xr
 {
+  shared_ptr<XRSystem> XRDeviceClient::createXRSystem(uv_loop_t *eventloop)
+  {
+    assert(xrSystem_ == nullptr && "XRSystem is already created.");
+    assert(eventloop != nullptr && "The event loop must not be null.");
+
+    xrSystem_ = XRSystem::Make(shared_from_this(), eventloop);
+    return xrSystem_;
+  }
+
   bool XRDeviceClient::isSessionSupported(XRSessionMode mode)
   {
     if (mode == xr::TrXRSessionMode::Unknown)
-      throw std::invalid_argument("mode should be 'immersive-ar', 'immersive-vr' or 'inline'.");
+      throw invalid_argument("mode should be 'immersive-ar', 'immersive-vr' or 'inline'.");
 
     xr::IsSessionSupportedRequest request(mode);
     if (!clientContext_->sendXrCommand(request))
-      throw std::runtime_error("failed to send XR command(IsSessionSupportedRequest).");
+      throw runtime_error("failed to send XR command(IsSessionSupportedRequest).");
 
     auto resp = clientContext_->recvXrCommand<xr::IsSessionSupportedResponse>(
       xr::TrXRCmdType::IsSessionSupportedResponse,
       requestTimeout_);
     if (resp == nullptr)
-      throw std::runtime_error("failed to receive XR command(SessionResponse).");
+      throw runtime_error("failed to receive XR command(SessionResponse).");
 
     bool supported = resp->supported;
     delete resp;
@@ -52,33 +63,33 @@ namespace client_xr
   }
 
   XRSessionConfiguration XRDeviceClient::requestSession(XRSessionMode mode,
-                                                        std::vector<xr::TrXRFeature> features,
-                                                        std::optional<XRSessionRequestInit> init)
+                                                        vector<xr::TrXRFeature> features,
+                                                        optional<XRSessionRequestInit> init)
   {
     xr::SessionRequest request(mode);
     if (!clientContext_->sendXrCommand(request))
-      throw std::runtime_error("failed to send XR command(SessionRequest).");
+      throw runtime_error("failed to send XR command(SessionRequest).");
 
     auto resp = clientContext_->recvXrCommand<xr::SessionResponse>(xr::TrXRCmdType::SessionResponse, requestTimeout_);
     if (resp == nullptr)
-      throw std::runtime_error("failed to receive XR command(SessionResponse).");
+      throw runtime_error("failed to receive XR command(SessionResponse).");
 
     XRSessionConfiguration sessionConfig(*resp, mode, init.value_or(XRSessionRequestInit::Default()), features);
     delete resp;
     return sessionConfig;
   }
 
-  XRSessionConfiguration XRDeviceClient::requestSession(std::string modeString,
-                                                        std::vector<xr::TrXRFeature> features,
-                                                        std::optional<XRSessionRequestInit> init)
+  XRSessionConfiguration XRDeviceClient::requestSession(string modeString,
+                                                        vector<xr::TrXRFeature> features,
+                                                        optional<XRSessionRequestInit> init)
   {
     xr::TrXRSessionMode mode = xr::MakeSessionMode(modeString);
     if (mode == xr::TrXRSessionMode::Unknown)
-      throw std::invalid_argument("mode should be 'immersive-ar', 'immersive-vr' or 'inline'.");
+      throw invalid_argument("mode should be 'immersive-ar', 'immersive-vr' or 'inline'.");
     return requestSession(mode, features, init);
   }
 
-  bool XRDeviceClient::startFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
+  bool XRDeviceClient::startFrame(shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
   {
     assert(session != nullptr);
     session->markCurrentFrameStarted(frameRequest);
@@ -87,13 +98,13 @@ namespace client_xr
     if (TR_UNLIKELY(glContext == nullptr))
     {
       auto msg = "WebGLContext is not connected with the XRSession(" + std::to_string(session->id) + ").";
-      throw std::runtime_error(msg);
+      throw runtime_error(msg);
     }
     auto req = session->createStartFrameCommand();
     return glContext->sendCommandBufferRequestDirectly(req);
   }
 
-  bool XRDeviceClient::endFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
+  bool XRDeviceClient::endFrame(shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
   {
     assert(session != nullptr);
     session->markCurrentFrameEnded();
@@ -101,7 +112,7 @@ namespace client_xr
     if (TR_UNLIKELY(glContext == nullptr))
     {
       auto msg = "WebGLContext is not connected with the XRSession(" + std::to_string(session->id) + ").";
-      throw std::runtime_error(msg);
+      throw runtime_error(msg);
     }
     auto req = session->createEndFrameCommand(frameRequest);
     return glContext->sendCommandBufferRequestDirectly(req);

@@ -132,6 +132,32 @@ namespace dom
     data_.replace(offset, count, data);
   }
 
+  void CharacterData::replaceWith(vector<shared_ptr<Node>> nodes)
+  {
+    if (nodes.empty())
+    {
+      // If no arguments are passed in, this method removes the node from the DOM tree.
+      remove();
+      return;
+    }
+
+    string stringData;
+    for (auto &node : nodes)
+    {
+      if (node == nullptr)
+        continue;
+
+      if (node->isCharacterData())
+      {
+        auto charDataNode = static_pointer_cast<CharacterData>(node);
+        stringData += charDataNode->data();
+      }
+    }
+
+    // Replace the data of this node with the concatenated string data.
+    data_ = stringData;
+  }
+
   string CharacterData::substringData(size_t offset, size_t count)
   {
     if (offset >= data_.length())

@@ -1,5 +1,6 @@
 #include <client/dom/element.hpp>
 #include <client/dom/document.hpp>
+#include <client/dom/browsing_context.hpp>
 #include <client/html/html_meta_element.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
@@ -18,6 +19,7 @@ namespace browser
   Window::Window(TrClientContextPerProcess *client_context)
       : dom::DOMEventTarget()
       , client_context_(client_context)
+      , navigator_(make_shared<browser::Navigator>(client_context))
   {
   }
 
@@ -160,5 +162,35 @@ namespace browser
         // TODO(yorkie): Add RPC call to notify about viewport size change
       }
     }
+  }
+
+  long Window::requestAnimationFrame(AnimationFrameCallback callback)
+  {
+    assert(animation_frame_provider_ != nullptr && animation_frame_provider_->isStarted() &&
+           "AnimationFrameProvider must be started before requesting animation frames.");
+    return animation_frame_provider_->requestAnimationFrame(callback);
+  }
+
+  void Window::cancelAnimationFrame(long handle)
+  {
+    if (animation_frame_provider_ == nullptr || !animation_frame_provider_->isStarted())
+      return;
+    animation_frame_provider_->cancelAnimationFrame(handle);
+  }
+
+  void Window::startAnimationFrameProvider()
+  {
+    assert((animation_frame_provider_ == nullptr || !animation_frame_provider_->isStarted()) &&
+           "AnimationFrameProvider must be null and not started.");
+    animation_frame_provider_ = make_shared<client_frame::AnimationFrameProvider>();
+    animation_frame_provider_->start();
+  }
+
+  void Window::configureDocument(std::shared_ptr<dom::Document> document)
+  {
+    assert(is_document_configured_ == false);
+    document_ = document;
+    location_ = make_shared<browser::Location>(document_->baseURI);
+    is_document_configured_ = true;
   }
 }

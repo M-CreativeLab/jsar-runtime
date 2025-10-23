@@ -7,25 +7,15 @@ import { ResourceLoaderOnTransmute } from './ResourceLoader';
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
-import { Threepio } from './threepio';
+// import { Threepio } from './threepio';
 
 export class TransmuteRuntime2 extends EventTarget {
   #resourceLoader: ResourceLoaderOnTransmute = new ResourceLoaderOnTransmute();
   #browsingContext: Transmute.BrowsingContext;
-  #threepio: Threepio;
+  // #threepio: Threepio;
 
-  constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
+  constructor(private id: number) {
     super();
-    {
-      /**
-       * Print the supported WebGL extensions and versions.
-       */
-      const exts = gl.getSupportedExtensions();
-      console.info(`[WebGL] supported extensions(${exts.length}):`);
-      for (const extName of exts) {
-        console.info(`  - ${extName}`);
-      }
-    }
     {
       /**
        * Initialize the `BrowsingContext` instance.
@@ -34,7 +24,7 @@ export class TransmuteRuntime2 extends EventTarget {
       const browsingContext = new BrowsingContext();
       browsingContext.setResourceLoader(this.#resourceLoader);
       this.#browsingContext = browsingContext;
-      this.#threepio = new Threepio(browsingContext);
+      // this.#threepio = new Threepio(browsingContext);
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
@@ -54,15 +44,11 @@ export class TransmuteRuntime2 extends EventTarget {
     ) {
       await this.load(requestUrl);
     } else {
-      await this.#threepio.request(requestUrl);
+      // await this.#threepio.request(requestUrl);
     }
   }
 
   private async load(codeOrUrl: string, urlBase?: string) {
-    if (!this.gl) {
-      throw new TypeError('The webgl is not ready or lost context state');
-    }
-
     // Override the `codeOrUrl` with the example url if the debug mode is enabled.
     if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_URL) {
       codeOrUrl = process.env.JSAR_EXAMPLE_URL;
@@ -140,7 +126,7 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     // Start the browsing context.
-    this.#browsingContext.start(codeOrUrl, 'text/html', inputType, urlBase);
+    globalThis.document = this.#browsingContext.start(codeOrUrl, 'text/html', inputType, urlBase);
     console.info(`Content(#${this.id}): the document is loaded successfully.`);
   }
 }

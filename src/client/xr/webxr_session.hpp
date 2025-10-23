@@ -5,7 +5,6 @@
 #include <idgen.hpp>
 #include <common/utility.hpp>
 #include <client/graphics/webgl_context.hpp>
-#include <bindings/webxr/common.hpp>
 
 #include "./common.hpp"
 #include "./webxr_session_events.hpp"
@@ -85,7 +84,6 @@ namespace client_xr
   };
 
   class XRSession : public dom::DOMEventTarget,
-                    public JSObjectHolder<bindings::XRSession>,
                     public std::enable_shared_from_this<XRSession>
   {
     friend class XRDeviceClient;

@@ -4,12 +4,13 @@
 #include <string>
 #include <iostream>
 #include <common/command_buffers/details/properties.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 #include "./webgl_object.hpp"
 
 namespace client_graphics
 {
-  class WebGLShaderPrecisionFormat
+  class WebGLShaderPrecisionFormat : public scripting_base::JSObjectHolder
   {
   public:
     WebGLShaderPrecisionFormat() = default;

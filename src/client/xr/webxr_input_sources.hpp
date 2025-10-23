@@ -3,7 +3,7 @@
 #include <memory>
 #include <optional>
 #include <common/utility.hpp>
-#include <bindings/webxr/common.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 #include "./common.hpp"
 #include "./webxr_spaces.hpp"
@@ -21,8 +21,8 @@ namespace client_xr
    * direction in which it is being aimed and optionally may generate events if the user triggers performs actions using the
    * device.
    */
-  class XRInputSource : public JSObjectHolder<bindings::XRInputSource>,
-                        public enable_shared_from_this<XRInputSource>
+  class XRInputSource : public enable_shared_from_this<XRInputSource>,
+                        public scripting_base::JSObjectHolder
   {
     friend class XRHand;
     friend class XRJointSpace;

@@ -6,7 +6,7 @@
 #include <client/dom/events/ui_event.hpp>
 #include <client/script_bindings/event.hpp>
 
-namespace script_bindings
+namespace script_bindings::event_bindings
 {
   class UIEvent;
   using UIEventBase = scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>;
@@ -30,5 +30,13 @@ namespace script_bindings
     {
       return "UIEvent";
     }
+
+    static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                             std::shared_ptr<::dom::events::UIEvent> nativeEvent);
+
+  private:
+    // Property getters
+    void DetailGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
   };
 }

@@ -65,6 +65,8 @@ typedef uint32_t FrameRequestId;
 typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
 typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferResponseFunction;
 
+class TrClientContextPerProcess;
+
 /**
  * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
  * necessary components and settings for initializing and running a Node.js-based script execution environment.
@@ -81,7 +83,7 @@ typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferRespon
 class ScriptEnvironment final
 {
 public:
-  ScriptEnvironment(int id, string &scriptsDir);
+  ScriptEnvironment(int id, const std::string &scriptsDir);
   ~ScriptEnvironment();
 
 public:
@@ -108,16 +110,23 @@ public:
   ~TrScriptRuntimePerProcess();
 
 public:
-  void start(vector<string> &scriptArgs);
+  bool setup(vector<string> &script_args);
+  void start();
   void terminate();
 
+  v8::Isolate *getIsolate() const;
+
 protected:
-  int executeMainScript(ScriptEnvironment &env, vector<string> &scriptArgs);
+  int executeMainScript();
   void onScriptExit(node::Environment *env, int exit_code);
 
 private:
-  bool started = false;
-  bool running = false;
+  bool started_ = false;
+  bool running_ = false;
+
+  TrClientContextPerProcess *client_context_;
+  ScriptEnvironment script_env_;
+  std::unique_ptr<node::CommonEnvironmentSetup> script_setup_;
 };
 
 class TrClientPerformanceFileSystem : public analytics::PerformanceFileSystem
@@ -198,9 +207,9 @@ public:
    */
   void preload();
   /**
-   * Initialize(start) the client context at specialized application process, such as connecting sockets, channels, etc.
+   * Bootstrap the client context at specialized application process, such as connecting sockets, channels, etc.
    */
-  void start();
+  void bootstrap();
   /**
    * Prints the client context information.
    */
@@ -353,6 +362,7 @@ public: // commandbuffer methods
 public: // WebXR methods
   inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient()
   {
+    assert(xrDeviceClient != nullptr && "XR device client is not initialized.");
     return xrDeviceClient;
   }
   xr::TrXRDeviceContextZone *getXRDeviceContextZone()
@@ -431,6 +441,10 @@ public: // WebXR methods
   }
 
 public:
+  inline std::string getScriptsDirectory() const
+  {
+    return applicationCacheDirectory + "/scripts";
+  }
   /**
    * @returns the scripting thread's event loop.
    */
@@ -452,10 +466,10 @@ public:
   {
     return scriptingEnv;
   }
-  inline ScriptEnvironment &createScriptingEnv(int id, string &scriptsDir)
+  ScriptEnvironment &createScriptingEnv()
   {
     assert(scriptingEnv == nullptr);
-    scriptingEnv = std::make_shared<ScriptEnvironment>(id, scriptsDir);
+    scriptingEnv = std::make_shared<ScriptEnvironment>(id, getScriptsDirectory());
     return *scriptingEnv;
   }
   // Check if the current thread is the scripting thread.
@@ -520,6 +534,10 @@ public:
    * The built-in scene for the DOM rendering.
    */
   std::shared_ptr<builtin_scene::Scene> builtinScene;
+  /**
+   * The main `BrowsingContext` instance for the client process.
+   */
+  std::shared_ptr<::dom::BrowsingContext> browsingContext;
   /**
    * The `Window` instance for the client process.
    */

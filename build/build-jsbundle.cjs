@@ -12,7 +12,7 @@ const shell = (cmd, options) => execSync(cmd, { stdio: 'inherit', ...options });
 const jsDir = path.join(__dirname, '../');
 
 function installDeps() {
-  shell('npm install', { cwd: jsDir });
+  shell('npm ci', { cwd: jsDir });
 }
 
 if (clean === 'yes' || !fs.existsSync(path.join(jsDir, 'node_modules'))) {
