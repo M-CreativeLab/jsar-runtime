@@ -11,6 +11,7 @@ namespace cdp_domains
     return {
       "Runtime",
       "Log",
+      "DOM",
     };
   }
 

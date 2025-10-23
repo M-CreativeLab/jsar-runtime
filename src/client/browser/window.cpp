@@ -186,7 +186,7 @@ namespace browser
     animation_frame_provider_->start();
   }
 
-  void Window::configureDocument(std::shared_ptr<dom::Document> document)
+  void Window::configureDocument(shared_ptr<dom::Document> document)
   {
     assert(is_document_configured_ == false);
     document_ = document;

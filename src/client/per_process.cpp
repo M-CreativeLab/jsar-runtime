@@ -535,27 +535,24 @@ void TrClientContextPerProcess::bootstrap()
   window = make_shared<::browser::Window>(this);
 
   // Start the service alive listener
-  serviceAliveListener = new thread([]()
-                                    {
-                                      SET_THREAD_NAME("TrServiceAliveListener");
-                                      while (true)
-                                      {
-                                        this_thread::sleep_for(chrono::seconds(1));
-                                        if (getppid() == 1)
-                                          exit(0);  // FIXME: more graceful exit?
-                                      } });
+  auto keepAlive = []()
+  {
+    // Keep the process alive until the parent process is dead.
+    SET_THREAD_NAME("TrServiceAliveListener");
+    while (true)
+    {
+      this_thread::sleep_for(chrono::seconds(1));
+      if (getppid() == 1)
+        exit(0); // FIXME: more graceful exit?
+    }
+  };
+  serviceAliveListener = new thread(keepAlive);
 
   startedAt = uv_hrtime();
 
   // Finish the client start.
   fprintf(stdout, "The client(%d) is bootstrapped at %" PRIu64 ".\n", id, startedAt);
 }
-
-#define SHOULD_STARTED() \
-  if (!startedAt)        \
-  {                      \
-    return nullptr;      \
-  }
 
 void TrClientContextPerProcess::print()
 {
@@ -645,8 +642,6 @@ TrNativeEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
 
 shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer(media_comm::MediaContentType contentType)
 {
-  SHOULD_STARTED()
-
   auto player = make_shared<media_client::MediaPlayer>(contentType);
   mediaPlayers.push_back(player);
   return player;
@@ -654,8 +649,6 @@ shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlay
 
 shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlayer()
 {
-  SHOULD_STARTED()
-
   auto player = make_shared<media_client::AudioPlayer>();
   mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
   return player;
@@ -663,7 +656,12 @@ shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlay
 
 TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::createHostWebGLContext()
 {
-  SHOULD_STARTED()
+  if (!commandBufferChanClient ||
+      !commandBufferChanSender ||
+      !commandBufferChanReceiver)
+  {
+    return nullptr;
+  }
 
   client_graphics::ContextAttributes contextAttrs;
   contextAttrs.xrCompatible = true;

@@ -14,6 +14,7 @@ namespace client_inspector
   {
     class CdpLogDomain;
     class CdpRuntimeDomain;
+    class CdpDomDomain;
   }
 
   // Function type for sending CDP events from content process to host
@@ -84,6 +85,7 @@ namespace client_inspector
     // Convenience method to get Log domain
     domains::CdpLogDomain *getLogDomain();
     domains::CdpRuntimeDomain *getRuntimeDomain();
+    domains::CdpDomDomain *getDomDomain();
 
   private:
     std::unordered_map<std::string, std::unique_ptr<ContentCdpDomainHandler>> domains_;

@@ -6,6 +6,7 @@
 #include "./content_cdp_handler.hpp"
 #include "./domains/log_domain.hpp"
 #include "./domains/runtime_domain.hpp"
+#include "./domains/dom_domain.hpp"
 
 namespace client_inspector
 {
@@ -17,6 +18,7 @@ namespace client_inspector
     // Register content-side domain implementations
     registerDomain("Runtime", make_unique<domains::CdpRuntimeDomain>());
     registerDomain("Log", make_unique<domains::CdpLogDomain>());
+    registerDomain("DOM", make_unique<domains::CdpDomDomain>());
 
     // Set event sender for all domains if provided
     if (eventSender_)
@@ -103,5 +105,10 @@ namespace client_inspector
   domains::CdpRuntimeDomain *ContentCdpHandler::getRuntimeDomain()
   {
     return getDomain<domains::CdpRuntimeDomain>("Runtime");
+  }
+
+  domains::CdpDomDomain *ContentCdpHandler::getDomDomain()
+  {
+    return getDomain<domains::CdpDomDomain>("DOM");
   }
 }
