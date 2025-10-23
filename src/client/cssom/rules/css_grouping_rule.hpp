@@ -4,23 +4,26 @@
 #include <memory>
 #include "../css_rule.hpp"
 
-namespace client_cssom::rules
+namespace endor
 {
-  class CSSGroupingRule : public CSSRule
+  namespace client_cssom::rules
   {
-    using CSSRule::CSSRule;
-
-  public:
-    inline CSSRuleList &cssRules() const
+    class CSSGroupingRule : public CSSRule
     {
-      return *cssRules_;
-    }
+      using CSSRule::CSSRule;
 
-  public:
-    size_t insertRule(const std::string &rule, size_t index);
-    void deleteRule(size_t index);
+    public:
+      inline CSSRuleList &cssRules() const
+      {
+        return *cssRules_;
+      }
 
-  private:
-    std::unique_ptr<CSSRuleList> cssRules_;
-  };
-}
+    public:
+      size_t insertRule(const std::string &rule, size_t index);
+      void deleteRule(size_t index);
+
+    private:
+      std::unique_ptr<CSSRuleList> cssRules_;
+    };
+  }
+} // namespace endor

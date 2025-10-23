@@ -10,87 +10,90 @@
 #include "./character_data.hpp"
 #include "./geometry/dom_rect.hpp"
 
-namespace dom
+namespace endor
 {
-  class Node;
-  class Element;
-  class Document;
-
-  class Text final : public CharacterData
+  namespace dom
   {
-    friend class RenderHTMLDocument;
-    friend class Element;
-    friend class client_layout::LayoutObject;
+    class Node;
+    class Element;
+    class Document;
 
-  public:
-    /**
+    class Text final : public CharacterData
+    {
+      friend class RenderHTMLDocument;
+      friend class Element;
+      friend class client_layout::LayoutObject;
+
+    public:
+      /**
      * Create a text node from the internal xml_node.
      *
      * @param node The internal xml_node.
      * @param ownerDocument The owner document.
      * @returns The created text node.
      */
-    static std::shared_ptr<Text> CreateText(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    /**
+      static std::shared_ptr<Text> CreateText(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+      /**
      * Clone the text node.
      *
      * @param srcText The source text node to clone.
      * @returns The cloned text node.
      */
-    static std::shared_ptr<Node> CloneText(shared_ptr<Node> srcText);
+      static std::shared_ptr<Node> CloneText(shared_ptr<Node> srcText);
 
-  public:
-    Text(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    Text(std::shared_ptr<Document> ownerDocument);
-    Text(const std::string value, std::shared_ptr<Document> ownerDocument);
-    Text(const Text &other);
-    ~Text() = default;
+    public:
+      Text(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+      Text(std::shared_ptr<Document> ownerDocument);
+      Text(const std::string value, std::shared_ptr<Document> ownerDocument);
+      Text(const Text &other);
+      ~Text() = default;
 
-  public:
-    const std::string &wholeText() const;
+    public:
+      const std::string &wholeText() const;
 
-  public:
-    [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
+    public:
+      [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
 
-    inline const client_cssom::CSSStyleDeclaration &defaultStyle() const
-    {
-      return defaultStyle_;
-    }
-    inline bool hasAdoptedStyle() const
-    {
-      return adoptedStyle_ != nullptr;
-    }
-    inline client_cssom::ComputedStyle &adoptedStyleRef() const
-    {
-      return *adoptedStyle_;
-    }
+      inline const client_cssom::CSSStyleDeclaration &defaultStyle() const
+      {
+        return defaultStyle_;
+      }
+      inline bool hasAdoptedStyle() const
+      {
+        return adoptedStyle_ != nullptr;
+      }
+      inline client_cssom::ComputedStyle &adoptedStyleRef() const
+      {
+        return *adoptedStyle_;
+      }
 
-    builtin_scene::RenderQueue computeRenderQueue() const override final;
+      builtin_scene::RenderQueue computeRenderQueue() const override final;
 
-  private:
-    bool isText() const override final
-    {
-      return true;
-    }
+    private:
+      bool isText() const override final
+      {
+        return true;
+      }
 
-    void connectedCallback() override;
-    void disconnectedCallback() override;
-    void nodeValueChangedCallback(const std::string &newValue) override;
-    void layoutSizeChangedCallback(const client_layout::Fragment &);
+      void connectedCallback() override;
+      void disconnectedCallback() override;
+      void nodeValueChangedCallback(const std::string &newValue) override;
+      void layoutSizeChangedCallback(const client_layout::Fragment &);
 
-  private:
-    void initCSSBoxes();
-    void resetCSSBoxes(bool skipCheck = false);
+    private:
+      void initCSSBoxes();
+      void resetCSSBoxes(bool skipCheck = false);
 
-    bool adoptStyle(const client_cssom::ComputedStyle &);
-    bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
+      bool adoptStyle(const client_cssom::ComputedStyle &);
+      bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
 
-  private:
-    client_cssom::CSSStyleDeclaration defaultStyle_;
-    std::unique_ptr<client_cssom::ComputedStyle> adoptedStyle_;
-    std::vector<std::shared_ptr<client_layout::LayoutText>> textBoxes_;
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
-    float offsetWidth_ = 0.0f;
-    float offsetHeight_ = 0.0f;
-  };
-}
+    private:
+      client_cssom::CSSStyleDeclaration defaultStyle_;
+      std::unique_ptr<client_cssom::ComputedStyle> adoptedStyle_;
+      std::vector<std::shared_ptr<client_layout::LayoutText>> textBoxes_;
+      std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
+      float offsetWidth_ = 0.0f;
+      float offsetHeight_ = 0.0f;
+    };
+  }
+} // namespace endor

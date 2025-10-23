@@ -7,56 +7,59 @@
 
 #include "./layout_replaced.hpp"
 
-namespace client_layout
+namespace endor
 {
-  /**
+  namespace client_layout
+  {
+    /**
    * The layout box for image types:
    *
    * 1. normal image types: <img>, <picture>.
    * 2. content image types: "content: url(path/to/image.png)".
    */
-  class LayoutImage final : public LayoutReplaced
-  {
-    using LayoutReplaced::LayoutReplaced;
-
-  public:
-    const char *name() const override
+    class LayoutImage final : public LayoutReplaced
     {
-      return "LayoutImage";
-    }
-    bool isLayoutImage() const override final
-    {
-      return true;
-    }
+      using LayoutReplaced::LayoutReplaced;
 
-    // Adjusts the image size according to the style, and returns `false` if the size is not changed.
-    bool adjustImageSize();
-    void setImageBitmap(std::shared_ptr<SkBitmap> srcBitmap);
+    public:
+      const char *name() const override
+      {
+        return "LayoutImage";
+      }
+      bool isLayoutImage() const override final
+      {
+        return true;
+      }
 
-  private:
-    inline dom::HTMLImageElement &imageElement()
-    {
-      return dom::Node::AsChecked<dom::HTMLImageElement>(node());
-    }
-    inline const dom::HTMLImageElement &imageElement() const
-    {
-      return dom::Node::AsChecked<const dom::HTMLImageElement>(node());
-    }
+      // Adjusts the image size according to the style, and returns `false` if the size is not changed.
+      bool adjustImageSize();
+      void setImageBitmap(std::shared_ptr<SkBitmap> srcBitmap);
 
-    void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
-    void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
-    void styleWillChange(client_cssom::ComputedStyle &new_style) override;
-    void didComputeLayoutOnce(const ConstraintSpace &) override;
-    void sizeDidChange(const Fragment &newSize) override;
+    private:
+      inline dom::HTMLImageElement &imageElement()
+      {
+        return dom::Node::AsChecked<dom::HTMLImageElement>(node());
+      }
+      inline const dom::HTMLImageElement &imageElement() const
+      {
+        return dom::Node::AsChecked<const dom::HTMLImageElement>(node());
+      }
 
-    void layoutDidFirstReady(const Fragment &);
+      void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
+      void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+      void styleWillChange(client_cssom::ComputedStyle &new_style) override;
+      void didComputeLayoutOnce(const ConstraintSpace &) override;
+      void sizeDidChange(const Fragment &newSize) override;
 
-    // Set if the image should be visible or not in drawing.
-    void setVisible(bool);
+      void layoutDidFirstReady(const Fragment &);
 
-  private:
-    // Whether the layout is computed, it means the loading can be started when the layout is computed.
-    bool is_layout_ready_ = false;
-    std::optional<bool> last_visible_ = std::nullopt;
-  };
-}
+      // Set if the image should be visible or not in drawing.
+      void setVisible(bool);
+
+    private:
+      // Whether the layout is computed, it means the loading can be started when the layout is computed.
+      bool is_layout_ready_ = false;
+      std::optional<bool> last_visible_ = std::nullopt;
+    };
+  }
+} // namespace endor

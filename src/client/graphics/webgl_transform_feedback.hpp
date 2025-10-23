@@ -2,6 +2,9 @@
 
 #include "./webgl_object.hpp"
 
-namespace client_graphics
+namespace endor
 {
-}
+  namespace client_graphics
+  {
+  }
+} // namespace endor

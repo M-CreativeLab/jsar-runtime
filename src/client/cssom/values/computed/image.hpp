@@ -6,87 +6,90 @@
 #include <client/cssom/values/computed/length_percentage.hpp>
 #include <client/cssom/values/computed/url.hpp>
 
-namespace client_cssom::values::computed
+namespace endor
 {
-  using GradientItem = generics::GenericGradientItem<computed::Color, computed::LengthPercentage>;
-  using GradientBase = generics::GenericGradient<computed::Length,
-                                                 computed::LengthPercentage,
-                                                 computed::Color>;
-
-  class Gradient : public GradientBase
+  namespace client_cssom::values::computed
   {
-    using GradientBase::GenericGradient;
-  };
+    using GradientItem = generics::GenericGradientItem<computed::Color, computed::LengthPercentage>;
+    using GradientBase = generics::GenericGradient<computed::Length,
+                                                   computed::LengthPercentage,
+                                                   computed::Color>;
 
-  class Image : public generics::GenericImage<Gradient, UrlOrNone>
-  {
-  public:
-    static Image None()
+    class Gradient : public GradientBase
     {
-      return Image();
-    }
+      using GradientBase::GenericGradient;
+    };
 
-  public:
-    // Default constructor creates a 'none' image
-    Image() = default;
-    Image(const Gradient &gradient)
+    class Image : public generics::GenericImage<Gradient, UrlOrNone>
     {
-      emplace<Gradient>(std::move(gradient));
-    }
+    public:
+      static Image None()
+      {
+        return Image();
+      }
 
-    // Copy constructor
-    Image(const Image &) = default;
-    Image &operator=(const Image &) = default;
+    public:
+      // Default constructor creates a 'none' image
+      Image() = default;
+      Image(const Gradient &gradient)
+      {
+        emplace<Gradient>(std::move(gradient));
+      }
 
-    // Move constructor
-    Image(Image &&) = default;
-    Image &operator=(Image &&) = default;
+      // Copy constructor
+      Image(const Image &) = default;
+      Image &operator=(const Image &) = default;
 
-    // Check if image is none/empty
-    bool isNone() const
-    {
-      return std::holds_alternative<std::monostate>(*this);
-    }
+      // Move constructor
+      Image(Image &&) = default;
+      Image &operator=(Image &&) = default;
 
-    // Check if image is a URL
-    bool isUrl() const
-    {
-      return std::holds_alternative<UrlOrNone>(*this);
-    }
+      // Check if image is none/empty
+      bool isNone() const
+      {
+        return std::holds_alternative<std::monostate>(*this);
+      }
 
-    // Check if image is a gradient
-    bool isGradient() const
-    {
-      return std::holds_alternative<Gradient>(*this);
-    }
+      // Check if image is a URL
+      bool isUrl() const
+      {
+        return std::holds_alternative<UrlOrNone>(*this);
+      }
 
-    // Get URL if it's a URL, otherwise return empty string
-    std::string getUrl() const;
+      // Check if image is a gradient
+      bool isGradient() const
+      {
+        return std::holds_alternative<Gradient>(*this);
+      }
 
-    // Get gradient data if it's a gradient, otherwise return nullptr
-    const Gradient *getGradient() const;
+      // Get URL if it's a URL, otherwise return empty string
+      std::string getUrl() const;
 
-    // Get linear gradient data if it's a linear gradient, otherwise return nullptr
-    const typename Gradient::LinearGradient *getLinearGradient() const;
+      // Get gradient data if it's a gradient, otherwise return nullptr
+      const Gradient *getGradient() const;
 
-    // Get radial gradient data if it's a radial gradient, otherwise return nullptr
-    const typename Gradient::RadialGradient *getRadialGradient() const;
+      // Get linear gradient data if it's a linear gradient, otherwise return nullptr
+      const typename Gradient::LinearGradient *getLinearGradient() const;
 
-    // Check if gradient is repeating (only valid if isGradient() is true)
-    bool isGradientRepeating() const;
+      // Get radial gradient data if it's a radial gradient, otherwise return nullptr
+      const typename Gradient::RadialGradient *getRadialGradient() const;
 
-    // Returns the url() `Image` starts loading image data or is already loaded.
-    bool isUrlImageLoaded() const;
-    bool isUrlImageLoadingOrLoaded() const;
-    void startLoadingUrlImage();
-    void setUrlImageData(const void *data, size_t length);
-    const std::vector<char> &getUrlImageData() const
-    {
-      return url_image_data_;
-    }
+      // Check if gradient is repeating (only valid if isGradient() is true)
+      bool isGradientRepeating() const;
 
-  private:
-    std::vector<char> url_image_data_;
-    bool is_url_image_loading_ = false;
-  };
-}
+      // Returns the url() `Image` starts loading image data or is already loaded.
+      bool isUrlImageLoaded() const;
+      bool isUrlImageLoadingOrLoaded() const;
+      void startLoadingUrlImage();
+      void setUrlImageData(const void *data, size_t length);
+      const std::vector<char> &getUrlImageData() const
+      {
+        return url_image_data_;
+      }
+
+    private:
+      std::vector<char> url_image_data_;
+      bool is_url_image_loading_ = false;
+    };
+  }
+} // namespace endor

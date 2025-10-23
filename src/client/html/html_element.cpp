@@ -5,203 +5,206 @@
 
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  string DashStyleToCamelCase(const string &dashStyle)
+  namespace dom
   {
-    string camelCase;
-    bool upper = false;
-    for (auto c : dashStyle)
+    using namespace std;
+
+    string DashStyleToCamelCase(const string &dashStyle)
     {
-      if (c == '-')
+      string camelCase;
+      bool upper = false;
+      for (auto c : dashStyle)
       {
-        upper = true;
-      }
-      else
-      {
-        if (upper)
+        if (c == '-')
         {
-          camelCase += toupper(c);
-          upper = false;
+          upper = true;
         }
         else
         {
-          camelCase += c;
+          if (upper)
+          {
+            camelCase += toupper(c);
+            upper = false;
+          }
+          else
+          {
+            camelCase += c;
+          }
         }
       }
+      return camelCase;
     }
-    return camelCase;
-  }
 
-  string CamelCaseToDashStyle(const string &camelCase)
-  {
-    string dashStyle;
-    for (auto c : camelCase)
+    string CamelCaseToDashStyle(const string &camelCase)
     {
-      if (isupper(c))
+      string dashStyle;
+      for (auto c : camelCase)
       {
-        if (!dashStyle.empty())
-          dashStyle += '-';
-        dashStyle += tolower(c);
+        if (isupper(c))
+        {
+          if (!dashStyle.empty())
+            dashStyle += '-';
+          dashStyle += tolower(c);
+        }
+        else
+        {
+          dashStyle += c;
+        }
       }
-      else
+      return dashStyle;
+    }
+
+    // TODO: Implement the following methods.
+    void HTMLElement::blur()
+    {
+    }
+    void HTMLElement::focus()
+    {
+    }
+    void HTMLElement::click()
+    {
+      // TODO(yorkie): support disabled state.
+      simulateClick(glm::vec3(0.0f, 0.0f, 0.0f));
+    }
+
+    optional<string> HTMLElement::getDataset(const string &key)
+    {
+      auto it = dataset_.find(key);
+      if (it != dataset_.end())
+        return it->second;
+      return nullopt;
+    }
+
+    HTMLElement::HTMLElement(const HTMLElement &other)
+        : Element(other)
+        , dir(other.dir)
+        , draggable(other.draggable)
+        , hidden(other.hidden)
+        , innerText(other.innerText)
+        , lang(other.lang)
+        , nonce(other.nonce)
+        , outerText(other.outerText)
+        , title(other.title)
+        , offset_width_(other.offset_width_)
+        , offset_height_(other.offset_height_)
+        , dataset_(other.dataset_)
+        , style_(other.style_)
+    {
+    }
+
+    void HTMLElement::setDataset(const string &key, const string &value)
+    {
+      dataset_[key] = value;
+      setAttribute("data-" + CamelCaseToDashStyle(key), value);
+    }
+
+    void HTMLElement::removeDataset(const string &key)
+    {
+      dataset_.erase(key);
+      removeAttribute("data-" + CamelCaseToDashStyle(key));
+    }
+
+    void HTMLElement::setInnerText(const string &text)
+    {
+      innerText = text;
+    }
+
+    void HTMLElement::setHidden(bool value)
+    {
+      hidden = value;
+      setAttribute("hidden", hidden ? "hidden" : "", false);
+    }
+
+    void HTMLElement::fetchArrayBufferLikeResource(const std::string &url,
+                                                   std::function<void(const void *data, size_t length)> callback)
+    {
+      assert(ownerDocument->expired() == false && "The owner document is expired.");
+      auto browsingContext = ownerDocument->lock()->browsingContext;
+      browsingContext->fetchArrayBufferLikeResource(url, callback);
+    }
+
+    void HTMLElement::createdCallback(bool from_scripting)
+    {
+      Element::createdCallback(from_scripting);
+
+      // Update dataset from the attributes.
+      for (auto &attr : attributeNodes_)
       {
-        dashStyle += c;
+        if (attr.first.size() > 5 && attr.first.substr(0, 5) == "data-")
+        {
+          string key = DashStyleToCamelCase(attr.first.substr(5));
+          string value = attr.second->value;
+          dataset_[key] = value;
+        }
       }
-    }
-    return dashStyle;
-  }
 
-  // TODO: Implement the following methods.
-  void HTMLElement::blur()
-  {
-  }
-  void HTMLElement::focus()
-  {
-  }
-  void HTMLElement::click()
-  {
-    // TODO(yorkie): support disabled state.
-    simulateClick(glm::vec3(0.0f, 0.0f, 0.0f));
-  }
-
-  optional<string> HTMLElement::getDataset(const string &key)
-  {
-    auto it = dataset_.find(key);
-    if (it != dataset_.end())
-      return it->second;
-    return nullopt;
-  }
-
-  HTMLElement::HTMLElement(const HTMLElement &other)
-      : Element(other)
-      , dir(other.dir)
-      , draggable(other.draggable)
-      , hidden(other.hidden)
-      , innerText(other.innerText)
-      , lang(other.lang)
-      , nonce(other.nonce)
-      , outerText(other.outerText)
-      , title(other.title)
-      , offset_width_(other.offset_width_)
-      , offset_height_(other.offset_height_)
-      , dataset_(other.dataset_)
-      , style_(other.style_)
-  {
-  }
-
-  void HTMLElement::setDataset(const string &key, const string &value)
-  {
-    dataset_[key] = value;
-    setAttribute("data-" + CamelCaseToDashStyle(key), value);
-  }
-
-  void HTMLElement::removeDataset(const string &key)
-  {
-    dataset_.erase(key);
-    removeAttribute("data-" + CamelCaseToDashStyle(key));
-  }
-
-  void HTMLElement::setInnerText(const string &text)
-  {
-    innerText = text;
-  }
-
-  void HTMLElement::setHidden(bool value)
-  {
-    hidden = value;
-    setAttribute("hidden", hidden ? "hidden" : "", false);
-  }
-
-  void HTMLElement::fetchArrayBufferLikeResource(const std::string &url,
-                                                 std::function<void(const void *data, size_t length)> callback)
-  {
-    assert(ownerDocument->expired() == false && "The owner document is expired.");
-    auto browsingContext = ownerDocument->lock()->browsingContext;
-    browsingContext->fetchArrayBufferLikeResource(url, callback);
-  }
-
-  void HTMLElement::createdCallback(bool from_scripting)
-  {
-    Element::createdCallback(from_scripting);
-
-    // Update dataset from the attributes.
-    for (auto &attr : attributeNodes_)
-    {
-      if (attr.first.size() > 5 && attr.first.substr(0, 5) == "data-")
+      // Configure the style property change callback.
+      auto onPropertyChanged = [this](const string &name)
       {
-        string key = DashStyleToCamelCase(attr.first.substr(5));
-        string value = attr.second->value;
-        dataset_[key] = value;
-      }
+        markAsDirty();
+      };
+      // Create style declaration from the default style & the style attribute.
+      style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
+      style_->setPropertyChangedCallback(onPropertyChanged);
     }
 
-    // Configure the style property change callback.
-    auto onPropertyChanged = [this](const string &name)
+    void HTMLElement::attributeChangedCallback(const std::string &name,
+                                               const std::string &oldValue,
+                                               const std::string &newValue)
     {
-      markAsDirty();
-    };
-    // Create style declaration from the default style & the style attribute.
-    style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
-    style_->setPropertyChangedCallback(onPropertyChanged);
-  }
+      Element::attributeChangedCallback(name, oldValue, newValue);
 
-  void HTMLElement::attributeChangedCallback(const std::string &name,
-                                             const std::string &oldValue,
-                                             const std::string &newValue)
-  {
-    Element::attributeChangedCallback(name, oldValue, newValue);
-
-    // Update the style property if the attribute is changed.
-    if (name == "style")
-    {
-      // Update the style property.
-      style_ = make_shared<client_cssom::CSSStyleDeclaration>(newValue);
-    }
-
-    // Update the dataset if the attribute is changed.
-    if (name.substr(0, 5) == "data-")
-    {
-      string key = DashStyleToCamelCase(name.substr(5));
-      if (newValue.empty())
+      // Update the style property if the attribute is changed.
+      if (name == "style")
       {
-        dataset_.erase(key);
+        // Update the style property.
+        style_ = make_shared<client_cssom::CSSStyleDeclaration>(newValue);
       }
-      else
+
+      // Update the dataset if the attribute is changed.
+      if (name.substr(0, 5) == "data-")
       {
-        dataset_[key] = newValue;
+        string key = DashStyleToCamelCase(name.substr(5));
+        if (newValue.empty())
+        {
+          dataset_.erase(key);
+        }
+        else
+        {
+          dataset_[key] = newValue;
+        }
+      }
+
+      // Handle onclick attribute for inline event handlers
+      if (name == "onclick")
+      {
+        setEventHandler("click", newValue);
       }
     }
 
-    // Handle onclick attribute for inline event handlers
-    if (name == "onclick")
+    void HTMLElement::connectedCallback()
     {
-      setEventHandler("click", newValue);
+      Element::connectedCallback();
+    }
+
+    void HTMLElement::disconnectedCallback()
+    {
+      Element::disconnectedCallback();
+    }
+
+    void HTMLElement::markAsDirty()
+    {
+      Element::markAsDirty();
+      invalidateStyleCache();
+    }
+
+    void HTMLElement::invalidateStyleCache()
+    {
+      auto document = getOwnerDocumentReference();
+      if (document != nullptr)
+        document->styleCache().resetStyle(getPtr<HTMLElement>());
     }
   }
-
-  void HTMLElement::connectedCallback()
-  {
-    Element::connectedCallback();
-  }
-
-  void HTMLElement::disconnectedCallback()
-  {
-    Element::disconnectedCallback();
-  }
-
-  void HTMLElement::markAsDirty()
-  {
-    Element::markAsDirty();
-    invalidateStyleCache();
-  }
-
-  void HTMLElement::invalidateStyleCache()
-  {
-    auto document = getOwnerDocumentReference();
-    if (document != nullptr)
-      document->styleCache().resetStyle(getPtr<HTMLElement>());
-  }
-}
+} // namespace endor

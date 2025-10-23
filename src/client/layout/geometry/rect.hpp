@@ -3,106 +3,109 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
-namespace client_layout::geometry
+namespace endor
 {
-  /**
+  namespace client_layout::geometry
+  {
+    /**
    * A rectangle with top, right, bottom, and left values.
    *
    * @tparam T The type of the rectangle values.
    */
-  template <typename T>
-  class Rect
-  {
-  public:
-    Rect() = default;
-    Rect(T top, T right, T bottom, T left)
-        : top_(top)
-        , right_(right)
-        , bottom_(bottom)
-        , left_(left)
+    template <typename T>
+    class Rect
     {
-    }
+    public:
+      Rect() = default;
+      Rect(T top, T right, T bottom, T left)
+          : top_(top)
+          , right_(right)
+          , bottom_(bottom)
+          , left_(left)
+      {
+      }
 
-    bool operator==(const Rect<T> &other) const
-    {
-      return top_ == other.top_ &&
-             right_ == other.right_ &&
-             bottom_ == other.bottom_ &&
-             left_ == other.left_;
-    }
-    bool operator!=(const Rect<T> &other) const
-    {
-      return !(*this == other);
-    }
+      bool operator==(const Rect<T> &other) const
+      {
+        return top_ == other.top_ &&
+               right_ == other.right_ &&
+               bottom_ == other.bottom_ &&
+               left_ == other.left_;
+      }
+      bool operator!=(const Rect<T> &other) const
+      {
+        return !(*this == other);
+      }
 
-  public:
-    T &top()
-    {
-      return top_;
-    }
-    T top() const
-    {
-      return top_;
-    }
-    T &right()
-    {
-      return right_;
-    }
-    T right() const
-    {
-      return right_;
-    }
-    T &bottom()
-    {
-      return bottom_;
-    }
-    T bottom() const
-    {
-      return bottom_;
-    }
-    T &left()
-    {
-      return left_;
-    }
-    T left() const
-    {
-      return left_;
-    }
+    public:
+      T &top()
+      {
+        return top_;
+      }
+      T top() const
+      {
+        return top_;
+      }
+      T &right()
+      {
+        return right_;
+      }
+      T right() const
+      {
+        return right_;
+      }
+      T &bottom()
+      {
+        return bottom_;
+      }
+      T bottom() const
+      {
+        return bottom_;
+      }
+      T &left()
+      {
+        return left_;
+      }
+      T left() const
+      {
+        return left_;
+      }
 
-    T width() const
-    {
-      return right_ - left_;
-    }
-    T height() const
-    {
-      return bottom_ - top_;
-    }
+      T width() const
+      {
+        return right_ - left_;
+      }
+      T height() const
+      {
+        return bottom_ - top_;
+      }
 
-    // Move the rectangle by the given offset.
-    void move(const glm::vec<2, T, glm::packed_highp> offset)
-    {
-      top_ += offset.y;
-      right_ += offset.x;
-      bottom_ += offset.y;
-      left_ += offset.x;
-    }
+      // Move the rectangle by the given offset.
+      void move(const glm::vec<2, T, glm::packed_highp> offset)
+      {
+        top_ += offset.y;
+        right_ += offset.x;
+        bottom_ += offset.y;
+        left_ += offset.x;
+      }
 
-  public:
-    friend std::ostream &operator<<(std::ostream &os, const Rect<T> &style)
-    {
-      os << "("
-         << "top=" << style.top_ << ", "
-         << "right=" << style.right_ << ", "
-         << "bottom=" << style.bottom_ << ", "
-         << "left=" << style.left_
-         << ")";
-      return os;
-    }
+    public:
+      friend std::ostream &operator<<(std::ostream &os, const Rect<T> &style)
+      {
+        os << "("
+           << "top=" << style.top_ << ", "
+           << "right=" << style.right_ << ", "
+           << "bottom=" << style.bottom_ << ", "
+           << "left=" << style.left_
+           << ")";
+        return os;
+      }
 
-  private:
-    T top_;
-    T right_;
-    T bottom_;
-    T left_;
-  };
-}
+    private:
+      T top_;
+      T right_;
+      T bottom_;
+      T left_;
+    };
+  }
+} // namespace endor

@@ -3,31 +3,34 @@
 #include <string>
 #include "./character_data.hpp"
 
-namespace dom
+namespace endor
 {
-  class Comment final : public CharacterData
+  namespace dom
   {
-    using CharacterData::CharacterData;
-
-  public:
-    static std::shared_ptr<Comment> CreateComment(pugi::xml_node node, std::shared_ptr<Document> ownerDocument)
+    class Comment final : public CharacterData
     {
-      return std::make_shared<Comment>(node, ownerDocument);
-    }
-    static std::shared_ptr<Node> CloneComment(shared_ptr<Node> srcComment)
-    {
-      auto commentNode = dynamic_pointer_cast<Comment>(srcComment);
-      assert(commentNode != nullptr && "The source node is not a comment node.");
-      return make_shared<Comment>(*commentNode);
-    }
+      using CharacterData::CharacterData;
 
-  public:
-    Comment(const std::string &content = "", std::shared_ptr<Document> ownerDocument = nullptr);
+    public:
+      static std::shared_ptr<Comment> CreateComment(pugi::xml_node node, std::shared_ptr<Document> ownerDocument)
+      {
+        return std::make_shared<Comment>(node, ownerDocument);
+      }
+      static std::shared_ptr<Node> CloneComment(shared_ptr<Node> srcComment)
+      {
+        auto commentNode = dynamic_pointer_cast<Comment>(srcComment);
+        assert(commentNode != nullptr && "The source node is not a comment node.");
+        return make_shared<Comment>(*commentNode);
+      }
 
-  public:
-    bool isComment() const override final
-    {
-      return true;
-    }
-  };
-}
+    public:
+      Comment(const std::string &content = "", std::shared_ptr<Document> ownerDocument = nullptr);
+
+    public:
+      bool isComment() const override final
+      {
+        return true;
+      }
+    };
+  }
+} // namespace endor

@@ -6,28 +6,31 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/webgl/object.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    class WebGLProgram;
-    using WebGLProgramBase = scripting_base::ObjectWrap<WebGLProgram,
-                                                        client_graphics::WebGLProgram,
-                                                        WebGLObject>;
-
-    class WebGLProgram : public WebGLProgramBase
+    namespace webgl_bindings
     {
-      using WebGLProgramBase::ObjectWrap;
+      class WebGLProgram;
+      using WebGLProgramBase = scripting_base::ObjectWrap<WebGLProgram,
+                                                          client_graphics::WebGLProgram,
+                                                          WebGLObject>;
 
-    public:
-      static std::string Name()
+      class WebGLProgram : public WebGLProgramBase
       {
-        return "WebGLProgram";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using WebGLProgramBase::ObjectWrap;
 
-    public:
-      WebGLProgram(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
-  } // namespace webgl
-} // namespace script_bindings
+      public:
+        static std::string Name()
+        {
+          return "WebGLProgram";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      public:
+        WebGLProgram(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    } // namespace webgl
+  } // namespace script_bindings
+} // namespace endor

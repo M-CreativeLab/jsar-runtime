@@ -1,42 +1,45 @@
 #include "./html_element_dataset.hpp"
 
-namespace script_bindings::html_bindings
+namespace endor
 {
-  using namespace std;
-  using namespace v8;
-
-  Local<Object> HTMLElementDataset::NewInstance(Isolate *isolate, shared_ptr<::dom::HTMLElement> element)
+  namespace script_bindings::html_bindings
   {
-    EscapableHandleScope scope(isolate);
-    Local<Object> datasetValue = dom_bindings::DOMStringMap::NewInstance(isolate,
-                                                                         make_shared<HTMLElementDataset>(element));
-    return scope.Escape(datasetValue);
-  }
+    using namespace std;
+    using namespace v8;
 
-  HTMLElementDataset::HTMLElementDataset(std::shared_ptr<::dom::HTMLElement> element)
-      : data_source_(element)
-  {
-  }
+    Local<Object> HTMLElementDataset::NewInstance(Isolate *isolate, shared_ptr<::dom::HTMLElement> element)
+    {
+      EscapableHandleScope scope(isolate);
+      Local<Object> datasetValue = dom_bindings::DOMStringMap::NewInstance(isolate,
+                                                                           make_shared<HTMLElementDataset>(element));
+      return scope.Escape(datasetValue);
+    }
 
-  optional<string> HTMLElementDataset::get(const string &key) const
-  {
-    auto htmlElement = data_source_.lock();
-    return htmlElement != nullptr
-             ? htmlElement->getDataset(key)
-             : nullopt;
-  }
+    HTMLElementDataset::HTMLElementDataset(std::shared_ptr<::dom::HTMLElement> element)
+        : data_source_(element)
+    {
+    }
 
-  void HTMLElementDataset::set(const string &key, const string &value)
-  {
-    auto htmlElement = data_source_.lock();
-    if (htmlElement != nullptr)
-      htmlElement->setDataset(key, value);
-  }
+    optional<string> HTMLElementDataset::get(const string &key) const
+    {
+      auto htmlElement = data_source_.lock();
+      return htmlElement != nullptr
+               ? htmlElement->getDataset(key)
+               : nullopt;
+    }
 
-  void HTMLElementDataset::unset(const string &key)
-  {
-    auto htmlElement = data_source_.lock();
-    if (htmlElement != nullptr)
-      htmlElement->removeDataset(key);
+    void HTMLElementDataset::set(const string &key, const string &value)
+    {
+      auto htmlElement = data_source_.lock();
+      if (htmlElement != nullptr)
+        htmlElement->setDataset(key, value);
+    }
+
+    void HTMLElementDataset::unset(const string &key)
+    {
+      auto htmlElement = data_source_.lock();
+      if (htmlElement != nullptr)
+        htmlElement->removeDataset(key);
+    }
   }
-}
+} // namespace endor

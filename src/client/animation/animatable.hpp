@@ -7,22 +7,25 @@
 #include "./animation.hpp"
 #include "./keyframes.hpp"
 
-namespace dom
+namespace endor
 {
-  class Element;
-
-  struct GetAnimationsOptions
+  namespace dom
   {
-    bool subtree;
-  };
+    class Element;
 
-  class Animatable
-  {
-  public:
-    virtual std::shared_ptr<Element> getAnimationTarget() = 0;
+    struct GetAnimationsOptions
+    {
+      bool subtree;
+    };
 
-    Animation &animate(Keyframes &keyframes);
-    std::vector<std::shared_ptr<Animation>> getAnimations(
-      std::optional<GetAnimationsOptions> options = std::nullopt);
-  };
-}
+    class Animatable
+    {
+    public:
+      virtual std::shared_ptr<Element> getAnimationTarget() = 0;
+
+      Animation &animate(Keyframes &keyframes);
+      std::vector<std::shared_ptr<Animation>> getAnimations(
+        std::optional<GetAnimationsOptions> options = std::nullopt);
+    };
+  }
+} // namespace endor

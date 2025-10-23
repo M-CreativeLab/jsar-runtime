@@ -6,33 +6,36 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/webgl/object.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    class WebGLFramebuffer;
-    using WebGLFramebufferBase = scripting_base::ObjectWrap<WebGLFramebuffer,
-                                                            client_graphics::WebGLFramebuffer,
-                                                            WebGLObject>;
-
-    class WebGLFramebuffer : public WebGLFramebufferBase
+    namespace webgl_bindings
     {
-      using WebGLFramebufferBase::ObjectWrap;
+      class WebGLFramebuffer;
+      using WebGLFramebufferBase = scripting_base::ObjectWrap<WebGLFramebuffer,
+                                                              client_graphics::WebGLFramebuffer,
+                                                              WebGLObject>;
 
-    public:
-      static std::string Name()
+      class WebGLFramebuffer : public WebGLFramebufferBase
       {
-        return "WebGLFramebuffer";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using WebGLFramebufferBase::ObjectWrap;
 
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<client_graphics::WebGLFramebuffer> nativeFramebuffer);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, uint32_t framebufferId);
+      public:
+        static std::string Name()
+        {
+          return "WebGLFramebuffer";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    public:
-      WebGLFramebuffer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                                 std::shared_ptr<client_graphics::WebGLFramebuffer> nativeFramebuffer);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, uint32_t framebufferId);
 
-  } // namespace webgl
-} // namespace script_bindings
+      public:
+        WebGLFramebuffer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+
+    } // namespace webgl
+  } // namespace script_bindings
+} // namespace endor

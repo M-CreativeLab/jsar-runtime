@@ -5,251 +5,254 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace endor
 {
-  namespace dom_bindings
+  namespace script_bindings
   {
-    // static
-    void Console::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace dom_bindings
     {
-      HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-
-      // Add console methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "log").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Log));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "info").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Info));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "warn").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Warn));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "error").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Error));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "debug").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Debug));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "trace").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Trace));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "assert").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Assert));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "clear").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Clear));
-    }
-
-    Console::Console(Isolate *isolate)
-        : scripting_base::ObjectWrap<Console, void>(isolate)
-    {
-    }
-
-    Console::Console(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<Console, void>(isolate, args)
-    {
-    }
-
-    // Console methods
-
-    // static
-    void Console::Log(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      ostringstream oss;
-      for (int i = 0; i < info.Length(); ++i)
+      // static
+      void Console::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
       {
-        if (i > 0)
-          oss << " ";
-        oss << FormatValue(isolate, info[i]);
+        HandleScope scope(isolate);
+
+        // Set up the instance template
+        Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+
+        // Add console methods
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "log").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Log));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "info").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Info));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "warn").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Warn));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "error").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Error));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "debug").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Debug));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "trace").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Trace));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "assert").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Assert));
+        instanceTemplate->Set(String::NewFromUtf8(isolate, "clear").ToLocalChecked(),
+                              FunctionTemplate::New(isolate, Clear));
       }
 
-      LogMessage("log", oss.str());
-    }
-
-    // static
-    void Console::Info(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      ostringstream oss;
-      for (int i = 0; i < info.Length(); ++i)
+      Console::Console(Isolate *isolate)
+          : scripting_base::ObjectWrap<Console, void>(isolate)
       {
-        if (i > 0)
-          oss << " ";
-        oss << FormatValue(isolate, info[i]);
       }
 
-      LogMessage("info", oss.str());
-    }
-
-    // static
-    void Console::Warn(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      ostringstream oss;
-      for (int i = 0; i < info.Length(); ++i)
+      Console::Console(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+          : scripting_base::ObjectWrap<Console, void>(isolate, args)
       {
-        if (i > 0)
-          oss << " ";
-        oss << FormatValue(isolate, info[i]);
       }
 
-      LogMessage("warn", oss.str());
-    }
+      // Console methods
 
-    // static
-    void Console::Error(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      ostringstream oss;
-      for (int i = 0; i < info.Length(); ++i)
+      // static
+      void Console::Log(const FunctionCallbackInfo<Value> &info)
       {
-        if (i > 0)
-          oss << " ";
-        oss << FormatValue(isolate, info[i]);
-      }
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
 
-      LogMessage("error", oss.str());
-    }
-
-    // static
-    void Console::Debug(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      ostringstream oss;
-      for (int i = 0; i < info.Length(); ++i)
-      {
-        if (i > 0)
-          oss << " ";
-        oss << FormatValue(isolate, info[i]);
-      }
-
-      LogMessage("debug", oss.str());
-    }
-
-    // static
-    void Console::Trace(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      ostringstream oss;
-      oss << "Trace:";
-      for (int i = 0; i < info.Length(); ++i)
-      {
-        oss << " " << FormatValue(isolate, info[i]);
-      }
-
-      // TODO: Add actual stack trace
-      LogMessage("trace", oss.str());
-    }
-
-    // static
-    void Console::Assert(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      if (info.Length() < 1)
-      {
-        LogMessage("error", "Assertion failed");
-        return;
-      }
-
-      bool condition = info[0]->BooleanValue(isolate);
-      if (!condition)
-      {
         ostringstream oss;
-        oss << "Assertion failed";
-        for (int i = 1; i < info.Length(); ++i)
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (i > 0)
+            oss << " ";
+          oss << FormatValue(isolate, info[i]);
+        }
+
+        LogMessage("log", oss.str());
+      }
+
+      // static
+      void Console::Info(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        ostringstream oss;
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (i > 0)
+            oss << " ";
+          oss << FormatValue(isolate, info[i]);
+        }
+
+        LogMessage("info", oss.str());
+      }
+
+      // static
+      void Console::Warn(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        ostringstream oss;
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (i > 0)
+            oss << " ";
+          oss << FormatValue(isolate, info[i]);
+        }
+
+        LogMessage("warn", oss.str());
+      }
+
+      // static
+      void Console::Error(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        ostringstream oss;
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (i > 0)
+            oss << " ";
+          oss << FormatValue(isolate, info[i]);
+        }
+
+        LogMessage("error", oss.str());
+      }
+
+      // static
+      void Console::Debug(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        ostringstream oss;
+        for (int i = 0; i < info.Length(); ++i)
+        {
+          if (i > 0)
+            oss << " ";
+          oss << FormatValue(isolate, info[i]);
+        }
+
+        LogMessage("debug", oss.str());
+      }
+
+      // static
+      void Console::Trace(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        ostringstream oss;
+        oss << "Trace:";
+        for (int i = 0; i < info.Length(); ++i)
         {
           oss << " " << FormatValue(isolate, info[i]);
         }
-        LogMessage("error", oss.str());
-      }
-    }
 
-    // static
-    void Console::Clear(const FunctionCallbackInfo<Value> &info)
-    {
-      // TODO: Implement console clearing if needed
-      LogMessage("info", "Console was cleared");
-    }
+        // TODO: Add actual stack trace
+        LogMessage("trace", oss.str());
+      }
 
-    // Helper methods
+      // static
+      void Console::Assert(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
 
-    // static
-    string Console::FormatValue(Isolate *isolate, Local<Value> value)
-    {
-      HandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-
-      if (value->IsString())
-      {
-        String::Utf8Value utf8(isolate, value);
-        return string(*utf8);
-      }
-      else if (value->IsNumber())
-      {
-        double num = value->NumberValue(context).FromMaybe(0.0);
-        return to_string(num);
-      }
-      else if (value->IsBoolean())
-      {
-        bool b = value->BooleanValue(isolate);
-        return b ? "true" : "false";
-      }
-      else if (value->IsNull())
-      {
-        return "null";
-      }
-      else if (value->IsUndefined())
-      {
-        return "undefined";
-      }
-      else if (value->IsObject())
-      {
-        // For objects, try to convert to string or return [object Object]
-        Local<String> str = value->ToString(context).FromMaybe(Local<String>());
-        if (!str.IsEmpty())
+        if (info.Length() < 1)
         {
-          String::Utf8Value utf8(isolate, str);
+          LogMessage("error", "Assertion failed");
+          return;
+        }
+
+        bool condition = info[0]->BooleanValue(isolate);
+        if (!condition)
+        {
+          ostringstream oss;
+          oss << "Assertion failed";
+          for (int i = 1; i < info.Length(); ++i)
+          {
+            oss << " " << FormatValue(isolate, info[i]);
+          }
+          LogMessage("error", oss.str());
+        }
+      }
+
+      // static
+      void Console::Clear(const FunctionCallbackInfo<Value> &info)
+      {
+        // TODO: Implement console clearing if needed
+        LogMessage("info", "Console was cleared");
+      }
+
+      // Helper methods
+
+      // static
+      string Console::FormatValue(Isolate *isolate, Local<Value> value)
+      {
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+
+        if (value->IsString())
+        {
+          String::Utf8Value utf8(isolate, value);
           return string(*utf8);
         }
-        return "[object Object]";
-      }
-      else
-      {
-        // Fallback for other types
-        Local<String> str = value->ToString(context).FromMaybe(Local<String>());
-        if (!str.IsEmpty())
+        else if (value->IsNumber())
         {
-          String::Utf8Value utf8(isolate, str);
-          return string(*utf8);
+          double num = value->NumberValue(context).FromMaybe(0.0);
+          return to_string(num);
         }
-        return "[unknown]";
+        else if (value->IsBoolean())
+        {
+          bool b = value->BooleanValue(isolate);
+          return b ? "true" : "false";
+        }
+        else if (value->IsNull())
+        {
+          return "null";
+        }
+        else if (value->IsUndefined())
+        {
+          return "undefined";
+        }
+        else if (value->IsObject())
+        {
+          // For objects, try to convert to string or return [object Object]
+          Local<String> str = value->ToString(context).FromMaybe(Local<String>());
+          if (!str.IsEmpty())
+          {
+            String::Utf8Value utf8(isolate, str);
+            return string(*utf8);
+          }
+          return "[object Object]";
+        }
+        else
+        {
+          // Fallback for other types
+          Local<String> str = value->ToString(context).FromMaybe(Local<String>());
+          if (!str.IsEmpty())
+          {
+            String::Utf8Value utf8(isolate, str);
+            return string(*utf8);
+          }
+          return "[unknown]";
+        }
       }
-    }
 
-    // static
-    void Console::LogMessage(const char *level, const string &message)
-    {
-      // For now, just output to stdout/stderr
-      // In a full implementation, this would integrate with CDP and logging infrastructure
-      if (strcmp(level, "error") == 0 || strcmp(level, "warn") == 0)
+      // static
+      void Console::LogMessage(const char *level, const string &message)
       {
-        cerr << "[" << level << "] " << message << endl;
-      }
-      else
-      {
-        cout << "[" << level << "] " << message << endl;
+        // For now, just output to stdout/stderr
+        // In a full implementation, this would integrate with CDP and logging infrastructure
+        if (strcmp(level, "error") == 0 || strcmp(level, "warn") == 0)
+        {
+          cerr << "[" << level << "] " << message << endl;
+        }
+        else
+        {
+          cout << "[" << level << "] " << message << endl;
+        }
       }
     }
   }
-}
+} // namespace endor

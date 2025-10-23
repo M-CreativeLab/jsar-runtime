@@ -6,19 +6,22 @@
 #include "../css_rule.hpp"
 #include "../css_style_declaration.hpp"
 
-namespace client_cssom::rules
+namespace endor
 {
-  class CSSConditionRule : public CSSGroupingRule
+  namespace client_cssom::rules
   {
-    using CSSGroupingRule::CSSGroupingRule;
-
-  public:
-    const std::string &conditionText() const
+    class CSSConditionRule : public CSSGroupingRule
     {
-      return conditionText_;
-    }
+      using CSSGroupingRule::CSSGroupingRule;
 
-  private:
-    std::string conditionText_;
-  };
-}
+    public:
+      const std::string &conditionText() const
+      {
+        return conditionText_;
+      }
+
+    private:
+      std::string conditionText_;
+    };
+  }
+} // namespace endor

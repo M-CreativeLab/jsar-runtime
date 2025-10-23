@@ -11,12 +11,14 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::dom_bindings
+namespace endor
 {
-  void Node::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings::dom_bindings
   {
-    HandleScope scope(isolate);
-    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
+    void Node::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    {
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
 #define NODE_TYPE_MAP(XX)         \
   XX(ATTRIBUTE_NODE)              \
@@ -34,596 +36,597 @@ namespace script_bindings::dom_bindings
 #define XX(TYPE) \
   IntegerConstant(isolate, tpl, #TYPE, ::dom::NodeType::TYPE);
 
-    NODE_TYPE_MAP(XX)
+      NODE_TYPE_MAP(XX)
 #undef XX
 #undef NODE_TYPE_MAP
 
-    // Add property accessors
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "baseURI", &Node::BaseURIGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "isConnected", &Node::IsConnectedGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "parentElement", &Node::ParentElementGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "childNodes", &Node::ChildNodesGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "nextSibling", &Node::NextSiblingGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "previousSibling", &Node::PreviousSiblingGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "ownerDocument", &Node::OwnerDocumentGetter);
-    InstancePropertyAccessor(isolate, prototype, "nodeValue", &Node::NodeValueGetter, &Node::NodeValueSetter);
-    InstancePropertyAccessor(isolate, prototype, "textContent", &Node::TextContentGetter, &Node::TextContentSetter);
+      // Add property accessors
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "baseURI", &Node::BaseURIGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "isConnected", &Node::IsConnectedGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "parentElement", &Node::ParentElementGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "childNodes", &Node::ChildNodesGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "nextSibling", &Node::NextSiblingGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "previousSibling", &Node::PreviousSiblingGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "ownerDocument", &Node::OwnerDocumentGetter);
+      InstancePropertyAccessor(isolate, prototype, "nodeValue", &Node::NodeValueGetter, &Node::NodeValueSetter);
+      InstancePropertyAccessor(isolate, prototype, "textContent", &Node::TextContentGetter, &Node::TextContentSetter);
 
-    // Add methods
-    InstanceMethod(isolate, prototype, "appendChild", &Node::AppendChild);
-    InstanceMethod(isolate, prototype, "removeChild", &Node::RemoveChild);
-    InstanceMethod(isolate, prototype, "insertBefore", &Node::InsertBefore);
-    InstanceMethod(isolate, prototype, "replaceChild", &Node::ReplaceChild);
-    InstanceMethod(isolate, prototype, "cloneNode", &Node::CloneNode);
-    InstanceMethod(isolate, prototype, "hasChildNodes", &Node::HasChildNodes);
-    InstanceMethod(isolate, prototype, "contains", &Node::Contains);
-    InstanceMethod(isolate, prototype, "isDefaultNamespace", &Node::IsDefaultNamespace);
-    InstanceMethod(isolate, prototype, "isEqualNode", &Node::IsEqualNode);
-    InstanceMethod(isolate, prototype, "isSameNode", &Node::IsSameNode);
-    InstanceMethod(isolate, prototype, "normalize", &Node::Normalize);
-  }
-
-  Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode)
-  {
-    EscapableHandleScope scope(isolate);
-    assert(nativeNode != nullptr && "The native node is null.");
-
-    if (nativeNode->isDocument())
-    {
-      return scope.Escape(Document::NewInstance(
-        isolate, static_pointer_cast<::dom::Document>(nativeNode)));
+      // Add methods
+      InstanceMethod(isolate, prototype, "appendChild", &Node::AppendChild);
+      InstanceMethod(isolate, prototype, "removeChild", &Node::RemoveChild);
+      InstanceMethod(isolate, prototype, "insertBefore", &Node::InsertBefore);
+      InstanceMethod(isolate, prototype, "replaceChild", &Node::ReplaceChild);
+      InstanceMethod(isolate, prototype, "cloneNode", &Node::CloneNode);
+      InstanceMethod(isolate, prototype, "hasChildNodes", &Node::HasChildNodes);
+      InstanceMethod(isolate, prototype, "contains", &Node::Contains);
+      InstanceMethod(isolate, prototype, "isDefaultNamespace", &Node::IsDefaultNamespace);
+      InstanceMethod(isolate, prototype, "isEqualNode", &Node::IsEqualNode);
+      InstanceMethod(isolate, prototype, "isSameNode", &Node::IsSameNode);
+      InstanceMethod(isolate, prototype, "normalize", &Node::Normalize);
     }
-    else if (nativeNode->isDocumentFragment())
+
+    Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode)
     {
-      return scope.Escape(DocumentFragment::NewInstance(
-        isolate, static_pointer_cast<::dom::DocumentFragment>(nativeNode)));
+      EscapableHandleScope scope(isolate);
+      assert(nativeNode != nullptr && "The native node is null.");
+
+      if (nativeNode->isDocument())
+      {
+        return scope.Escape(Document::NewInstance(
+          isolate, static_pointer_cast<::dom::Document>(nativeNode)));
+      }
+      else if (nativeNode->isDocumentFragment())
+      {
+        return scope.Escape(DocumentFragment::NewInstance(
+          isolate, static_pointer_cast<::dom::DocumentFragment>(nativeNode)));
+      }
+      else if (nativeNode->isElement())
+      {
+        return scope.Escape(Element::NewInstance(
+          isolate, static_pointer_cast<::dom::Element>(nativeNode)));
+      }
+      else if (nativeNode->isCharacterData())
+      {
+        return scope.Escape(CharacterData::NewInstance(
+          isolate, static_pointer_cast<::dom::CharacterData>(nativeNode)));
+      }
+      else
+      {
+        return scope.Escape(NodeBase::NewInstance(isolate, nativeNode));
+      }
     }
-    else if (nativeNode->isElement())
+
+    // Property getters
+
+    void Node::BaseURIGetter(const FunctionCallbackInfo<Value> &info)
     {
-      return scope.Escape(Element::NewInstance(
-        isolate, static_pointer_cast<::dom::Element>(nativeNode)));
-    }
-    else if (nativeNode->isCharacterData())
-    {
-      return scope.Escape(CharacterData::NewInstance(
-        isolate, static_pointer_cast<::dom::CharacterData>(nativeNode)));
-    }
-    else
-    {
-      return scope.Escape(NodeBase::NewInstance(isolate, nativeNode));
-    }
-  }
-
-  // Property getters
-
-  void Node::BaseURIGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
-                                                  handle()->baseURI.c_str())
-                                .ToLocalChecked());
-  }
-
-  void Node::NodeNameGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    string nodeName = handle()->nodeName;
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
-                                                  nodeName.c_str())
-                                .ToLocalChecked());
-  }
-
-  void Node::NodeTypeGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    int nodeType = static_cast<int>(handle()->nodeType);
-    info.GetReturnValue().Set(Integer::New(isolate, nodeType));
-  }
-
-  void Node::NodeValueGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    optional<string> nodeValue = handle()->nodeValue();
-    if (!nodeValue.has_value())
-      info.GetReturnValue().SetNull();
-    else
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
       info.GetReturnValue().Set(String::NewFromUtf8(isolate,
-                                                    nodeValue.value_or("").c_str())
+                                                    handle()->baseURI.c_str())
                                   .ToLocalChecked());
-  }
-
-  void Node::NodeValueSetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Value> value = info[0];
-
-    if (value->IsNull() || value->IsUndefined())
-    {
-      handle()->setNodeValue("");
-    }
-    else
-    {
-      String::Utf8Value utf8Value(isolate, value);
-      handle()->setNodeValue(string(*utf8Value));
-    }
-  }
-
-  void Node::IsConnectedGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    info.GetReturnValue().Set(Boolean::New(isolate, handle()->connected));
-  }
-
-  void Node::ParentNodeGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto parentNode = handle()->parentNode.lock();
-    if (parentNode == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      Local<Object> parentWrapper = Node::GetOrNewInstance(isolate, parentNode);
-      info.GetReturnValue().Set(parentWrapper);
-    }
-  }
-
-  void Node::ParentElementGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto parentElement = handle()->getParentElement();
-    if (parentElement == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      Local<Object> parentWrapper = Element::GetOrNewInstance(isolate, parentElement);
-      info.GetReturnValue().Set(parentWrapper);
-    }
-  }
-
-  void Node::ChildNodesGetter(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    auto childNodes = handle()->childNodes;
-    Local<Array> resultArray = Array::New(isolate, childNodes.size());
-    for (size_t i = 0; i < childNodes.size(); ++i)
-    {
-      Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, childNodes[i]);
-      resultArray->Set(context, static_cast<uint32_t>(i), nodeWrapper).Check();
-    }
-    info.GetReturnValue().Set(resultArray);
-  }
-
-  void Node::FirstChildGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto firstChild = handle()->firstChild();
-    if (firstChild == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      Local<Object> childWrapper = Node::GetOrNewInstance(isolate, firstChild);
-      info.GetReturnValue().Set(childWrapper);
-    }
-  }
-
-  void Node::LastChildGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto lastChild = handle()->lastChild();
-    if (lastChild == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      Local<Object> childWrapper = Node::GetOrNewInstance(isolate, lastChild);
-      info.GetReturnValue().Set(childWrapper);
-    }
-  }
-
-  void Node::NextSiblingGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto nextSibling = handle()->nextSibling();
-    if (nextSibling == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      Local<Object> siblingWrapper = Node::GetOrNewInstance(isolate, nextSibling);
-      info.GetReturnValue().Set(siblingWrapper);
-    }
-  }
-
-  void Node::PreviousSiblingGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto previousSibling = handle()->previousSibling();
-    if (previousSibling == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      Local<Object> siblingWrapper = Node::GetOrNewInstance(isolate, previousSibling);
-      info.GetReturnValue().Set(siblingWrapper);
-    }
-  }
-
-  void Node::OwnerDocumentGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    shared_ptr<::dom::Document> ownerDocument = handle()->getOwnerDocumentReference();
-    if (ownerDocument == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-    }
-    else
-    {
-      info.GetReturnValue().Set(Node::GetOrNewInstance(isolate, ownerDocument));
-    }
-  }
-
-  void Node::TextContentGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    string textContent = handle()->textContent();
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
-                                                  textContent.c_str())
-                                .ToLocalChecked());
-  }
-
-  void Node::TextContentSetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    String::Utf8Value utf8Value(isolate, info[0]);
-    handle()->setTextContent(string(*utf8Value));
-  }
-
-  // Methods
-
-  void Node::AppendChild(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "appendChild", "appendChild requires 1 argument")));
-      return;
     }
 
-    if (!info[0]->IsObject())
+    void Node::NodeNameGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Argument must be a Node").ToLocalChecked()));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      string nodeName = handle()->nodeName;
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    nodeName.c_str())
+                                  .ToLocalChecked());
     }
 
-    Node *childNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
-    if (childNode == nullptr || childNode->handle() == nullptr)
+    void Node::NodeTypeGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "appendChild", "Argument must be a Node")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      int nodeType = static_cast<int>(handle()->nodeType);
+      info.GetReturnValue().Set(Integer::New(isolate, nodeType));
     }
 
-    auto result = handle()->appendChild(childNode->handle());
-    if (result != nullptr)
+    void Node::NodeValueGetter(const FunctionCallbackInfo<Value> &info)
     {
-      Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, result);
-      info.GetReturnValue().Set(resultWrapper);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
 
-  void Node::RemoveChild(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "removeChild", "removeChild requires 1 argument")));
-      return;
+      optional<string> nodeValue = handle()->nodeValue();
+      if (!nodeValue.has_value())
+        info.GetReturnValue().SetNull();
+      else
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                      nodeValue.value_or("").c_str())
+                                    .ToLocalChecked());
     }
 
-    if (!info[0]->IsObject())
+    void Node::NodeValueSetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "removeChild", "Argument must be a Node")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Value> value = info[0];
+
+      if (value->IsNull() || value->IsUndefined())
+      {
+        handle()->setNodeValue("");
+      }
+      else
+      {
+        String::Utf8Value utf8Value(isolate, value);
+        handle()->setNodeValue(string(*utf8Value));
+      }
     }
 
-    Node *childNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
-    if (childNode == nullptr || childNode->handle() == nullptr)
+    void Node::IsConnectedGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "removeChild", "Argument must be a Node")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(Boolean::New(isolate, handle()->connected));
     }
 
-    auto result = handle()->removeChild(childNode->handle());
-    if (result != nullptr)
+    void Node::ParentNodeGetter(const FunctionCallbackInfo<Value> &info)
     {
-      Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, result);
-      info.GetReturnValue().Set(resultWrapper);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
 
-  void Node::InsertBefore(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 2)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "insertBefore", "Illegal arguments")));
-      return;
+      auto parentNode = handle()->parentNode.lock();
+      if (parentNode == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        Local<Object> parentWrapper = Node::GetOrNewInstance(isolate, parentNode);
+        info.GetReturnValue().Set(parentWrapper);
+      }
     }
 
-    auto newChildNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked())->handle();
-    auto refChildNode = Node::Unwrap(isolate, info[1]->ToObject(context).ToLocalChecked())->handle();
-    if (newChildNode == nullptr || refChildNode == nullptr)
+    void Node::ParentElementGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "insertBefore", "Arguments must be Nodes")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto parentElement = handle()->getParentElement();
+      if (parentElement == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        Local<Object> parentWrapper = Element::GetOrNewInstance(isolate, parentElement);
+        info.GetReturnValue().Set(parentWrapper);
+      }
     }
 
-    auto insertedNode = handle()->insertBefore(newChildNode, refChildNode);
-    if (insertedNode != nullptr)
+    void Node::ChildNodesGetter(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, insertedNode);
-      info.GetReturnValue().Set(resultWrapper);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-  void Node::ReplaceChild(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 2)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "replaceChild", "replaceChild requires 2 arguments")));
-      return;
-    }
-    if (!info[0]->IsObject() || !info[1]->IsObject())
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "replaceChild", "Arguments must be Nodes")));
-      return;
+      auto childNodes = handle()->childNodes;
+      Local<Array> resultArray = Array::New(isolate, childNodes.size());
+      for (size_t i = 0; i < childNodes.size(); ++i)
+      {
+        Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, childNodes[i]);
+        resultArray->Set(context, static_cast<uint32_t>(i), nodeWrapper).Check();
+      }
+      info.GetReturnValue().Set(resultArray);
     }
 
-    auto newChildNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked())->handle();
-    auto oldChildNode = Node::Unwrap(isolate, info[1]->ToObject(context).ToLocalChecked())->handle();
-    if (newChildNode == nullptr || oldChildNode == nullptr)
+    void Node::FirstChildGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "replaceChild", "Arguments must be Nodes")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto firstChild = handle()->firstChild();
+      if (firstChild == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        Local<Object> childWrapper = Node::GetOrNewInstance(isolate, firstChild);
+        info.GetReturnValue().Set(childWrapper);
+      }
     }
 
-    auto replacedNode = handle()->replaceChild(newChildNode, oldChildNode);
-    if (replacedNode != nullptr)
+    void Node::LastChildGetter(const FunctionCallbackInfo<Value> &info)
     {
-      Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, replacedNode);
-      info.GetReturnValue().Set(resultWrapper);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
 
-  void Node::CloneNode(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    bool deep = false;
-    if (info.Length() > 0 && info[0]->IsBoolean())
-      deep = info[0]->BooleanValue(isolate);
-
-    auto clonedNode = handle()->cloneNode(deep);
-    if (clonedNode != nullptr)
-    {
-      Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, clonedNode);
-      info.GetReturnValue().Set(nodeWrapper);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
-
-  void Node::HasChildNodes(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    info.GetReturnValue().Set(Boolean::New(isolate,
-                                           handle()->hasChildNodes()));
-  }
-
-  void Node::Contains(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1 || !info[0]->IsObject())
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "contains", "Argument must be a Node")));
-      return;
+      auto lastChild = handle()->lastChild();
+      if (lastChild == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        Local<Object> childWrapper = Node::GetOrNewInstance(isolate, lastChild);
+        info.GetReturnValue().Set(childWrapper);
+      }
     }
 
-    Local<Context> context = isolate->GetCurrentContext();
-    Node *otherNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
-    if (otherNode == nullptr || otherNode->handle() == nullptr)
+    void Node::NextSiblingGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "contains", "Argument must be a Node")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto nextSibling = handle()->nextSibling();
+      if (nextSibling == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        Local<Object> siblingWrapper = Node::GetOrNewInstance(isolate, nextSibling);
+        info.GetReturnValue().Set(siblingWrapper);
+      }
     }
 
-    // TODO: implement contains properly
-    info.GetReturnValue().Set(Boolean::New(isolate, false));
-  }
-
-  void Node::IsDefaultNamespace(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "isDefaultNamespace", "Not implemented")));
-    return;
-  }
-
-  void Node::IsEqualNode(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 1)
+    void Node::PreviousSiblingGetter(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "isEqualNode", "Requires 1 argument but 0 given")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto previousSibling = handle()->previousSibling();
+      if (previousSibling == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        Local<Object> siblingWrapper = Node::GetOrNewInstance(isolate, previousSibling);
+        info.GetReturnValue().Set(siblingWrapper);
+      }
     }
 
-    if (info[0]->IsNull())
+    void Node::OwnerDocumentGetter(const FunctionCallbackInfo<Value> &info)
     {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      shared_ptr<::dom::Document> ownerDocument = handle()->getOwnerDocumentReference();
+      if (ownerDocument == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+      }
+      else
+      {
+        info.GetReturnValue().Set(Node::GetOrNewInstance(isolate, ownerDocument));
+      }
+    }
+
+    void Node::TextContentGetter(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      string textContent = handle()->textContent();
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    textContent.c_str())
+                                  .ToLocalChecked());
+    }
+
+    void Node::TextContentSetter(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      String::Utf8Value utf8Value(isolate, info[0]);
+      handle()->setTextContent(string(*utf8Value));
+    }
+
+    // Methods
+
+    void Node::AppendChild(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "appendChild", "appendChild requires 1 argument")));
+        return;
+      }
+
+      if (!info[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Argument must be a Node").ToLocalChecked()));
+        return;
+      }
+
+      Node *childNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+      if (childNode == nullptr || childNode->handle() == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "appendChild", "Argument must be a Node")));
+        return;
+      }
+
+      auto result = handle()->appendChild(childNode->handle());
+      if (result != nullptr)
+      {
+        Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, result);
+        info.GetReturnValue().Set(resultWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void Node::RemoveChild(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "removeChild", "removeChild requires 1 argument")));
+        return;
+      }
+
+      if (!info[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "removeChild", "Argument must be a Node")));
+        return;
+      }
+
+      Node *childNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+      if (childNode == nullptr || childNode->handle() == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "removeChild", "Argument must be a Node")));
+        return;
+      }
+
+      auto result = handle()->removeChild(childNode->handle());
+      if (result != nullptr)
+      {
+        Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, result);
+        info.GetReturnValue().Set(resultWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void Node::InsertBefore(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "insertBefore", "Illegal arguments")));
+        return;
+      }
+
+      auto newChildNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked())->handle();
+      auto refChildNode = Node::Unwrap(isolate, info[1]->ToObject(context).ToLocalChecked())->handle();
+      if (newChildNode == nullptr || refChildNode == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "insertBefore", "Arguments must be Nodes")));
+        return;
+      }
+
+      auto insertedNode = handle()->insertBefore(newChildNode, refChildNode);
+      if (insertedNode != nullptr)
+      {
+        Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, insertedNode);
+        info.GetReturnValue().Set(resultWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void Node::ReplaceChild(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "replaceChild", "replaceChild requires 2 arguments")));
+        return;
+      }
+      if (!info[0]->IsObject() || !info[1]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "replaceChild", "Arguments must be Nodes")));
+        return;
+      }
+
+      auto newChildNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked())->handle();
+      auto oldChildNode = Node::Unwrap(isolate, info[1]->ToObject(context).ToLocalChecked())->handle();
+      if (newChildNode == nullptr || oldChildNode == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "replaceChild", "Arguments must be Nodes")));
+        return;
+      }
+
+      auto replacedNode = handle()->replaceChild(newChildNode, oldChildNode);
+      if (replacedNode != nullptr)
+      {
+        Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, replacedNode);
+        info.GetReturnValue().Set(resultWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void Node::CloneNode(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      bool deep = false;
+      if (info.Length() > 0 && info[0]->IsBoolean())
+        deep = info[0]->BooleanValue(isolate);
+
+      auto clonedNode = handle()->cloneNode(deep);
+      if (clonedNode != nullptr)
+      {
+        Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, clonedNode);
+        info.GetReturnValue().Set(nodeWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void Node::HasChildNodes(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(Boolean::New(isolate,
+                                             handle()->hasChildNodes()));
+    }
+
+    void Node::Contains(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1 || !info[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "contains", "Argument must be a Node")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      Node *otherNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+      if (otherNode == nullptr || otherNode->handle() == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "contains", "Argument must be a Node")));
+        return;
+      }
+
+      // TODO: implement contains properly
       info.GetReturnValue().Set(Boolean::New(isolate, false));
-      return;
     }
-    else if (!info[0]->IsObject())
+
+    void Node::IsDefaultNamespace(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "isEqualNode", "Argument must be a Node or null")));
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "isDefaultNamespace", "Not implemented")));
       return;
     }
 
-    auto otherNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
-    if (otherNode == nullptr || otherNode->handle() == nullptr)
+    void Node::IsEqualNode(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "isEqualNode", "Argument must be a Node or null")));
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "isEqualNode", "Requires 1 argument but 0 given")));
+        return;
+      }
+
+      if (info[0]->IsNull())
+      {
+        info.GetReturnValue().Set(Boolean::New(isolate, false));
+        return;
+      }
+      else if (!info[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "isEqualNode", "Argument must be a Node or null")));
+        return;
+      }
+
+      auto otherNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+      if (otherNode == nullptr || otherNode->handle() == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "isEqualNode", "Argument must be a Node or null")));
+        return;
+      }
+
+      bool isEqual = handle()->isEqualNode(*otherNode->handle());
+      info.GetReturnValue().Set(Boolean::New(isolate, isEqual));
     }
 
-    bool isEqual = handle()->isEqualNode(*otherNode->handle());
-    info.GetReturnValue().Set(Boolean::New(isolate, isEqual));
+    void Node::IsSameNode(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "isSameNode", "Requires 1 argument but 0 given")));
+        return;
+      }
+      if (!info[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "isSameNode", "Argument must be a Node")));
+        return;
+      }
+
+      // Fast path for the same JS object
+      if (info[0]->StrictEquals(info.This()))
+      {
+        info.GetReturnValue().Set(Boolean::New(isolate, true));
+        return;
+      }
+
+      auto otherNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+      if (otherNode == nullptr || otherNode->handle() == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "isSameNode", "Argument must be a Node")));
+        return;
+      }
+
+      bool isSame = handle()->isSameNode(*otherNode->handle());
+      info.GetReturnValue().Set(Boolean::New(isolate, isSame));
+    }
+
+    void Node::Normalize(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "normalize", "Not implemented")));
+      return;
+    }
   }
-
-  void Node::IsSameNode(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "isSameNode", "Requires 1 argument but 0 given")));
-      return;
-    }
-    if (!info[0]->IsObject())
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "isSameNode", "Argument must be a Node")));
-      return;
-    }
-
-    // Fast path for the same JS object
-    if (info[0]->StrictEquals(info.This()))
-    {
-      info.GetReturnValue().Set(Boolean::New(isolate, true));
-      return;
-    }
-
-    auto otherNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
-    if (otherNode == nullptr || otherNode->handle() == nullptr)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "isSameNode", "Argument must be a Node")));
-      return;
-    }
-
-    bool isSame = handle()->isSameNode(*otherNode->handle());
-    info.GetReturnValue().Set(Boolean::New(isolate, isSame));
-  }
-
-  void Node::Normalize(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "normalize", "Not implemented")));
-    return;
-  }
-}
+} // namespace endor

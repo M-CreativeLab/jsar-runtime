@@ -3,66 +3,69 @@
 #include <client/cssom/values/common.hpp>
 #include <client/cssom/values/generics/common.hpp>
 
-namespace client_cssom::values::computed
+namespace endor
 {
-  using NonNegativeNumber = generics::NonNegative<CSSFloat>;
-
-  // A computed value for `min-width`, `min-height`, `width` or `height` property.
-  class CSSPixelLength
+  namespace client_cssom::values::computed
   {
-  public:
-    CSSPixelLength(float px)
-        : value(px)
-    {
-    }
+    using NonNegativeNumber = generics::NonNegative<CSSFloat>;
 
-    bool operator==(const CSSPixelLength &other) const
+    // A computed value for `min-width`, `min-height`, `width` or `height` property.
+    class CSSPixelLength
     {
-      return value == other.value;
-    }
-    bool operator==(float other) const
-    {
-      return value == other;
-    }
-    bool operator<(const CSSPixelLength &other) const
-    {
-      return value < other.value;
-    }
-    bool operator<(float other) const
-    {
-      return value < other;
-    }
-    bool operator>(const CSSPixelLength &other) const
-    {
-      return value > other.value;
-    }
-    bool operator>(float other) const
-    {
-      return value > other;
-    }
+    public:
+      CSSPixelLength(float px)
+          : value(px)
+      {
+      }
 
-  public:
-    inline float px() const
-    {
-      return value;
-    }
+      bool operator==(const CSSPixelLength &other) const
+      {
+        return value == other.value;
+      }
+      bool operator==(float other) const
+      {
+        return value == other;
+      }
+      bool operator<(const CSSPixelLength &other) const
+      {
+        return value < other.value;
+      }
+      bool operator<(float other) const
+      {
+        return value < other;
+      }
+      bool operator>(const CSSPixelLength &other) const
+      {
+        return value > other.value;
+      }
+      bool operator>(float other) const
+      {
+        return value > other;
+      }
 
-    // Returns the absolute value of the CSSPixelLength.
-    inline CSSPixelLength abs() const
-    {
-      return CSSPixelLength(std::abs(value));
-    }
+    public:
+      inline float px() const
+      {
+        return value;
+      }
 
-    inline CSSPixelLength min(const CSSPixelLength &other) const
-    {
-      return CSSPixelLength(std::min(value, other.value));
-    }
-    inline CSSPixelLength max(const CSSPixelLength &other) const
-    {
-      return CSSPixelLength(std::max(value, other.value));
-    }
+      // Returns the absolute value of the CSSPixelLength.
+      inline CSSPixelLength abs() const
+      {
+        return CSSPixelLength(std::abs(value));
+      }
 
-  public:
-    float value;
-  };
-}
+      inline CSSPixelLength min(const CSSPixelLength &other) const
+      {
+        return CSSPixelLength(std::min(value, other.value));
+      }
+      inline CSSPixelLength max(const CSSPixelLength &other) const
+      {
+        return CSSPixelLength(std::max(value, other.value));
+      }
+
+    public:
+      float value;
+    };
+  }
+} // namespace endor

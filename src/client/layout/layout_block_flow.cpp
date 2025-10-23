@@ -1,17 +1,20 @@
 #include "./layout_block_flow.hpp"
 
-namespace client_layout
+namespace endor
 {
-  using namespace std;
-
-  void LayoutBlockFlow::addChild(shared_ptr<LayoutObject> child,
-                                 shared_ptr<LayoutObject> beforeChild)
+  namespace client_layout
   {
-    LayoutBox::addChild(child, beforeChild);
-  }
+    using namespace std;
 
-  void LayoutBlockFlow::removeChild(shared_ptr<LayoutObject> child)
-  {
-    LayoutBox::removeChild(child);
+    void LayoutBlockFlow::addChild(shared_ptr<LayoutObject> child,
+                                   shared_ptr<LayoutObject> beforeChild)
+    {
+      LayoutBox::addChild(child, beforeChild);
+    }
+
+    void LayoutBlockFlow::removeChild(shared_ptr<LayoutObject> child)
+    {
+      LayoutBox::removeChild(child);
+    }
   }
-}
+} // namespace endor

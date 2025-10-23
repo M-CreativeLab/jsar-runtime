@@ -3,11 +3,14 @@
 #include <client/scripting_base/v8_object_holder.hpp>
 #include <xr/viewport.hpp>
 
-namespace client_xr
+namespace endor
 {
-  class XRViewport : public xr::Viewport,
-                     public scripting_base::JSObjectHolder
+  namespace client_xr
   {
-    using xr::Viewport::Viewport;
-  };
-}
+    class XRViewport : public xr::Viewport,
+                       public scripting_base::JSObjectHolder
+    {
+      using xr::Viewport::Viewport;
+    };
+  }
+} // namespace endor

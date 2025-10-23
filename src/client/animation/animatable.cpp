@@ -1,16 +1,19 @@
 #include "./animatable.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  Animation &Animatable::animate(Keyframes &keyframes)
+  namespace dom
   {
-    throw runtime_error("Not implemented");
-  }
+    using namespace std;
 
-  vector<shared_ptr<Animation>> Animatable::getAnimations(optional<GetAnimationsOptions> options)
-  {
-    return {};
+    Animation &Animatable::animate(Keyframes &keyframes)
+    {
+      throw runtime_error("Not implemented");
+    }
+
+    vector<shared_ptr<Animation>> Animatable::getAnimations(optional<GetAnimationsOptions> options)
+    {
+      return {};
+    }
   }
-}
+} // namespace endor

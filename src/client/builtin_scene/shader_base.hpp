@@ -4,17 +4,19 @@
 #include <string>
 #include <client/graphics/webgl_shader.hpp>
 
-namespace builtin_scene
+namespace endor
 {
-  using ShaderType = client_graphics::WebGLShaderType;
+  namespace builtin_scene
+  {
+    using ShaderType = client_graphics::WebGLShaderType;
 
-  /**
+    /**
    * The preprocessor for shaders, such as adding #version, #extension, etc.
    */
-  class ShaderPreprocessor
-  {
-  public:
-    /**
+    class ShaderPreprocessor
+    {
+    public:
+      /**
      * Preprocess the source code of a shader.
      *
      * @param source The source code of the shader.
@@ -22,74 +24,75 @@ namespace builtin_scene
      * @param shaderType The type of the shader, such as vertex or fragment shader.
      * @return The preprocessed source code of the shader.
      */
-    static std::string PreprocessSource(std::string source,
-                                        const std::vector<std::string> &defines,
-                                        client_graphics::WebGLShaderType shaderType);
+      static std::string PreprocessSource(std::string source,
+                                          const std::vector<std::string> &defines,
+                                          client_graphics::WebGLShaderType shaderType);
 
-    /**
+      /**
      * Concatenate the source code with the given lines.
      *
      * @param source The source code to concatenate.
      * @param lines The list of lines to concatenate.
      * @return The concatenated source code.
      */
-    static std::string ConcatSource(const std::string &source, const std::vector<std::string> &lines);
+      static std::string ConcatSource(const std::string &source, const std::vector<std::string> &lines);
 
-  public:
-    ShaderPreprocessor() = delete;
-  };
+    public:
+      ShaderPreprocessor() = delete;
+    };
 
-  /**
+    /**
    * The `ShaderSource` class represents a shader source code.
    */
-  class ShaderSource
-  {
-  public:
-    ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines, client_graphics::WebGLShaderType shaderType)
-        : name(name)
-        , source(ShaderPreprocessor::PreprocessSource(source, defines, shaderType))
+    class ShaderSource
     {
-    }
+    public:
+      ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines, client_graphics::WebGLShaderType shaderType)
+          : name(name)
+          , source(ShaderPreprocessor::PreprocessSource(source, defines, shaderType))
+      {
+      }
 
-  public:
-    std::string name;
-    std::string source;
-  };
+    public:
+      std::string name;
+      std::string source;
+    };
 
-  /**
+    /**
    * A reference to a `ShaderSource` object.
    */
-  class ShaderRef
-  {
-  public:
-    /**
+    class ShaderRef
+    {
+    public:
+      /**
      * Construct a `ShaderRef` object with the given name.
      *
      * @param name The relative path of the builtin shader, such as "materials/color.frag".
      */
-    ShaderRef(client_graphics::WebGLShaderType type, std::string name)
-        : type(type)
-        , name(name)
-    {
-    }
+      ShaderRef(client_graphics::WebGLShaderType type, std::string name)
+          : type(type)
+          , name(name)
+      {
+      }
 
-  public:
-    /**
+    public:
+      /**
      * Get the `ShaderSource` object of the shader.
      *
      * @param defines The list of defines to add to the shader.
      * @returns The `ShaderSource` object.
      */
-    ShaderSource shader(const std::vector<std::string> &defines = {}) const;
+      ShaderSource shader(const std::vector<std::string> &defines = {}) const;
 
-  public:
-    /**
+    public:
+      /**
      * The shader type, such as vertex or fragment shader.
      */
-    client_graphics::WebGLShaderType type;
-    /**
+      client_graphics::WebGLShaderType type;
+      /**
      * The relative path of the builtin shader, such as "materials/color.frag".
      */
-    std::string name;
-  };
-}
+      std::string name;
+    };
+  }
+} // namespace endor

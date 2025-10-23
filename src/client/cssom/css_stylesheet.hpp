@@ -7,38 +7,41 @@
 #include "./css_rule.hpp"
 #include "./rules/all.hpp"
 
-namespace client_cssom
+namespace endor
 {
-  struct CSSStyleSheetInit
+  namespace client_cssom
   {
-    std::string baseURL;
-    bool disabled;
-  };
-
-  class CSSStyleSheet : public StyleSheet
-  {
-  public:
-    CSSStyleSheet(std::optional<CSSStyleSheetInit> init = std::nullopt);
-
-  public:
-    const CSSRuleList &cssRules() const
+    struct CSSStyleSheetInit
     {
-      return *cssRules_;
-    }
-    std::shared_ptr<rules::CSSImportRule> ownerRule() const
+      std::string baseURL;
+      bool disabled;
+    };
+
+    class CSSStyleSheet : public StyleSheet
     {
-      return ownerRule_.lock();
-    }
+    public:
+      CSSStyleSheet(std::optional<CSSStyleSheetInit> init = std::nullopt);
 
-  public:
-    void deleteRule(CSSRuleIndex index);
-    CSSRuleIndex insertRule(const std::string &rule, CSSRuleIndex index = 0);
-    void replace(const std::string &cssText);
-    void replaceSync(const std::string &cssText);
+    public:
+      const CSSRuleList &cssRules() const
+      {
+        return *cssRules_;
+      }
+      std::shared_ptr<rules::CSSImportRule> ownerRule() const
+      {
+        return ownerRule_.lock();
+      }
 
-  private:
-    CSSStyleSheetInit init_;
-    std::unique_ptr<CSSRuleList> cssRules_;
-    std::weak_ptr<rules::CSSImportRule> ownerRule_;
-  };
-}
+    public:
+      void deleteRule(CSSRuleIndex index);
+      CSSRuleIndex insertRule(const std::string &rule, CSSRuleIndex index = 0);
+      void replace(const std::string &cssText);
+      void replaceSync(const std::string &cssText);
+
+    private:
+      CSSStyleSheetInit init_;
+      std::unique_ptr<CSSRuleList> cssRules_;
+      std::weak_ptr<rules::CSSImportRule> ownerRule_;
+    };
+  }
+} // namespace endor

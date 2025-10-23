@@ -5,19 +5,22 @@
 #include <node/openssl/ssl.h>
 #include <http/llhttp.h>
 
-namespace client_networking
+namespace endor
 {
-  class HttpRequest
+  namespace client_networking
   {
-  public:
-    HttpRequest();
-    ~HttpRequest();
+    class HttpRequest
+    {
+    public:
+      HttpRequest();
+      ~HttpRequest();
 
-  private:
-    uv_loop_t *loop_;
-    SSL_CTX *sslCtx_;
-    std::string host_;
-    int port_;
-    std::string path_;
-  };
-}
+    private:
+      uv_loop_t *loop_;
+      SSL_CTX *sslCtx_;
+      std::string host_;
+      int port_;
+      std::string path_;
+    };
+  }
+} // namespace endor

@@ -7,40 +7,43 @@
 #include "./animation.hpp"
 #include "./css/css_animations.hpp"
 
-namespace dom
+namespace endor
 {
-  class Element;
-  class ElementAnimations final
+  namespace dom
   {
-  public:
-    // Create a new `ElementAnimations` object for the given target element.
-    ElementAnimations(std::shared_ptr<Element> target_element);
-    ElementAnimations(const ElementAnimations &) = delete;
-    ElementAnimations &operator=(const ElementAnimations &) = delete;
-    ~ElementAnimations() = default;
-
-  public:
-    bool isEmpty() const
+    class Element;
+    class ElementAnimations final
     {
-      return css_animations_.isEmpty() && animations_.empty();
-    }
-    const CSSAnimations &cssAnimations() const
-    {
-      return css_animations_;
-    }
-    CSSAnimations &cssAnimations()
-    {
-      return css_animations_;
-    }
+    public:
+      // Create a new `ElementAnimations` object for the given target element.
+      ElementAnimations(std::shared_ptr<Element> target_element);
+      ElementAnimations(const ElementAnimations &) = delete;
+      ElementAnimations &operator=(const ElementAnimations &) = delete;
+      ~ElementAnimations() = default;
 
-    // Update the element's animations to the given computed style, and returns whether the style is updated via
-    // animations.
-    bool updateFrameToStyle(client_cssom::ComputedStyle &);
+    public:
+      bool isEmpty() const
+      {
+        return css_animations_.isEmpty() && animations_.empty();
+      }
+      const CSSAnimations &cssAnimations() const
+      {
+        return css_animations_;
+      }
+      CSSAnimations &cssAnimations()
+      {
+        return css_animations_;
+      }
 
-  private:
-    std::weak_ptr<Element> target_element_;
-    CSSAnimations css_animations_;
-    std::vector<std::shared_ptr<Animation>> animations_;
-    // TODO(yorkie): worklet animations?
-  };
-}
+      // Update the element's animations to the given computed style, and returns whether the style is updated via
+      // animations.
+      bool updateFrameToStyle(client_cssom::ComputedStyle &);
+
+    private:
+      std::weak_ptr<Element> target_element_;
+      CSSAnimations css_animations_;
+      std::vector<std::shared_ptr<Animation>> animations_;
+      // TODO(yorkie): worklet animations?
+    };
+  }
+} // namespace endor

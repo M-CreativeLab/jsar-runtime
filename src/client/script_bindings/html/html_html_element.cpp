@@ -1,17 +1,20 @@
 #include "./html_html_element.hpp"
 
-namespace script_bindings::html_bindings
+namespace endor
 {
-  using namespace std;
-  using namespace v8;
-
-  void HTMLHtmlElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings::html_bindings
   {
-    // No specific methods or properties for <html> element as of now
-  }
+    using namespace std;
+    using namespace v8;
 
-  HTMLHtmlElement::HTMLHtmlElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : HTMLHtmlElementBase(isolate, args)
-  {
+    void HTMLHtmlElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    {
+      // No specific methods or properties for <html> element as of now
+    }
+
+    HTMLHtmlElement::HTMLHtmlElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : HTMLHtmlElementBase(isolate, args)
+    {
+    }
   }
-}
+} // namespace endor

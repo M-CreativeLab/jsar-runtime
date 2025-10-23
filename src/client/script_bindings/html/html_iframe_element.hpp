@@ -5,30 +5,33 @@
 #include <client/html/html_iframe_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLIframeElement;
-    using HTMLIframeElementBase = scripting_base::ObjectWrap<HTMLIframeElement, dom::HTMLIframeElement, HTMLElement>;
-
-    class HTMLIframeElement : public HTMLIframeElementBase
+    namespace html_bindings
     {
-      using HTMLIframeElementBase::ObjectWrap;
+      class HTMLIframeElement;
+      using HTMLIframeElementBase = scripting_base::ObjectWrap<HTMLIframeElement, dom::HTMLIframeElement, HTMLElement>;
 
-    public:
-      /**
+      class HTMLIframeElement : public HTMLIframeElementBase
+      {
+        using HTMLIframeElementBase::ObjectWrap;
+
+      public:
+        /**
        * The name of the HTMLIframeElement class for V8.
        */
-      static std::string Name()
-      {
-        return "HTMLIframeElement";
-      }
+        static std::string Name()
+        {
+          return "HTMLIframeElement";
+        }
 
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    public:
-      HTMLIframeElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        HTMLIframeElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

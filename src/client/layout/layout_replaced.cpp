@@ -1,10 +1,13 @@
 #include "./layout_replaced.hpp"
 
-namespace client_layout
+namespace endor
 {
-  void LayoutReplaced::formattingContextDidSet(FormattingContext &context)
+  namespace client_layout
   {
-    LayoutBox::formattingContextDidSet(context);
-    context.setContentSizeEnabled(true);
+    void LayoutReplaced::formattingContextDidSet(FormattingContext &context)
+    {
+      LayoutBox::formattingContextDidSet(context);
+      context.setContentSizeEnabled(true);
+    }
   }
-}
+} // namespace endor

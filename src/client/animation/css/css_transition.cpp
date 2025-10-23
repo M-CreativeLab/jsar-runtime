@@ -1,18 +1,21 @@
 #include "./css_transition.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  void CSSTransition::clearOwningElement()
+  namespace dom
   {
-    owning_element_.reset();
-  }
+    using namespace std;
 
-  shared_ptr<Element> CSSTransition::owningElement() const
-  {
-    if (owning_element_.expired())
-      return nullptr;
-    return owning_element_.lock();
+    void CSSTransition::clearOwningElement()
+    {
+      owning_element_.reset();
+    }
+
+    shared_ptr<Element> CSSTransition::owningElement() const
+    {
+      if (owning_element_.expired())
+        return nullptr;
+      return owning_element_.lock();
+    }
   }
-}
+} // namespace endor

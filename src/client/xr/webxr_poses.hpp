@@ -6,46 +6,49 @@
 #include "./common.hpp"
 #include "./webxr_rigid_transform.hpp"
 
-namespace client_xr
+namespace endor
 {
-  class XRPose : public scripting_base::JSObjectHolder
+  namespace client_xr
   {
-  public:
-    XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
-    XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform);
-
-  public:
-    XRRigidTransform transform;
-    bool emulatedPosition;
-
-  protected:
-    std::shared_ptr<XRSession> session_;
-    std::shared_ptr<XRDeviceClient> device_;
-  };
-
-  class XRViewerPose : public XRPose
-  {
-  public:
-    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
-    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
-
-  public:
-    std::vector<std::shared_ptr<XRView>> &views()
+    class XRPose : public scripting_base::JSObjectHolder
     {
-      return views_;
-    }
+    public:
+      XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
+      XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform);
 
-  private:
-    void setupViews(std::shared_ptr<XRFrame> frame, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+    public:
+      XRRigidTransform transform;
+      bool emulatedPosition;
 
-  private:
-    std::vector<std::shared_ptr<XRView>> views_;
-  };
+    protected:
+      std::shared_ptr<XRSession> session_;
+      std::shared_ptr<XRDeviceClient> device_;
+    };
 
-  class XRJointPose : public XRPose
-  {
-  public:
-    XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
-    XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform);
-  };
-}
+    class XRViewerPose : public XRPose
+    {
+    public:
+      XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+      XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+
+    public:
+      std::vector<std::shared_ptr<XRView>> &views()
+      {
+        return views_;
+      }
+
+    private:
+      void setupViews(std::shared_ptr<XRFrame> frame, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+
+    private:
+      std::vector<std::shared_ptr<XRView>> views_;
+    };
+
+    class XRJointPose : public XRPose
+    {
+    public:
+      XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
+      XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform);
+    };
+  }
+} // namespace endor

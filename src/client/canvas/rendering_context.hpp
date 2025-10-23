@@ -6,51 +6,54 @@
 #include <client/scripting_base/v8_object_holder.hpp>
 #include "../per_process.hpp"
 
-namespace canvas
+namespace endor
 {
-  enum class RenderingContextType
+  namespace canvas
   {
-    Unset,
-    RenderingContext2D,
-    WebGL,
-    WebGL2,
-    BitmapRenderer,
-  };
-
-  template <typename CanvasType>
-  class RenderingContextBase : public scripting_base::JSObjectHolder
-  {
-  public:
-    RenderingContextBase(RenderingContextType type, std::shared_ptr<CanvasType> canvasRef)
-        : contextType(type)
-        , canvasRef(canvasRef)
-        , clientContext(TrClientContextPerProcess::Get())
+    enum class RenderingContextType
     {
-      assert(clientContext != nullptr);
-      assert(canvasRef != nullptr && "Canvas reference cannot be null");
-    }
-    virtual ~RenderingContextBase() = default;
+      Unset,
+      RenderingContext2D,
+      WebGL,
+      WebGL2,
+      BitmapRenderer,
+    };
 
-  protected:
-    // Notify the context's canvas object that the pixels might be changed.
-    void notifyCanvasUpdated()
+    template <typename CanvasType>
+    class RenderingContextBase : public scripting_base::JSObjectHolder
     {
-      if (TR_UNLIKELY(canvasRef.expired()))
-        return;
+    public:
+      RenderingContextBase(RenderingContextType type, std::shared_ptr<CanvasType> canvasRef)
+          : contextType(type)
+          , canvasRef(canvasRef)
+          , clientContext(TrClientContextPerProcess::Get())
+      {
+        assert(clientContext != nullptr);
+        assert(canvasRef != nullptr && "Canvas reference cannot be null");
+      }
+      virtual ~RenderingContextBase() = default;
 
-      auto canvas = canvasRef.lock();
-      assert(canvas != nullptr && "Canvas reference is expired");
-      if (canvas->pixels_updated_callback_ != nullptr)
-        canvas->pixels_updated_callback_();
-    }
+    protected:
+      // Notify the context's canvas object that the pixels might be changed.
+      void notifyCanvasUpdated()
+      {
+        if (TR_UNLIKELY(canvasRef.expired()))
+          return;
 
-  public:
-    RenderingContextType contextType;
-    std::weak_ptr<CanvasType> canvasRef;
+        auto canvas = canvasRef.lock();
+        assert(canvas != nullptr && "Canvas reference is expired");
+        if (canvas->pixels_updated_callback_ != nullptr)
+          canvas->pixels_updated_callback_();
+      }
 
-  protected:
-    TrClientContextPerProcess *clientContext = nullptr;
-  };
-}
+    public:
+      RenderingContextType contextType;
+      std::weak_ptr<CanvasType> canvasRef;
+
+    protected:
+      TrClientContextPerProcess *clientContext = nullptr;
+    };
+  }
 
 #include "./rendering_context2d.hpp"
+} // namespace endor

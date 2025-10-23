@@ -7,216 +7,219 @@
 
 #include "./v8_object_wrap.hpp"
 
-namespace scripting_base
+namespace endor
 {
-  // This is new version of the implementation of the Iterator Protocol
-  namespace iteration_protocol
+  namespace scripting_base
   {
-    class Iterable
+    // This is new version of the implementation of the Iterator Protocol
+    namespace iteration_protocol
     {
-    public:
-      virtual void GetIterator(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
-    };
+      class Iterable
+      {
+      public:
+        virtual void GetIterator(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+      };
 
-    class Iterator
-    {
-    public:
-      virtual void Next(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
-      virtual void Return(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
-      virtual void Throw(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
-    };
+      class Iterator
+      {
+      public:
+        virtual void Next(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+        virtual void Return(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+        virtual void Throw(const v8::FunctionCallbackInfo<v8::Value> &args) = 0;
+      };
 
-    struct IteratorResult
-    {
-      /**
+      struct IteratorResult
+      {
+        /**
        * A boolean that's `false` if the iterator was able to produce the next value in the sequence.
        */
-      bool done;
-      /**
+        bool done;
+        /**
        * Any JavaScript value returned by the iterator. Can be omitted when done is true.
        */
-      v8::Global<v8::Value> value;
-    };
-  }
+        v8::Global<v8::Value> value;
+      };
+    }
 
-  /**
+    /**
    * A base class for implementing the Iterator Protocol in V8.
    *
    * @tparam T The class to wrap
    * @tparam ValueType The type of the values in the data source
    */
-  template <typename T, typename ValueType>
-  class Iterator : public ObjectWrap<T>
-  {
-    using ObjectWrap<T>::ObjectWrap;
-
-  public:
-    static std::string Name()
+    template <typename T, typename ValueType>
+    class Iterator : public ObjectWrap<T>
     {
-      return "Iterator";
-    }
+      using ObjectWrap<T>::ObjectWrap;
 
-    // Creates a new instance of the Iterator class, with a vector of data source.
-    // TODO(yorkie): remove the dependency on napi_env
-    static v8::Local<v8::Value> NewInstance(napi_env napiEnv,
-                                            const std::vector<std::shared_ptr<ValueType>> &dataSource)
-    {
-      v8::Isolate *isolate = v8::Isolate::GetCurrent();
-      v8::EscapableHandleScope scope(isolate);
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    public:
+      static std::string Name()
+      {
+        return "Iterator";
+      }
 
-      v8::Local<v8::Value> jsValue = ObjectWrap<T>::NewInstance(napiEnv);
-      v8::Local<v8::Object> jsObject = jsValue->ToObject(context).ToLocalChecked();
-      T *instance = ObjectWrap<T>::Unwrap(isolate, jsObject);
-      assert(instance != nullptr && "instance must not be null");
+      // Creates a new instance of the Iterator class, with a vector of data source.
+      // TODO(yorkie): remove the dependency on napi_env
+      static v8::Local<v8::Value> NewInstance(napi_env napiEnv,
+                                              const std::vector<std::shared_ptr<ValueType>> &dataSource)
+      {
+        v8::Isolate *isolate = v8::Isolate::GetCurrent();
+        v8::EscapableHandleScope scope(isolate);
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-      instance->dataSource_ = dataSource;
-      return scope.Escape(jsValue);
-    }
+        v8::Local<v8::Value> jsValue = ObjectWrap<T>::NewInstance(napiEnv);
+        v8::Local<v8::Object> jsObject = jsValue->ToObject(context).ToLocalChecked();
+        T *instance = ObjectWrap<T>::Unwrap(isolate, jsObject);
+        assert(instance != nullptr && "instance must not be null");
 
-  public:
-    Iterator(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
-        : ObjectWrap<T>(isolate, info)
-    {
-      v8::HandleScope scope(isolate);
-      auto context = isolate->GetCurrentContext();
-      auto jsObject = info.This();
+        instance->dataSource_ = dataSource;
+        return scope.Escape(jsValue);
+      }
 
-      // Configure the Iterator Protocol
-      jsObject->Set(context,
-                    v8::String::NewFromUtf8Literal(isolate, "next"),
-                    v8::FunctionTemplate::New(isolate, Next)->GetFunction(context).ToLocalChecked())
-        .FromJust();
-      jsObject->Set(context,
-                    v8::String::NewFromUtf8Literal(isolate, "return"),
-                    v8::FunctionTemplate::New(isolate, Return)->GetFunction(context).ToLocalChecked())
-        .FromJust();
-      jsObject->Set(context,
-                    v8::String::NewFromUtf8Literal(isolate, "throw"),
-                    v8::FunctionTemplate::New(isolate, Throw)->GetFunction(context).ToLocalChecked())
-        .FromJust();
-    }
-    virtual ~Iterator() = default;
+    public:
+      Iterator(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
+          : ObjectWrap<T>(isolate, info)
+      {
+        v8::HandleScope scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto jsObject = info.This();
 
-  protected:
-    virtual v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<ValueType> value)
-    {
-      return v8::Undefined(isolate);
-    }
+        // Configure the Iterator Protocol
+        jsObject->Set(context,
+                      v8::String::NewFromUtf8Literal(isolate, "next"),
+                      v8::FunctionTemplate::New(isolate, Next)->GetFunction(context).ToLocalChecked())
+          .FromJust();
+        jsObject->Set(context,
+                      v8::String::NewFromUtf8Literal(isolate, "return"),
+                      v8::FunctionTemplate::New(isolate, Return)->GetFunction(context).ToLocalChecked())
+          .FromJust();
+        jsObject->Set(context,
+                      v8::String::NewFromUtf8Literal(isolate, "throw"),
+                      v8::FunctionTemplate::New(isolate, Throw)->GetFunction(context).ToLocalChecked())
+          .FromJust();
+      }
+      virtual ~Iterator() = default;
 
-  private:
-    /**
+    protected:
+      virtual v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<ValueType> value)
+      {
+        return v8::Undefined(isolate);
+      }
+
+    private:
+      /**
      * The next() method returns an object with two properties done and value.
      *
      * @param info The callback info
      */
-    static void Next(const v8::FunctionCallbackInfo<v8::Value> &info)
-    {
-      v8::Isolate *isolate = info.GetIsolate();
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::HandleScope scope(isolate);
-
-      T *instance = ObjectWrap<T>::Unwrap(isolate, info.This());
-      if (!instance)
+      static void Next(const v8::FunctionCallbackInfo<v8::Value> &info)
       {
-        info.GetReturnValue().Set(v8::Undefined(isolate));
-        return;
-      }
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
+        v8::HandleScope scope(isolate);
 
-      // Return { done: true } if the iterator has been consumed or the data source is empty
-      if (instance->hasDone_ || instance->dataSource_.empty())
-      {
+        T *instance = ObjectWrap<T>::Unwrap(isolate, info.This());
+        if (!instance)
+        {
+          info.GetReturnValue().Set(v8::Undefined(isolate));
+          return;
+        }
+
+        // Return { done: true } if the iterator has been consumed or the data source is empty
+        if (instance->hasDone_ || instance->dataSource_.empty())
+        {
+          v8::Local<v8::Object> result = v8::Object::New(isolate);
+          result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, true))
+            .FromJust();
+          info.GetReturnValue().Set(result);
+          return;
+        }
+
+        auto value = instance->dataSource_.front();
+        instance->dataSource_.erase(instance->dataSource_.begin());
+
         v8::Local<v8::Object> result = v8::Object::New(isolate);
-        result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, true))
+        result->Set(context, v8::String::NewFromUtf8Literal(isolate, "value"), instance->createNextValue(isolate, value))
+          .FromJust();
+        result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, false))
           .FromJust();
         info.GetReturnValue().Set(result);
-        return;
       }
 
-      auto value = instance->dataSource_.front();
-      instance->dataSource_.erase(instance->dataSource_.begin());
-
-      v8::Local<v8::Object> result = v8::Object::New(isolate);
-      result->Set(context, v8::String::NewFromUtf8Literal(isolate, "value"), instance->createNextValue(isolate, value))
-        .FromJust();
-      result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, false))
-        .FromJust();
-      info.GetReturnValue().Set(result);
-    }
-
-    /**
+      /**
      * The return() method returns the given value and finishes the iterator.
      */
-    static void Return(const v8::FunctionCallbackInfo<v8::Value> &info)
-    {
-      v8::Isolate *isolate = info.GetIsolate();
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::HandleScope scope(isolate);
-      std::cerr << "Iterator::Return()" << std::endl;
+      static void Return(const v8::FunctionCallbackInfo<v8::Value> &info)
+      {
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
+        v8::HandleScope scope(isolate);
+        std::cerr << "Iterator::Return()" << std::endl;
 
-      info.GetReturnValue().Set(v8::Undefined(isolate));
-    }
+        info.GetReturnValue().Set(v8::Undefined(isolate));
+      }
 
-    /**
+      /**
      * The throw() method throws an error into the generator.
      */
-    static void Throw(const v8::FunctionCallbackInfo<v8::Value> &info)
-    {
-      v8::Isolate *isolate = info.GetIsolate();
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::HandleScope scope(isolate);
-      std::cerr << "Iterator::Throw()" << std::endl;
+      static void Throw(const v8::FunctionCallbackInfo<v8::Value> &info)
+      {
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
+        v8::HandleScope scope(isolate);
+        std::cerr << "Iterator::Throw()" << std::endl;
 
-      info.GetReturnValue().Set(v8::Undefined(isolate));
-    }
+        info.GetReturnValue().Set(v8::Undefined(isolate));
+      }
 
-  private:
-    std::vector<std::shared_ptr<ValueType>> dataSource_;
-    bool hasDone_ = false;
-  };
+    private:
+      std::vector<std::shared_ptr<ValueType>> dataSource_;
+      bool hasDone_ = false;
+    };
 
-  /**
+    /**
    * A base class for implementing the Iterable Protocol in V8.
    *
    * @tparam T The class to wrap
    * @tparam ValueType The type of the values in the data source
    */
-  template <typename T, typename ValueType>
-  class Iterable : public Iterator<T, ValueType>
-  {
-    using Iterator<T, ValueType>::Iterator;
+    template <typename T, typename ValueType>
+    class Iterable : public Iterator<T, ValueType>
+    {
+      using Iterator<T, ValueType>::Iterator;
 
-  public:
-    /**
+    public:
+      /**
      * Creates a new instance of the Iterable class.
      *
      * @param isolate The V8 isolate
      * @param info The callback info
      */
-    Iterable(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
-        : Iterator<T, ValueType>(isolate, info)
-    {
-      v8::HandleScope scope(isolate);
-      auto context = isolate->GetCurrentContext();
-      auto jsObject = info.This();
+      Iterable(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
+          : Iterator<T, ValueType>(isolate, info)
+      {
+        v8::HandleScope scope(isolate);
+        auto context = isolate->GetCurrentContext();
+        auto jsObject = info.This();
 
-      // Get the Symbol.iterator value
-      jsObject->Set(context,
-                    v8::Symbol::GetIterator(isolate),
-                    v8::FunctionTemplate::New(isolate, GetIterator)->GetFunction(context).ToLocalChecked())
-        .FromJust();
-    }
+        // Get the Symbol.iterator value
+        jsObject->Set(context,
+                      v8::Symbol::GetIterator(isolate),
+                      v8::FunctionTemplate::New(isolate, GetIterator)->GetFunction(context).ToLocalChecked())
+          .FromJust();
+      }
 
-  private:
-    /**
+    private:
+      /**
      * The @@iterator method returns the iterator object itself.
      */
-    static void GetIterator(const v8::FunctionCallbackInfo<v8::Value> &info)
-    {
-      v8::Isolate *isolate = info.GetIsolate();
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::HandleScope scope(isolate);
-      info.GetReturnValue().Set(info.This());
-    }
-  };
-}
+      static void GetIterator(const v8::FunctionCallbackInfo<v8::Value> &info)
+      {
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
+        v8::HandleScope scope(isolate);
+        info.GetReturnValue().Set(info.This());
+      }
+    };
+  }
+} // namespace endor

@@ -2,147 +2,150 @@
 
 using namespace std;
 
-namespace client_url
+namespace endor
 {
-  URLSearchParams::URLSearchParams()
+  namespace client_url
   {
-  }
-
-  URLSearchParams::URLSearchParams(const string &query)
-  {
-    size_t start = 0;
-    while (start < query.size())
+    URLSearchParams::URLSearchParams()
     {
-      size_t end = query.find('&', start);
-      if (end == string::npos)
-      {
-        end = query.size();
-      }
+    }
 
-      size_t eq = query.find('=', start);
-      if (eq != string::npos && eq < end)
+    URLSearchParams::URLSearchParams(const string &query)
+    {
+      size_t start = 0;
+      while (start < query.size())
       {
-        string name = query.substr(start, eq - start);
-        string value = query.substr(eq + 1, end - eq - 1);
-        append(name, value);
+        size_t end = query.find('&', start);
+        if (end == string::npos)
+        {
+          end = query.size();
+        }
+
+        size_t eq = query.find('=', start);
+        if (eq != string::npos && eq < end)
+        {
+          string name = query.substr(start, eq - start);
+          string value = query.substr(eq + 1, end - eq - 1);
+          append(name, value);
+        }
+        else
+        {
+          string name = query.substr(start, end - start);
+          append(name, "");
+        }
+
+        start = end + 1;
+      }
+    }
+
+    void URLSearchParams::append(const string &name, const string &value)
+    {
+      emplace_back(name, value);
+    }
+
+    void URLSearchParams::remove(const string &name, optional<string> value)
+    {
+      if (value.has_value())
+      {
+        auto it = begin();
+        while (it != end())
+        {
+          if (it->first == name && it->second == value.value())
+          {
+            it = erase(it);
+          }
+          else
+          {
+            ++it;
+          }
+        }
       }
       else
       {
-        string name = query.substr(start, end - start);
-        append(name, "");
+        auto it = begin();
+        while (it != end())
+        {
+          if (it->first == name)
+          {
+            it = erase(it);
+          }
+          else
+          {
+            ++it;
+          }
+        }
       }
-
-      start = end + 1;
     }
-  }
 
-  void URLSearchParams::append(const string &name, const string &value)
-  {
-    emplace_back(name, value);
-  }
-
-  void URLSearchParams::remove(const string &name, optional<string> value)
-  {
-    if (value.has_value())
+    string URLSearchParams::get(const string &name) const
     {
-      auto it = begin();
-      while (it != end())
+      for (const auto &pair : *this)
       {
-        if (it->first == name && it->second == value.value())
-        {
-          it = erase(it);
-        }
-        else
-        {
-          ++it;
-        }
+        if (pair.first == name)
+          return pair.second;
       }
+      return "";
     }
-    else
+
+    vector<string> URLSearchParams::getAll(const string &name) const
     {
-      auto it = begin();
-      while (it != end())
+      vector<string> values;
+      for (const auto &pair : *this)
       {
-        if (it->first == name)
-        {
-          it = erase(it);
-        }
-        else
-        {
-          ++it;
-        }
+        if (pair.first == name)
+          values.push_back(pair.second);
       }
+      return values;
     }
-  }
 
-  string URLSearchParams::get(const string &name) const
-  {
-    for (const auto &pair : *this)
+    bool URLSearchParams::has(const string &name) const
     {
-      if (pair.first == name)
-        return pair.second;
-    }
-    return "";
-  }
-
-  vector<string> URLSearchParams::getAll(const string &name) const
-  {
-    vector<string> values;
-    for (const auto &pair : *this)
-    {
-      if (pair.first == name)
-        values.push_back(pair.second);
-    }
-    return values;
-  }
-
-  bool URLSearchParams::has(const string &name) const
-  {
-    for (const auto &pair : *this)
-    {
-      if (pair.first == name)
-        return true;
-    }
-    return false;
-  }
-
-  void URLSearchParams::set(const string &name, const string &value)
-  {
-    // Remove all existing entries with the same name
-    remove(name);
-
-    // Add the new entry
-    append(name, value);
-  }
-
-  string URLSearchParams::toString() const
-  {
-    string result;
-    for (size_t i = 0; i < size(); ++i)
-    {
-      const auto &pair = (*this)[i];
-      result += pair.first + "=" + pair.second;
-      if (i < size() - 1)
+      for (const auto &pair : *this)
       {
-        result += "&";
+        if (pair.first == name)
+          return true;
       }
+      return false;
     }
-    return result;
-  }
 
-  vector<string> URLSearchParams::keys() const
-  {
-    vector<string> result;
-    for (const auto &pair : *this)
-      result.push_back(pair.first);
-    return result;
-  }
+    void URLSearchParams::set(const string &name, const string &value)
+    {
+      // Remove all existing entries with the same name
+      remove(name);
 
-  vector<string> URLSearchParams::values() const
-  {
-    vector<string> result;
-    for (const auto &pair : *this)
-      result.push_back(pair.second);
-    return result;
+      // Add the new entry
+      append(name, value);
+    }
+
+    string URLSearchParams::toString() const
+    {
+      string result;
+      for (size_t i = 0; i < size(); ++i)
+      {
+        const auto &pair = (*this)[i];
+        result += pair.first + "=" + pair.second;
+        if (i < size() - 1)
+        {
+          result += "&";
+        }
+      }
+      return result;
+    }
+
+    vector<string> URLSearchParams::keys() const
+    {
+      vector<string> result;
+      for (const auto &pair : *this)
+        result.push_back(pair.first);
+      return result;
+    }
+
+    vector<string> URLSearchParams::values() const
+    {
+      vector<string> result;
+      for (const auto &pair : *this)
+        result.push_back(pair.second);
+      return result;
+    }
   }
-}
+} // namespace endor

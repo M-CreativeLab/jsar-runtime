@@ -5,10 +5,13 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::canvas_bindings
+namespace endor
 {
-  CanvasRenderingContext2D::CanvasRenderingContext2D(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : CanvasRenderingContext2DBase(isolate, args)
+  namespace script_bindings::canvas_bindings
   {
+    CanvasRenderingContext2D::CanvasRenderingContext2D(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : CanvasRenderingContext2DBase(isolate, args)
+    {
+    }
   }
-}
+} // namespace endor

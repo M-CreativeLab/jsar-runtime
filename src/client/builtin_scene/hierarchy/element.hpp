@@ -4,38 +4,41 @@
 #include <client/classes.hpp>
 #include "../ecs-inl.hpp"
 
-namespace builtin_scene::hierarchy
+namespace endor
 {
-  class Element : public ecs::Component
+  namespace builtin_scene::hierarchy
   {
-    using ecs::Component::Component;
-
-  public:
-    Element(std::string name, std::shared_ptr<dom::Node> node)
-        : name(name)
-        , node(node)
+    class Element : public ecs::Component
     {
-    }
+      using ecs::Component::Component;
 
-  public:
-    template <typename T>
-      requires std::is_same_v<T, dom::SceneObject>
-    std::shared_ptr<T> getNode() const
-    {
-      return std::dynamic_pointer_cast<T>(node);
-    }
+    public:
+      Element(std::string name, std::shared_ptr<dom::Node> node)
+          : name(name)
+          , node(node)
+      {
+      }
 
-    template <typename T>
-      requires std::is_same_v<T, dom::SceneObject>
-    T &getNodeChecked() const
-    {
-      auto ref = getNode<T>();
-      assert(ref != nullptr && "The node must be valid.");
-      return *ref;
-    }
+    public:
+      template <typename T>
+        requires std::is_same_v<T, dom::SceneObject>
+      std::shared_ptr<T> getNode() const
+      {
+        return std::dynamic_pointer_cast<T>(node);
+      }
 
-  public:
-    std::string name;
-    std::shared_ptr<dom::Node> node;
-  };
-}
+      template <typename T>
+        requires std::is_same_v<T, dom::SceneObject>
+      T &getNodeChecked() const
+      {
+        auto ref = getNode<T>();
+        assert(ref != nullptr && "The node must be valid.");
+        return *ref;
+      }
+
+    public:
+      std::string name;
+      std::shared_ptr<dom::Node> node;
+    };
+  }
+} // namespace endor

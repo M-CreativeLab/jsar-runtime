@@ -5,23 +5,26 @@
 #include <client/dom/node.hpp>
 #include "./computed_style.hpp"
 
-namespace client_cssom
+namespace endor
 {
-  class StyleCache : std::unordered_map<uint32_t, std::shared_ptr<ComputedStyle>>
+  namespace client_cssom
   {
-  public:
-    StyleCache() = default;
-
-  public:
-    std::shared_ptr<ComputedStyle> findStyle(std::shared_ptr<dom::Node> elementOrTextNode) const;
-    std::shared_ptr<ComputedStyle> createStyle(std::shared_ptr<dom::Node> elementOrTextNode,
-                                               bool useElementStyle = true,
-                                               bool writeCache = true);
-    bool resetStyle(std::shared_ptr<dom::Node> elementOrTextNode);
-
-    inline void invalidateCache()
+    class StyleCache : std::unordered_map<uint32_t, std::shared_ptr<ComputedStyle>>
     {
-      clear();
-    }
-  };
-}
+    public:
+      StyleCache() = default;
+
+    public:
+      std::shared_ptr<ComputedStyle> findStyle(std::shared_ptr<dom::Node> elementOrTextNode) const;
+      std::shared_ptr<ComputedStyle> createStyle(std::shared_ptr<dom::Node> elementOrTextNode,
+                                                 bool useElementStyle = true,
+                                                 bool writeCache = true);
+      bool resetStyle(std::shared_ptr<dom::Node> elementOrTextNode);
+
+      inline void invalidateCache()
+      {
+        clear();
+      }
+    };
+  }
+} // namespace endor

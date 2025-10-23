@@ -4,24 +4,27 @@
 #include <common/command_buffers/details/program.hpp>
 #include <client/scripting_base/v8_object_holder.hpp>
 
-namespace client_graphics
+namespace endor
 {
-  class WebGLActiveInfo : public scripting_base::JSObjectHolder
+  namespace client_graphics
   {
-  public:
-    WebGLActiveInfo()
+    class WebGLActiveInfo : public scripting_base::JSObjectHolder
     {
-    }
-    WebGLActiveInfo(const commandbuffers::ActiveInfo &info)
-        : name(info.name)
-        , size(info.size)
-        , type(info.type)
-    {
-    }
+    public:
+      WebGLActiveInfo()
+      {
+      }
+      WebGLActiveInfo(const commandbuffers::ActiveInfo &info)
+          : name(info.name)
+          , size(info.size)
+          , type(info.type)
+      {
+      }
 
-  public:
-    std::string name;
-    int size;
-    int type;
-  };
-}
+    public:
+      std::string name;
+      int size;
+      int type;
+    };
+  }
+} // namespace endor

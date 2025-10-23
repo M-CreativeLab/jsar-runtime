@@ -100,202 +100,205 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace endor
 {
-  void Initialize(Isolate *isolate, Local<Context> context, ContextType type)
+  namespace script_bindings
   {
-    HandleScope scope(isolate);
-    Context::Scope contextScope(context);
-    Local<Object> global = context->Global();
+    void Initialize(Isolate *isolate, Local<Context> context, ContextType type)
+    {
+      HandleScope scope(isolate);
+      Context::Scope contextScope(context);
+      Local<Object> global = context->Global();
 
 #define NAME(str) String::NewFromUtf8(isolate, str).ToLocalChecked()
 
-    // Initialize base classes first
+      // Initialize base classes first
 #define ADD_BASE_TYPE(X) \
   global->Set(context, NAME(#X), script_bindings::X::Initialize(isolate)).Check();
 
-    ADD_BASE_TYPE(Event)
-    ADD_BASE_TYPE(EventTarget)
+      ADD_BASE_TYPE(Event)
+      ADD_BASE_TYPE(EventTarget)
 #undef ADD_BASE_TYPE
 
-    // Initialize event classes
+      // Initialize event classes
 #define ADD_EVENT(X) \
   global->Set(context, NAME(#X), event_bindings::X::Initialize(isolate)).Check();
 
-    ADD_EVENT(ErrorEvent)
-    ADD_EVENT(MessageEvent)
-    ADD_EVENT(UIEvent)
-    ADD_EVENT(MouseEvent)
-    ADD_EVENT(PointerEvent)
+      ADD_EVENT(ErrorEvent)
+      ADD_EVENT(MessageEvent)
+      ADD_EVENT(UIEvent)
+      ADD_EVENT(MouseEvent)
+      ADD_EVENT(PointerEvent)
 
-    // WebXR events
-    ADD_EVENT(XRSessionEvent)
-    ADD_EVENT(XRInputSourceEvent)
-    ADD_EVENT(XRInputSourcesChangeEvent)
+      // WebXR events
+      ADD_EVENT(XRSessionEvent)
+      ADD_EVENT(XRInputSourceEvent)
+      ADD_EVENT(XRInputSourcesChangeEvent)
 #undef ADD_EVENT
 
-    {
-      // Create and set global console object
-      auto Console = dom_bindings::Console::Initialize(isolate);
-      auto console = dom_bindings::Console::NewInstance(isolate, nullptr);
-      global->Set(context, NAME("Console"), Console).Check();
-      global->Set(context, NAME("console"), console).Check();
-    }
+      {
+        // Create and set global console object
+        auto Console = dom_bindings::Console::Initialize(isolate);
+        auto console = dom_bindings::Console::NewInstance(isolate, nullptr);
+        global->Set(context, NAME("Console"), Console).Check();
+        global->Set(context, NAME("console"), console).Check();
+      }
 
 #define ADD_CANVAS_TYPE(X) \
   global->Set(context, NAME(#X), canvas_bindings::X::Initialize(isolate)).Check();
 
-    ADD_CANVAS_TYPE(ImageBitmap)
-    ADD_CANVAS_TYPE(ImageData)
-    ADD_CANVAS_TYPE(CanvasRenderingContext2D)
-    ADD_CANVAS_TYPE(OffscreenCanvas)
-    ADD_CANVAS_TYPE(OffscreenCanvasRenderingContext2D)
-    ADD_CANVAS_TYPE(Path2D)
-    ADD_CANVAS_TYPE(TextMetrics)
+      ADD_CANVAS_TYPE(ImageBitmap)
+      ADD_CANVAS_TYPE(ImageData)
+      ADD_CANVAS_TYPE(CanvasRenderingContext2D)
+      ADD_CANVAS_TYPE(OffscreenCanvas)
+      ADD_CANVAS_TYPE(OffscreenCanvasRenderingContext2D)
+      ADD_CANVAS_TYPE(Path2D)
+      ADD_CANVAS_TYPE(TextMetrics)
 
 #undef ADD_CANVAS_TYPE
 
-    // Initialize File API classes
+      // Initialize File API classes
 #define ADD_FILE_API_TYPE(X) \
   global->Set(context, NAME(#X), fileapi_bindings::X::Initialize(isolate)).Check();
 
-    ADD_FILE_API_TYPE(Blob)
+      ADD_FILE_API_TYPE(Blob)
 #undef ADD_FILE_API_TYPE
 
-    // Initialize Fetch classes
-    global->Set(context, NAME("Response"), Response::Initialize(isolate)).Check();
+      // Initialize Fetch classes
+      global->Set(context, NAME("Response"), Response::Initialize(isolate)).Check();
 
-    // Initialize URL classes
+      // Initialize URL classes
 #define ADD_URL_TYPE(X) \
   global->Set(context, NAME(#X), url_bindings::X::Initialize(isolate)).Check();
 
-    ADD_URL_TYPE(URL)
-    ADD_URL_TYPE(URLSearchParams)
+      ADD_URL_TYPE(URL)
+      ADD_URL_TYPE(URLSearchParams)
 #undef ADD_URL_TYPE
 
-    // Initialize Worker class
+      // Initialize Worker class
 #define ADD_WORKER_TYPE(X) \
   global->Set(context, NAME(#X), workers_bindings::X::Initialize(isolate)).Check();
 
-    ADD_WORKER_TYPE(Worker)
+      ADD_WORKER_TYPE(Worker)
 #undef ADD_WORKER_TYPE
 
-    // Initialize classes and objects for scripting context only
-    if (type == ContextType::kScripting)
-    {
-      // Browser/Navigator object
-      auto Navigator = Navigator::Initialize(isolate);
-      global->Set(context, NAME("Navigator"), Navigator).Check();
-      auto Location = Location::Initialize(isolate);
-      global->Set(context, NAME("Location"), Location).Check();
+      // Initialize classes and objects for scripting context only
+      if (type == ContextType::kScripting)
+      {
+        // Browser/Navigator object
+        auto Navigator = Navigator::Initialize(isolate);
+        global->Set(context, NAME("Navigator"), Navigator).Check();
+        auto Location = Location::Initialize(isolate);
+        global->Set(context, NAME("Location"), Location).Check();
 
-      // Base DOM classes
+        // Base DOM classes
 #define ADD_DOM_TYPE(X) \
   global->Set(context, NAME(#X), dom_bindings::X::Initialize(isolate)).Check();
 
-      ADD_DOM_TYPE(Node)
-      ADD_DOM_TYPE(NodeList)
-      ADD_DOM_TYPE(Element)
-      ADD_DOM_TYPE(Document)
-      ADD_DOM_TYPE(DocumentFragment)
-      ADD_DOM_TYPE(CharacterData)
-      ADD_DOM_TYPE(Text)
-      ADD_DOM_TYPE(Comment)
-      ADD_DOM_TYPE(DOMParser)
-      ADD_DOM_TYPE(DOMStringMap)
-      ADD_DOM_TYPE(MutationObserver)
-      ADD_DOM_TYPE(MutationRecord)
+        ADD_DOM_TYPE(Node)
+        ADD_DOM_TYPE(NodeList)
+        ADD_DOM_TYPE(Element)
+        ADD_DOM_TYPE(Document)
+        ADD_DOM_TYPE(DocumentFragment)
+        ADD_DOM_TYPE(CharacterData)
+        ADD_DOM_TYPE(Text)
+        ADD_DOM_TYPE(Comment)
+        ADD_DOM_TYPE(DOMParser)
+        ADD_DOM_TYPE(DOMStringMap)
+        ADD_DOM_TYPE(MutationObserver)
+        ADD_DOM_TYPE(MutationRecord)
 #undef ADD_DOM_TYPE
 
-      // CSSOM
+        // CSSOM
 #define ADD_CSSOM_TYPE(X) \
   global->Set(context, NAME(#X), cssom_bindings::X::Initialize(isolate)).Check();
 
-      ADD_CSSOM_TYPE(CSSStyleDeclaration)
+        ADD_CSSOM_TYPE(CSSStyleDeclaration)
 #undef ADD_CSSOM_TYPE
 
-      // HTML elements
+        // HTML elements
 #define ADD_HTML_ELEMENT(X) \
   global->Set(context, NAME(#X), html_bindings::X::Initialize(isolate)).Check();
 
-      ADD_HTML_ELEMENT(HTMLElement)
-      ADD_HTML_ELEMENT(HTMLAudioElement)
-      ADD_HTML_ELEMENT(HTMLBodyElement)
-      ADD_HTML_ELEMENT(HTMLButtonElement)
-      ADD_HTML_ELEMENT(HTMLCanvasElement)
-      ADD_HTML_ELEMENT(HTMLDivElement)
-      ADD_HTML_ELEMENT(HTMLHeadElement)
-      ADD_HTML_ELEMENT(HTMLHeadingElement)
-      ADD_HTML_ELEMENT(HTMLHtmlElement)
-      ADD_HTML_ELEMENT(HTMLIframeElement)
-      ADD_HTML_ELEMENT(HTMLImageElement)
-      ADD_HTML_ELEMENT(HTMLInputElement)
-      ADD_HTML_ELEMENT(HTMLLinkElement)
-      ADD_HTML_ELEMENT(HTMLMediaElement)
-      ADD_HTML_ELEMENT(HTMLMetaElement)
-      ADD_HTML_ELEMENT(HTMLModelElement)
-      ADD_HTML_ELEMENT(HTMLParagraphElement)
-      ADD_HTML_ELEMENT(HTMLScriptElement)
-      ADD_HTML_ELEMENT(HTMLSpanElement)
-      ADD_HTML_ELEMENT(HTMLStyleElement)
-      ADD_HTML_ELEMENT(HTMLTemplateElement)
-      ADD_HTML_ELEMENT(HTMLVideoElement)
+        ADD_HTML_ELEMENT(HTMLElement)
+        ADD_HTML_ELEMENT(HTMLAudioElement)
+        ADD_HTML_ELEMENT(HTMLBodyElement)
+        ADD_HTML_ELEMENT(HTMLButtonElement)
+        ADD_HTML_ELEMENT(HTMLCanvasElement)
+        ADD_HTML_ELEMENT(HTMLDivElement)
+        ADD_HTML_ELEMENT(HTMLHeadElement)
+        ADD_HTML_ELEMENT(HTMLHeadingElement)
+        ADD_HTML_ELEMENT(HTMLHtmlElement)
+        ADD_HTML_ELEMENT(HTMLIframeElement)
+        ADD_HTML_ELEMENT(HTMLImageElement)
+        ADD_HTML_ELEMENT(HTMLInputElement)
+        ADD_HTML_ELEMENT(HTMLLinkElement)
+        ADD_HTML_ELEMENT(HTMLMediaElement)
+        ADD_HTML_ELEMENT(HTMLMetaElement)
+        ADD_HTML_ELEMENT(HTMLModelElement)
+        ADD_HTML_ELEMENT(HTMLParagraphElement)
+        ADD_HTML_ELEMENT(HTMLScriptElement)
+        ADD_HTML_ELEMENT(HTMLSpanElement)
+        ADD_HTML_ELEMENT(HTMLStyleElement)
+        ADD_HTML_ELEMENT(HTMLTemplateElement)
+        ADD_HTML_ELEMENT(HTMLVideoElement)
 #undef ADD_HTML_ELEMENT
-      {
-        using namespace html_bindings;
+        {
+          using namespace html_bindings;
 
-        // Set up constructor as a global function: Audio, Image, etc.
-        global->Set(context, NAME("Audio"), HTMLAudioElement::CreateAudioConstructor(isolate)).Check();
-        global->Set(context, NAME("Image"), HTMLImageElement::CreateImageConstructor(isolate)).Check();
+          // Set up constructor as a global function: Audio, Image, etc.
+          global->Set(context, NAME("Audio"), HTMLAudioElement::CreateAudioConstructor(isolate)).Check();
+          global->Set(context, NAME("Image"), HTMLImageElement::CreateImageConstructor(isolate)).Check();
 
-        // Initialize HTML elements which won't be exposed
-        HTMLSectionElement::Initialize(isolate);
-      }
+          // Initialize HTML elements which won't be exposed
+          HTMLSectionElement::Initialize(isolate);
+        }
 
-      // WebGL classes
+        // WebGL classes
 #define ADD_WEBGL_TYPE(X) \
   global->Set(context, NAME(#X), webgl_bindings::X::Initialize(isolate)).Check();
 
-      ADD_WEBGL_TYPE(WebGLActiveInfo)
-      ADD_WEBGL_TYPE(WebGLBuffer)
-      ADD_WEBGL_TYPE(WebGLFramebuffer)
-      ADD_WEBGL_TYPE(WebGLProgram)
-      ADD_WEBGL_TYPE(WebGLRenderbuffer)
-      ADD_WEBGL_TYPE(WebGLShader)
-      ADD_WEBGL_TYPE(WebGLShaderPrecisionFormat)
-      ADD_WEBGL_TYPE(WebGLTexture)
-      ADD_WEBGL_TYPE(WebGLUniformLocation)
-      ADD_WEBGL_TYPE(WebGLVertexArray)
-      ADD_WEBGL_TYPE(WebGLRenderingContext)
-      ADD_WEBGL_TYPE(WebGL2RenderingContext)
+        ADD_WEBGL_TYPE(WebGLActiveInfo)
+        ADD_WEBGL_TYPE(WebGLBuffer)
+        ADD_WEBGL_TYPE(WebGLFramebuffer)
+        ADD_WEBGL_TYPE(WebGLProgram)
+        ADD_WEBGL_TYPE(WebGLRenderbuffer)
+        ADD_WEBGL_TYPE(WebGLShader)
+        ADD_WEBGL_TYPE(WebGLShaderPrecisionFormat)
+        ADD_WEBGL_TYPE(WebGLTexture)
+        ADD_WEBGL_TYPE(WebGLUniformLocation)
+        ADD_WEBGL_TYPE(WebGLVertexArray)
+        ADD_WEBGL_TYPE(WebGLRenderingContext)
+        ADD_WEBGL_TYPE(WebGL2RenderingContext)
 
-      // WebGL extensions
-      webgl_bindings::WebGLExtensions::Initialize(isolate);
+        // WebGL extensions
+        webgl_bindings::WebGLExtensions::Initialize(isolate);
 #undef ADD_WEBGL_TYPE
 
-      // WebXR classes
-      // Initialize WebXR classes
+        // WebXR classes
+        // Initialize WebXR classes
 #define ADD_WEBXR_TYPE(X) \
   global->Set(context, NAME(#X), webxr_bindings::X::Initialize(isolate)).Check();
 
-      ADD_WEBXR_TYPE(XRSpace)
-      ADD_WEBXR_TYPE(XRReferenceSpace)
-      ADD_WEBXR_TYPE(XRSession)
-      ADD_WEBXR_TYPE(XRFrame)
-      ADD_WEBXR_TYPE(XRRigidTransform)
-      ADD_WEBXR_TYPE(XRPose)
-      ADD_WEBXR_TYPE(XRViewerPose)
-      ADD_WEBXR_TYPE(XRViewport)
-      ADD_WEBXR_TYPE(XRView)
-      ADD_WEBXR_TYPE(XRSystem)
-      ADD_WEBXR_TYPE(XRRenderState)
-      ADD_WEBXR_TYPE(XRLayer)
-      ADD_WEBXR_TYPE(XRWebGLLayer)
-      ADD_WEBXR_TYPE(XRInputSource)
-      ADD_WEBXR_TYPE(XRHand)
+        ADD_WEBXR_TYPE(XRSpace)
+        ADD_WEBXR_TYPE(XRReferenceSpace)
+        ADD_WEBXR_TYPE(XRSession)
+        ADD_WEBXR_TYPE(XRFrame)
+        ADD_WEBXR_TYPE(XRRigidTransform)
+        ADD_WEBXR_TYPE(XRPose)
+        ADD_WEBXR_TYPE(XRViewerPose)
+        ADD_WEBXR_TYPE(XRViewport)
+        ADD_WEBXR_TYPE(XRView)
+        ADD_WEBXR_TYPE(XRSystem)
+        ADD_WEBXR_TYPE(XRRenderState)
+        ADD_WEBXR_TYPE(XRLayer)
+        ADD_WEBXR_TYPE(XRWebGLLayer)
+        ADD_WEBXR_TYPE(XRInputSource)
+        ADD_WEBXR_TYPE(XRHand)
 #undef ADD_WEBXR_TYPE
-    }
+      }
 
 #undef NAME
+    }
   }
-}
+} // namespace endor

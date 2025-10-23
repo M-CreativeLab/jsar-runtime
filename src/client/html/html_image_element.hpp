@@ -11,249 +11,252 @@
 
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLImageElement final : public HTMLElement,
-                                 public canvas::ImageSource
+  namespace dom
   {
-    using HTMLElement::HTMLElement;
-
-  public:
-    enum DecodingType
+    class HTMLImageElement final : public HTMLElement,
+                                   public canvas::ImageSource
     {
-      // Decode the image synchronously along with rendering the other DOM content, and present everything together.
-      kDecodingAsync,
-      // Decode the image asynchronously, after rendering and presenting the other DOM content.
-      kDecodingSync,
-      // No preference for the decoding mode; the browser decides what is best for the user. This is the default value.
-      kDecodingAuto,
-    };
+      using HTMLElement::HTMLElement;
 
-    enum LoadingHint
-    {
-      // Loads the image immediately, regardless of whether or not the image is currently within the visible viewport
-      // (this is the default value).
-      kLoadingEager,
-      // Defers loading the image until it reaches a calculated distance from the viewport, as defined by the browser.
-      // The intent is to avoid the network and storage bandwidth needed to handle the image until it's reasonably
-      // certain that it will be needed. This generally improves the performance of the content in most typical use
-      // cases.
-      kLoadingLazy,
-    };
+    public:
+      enum DecodingType
+      {
+        // Decode the image synchronously along with rendering the other DOM content, and present everything together.
+        kDecodingAsync,
+        // Decode the image asynchronously, after rendering and presenting the other DOM content.
+        kDecodingSync,
+        // No preference for the decoding mode; the browser decides what is best for the user. This is the default value.
+        kDecodingAuto,
+      };
 
-  public:
-    HTMLImageElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("IMG", ownerDocument)
-        , canvas::ImageSource()
-    {
-    }
+      enum LoadingHint
+      {
+        // Loads the image immediately, regardless of whether or not the image is currently within the visible viewport
+        // (this is the default value).
+        kLoadingEager,
+        // Defers loading the image until it reaches a calculated distance from the viewport, as defined by the browser.
+        // The intent is to avoid the network and storage bandwidth needed to handle the image until it's reasonably
+        // certain that it will be needed. This generally improves the performance of the content in most typical use
+        // cases.
+        kLoadingLazy,
+      };
 
-  public:
-    void createdCallback(bool from_scripting) override;
-    void connectedCallback() override;
-    void attributeChangedCallback(const std::string &name,
-                                  const std::string &oldValue,
-                                  const std::string &newValue) override;
-    void styleAdoptedCallback() override;
+    public:
+      HTMLImageElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLElement("IMG", ownerDocument)
+          , canvas::ImageSource()
+      {
+      }
 
-    inline geometry::DOMRect getImageClientRect() const
-    {
-      // For spatial (stereo) images, the layout width should be half of the natural width
-      // since spatial images contain side-by-side stereo pairs
-      int layoutWidth = isSpatial() ? naturalWidth() / 2 : naturalWidth();
-      return geometry::DOMRect(0, 0, layoutWidth, naturalHeight());
-    }
-    bool readPixels(SkPixmap &dst) const override
-    {
-      dst.reset(sk_bitmap_->info(),
-                sk_bitmap_->getPixels(),
-                sk_bitmap_->rowBytes());
-      return sk_bitmap_->readPixels(dst);
-    }
-    bool peekPixels(SkPixmap *pixmap) const override
-    {
-      if (pixmap == nullptr)
-        return false;
-      pixmap->reset(sk_bitmap_->info(),
-                    sk_bitmap_->getPixels(),
-                    sk_bitmap_->rowBytes());
-      return true;
-    }
+    public:
+      void createdCallback(bool from_scripting) override;
+      void connectedCallback() override;
+      void attributeChangedCallback(const std::string &name,
+                                    const std::string &oldValue,
+                                    const std::string &newValue) override;
+      void styleAdoptedCallback() override;
 
-    /**
+      inline geometry::DOMRect getImageClientRect() const
+      {
+        // For spatial (stereo) images, the layout width should be half of the natural width
+        // since spatial images contain side-by-side stereo pairs
+        int layoutWidth = isSpatial() ? naturalWidth() / 2 : naturalWidth();
+        return geometry::DOMRect(0, 0, layoutWidth, naturalHeight());
+      }
+      bool readPixels(SkPixmap &dst) const override
+      {
+        dst.reset(sk_bitmap_->info(),
+                  sk_bitmap_->getPixels(),
+                  sk_bitmap_->rowBytes());
+        return sk_bitmap_->readPixels(dst);
+      }
+      bool peekPixels(SkPixmap *pixmap) const override
+      {
+        if (pixmap == nullptr)
+          return false;
+        pixmap->reset(sk_bitmap_->info(),
+                      sk_bitmap_->getPixels(),
+                      sk_bitmap_->rowBytes());
+        return true;
+      }
+
+      /**
      * Sets the image source URL.
      *
      * @param src The URL of the image to load.
      */
-    void setSrc(const std::string &src)
-    {
-      is_src_image_loaded_ = false;
-      is_src_image_decoded_ = false;
+      void setSrc(const std::string &src)
+      {
+        is_src_image_loaded_ = false;
+        is_src_image_decoded_ = false;
 
-      setAttribute("src", src, false);
-      if (loading_ == LoadingHint::kLoadingEager)
-        loadImage();
-    }
+        setAttribute("src", src, false);
+        if (loading_ == LoadingHint::kLoadingEager)
+          loadImage();
+      }
 
-    /**
+      /**
      * Returns the image source URL.
      *
      * @returns The URL of the image to load.
      */
-    std::string getSrc()
-    {
-      return getAttribute("src");
-    }
+      std::string getSrc()
+      {
+        return getAttribute("src");
+      }
 
-    /**
+      /**
      * Loads the image, containing the image data, decoding it if necessary and rendering it.
      */
-    void loadImage();
+      void loadImage();
 
-    /**
+      /**
      * Decodes from the element's image data.
      */
-    void decodeImage();
+      void decodeImage();
 
-  private:
-    inline void ensureSkBitmap()
-    {
-      if (sk_bitmap_ == nullptr)
-        sk_bitmap_ = std::make_shared<SkBitmap>();
-      assert(sk_bitmap_ != nullptr &&
-             "The SkBitmap should not be null in HTMLImageElement.");
-    }
+    private:
+      inline void ensureSkBitmap()
+      {
+        if (sk_bitmap_ == nullptr)
+          sk_bitmap_ = std::make_shared<SkBitmap>();
+        assert(sk_bitmap_ != nullptr &&
+               "The SkBitmap should not be null in HTMLImageElement.");
+      }
 
-    void onImageDataReady(const void *imageData, size_t imageByteLength);
-    void onImageDecoded(const SkBitmap &bitmap);
-    void onSizeDidChange();
+      void onImageDataReady(const void *imageData, size_t imageByteLength);
+      void onImageDecoded(const SkBitmap &bitmap);
+      void onSizeDidChange();
 
-    void layoutSizeChangedCallback(const client_layout::Fragment &) override;
+      void layoutSizeChangedCallback(const client_layout::Fragment &) override;
 
-    // Validate if the current size is valid to create bitmap.
-    bool validateSizeToMakeBitmap();
+      // Validate if the current size is valid to create bitmap.
+      bool validateSizeToMakeBitmap();
 
-    // The implementation of the image decoding logic.
-    bool decodeImageImpl(SkBitmap &);
+      // The implementation of the image decoding logic.
+      bool decodeImageImpl(SkBitmap &);
 
-  public:
-    /**
+    public:
+      /**
      * Returns a boolean value that is true if the user agent has finished fetching the image, whether successful or
      * not. That means this value is also true if the image has no src value indicating an image to load.
      */
-    bool complete = false;
-    /**
+      bool complete = false;
+      /**
      * Returns a string representing the URL from which the currently displayed image was loaded.
      */
-    std::string currentSrc;
-    /**
+      std::string currentSrc;
+      /**
      * A string that reflects the alt HTML attribute, thus indicating the alternate fallback content to be displayed if
      * the image has not been loaded.
      */
-    std::string alt;
+      std::string alt;
 
-    inline size_t width() const override
-    {
-      return width_.value_or(natural_width_);
-    }
-    inline size_t height() const override
-    {
-      return height_.value_or(natural_height_);
-    }
-    inline void setWidth(size_t width)
-    {
-      width_ = width;
-      onSizeDidChange();
-    }
-    inline void setHeight(size_t height)
-    {
-      height_ = height;
-      onSizeDidChange();
-    }
+      inline size_t width() const override
+      {
+        return width_.value_or(natural_width_);
+      }
+      inline size_t height() const override
+      {
+        return height_.value_or(natural_height_);
+      }
+      inline void setWidth(size_t width)
+      {
+        width_ = width;
+        onSizeDidChange();
+      }
+      inline void setHeight(size_t height)
+      {
+        height_ = height;
+        onSizeDidChange();
+      }
 
-    inline LoadingHint loading() const
-    {
-      return loading_;
-    }
-    inline DecodingType decoding() const
-    {
-      return decoding_;
-    }
+      inline LoadingHint loading() const
+      {
+        return loading_;
+      }
+      inline DecodingType decoding() const
+      {
+        return decoding_;
+      }
 
-    /**
+      /**
      * @returns a boolean value which indicates that the image is to be used by a server-side image map. This may only
      * be used on images located within an <a> element.
      */
-    inline bool isMap() const
-    {
-      return is_map_;
-    }
+      inline bool isMap() const
+      {
+        return is_map_;
+      }
 
-    /**
+      /**
      * This property on the `HTMLImageElement` interface reflects the value of the HTML `usemap` attribute, which is a
      * string providing the name of the client-side image map to apply to the image.
      */
-    inline std::string useMap() const
-    {
-      return use_map_;
-    }
+      inline std::string useMap() const
+      {
+        return use_map_;
+      }
 
-    /**
+      /**
      * @returns The spatial rendering mode of the image (e.g., "stereo" for side-by-side stereo images).
      */
-    inline std::string spatial() const
-    {
-      return spatial_;
-    }
+      inline std::string spatial() const
+      {
+        return spatial_;
+      }
 
-    /**
+      /**
      * @returns True if the image is marked as a spatial (stereo) image.
      */
-    inline bool isSpatial() const
-    {
-      return spatial_ == "stereo";
-    }
+      inline bool isSpatial() const
+      {
+        return spatial_ == "stereo";
+      }
 
-    /**
+      /**
      * @returns The natural width of the image in pixels.
      */
-    inline int naturalWidth() const
-    {
-      return sk_bitmap_ ? sk_bitmap_->width() : 0;
-    }
+      inline int naturalWidth() const
+      {
+        return sk_bitmap_ ? sk_bitmap_->width() : 0;
+      }
 
-    /**
+      /**
      * @returns The natural height of the image in pixels.
      */
-    inline int naturalHeight() const
-    {
-      return sk_bitmap_ ? sk_bitmap_->height() : 0;
-    }
+      inline int naturalHeight() const
+      {
+        return sk_bitmap_ ? sk_bitmap_->height() : 0;
+      }
 
-  private:
-    uv_work_t decode_work_handle_;
+    private:
+      uv_work_t decode_work_handle_;
 
-    std::optional<int> width_;
-    std::optional<int> height_;
+      std::optional<int> width_;
+      std::optional<int> height_;
 
-    std::optional<int> decoding_width_;
-    std::optional<int> decoding_height_;
+      std::optional<int> decoding_width_;
+      std::optional<int> decoding_height_;
 
-    int natural_width_ = 0;
-    int natural_height_ = 0;
+      int natural_width_ = 0;
+      int natural_height_ = 0;
 
-    std::optional<std::vector<char>> image_data_ = std::nullopt;
-    canvas::EncodedImageFormat image_format_;
-    std::shared_ptr<SkBitmap> sk_bitmap_;
-    bool is_src_image_loading = false;
-    bool is_src_image_loaded_ = false;
-    bool is_src_image_decoded_ = false;
+      std::optional<std::vector<char>> image_data_ = std::nullopt;
+      canvas::EncodedImageFormat image_format_;
+      std::shared_ptr<SkBitmap> sk_bitmap_;
+      bool is_src_image_loading = false;
+      bool is_src_image_loaded_ = false;
+      bool is_src_image_decoded_ = false;
 
-    LoadingHint loading_ = LoadingHint::kLoadingEager;
-    DecodingType decoding_ = DecodingType::kDecodingAsync;
+      LoadingHint loading_ = LoadingHint::kLoadingEager;
+      DecodingType decoding_ = DecodingType::kDecodingAsync;
 
-    bool is_map_ = false;
-    std::string use_map_;
-    std::string spatial_;
-  };
-}
+      bool is_map_ = false;
+      std::string use_map_;
+      std::string spatial_;
+    };
+  }
+} // namespace endor

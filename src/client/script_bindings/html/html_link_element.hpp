@@ -5,26 +5,29 @@
 #include <client/html/html_link_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLLinkElement;
-    using HTMLLinkElementBase = scripting_base::ObjectWrap<HTMLLinkElement, dom::HTMLLinkElement, HTMLElement>;
-
-    class HTMLLinkElement : public HTMLLinkElementBase
+    namespace html_bindings
     {
-      using HTMLLinkElementBase::ObjectWrap;
+      class HTMLLinkElement;
+      using HTMLLinkElementBase = scripting_base::ObjectWrap<HTMLLinkElement, dom::HTMLLinkElement, HTMLElement>;
 
-    public:
-      static std::string Name()
+      class HTMLLinkElement : public HTMLLinkElementBase
       {
-        return "HTMLLinkElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using HTMLLinkElementBase::ObjectWrap;
 
-    public:
-      HTMLLinkElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        static std::string Name()
+        {
+          return "HTMLLinkElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      public:
+        HTMLLinkElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

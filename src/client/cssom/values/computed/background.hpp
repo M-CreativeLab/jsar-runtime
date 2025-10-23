@@ -3,87 +3,90 @@
 #include <client/cssom/values/generics/background.hpp>
 #include <skia/include/core/SkBlendMode.h>
 
-namespace client_cssom::values::specified
+namespace endor
 {
-  class BackgroundBlendMode;
-  class BackgroundClip;
-  class BackgroundOrigin;
-  class BackgroundRepeat;
-  class BackgroundSize;
-  class BackgroundPosition;
-}
-
-namespace client_cssom::values::computed
-{
-  class BackgroundBlendMode : public generics::GenericBackgroundBlendMode<BackgroundBlendMode>
+  namespace client_cssom::values::specified
   {
-    using generics::GenericBackgroundBlendMode<BackgroundBlendMode>::GenericBackgroundBlendMode;
+    class BackgroundBlendMode;
+    class BackgroundClip;
+    class BackgroundOrigin;
+    class BackgroundRepeat;
+    class BackgroundSize;
+    class BackgroundPosition;
+  }
 
-  public:
-    operator SkBlendMode() const
+  namespace client_cssom::values::computed
+  {
+    class BackgroundBlendMode : public generics::GenericBackgroundBlendMode<BackgroundBlendMode>
     {
-      switch (tag_)
+      using generics::GenericBackgroundBlendMode<BackgroundBlendMode>::GenericBackgroundBlendMode;
+
+    public:
+      operator SkBlendMode() const
       {
-      case BackgroundBlendMode::kNormal:
-        return SkBlendMode::kSrcOver;
-      case BackgroundBlendMode::kMultiply:
-        return SkBlendMode::kMultiply;
-      case BackgroundBlendMode::kScreen:
-        return SkBlendMode::kScreen;
-      case BackgroundBlendMode::kOverlay:
-        return SkBlendMode::kOverlay;
-      case BackgroundBlendMode::kDarken:
-        return SkBlendMode::kDarken;
-      case BackgroundBlendMode::kLighten:
-        return SkBlendMode::kLighten;
-      case BackgroundBlendMode::kColorDodge:
-        return SkBlendMode::kColorDodge;
-      case BackgroundBlendMode::kColorBurn:
-        return SkBlendMode::kColorBurn;
-      case BackgroundBlendMode::kHardLight:
-        return SkBlendMode::kHardLight;
-      case BackgroundBlendMode::kSoftLight:
-        return SkBlendMode::kSoftLight;
-      case BackgroundBlendMode::kDifference:
-        return SkBlendMode::kDifference;
-      case BackgroundBlendMode::kExclusion:
-        return SkBlendMode::kExclusion;
-      case BackgroundBlendMode::kHue:
-        return SkBlendMode::kHue;
-      case BackgroundBlendMode::kSaturation:
-        return SkBlendMode::kSaturation;
-      case BackgroundBlendMode::kColor:
-        return SkBlendMode::kColor;
-      case BackgroundBlendMode::kLuminosity:
-        return SkBlendMode::kLuminosity;
-      default:
-        return SkBlendMode::kSrcOver; // Default to SrcOver if none match
+        switch (tag_)
+        {
+        case BackgroundBlendMode::kNormal:
+          return SkBlendMode::kSrcOver;
+        case BackgroundBlendMode::kMultiply:
+          return SkBlendMode::kMultiply;
+        case BackgroundBlendMode::kScreen:
+          return SkBlendMode::kScreen;
+        case BackgroundBlendMode::kOverlay:
+          return SkBlendMode::kOverlay;
+        case BackgroundBlendMode::kDarken:
+          return SkBlendMode::kDarken;
+        case BackgroundBlendMode::kLighten:
+          return SkBlendMode::kLighten;
+        case BackgroundBlendMode::kColorDodge:
+          return SkBlendMode::kColorDodge;
+        case BackgroundBlendMode::kColorBurn:
+          return SkBlendMode::kColorBurn;
+        case BackgroundBlendMode::kHardLight:
+          return SkBlendMode::kHardLight;
+        case BackgroundBlendMode::kSoftLight:
+          return SkBlendMode::kSoftLight;
+        case BackgroundBlendMode::kDifference:
+          return SkBlendMode::kDifference;
+        case BackgroundBlendMode::kExclusion:
+          return SkBlendMode::kExclusion;
+        case BackgroundBlendMode::kHue:
+          return SkBlendMode::kHue;
+        case BackgroundBlendMode::kSaturation:
+          return SkBlendMode::kSaturation;
+        case BackgroundBlendMode::kColor:
+          return SkBlendMode::kColor;
+        case BackgroundBlendMode::kLuminosity:
+          return SkBlendMode::kLuminosity;
+        default:
+          return SkBlendMode::kSrcOver; // Default to SrcOver if none match
+        }
       }
-    }
-  };
+    };
 
-  class BackgroundClip : public generics::GenericBackgroundClip<BackgroundClip>
-  {
-    using generics::GenericBackgroundClip<BackgroundClip>::GenericBackgroundClip;
-  };
+    class BackgroundClip : public generics::GenericBackgroundClip<BackgroundClip>
+    {
+      using generics::GenericBackgroundClip<BackgroundClip>::GenericBackgroundClip;
+    };
 
-  class BackgroundOrigin : public generics::GenericBackgroundOrigin<BackgroundOrigin>
-  {
-    using generics::GenericBackgroundOrigin<BackgroundOrigin>::GenericBackgroundOrigin;
-  };
+    class BackgroundOrigin : public generics::GenericBackgroundOrigin<BackgroundOrigin>
+    {
+      using generics::GenericBackgroundOrigin<BackgroundOrigin>::GenericBackgroundOrigin;
+    };
 
-  class BackgroundRepeat : public generics::GenericBackgroundRepeat<BackgroundRepeat>
-  {
-    using generics::GenericBackgroundRepeat<BackgroundRepeat>::GenericBackgroundRepeat;
-  };
+    class BackgroundRepeat : public generics::GenericBackgroundRepeat<BackgroundRepeat>
+    {
+      using generics::GenericBackgroundRepeat<BackgroundRepeat>::GenericBackgroundRepeat;
+    };
 
-  class BackgroundSize : public generics::GenericBackgroundSize<BackgroundSize>
-  {
-    using generics::GenericBackgroundSize<BackgroundSize>::GenericBackgroundSize;
-  };
+    class BackgroundSize : public generics::GenericBackgroundSize<BackgroundSize>
+    {
+      using generics::GenericBackgroundSize<BackgroundSize>::GenericBackgroundSize;
+    };
 
-  class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>
-  {
-    using generics::GenericBackgroundPosition<BackgroundPosition>::GenericBackgroundPosition;
-  };
-}
+    class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>
+    {
+      using generics::GenericBackgroundPosition<BackgroundPosition>::GenericBackgroundPosition;
+    };
+  }
+} // namespace endor

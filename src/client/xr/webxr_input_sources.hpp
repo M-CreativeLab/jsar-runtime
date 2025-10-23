@@ -9,31 +9,33 @@
 #include "./webxr_spaces.hpp"
 #include "./webxr_hand.hpp"
 
-namespace client_xr
+namespace endor
 {
-  using InputSourceInternalResetCallback = function<xr::TrXRInputSource *(xr::TrXRFrameRequest *)>;
-  using InputSourcesChangedCallback = function<void(vector<std::shared_ptr<XRInputSource>> added,
-                                                    vector<std::shared_ptr<XRInputSource>> removed)>;
+  namespace client_xr
+  {
+    using InputSourceInternalResetCallback = function<xr::TrXRInputSource *(xr::TrXRFrameRequest *)>;
+    using InputSourcesChangedCallback = function<void(vector<std::shared_ptr<XRInputSource>> added,
+                                                      vector<std::shared_ptr<XRInputSource>> removed)>;
 
-  /**
+    /**
    * The WebXR Device API's `XRInputSource` interface describes a single source of control input which is part of the user's
    * WebXR-compatible virtual or augmented reality system. The device is specific to the platform being used, but provides the
    * direction in which it is being aimed and optionally may generate events if the user triggers performs actions using the
    * device.
    */
-  class XRInputSource : public enable_shared_from_this<XRInputSource>,
-                        public scripting_base::JSObjectHolder
-  {
-    friend class XRHand;
-    friend class XRJointSpace;
-    friend class XRTargetRayOrGripSpace;
-    friend class XRInputSourceArray;
+    class XRInputSource : public enable_shared_from_this<XRInputSource>,
+                          public scripting_base::JSObjectHolder
+    {
+      friend class XRHand;
+      friend class XRJointSpace;
+      friend class XRTargetRayOrGripSpace;
+      friend class XRInputSourceArray;
 
-  public:
-    XRInputSource(std::shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData);
+    public:
+      XRInputSource(std::shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData);
 
-  public:
-    /**
+    public:
+      /**
      * The read-only `XRInputSource` property `gripSpace` returns an `XRSpace` whose native origin tracks the pose used to render
      * virtual objects so they appear to be held in (or part of) the user's hand. For example, if a user were holding a virtual
      * straight rod, the native origin of this `XRSpace` would be located at the approximate center of mass of the user's fist.
@@ -42,32 +44,32 @@ namespace client_xr
      *          suitable for rendering an image of the device into the scene. `gripSpace` is `null` if the input source is not
      *          inherently trackable. For example, only inputs whose `targetRayMode` is `tracked-pointer` provide a `gripSpace`.
      */
-    inline std::shared_ptr<XRTargetRayOrGripSpace> gripSpace()
-    {
-      return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kGrip);
-    }
-    /**
+      inline std::shared_ptr<XRTargetRayOrGripSpace> gripSpace()
+      {
+        return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kGrip);
+      }
+      /**
      * The read-only `hand` property of the `XRInputSource` interface is a `XRHand` object providing access to a hand-tracking
      * device.
      *
      * @returns An `XRHand` object or `std::nullopt` if the `XRSession` has not been requested with the `hand-tracking` feature
      *          descriptor.
      */
-    inline XRHand hand()
-    {
-      return XRHand(shared_from_this());
-    }
-    /**
+      inline XRHand hand()
+      {
+        return XRHand(shared_from_this());
+      }
+      /**
      * The read-only `XRInputSource` property `handedness` indicates which of the user's hands the WebXR input source is associated
      * with, or if it's not associated with a hand at all.
      *
      * @returns a `XRHandedness` enum value indicating the handedness of the input source.
      */
-    inline XRHandedness handedness()
-    {
-      return inputSourceData_->handness;
-    }
-    /**
+      inline XRHandedness handedness()
+      {
+        return inputSourceData_->handness;
+      }
+      /**
      * The read-only `XRInputSource` property `targetRayMode` indicates the method by which the target ray for the input source
      * should be generated and how it should be presented to the user.
      *
@@ -81,11 +83,11 @@ namespace client_xr
      *
      * @returns a `XRTargetRayMode` indicating which method to use when generating and presenting the target ray to the user.
      */
-    inline XRTargetRayMode targetRayMode()
-    {
-      return inputSourceData_->targetRayMode;
-    }
-    /**
+      inline XRTargetRayMode targetRayMode()
+      {
+        return inputSourceData_->targetRayMode;
+      }
+      /**
      * The read-only `XRInputSource` property `targetRaySpace` returns an `XRSpace` (typically an `XRReferenceSpace`) representing
      * the position and orientation of the target ray in the virtual space. Its native origin tracks the position of the origin
      * point of the target ray, and its orientation indicates the orientation of the controller device itself. These values,
@@ -97,47 +99,48 @@ namespace client_xr
      * @returns an `XRSpace` object — typically an `XRReferenceSpace` or `XRBoundedReferenceSpace` — which represents the position and
      *          orientation of the input controller's target ray in virtual space.
      */
-    inline std::shared_ptr<XRTargetRayOrGripSpace> targetRaySpace()
+      inline std::shared_ptr<XRTargetRayOrGripSpace> targetRaySpace()
+      {
+        return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kTargetRay);
+      }
+
+    private:
+      bool dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame);
+
+    private:
+      std::shared_ptr<XRSession> session_;
+      xr::TrXRInputSource *inputSourceData_;
+      bool primaryActionPressed_ = false;
+      bool squeezeActionPressed_ = false;
+    };
+
+    class XRInputSourceArray : public std::vector<std::shared_ptr<XRInputSource>>
     {
-      return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kTargetRay);
-    }
+      friend class XRSession;
 
-  private:
-    bool dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame);
+    public:
+      XRInputSourceArray(std::shared_ptr<XRSession> session);
 
-  private:
-    std::shared_ptr<XRSession> session_;
-    xr::TrXRInputSource *inputSourceData_;
-    bool primaryActionPressed_ = false;
-    bool squeezeActionPressed_ = false;
-  };
-
-  class XRInputSourceArray : public std::vector<std::shared_ptr<XRInputSource>>
-  {
-    friend class XRSession;
-
-  public:
-    XRInputSourceArray(std::shared_ptr<XRSession> session);
-
-  public:
-    /**
+    public:
+      /**
      * @param id The id of the input source.
      * @returns the input source by id.
      */
-    std::shared_ptr<XRInputSource> getInputSourceById(int id);
+      std::shared_ptr<XRInputSource> getInputSourceById(int id);
 
-  private:
-    /**
+    private:
+      /**
      * Update the input sources.
      *
      * @param frame The `XRFrame` object representing the frame to be updated.
      * @param session The `XRSession` object representing the session to be updated.
      * @param onChangedCallback The callback function to be called when the input sources have changed.
      */
-    void updateInputSources(std::shared_ptr<XRFrame> frame, std::shared_ptr<XRSession> session, InputSourcesChangedCallback onChangedCallback);
+      void updateInputSources(std::shared_ptr<XRFrame> frame, std::shared_ptr<XRSession> session, InputSourcesChangedCallback onChangedCallback);
 
-  private:
-    std::shared_ptr<XRSession> session_;
-    std::shared_ptr<XRDeviceClient> device_;
-  };
-}
+    private:
+      std::shared_ptr<XRSession> session_;
+      std::shared_ptr<XRDeviceClient> device_;
+    };
+  }
+} // namespace endor

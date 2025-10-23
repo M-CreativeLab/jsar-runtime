@@ -1,8 +1,11 @@
 #include "./dom_parser.hpp"
 
-namespace dom
+namespace endor
 {
-  DOMParser::DOMParser()
+  namespace dom
   {
+    DOMParser::DOMParser()
+    {
+    }
   }
-}
+} // namespace endor

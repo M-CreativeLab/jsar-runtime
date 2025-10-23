@@ -1,35 +1,38 @@
 #include "./timing_function.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  unique_ptr<TimingFunction> TimingFunction::clone() const
+  namespace dom
   {
-    if (isLinear())
+    using namespace std;
+
+    unique_ptr<TimingFunction> TimingFunction::clone() const
     {
-      return LinearTimingFunction::Clone(this);
+      if (isLinear())
+      {
+        return LinearTimingFunction::Clone(this);
+      }
+      else
+      {
+        throw runtime_error("Unsupported TimingFunction type for clone");
+      }
     }
-    else
+
+    string LinearTimingFunction::toString() const
     {
-      throw runtime_error("Unsupported TimingFunction type for clone");
+      return "linear";
+    }
+
+    double LinearTimingFunction::evaluate(double fraction) const
+    {
+      // Linear timing function is a simple linear interpolation
+      return fraction;
+    }
+
+    void LinearTimingFunction::range(double *min, double *max) const
+    {
+      *min = 0.0;
+      *max = 1.0;
     }
   }
-
-  string LinearTimingFunction::toString() const
-  {
-    return "linear";
-  }
-
-  double LinearTimingFunction::evaluate(double fraction) const
-  {
-    // Linear timing function is a simple linear interpolation
-    return fraction;
-  }
-
-  void LinearTimingFunction::range(double *min, double *max) const
-  {
-    *min = 0.0;
-    *max = 1.0;
-  }
-}
+} // namespace endor

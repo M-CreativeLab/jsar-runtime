@@ -1,17 +1,20 @@
 #pragma once
 
-namespace client_cssom::values::generics
+namespace endor
 {
-  template <typename T>
-  class NonNegative : public T
+  namespace client_cssom::values::generics
   {
-    using T::T;
-
-  public:
-    NonNegative(T value)
-        : T(value)
+    template <typename T>
+    class NonNegative : public T
     {
-      // TODO(yorkie): set the value to zero if the value is negative.
-    }
-  };
-}
+      using T::T;
+
+    public:
+      NonNegative(T value)
+          : T(value)
+      {
+        // TODO(yorkie): set the value to zero if the value is negative.
+      }
+    };
+  }
+} // namespace endor

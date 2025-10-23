@@ -1,46 +1,49 @@
 #include "./attr.hpp"
 #include "./element.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  Attr::Attr(std::string name, std::string initialValue, shared_ptr<Element> ownerElement)
-      : Node(NodeType::ATTRIBUTE_NODE, name, ownerElement->getOwnerDocumentReference())
-      , name(name)
-      , value(initialValue)
-      , specified(true)
-      , ownerElement(ownerElement)
+  namespace dom
   {
-    string nameSource = name;
+    using namespace std;
 
-    // parse name into `prefix` and `localName`
-    size_t colonPos = nameSource.find(':');
-    if (colonPos != string::npos)
+    Attr::Attr(std::string name, std::string initialValue, shared_ptr<Element> ownerElement)
+        : Node(NodeType::ATTRIBUTE_NODE, name, ownerElement->getOwnerDocumentReference())
+        , name(name)
+        , value(initialValue)
+        , specified(true)
+        , ownerElement(ownerElement)
     {
-      prefix = nameSource.substr(0, colonPos);
-      localName = nameSource.substr(colonPos + 1);
+      string nameSource = name;
+
+      // parse name into `prefix` and `localName`
+      size_t colonPos = nameSource.find(':');
+      if (colonPos != string::npos)
+      {
+        prefix = nameSource.substr(0, colonPos);
+        localName = nameSource.substr(colonPos + 1);
+      }
+      else
+      {
+        localName = nameSource;
+      }
     }
-    else
+
+    Attr::Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement)
+        : Attr(attr.name(), attr.value(), ownerElement)
     {
-      localName = nameSource;
+    }
+
+    Attr::Attr(Attr &other)
+        : Node(other)
+        , localName(other.localName)
+        , name(other.name)
+        , namespaceURI(other.namespaceURI)
+        , prefix(other.prefix)
+        , specified(other.specified)
+        , value(other.value)
+        , ownerElement(other.ownerElement)
+    {
     }
   }
-
-  Attr::Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement)
-      : Attr(attr.name(), attr.value(), ownerElement)
-  {
-  }
-
-  Attr::Attr(Attr &other)
-      : Node(other)
-      , localName(other.localName)
-      , name(other.name)
-      , namespaceURI(other.namespaceURI)
-      , prefix(other.prefix)
-      , specified(other.specified)
-      , value(other.value)
-      , ownerElement(other.ownerElement)
-  {
-  }
-}
+} // namespace endor

@@ -1,38 +1,41 @@
 #include <crates/bindings.hpp>
 #include "./css_stylesheet.hpp"
 
-namespace client_cssom
+namespace endor
 {
-  using namespace std;
-  using namespace crates::css;
-
-  CSSStyleSheet::CSSStyleSheet(optional<CSSStyleSheetInit> init)
-      : StyleSheet()
-      , init_(init.value_or(CSSStyleSheetInit{}))
-      , cssRules_(make_unique<CSSRuleList>())
+  namespace client_cssom
   {
-  }
+    using namespace std;
+    using namespace crates::css;
 
-  void CSSStyleSheet::deleteRule(CSSRuleIndex index)
-  {
-    cssRules_->erase(cssRules_->begin() + index);
-  }
+    CSSStyleSheet::CSSStyleSheet(optional<CSSStyleSheetInit> init)
+        : StyleSheet()
+        , init_(init.value_or(CSSStyleSheetInit{}))
+        , cssRules_(make_unique<CSSRuleList>())
+    {
+    }
 
-  CSSRuleIndex CSSStyleSheet::insertRule(const string &ruleText, CSSRuleIndex index)
-  {
-    return index;
-  }
+    void CSSStyleSheet::deleteRule(CSSRuleIndex index)
+    {
+      cssRules_->erase(cssRules_->begin() + index);
+    }
 
-  void CSSStyleSheet::replace(const string &cssText)
-  {
-    replaceSync(cssText);
-  }
+    CSSRuleIndex CSSStyleSheet::insertRule(const string &ruleText, CSSRuleIndex index)
+    {
+      return index;
+    }
 
-  void CSSStyleSheet::replaceSync(const string &cssText)
-  {
-    auto stylesheet = crates::css2::parsing::CSSParser().parseStylesheet(cssText, "");
-    auto &cssRules = stylesheet.rules();
-    for (auto cssRule : cssRules)
-      cssRules_->insert(*cssRule);
+    void CSSStyleSheet::replace(const string &cssText)
+    {
+      replaceSync(cssText);
+    }
+
+    void CSSStyleSheet::replaceSync(const string &cssText)
+    {
+      auto stylesheet = crates::css2::parsing::CSSParser().parseStylesheet(cssText, "");
+      auto &cssRules = stylesheet.rules();
+      for (auto cssRule : cssRules)
+        cssRules_->insert(*cssRule);
+    }
   }
-}
+} // namespace endor

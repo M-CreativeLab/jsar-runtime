@@ -1,24 +1,27 @@
 #include <client/dom/element.hpp>
 #include "./element_animations.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  ElementAnimations::ElementAnimations(shared_ptr<Element> target_element)
-      : target_element_(target_element)
+  namespace dom
   {
-    assert(target_element != nullptr && "The target element must not be null.");
-  }
+    using namespace std;
 
-  bool ElementAnimations::updateFrameToStyle(client_cssom::ComputedStyle &style)
-  {
-    bool updated = css_animations_.updateFrameToStyle(style);
-    for (const auto &animation : animations_)
+    ElementAnimations::ElementAnimations(shared_ptr<Element> target_element)
+        : target_element_(target_element)
     {
-      if (animation->updateFrameToStyle(style) == true && !updated)
-        updated = true;
+      assert(target_element != nullptr && "The target element must not be null.");
     }
-    return updated;
+
+    bool ElementAnimations::updateFrameToStyle(client_cssom::ComputedStyle &style)
+    {
+      bool updated = css_animations_.updateFrameToStyle(style);
+      for (const auto &animation : animations_)
+      {
+        if (animation->updateFrameToStyle(style) == true && !updated)
+          updated = true;
+      }
+      return updated;
+    }
   }
-}
+} // namespace endor

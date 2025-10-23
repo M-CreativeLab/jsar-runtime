@@ -49,25 +49,28 @@
 #endif
 
 // Forward declarations
-namespace logging
+
+namespace endor
 {
-  class Logger;
-}
+  namespace logging
+  {
+    class Logger;
+  }
 
-using namespace std;
-using namespace ipc;
-using namespace commandbuffers;
-using namespace frame_request;
-using namespace events_comm;
-using namespace media_comm;
+  using namespace std;
+  using namespace ipc;
+  using namespace commandbuffers;
+  using namespace frame_request;
+  using namespace events_comm;
+  using namespace media_comm;
 
-typedef uint32_t FrameRequestId;
-typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
-typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferResponseFunction;
+  typedef uint32_t FrameRequestId;
+  typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
+  typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferResponseFunction;
 
-class TrClientContextPerProcess;
+  class TrClientContextPerProcess;
 
-/**
+  /**
  * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
  * necessary components and settings for initializing and running a Node.js-based script execution environment.
 
@@ -80,226 +83,226 @@ class TrClientContextPerProcess;
  * Each `ScriptEnvironment` instance corresponds to a separate script execution context, allowing for isolated and
  * controlled script execution within the application.
  */
-class ScriptEnvironment final
-{
-public:
-  ScriptEnvironment(int id, const std::string &scriptsDir);
-  ~ScriptEnvironment();
-
-public:
-  bool initialize();
-  bool initialized();
-  void dispose();
-
-public:
-  int id;
-  vector<string> scriptArgs;
-  node::InitializationResult *nodeInitResult = nullptr;
-  node::MultiIsolatePlatform *nodePlatform = nullptr;
-};
-
-class TrScriptRuntimePerProcess final
-{
-private:
-  static v8::MaybeLocal<v8::Value> PrepareStackTraceCallback(v8::Local<v8::Context> context,
-                                                             v8::Local<v8::Value> exception,
-                                                             v8::Local<v8::Array> trace);
-
-public:
-  TrScriptRuntimePerProcess();
-  ~TrScriptRuntimePerProcess();
-
-public:
-  bool setup(vector<string> &script_args);
-  void start();
-  void terminate();
-
-  v8::Isolate *getIsolate() const;
-
-protected:
-  int executeMainScript();
-  void onScriptExit(node::Environment *env, int exit_code);
-
-private:
-  bool started_ = false;
-  bool running_ = false;
-
-  TrClientContextPerProcess *client_context_;
-  ScriptEnvironment script_env_;
-  std::unique_ptr<node::CommonEnvironmentSetup> script_setup_;
-};
-
-class TrClientPerformanceFileSystem : public analytics::PerformanceFileSystem
-{
-public:
-  TrClientPerformanceFileSystem(std::string &cacheDir, const char *pidStr);
-  ~TrClientPerformanceFileSystem() = default;
-
-public:
-  inline void setFps(int value)
+  class ScriptEnvironment final
   {
-    fps->set(value);
-  }
-  inline void setFrameDuration(double value)
+  public:
+    ScriptEnvironment(int id, const std::string &scriptsDir);
+    ~ScriptEnvironment();
+
+  public:
+    bool initialize();
+    bool initialized();
+    void dispose();
+
+  public:
+    int id;
+    vector<string> scriptArgs;
+    node::InitializationResult *nodeInitResult = nullptr;
+    node::MultiIsolatePlatform *nodePlatform = nullptr;
+  };
+
+  class TrScriptRuntimePerProcess final
   {
-    frameDuration->set(value);
-  }
-  inline void setLongFrames(int value)
+  private:
+    static v8::MaybeLocal<v8::Value> PrepareStackTraceCallback(v8::Local<v8::Context> context,
+                                                               v8::Local<v8::Value> exception,
+                                                               v8::Local<v8::Array> trace);
+
+  public:
+    TrScriptRuntimePerProcess();
+    ~TrScriptRuntimePerProcess();
+
+  public:
+    bool setup(vector<string> &script_args);
+    void start();
+    void terminate();
+
+    v8::Isolate *getIsolate() const;
+
+  protected:
+    int executeMainScript();
+    void onScriptExit(node::Environment *env, int exit_code);
+
+  private:
+    bool started_ = false;
+    bool running_ = false;
+
+    TrClientContextPerProcess *client_context_;
+    ScriptEnvironment script_env_;
+    std::unique_ptr<node::CommonEnvironmentSetup> script_setup_;
+  };
+
+  class TrClientPerformanceFileSystem : public analytics::PerformanceFileSystem
   {
-    longFrames->set(value);
-  }
+  public:
+    TrClientPerformanceFileSystem(std::string &cacheDir, const char *pidStr);
+    ~TrClientPerformanceFileSystem() = default;
 
-public:
-  std::unique_ptr<analytics::PerformanceValue<int>> fps;
-  std::unique_ptr<analytics::PerformanceValue<double>> frameDuration;
-  std::unique_ptr<analytics::PerformanceValue<int>> longFrames;
-};
+  public:
+    inline void setFps(int value)
+    {
+      fps->set(value);
+    }
+    inline void setFrameDuration(double value)
+    {
+      frameDuration->set(value);
+    }
+    inline void setLongFrames(int value)
+    {
+      longFrames->set(value);
+    }
 
-enum class TrClientContextEventType
-{
-  ScriptingEventLoopReady, // When the event loop is ready.
-};
+  public:
+    std::unique_ptr<analytics::PerformanceValue<int>> fps;
+    std::unique_ptr<analytics::PerformanceValue<double>> frameDuration;
+    std::unique_ptr<analytics::PerformanceValue<int>> longFrames;
+  };
 
-class TrClientEnvironmentPerProcess final
-{
-public:
-  TrClientEnvironmentPerProcess();
+  enum class TrClientContextEventType
+  {
+    ScriptingEventLoopReady, // When the event loop is ready.
+  };
 
-public:
-  // Set via `DEBUG_LAYOUT_TREE=1`
-  const bool debugLayoutTree = false;
-  // Set via `DEBUG_LAYOUT_FORMATTING_CONTEXT=1`
-  const bool debugLayoutFormattingContext = false;
-};
+  class TrClientEnvironmentPerProcess final
+  {
+  public:
+    TrClientEnvironmentPerProcess();
 
-/**
+  public:
+    // Set via `DEBUG_LAYOUT_TREE=1`
+    const bool debugLayoutTree = false;
+    // Set via `DEBUG_LAYOUT_FORMATTING_CONTEXT=1`
+    const bool debugLayoutFormattingContext = false;
+  };
+
+  /**
  * The client context is a singleton class in an application process.
  *
  * Every client process has a unique client context, which is responsible for managing the client-side resources, such as
  * the media players, command buffers, frame requests, and event channels.
  */
-class TrClientContextPerProcess final : public TrEventTarget<TrClientContextEventType>
-{
-private:
-  using WebGLContextReference = std::shared_ptr<client_graphics::WebGL2Context>;
-  using WebGLContextsList = std::vector<WebGLContextReference>;
+  class TrClientContextPerProcess final : public TrEventTarget<TrClientContextEventType>
+  {
+  private:
+    using WebGLContextReference = std::shared_ptr<client_graphics::WebGL2Context>;
+    using WebGLContextsList = std::vector<WebGLContextReference>;
 
-public:
-  /**
+  public:
+    /**
    * Create the client context instance, and throws an exception if the instance already exists.
    *
    * @returns The new instance of the client context.
    */
-  static TrClientContextPerProcess *Create();
-  static TrClientContextPerProcess *Get();
-  static const TrClientEnvironmentPerProcess &GetEnvironmentRef()
-  {
-    return Get()->env;
-  }
+    static TrClientContextPerProcess *Create();
+    static TrClientContextPerProcess *Get();
+    static const TrClientEnvironmentPerProcess &GetEnvironmentRef()
+    {
+      return Get()->env;
+    }
 
-public:
-  TrClientContextPerProcess();
-  ~TrClientContextPerProcess();
+  public:
+    TrClientContextPerProcess();
+    ~TrClientContextPerProcess();
 
-public:
-  /**
+  public:
+    /**
    * This function should be called at hive initialization to initialize the context-free client context.
    */
-  void preload();
-  /**
+    void preload();
+    /**
    * Bootstrap the client context at specialized application process, such as connecting sockets, channels, etc.
    */
-  void bootstrap();
-  /**
+    void bootstrap();
+    /**
    * Prints the client context information.
    */
-  void print();
+    void print();
 
-  /**
+    /**
    * Get the current performance time in milliseconds.
    */
-  inline double performanceNow()
-  {
-    return static_cast<double>(uv_hrtime() - startedAt) / 1e6;
-  }
+    inline double performanceNow()
+    {
+      return static_cast<double>(uv_hrtime() - startedAt) / 1e6;
+    }
 
-public: // SNR(Script Not Responsible) methods
-  /**
+  public: // SNR(Script Not Responsible) methods
+    /**
    * Update the Script Alive Time to mark the script is responsible.
    */
-  void updateScriptTime();
-  /**
+    void updateScriptTime();
+    /**
    * Check if the script is not responding.
    */
-  inline bool isScriptNotResponding(int timeoutDuration = 2000);
+    inline bool isScriptNotResponding(int timeoutDuration = 2000);
 
-public: // frame request methods
-  FrameRequestId requestFrame(TrFrameRequestType type, TrFrameRequestFn callback);
-  FrameRequestId requestAnimationFrame(AnimationFrameRequestCallback callback);
-  void cancelFrame(FrameRequestId id);
+  public: // frame request methods
+    FrameRequestId requestFrame(TrFrameRequestType type, TrFrameRequestFn callback);
+    FrameRequestId requestAnimationFrame(AnimationFrameRequestCallback callback);
+    void cancelFrame(FrameRequestId id);
 
-public: // event methods
-  /**
+  public: // event methods
+    /**
    * Send a native event to the host process.
    *
    * @param event The native event to send.
    * @returns true if the event is sent successfully.
    */
-  bool sendEvent(std::shared_ptr<TrNativeEvent> event);
-  /**
+    bool sendEvent(std::shared_ptr<TrNativeEvent> event);
+    /**
    * Receive a native event message from the host process.
    *
    * @param timeout The timeout to wait for the next message.
    * @returns The new instance of the event message, or nullptr if no message received.
    */
-  TrNativeEventMessage *recvEventMessage(int timeout);
-  /**
+    TrNativeEventMessage *recvEventMessage(int timeout);
+    /**
    * Report a document event to the host process.
    */
-  inline bool reportDocumentEvent(TrDocumentEventType documentEventType)
-  {
-    TrDocumentEvent detail(id, documentEventType);
-    auto event = TrNativeEvent::MakeEvent(TrNativeEventType::DocumentEvent, &detail);
-    return sendEvent(event);
-  }
-  /**
+    inline bool reportDocumentEvent(TrDocumentEventType documentEventType)
+    {
+      TrDocumentEvent detail(id, documentEventType);
+      auto event = TrNativeEvent::MakeEvent(TrNativeEventType::DocumentEvent, &detail);
+      return sendEvent(event);
+    }
+    /**
    * Send an RPC request to the host process and waits for the response.
    *
    * @param method The method name to call.
    * @param args The arguments to pass to the method.
    * @returns true if the RPC call is successful and the response is received.
    */
-  inline bool makeRpcCall(string method, vector<string> args)
-  {
-    TrRpcRequest req(id, method, args);
-    auto event = TrNativeEvent::MakeEvent(TrNativeEventType::RpcRequest, &req);
-    if (sendEvent(event))
+    inline bool makeRpcCall(string method, vector<string> args)
     {
-      // TODO: wait for the response, moved from `NativeEventTarget`.
+      TrRpcRequest req(id, method, args);
+      auto event = TrNativeEvent::MakeEvent(TrNativeEventType::RpcRequest, &req);
+      if (sendEvent(event))
+      {
+        // TODO: wait for the response, moved from `NativeEventTarget`.
+      }
+      return false;
     }
-    return false;
-  }
 
-public: // media methods
-  /**
+  public: // media methods
+    /**
    * Create a new media player, it returns a shared pointer to the created player.
    */
-  shared_ptr<media_client::MediaPlayer> createMediaPlayer(media_comm::MediaContentType contentType = media_comm::MediaContentType::Audio);
-  /**
+    shared_ptr<media_client::MediaPlayer> createMediaPlayer(media_comm::MediaContentType contentType = media_comm::MediaContentType::Audio);
+    /**
    * Create a new audio player, it returns a shared pointer to the created player.
    */
-  shared_ptr<media_client::AudioPlayer> createAudioPlayer();
-  /**
+    shared_ptr<media_client::AudioPlayer> createAudioPlayer();
+    /**
    * Send a media command to the media channel.
    */
-  bool sendMediaRequest(TrMediaCommandBase &mediaCommand)
-  {
-    assert(mediaChanSender != nullptr);
-    return mediaChanSender->sendCommand(mediaCommand);
-  }
+    bool sendMediaRequest(TrMediaCommandBase &mediaCommand)
+    {
+      assert(mediaChanSender != nullptr);
+      return mediaChanSender->sendCommand(mediaCommand);
+    }
 
-public: // commandbuffer methods
-  /**
+  public: // commandbuffer methods
+    /**
    * Create a new host `WebGL2Context` instance for the client.
    *
    * The host `WebGL2Context` is a special XR-compatible context that is used to render content with the host graphics engine, such as Unity,
@@ -307,22 +310,22 @@ public: // commandbuffer methods
    *
    * @returns The created host `WebGL2Context` instance.
    */
-  WebGLContextReference createHostWebGLContext();
-  /**
+    WebGLContextReference createHostWebGLContext();
+    /**
    * Get the host `WebGL2Context` instance by the context id.
    *
    * @param contextId The context id to get.
    * @returns The host `WebGL2Context` instance, or nullptr if not found.
    */
-  WebGLContextReference getHostWebGLContext(uint32_t contextId);
-  /**
+    WebGLContextReference getHostWebGLContext(uint32_t contextId);
+    /**
    * Remove the host `WebGL2Context` instance by the context id.
    *
    * @param contextId The context id to remove.
    * @returns true if the host `WebGL2Context` instance is removed successfully.
    */
-  bool removeHostWebGLContext(uint32_t contextId);
-  /**
+    bool removeHostWebGLContext(uint32_t contextId);
+    /**
    * Send a command buffer request to the command buffer channel.
    *
    * @param commandBuffer The command buffer to send.
@@ -330,13 +333,13 @@ public: // commandbuffer methods
    *                     the buffer queue.
    * @returns true if the command buffer request is sent successfully.
    */
-  bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
-  /**
+    bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
+    /**
    * Select a `TrCommandBufferResponse` from the pending list and returns it, note that selected response will be 
    * removed from the pending list.
    */
-  [[nodiscard]] TrCommandBufferResponse *selectCommandbufferResponse(client_graphics::WebGLContext *, int requestId);
-  /**
+    [[nodiscard]] TrCommandBufferResponse *selectCommandbufferResponse(client_graphics::WebGLContext *, int requestId);
+    /**
    * Receive a command buffer response from the command buffer channel with a timeout.
    *
    * NOTE(yorkie): this method will be blocking util there is no pending async command buffer response, this is to
@@ -346,53 +349,53 @@ public: // commandbuffer methods
    * @param timeout The time in milliseconds to wait for the response.
    * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
    */
-  [[nodiscard]] TrCommandBufferResponse *recvCommandBufferResponse(client_graphics::WebGLContext *,
-                                                                   int requestId,
-                                                                   int timeout);
-  /**
+    [[nodiscard]] TrCommandBufferResponse *recvCommandBufferResponse(client_graphics::WebGLContext *,
+                                                                     int requestId,
+                                                                     int timeout);
+    /**
    * Asynchronously receive a command buffer response from the command buffer channel, and calls the callback with the 
    * response object.
    * 
    * @param callback The callback to call when the response is received.
    */
-  void recvCommandBufferResponseAsync(client_graphics::WebGLContext *,
-                                      int requestId,
-                                      AsyncCommandBufferResponseFunction);
+    void recvCommandBufferResponseAsync(client_graphics::WebGLContext *,
+                                        int requestId,
+                                        AsyncCommandBufferResponseFunction);
 
-public: // WebXR methods
-  inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient()
-  {
-    assert(xrDeviceClient != nullptr && "XR device client is not initialized.");
-    return xrDeviceClient;
-  }
-  xr::TrXRDeviceContextZone *getXRDeviceContextZone()
-  {
-    return xrDeviceContextZoneClient.get();
-  }
-  xr::TrXRInputSourcesZone *getXRInputSourcesZone()
-  {
-    return xrInputSourcesZoneClient.get();
-  }
+  public: // WebXR methods
+    inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient()
+    {
+      assert(xrDeviceClient != nullptr && "XR device client is not initialized.");
+      return xrDeviceClient;
+    }
+    xr::TrXRDeviceContextZone *getXRDeviceContextZone()
+    {
+      return xrDeviceContextZoneClient.get();
+    }
+    xr::TrXRInputSourcesZone *getXRInputSourcesZone()
+    {
+      return xrInputSourcesZoneClient.get();
+    }
 
-  /**
+    /**
    * Get the framebuffer's width, or zero if the XR is not enabled.
    *
    * @returns the framebuffer's width
    */
-  int getFramebufferWidth()
-  {
-    return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width;
-  }
-  /**
+    int getFramebufferWidth()
+    {
+      return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width;
+    }
+    /**
    * Get the framebuffer's height, or zero if the XR is not enabled.
    *
    * @returns the framebuffer's height
    */
-  int getFramebufferHeight()
-  {
-    return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height;
-  }
-  /**
+    int getFramebufferHeight()
+    {
+      return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height;
+    }
+    /**
    * Check if the framebuffer is double-wide, or false if the XR is not enabled.
    *
    * Double-wide is used at desktop example app, which doesn't depend on any other OpenGL extension like OVR_multiview, but at the production device, the framebuffer
@@ -400,214 +403,215 @@ public: // WebXR methods
    *
    * @returns true if the framebuffer is double width
    */
-  bool isFramebufferDoubleWide()
-  {
-    return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide;
-  }
+    bool isFramebufferDoubleWide()
+    {
+      return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide;
+    }
 
-  /**
+    /**
    * Send an XR command to the XR channel.
    *
    * @param xrCommand The XR command to send.
    * @returns true if the command is sent successfully.
    */
-  template <typename CommandType>
-  bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
-  {
-    if (TR_UNLIKELY(!xrCommandChanSender))
+    template <typename CommandType>
+    bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
     {
-      std::cerr << "Skipping sending an XR command because the channel is not ready." << std::endl;
-      return false;
+      if (TR_UNLIKELY(!xrCommandChanSender))
+      {
+        std::cerr << "Skipping sending an XR command because the channel is not ready." << std::endl;
+        return false;
+      }
+      return xrCommandChanSender->sendCommand(xrCommand);
     }
-    return xrCommandChanSender->sendCommand(xrCommand);
-  }
 
-  template <typename CommandType>
-  CommandType *recvXrCommand(xr::TrXRCmdType type, int timeout)
-  {
-    if (!xrCommandChanReceiver)
-      return nullptr;
-    auto message = xrCommandChanReceiver->recvCommandMessage(timeout);
-    if (message == nullptr)
-      return nullptr;
-    if (message->type != type) // When the message is not the expected type, discard it.
+    template <typename CommandType>
+    CommandType *recvXrCommand(xr::TrXRCmdType type, int timeout)
     {
+      if (!xrCommandChanReceiver)
+        return nullptr;
+      auto message = xrCommandChanReceiver->recvCommandMessage(timeout);
+      if (message == nullptr)
+        return nullptr;
+      if (message->type != type) // When the message is not the expected type, discard it.
+      {
+        delete message;
+        return nullptr;
+      }
+      auto xrCommand = message->createInstance<CommandType>();
       delete message;
-      return nullptr;
+      return xrCommand;
     }
-    auto xrCommand = message->createInstance<CommandType>();
-    delete message;
-    return xrCommand;
-  }
 
-public:
-  inline std::string getScriptsDirectory() const
-  {
-    return applicationCacheDirectory + "/scripts";
-  }
-  /**
+  public:
+    inline std::string getScriptsDirectory() const
+    {
+      return applicationCacheDirectory + "/scripts";
+    }
+    /**
    * @returns the scripting thread's event loop.
    */
-  inline uv_loop_t *getScriptingEventLoop()
-  {
-    return scriptingEventLoop;
-  }
-  inline bool isScriptingEventLoopReady()
-  {
-    return scriptingEventLoop != nullptr;
-  }
-  inline void setScriptingEventLoop(napi_env env)
-  {
-    scriptingThreadId = std::this_thread::get_id();
-    napi_get_uv_event_loop(env, &scriptingEventLoop);
-    dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
-  }
-  inline std::shared_ptr<ScriptEnvironment> getScriptingEnvironment()
-  {
-    return scriptingEnv;
-  }
-  ScriptEnvironment &createScriptingEnv()
-  {
-    assert(scriptingEnv == nullptr);
-    scriptingEnv = std::make_shared<ScriptEnvironment>(id, getScriptsDirectory());
-    return *scriptingEnv;
-  }
-  // Check if the current thread is the scripting thread.
-  inline bool isInScriptingThread() const
-  {
-    assert(scriptingThreadId != std::nullopt && "The scripting thread is not set.");
-    return std::this_thread::get_id() == scriptingThreadId.value();
-  }
-  inline font::FontCacheManager &getFontCacheManager()
-  {
-    return *fontCacheManager;
-  }
-  inline TrClientPerformanceFileSystem &getPerfFs()
-  {
-    return *perfFs;
-  }
+    inline uv_loop_t *getScriptingEventLoop()
+    {
+      return scriptingEventLoop;
+    }
+    inline bool isScriptingEventLoopReady()
+    {
+      return scriptingEventLoop != nullptr;
+    }
+    inline void setScriptingEventLoop(napi_env env)
+    {
+      scriptingThreadId = std::this_thread::get_id();
+      napi_get_uv_event_loop(env, &scriptingEventLoop);
+      dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
+    }
+    inline std::shared_ptr<ScriptEnvironment> getScriptingEnvironment()
+    {
+      return scriptingEnv;
+    }
+    ScriptEnvironment &createScriptingEnv()
+    {
+      assert(scriptingEnv == nullptr);
+      scriptingEnv = std::make_shared<ScriptEnvironment>(id, getScriptsDirectory());
+      return *scriptingEnv;
+    }
+    // Check if the current thread is the scripting thread.
+    inline bool isInScriptingThread() const
+    {
+      assert(scriptingThreadId != std::nullopt && "The scripting thread is not set.");
+      return std::this_thread::get_id() == scriptingThreadId.value();
+    }
+    inline font::FontCacheManager &getFontCacheManager()
+    {
+      return *fontCacheManager;
+    }
+    inline TrClientPerformanceFileSystem &getPerfFs()
+    {
+      return *perfFs;
+    }
 
-private:
-  void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
+  private:
+    void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
 
-public:
+  public:
 #ifdef TR_ENABLE_INSPECTOR
-  client_inspector::ContentCdpHandler *getContentCdpHandler()
-  {
-    return contentInspector ? contentInspector->getContentCdpHandler() : nullptr;
-  }
+    client_inspector::ContentCdpHandler *getContentCdpHandler()
+    {
+      return contentInspector ? contentInspector->getContentCdpHandler() : nullptr;
+    }
 #endif
 
-  logging::Logger *getLogger()
-  {
-    return logging::Logger::GetInstance();
-  }
+    logging::Logger *getLogger()
+    {
+      return logging::Logger::GetInstance();
+    }
 
-public:
-  uint32_t id;
-  string url;
-  const TrClientEnvironmentPerProcess env;
-  /**
+  public:
+    uint32_t id;
+    string url;
+    const TrClientEnvironmentPerProcess env;
+    /**
    * The directory where the application can store files that are persistent.
    */
-  string applicationCacheDirectory;
-  /**
+    string applicationCacheDirectory;
+    /**
    * The https proxy server to use for network requests if proxy is enabled.
    */
-  string httpsProxyServer;
-  /**
+    string httpsProxyServer;
+    /**
    * Enable v8 profiling.
    */
-  bool enableV8Profiling = false;
-  uint32_t webglVersion = 2; // webgl2 by default
-  uint32_t eventChanPort;
-  uint32_t mediaChanPort;
-  uint32_t commandBufferChanPort;
-  uint32_t inspectorChanPort;
-  xr::TrDeviceInit xrDeviceInit;
-  uint64_t startedAt;
-  /**
+    bool enableV8Profiling = false;
+    uint32_t webglVersion = 2; // webgl2 by default
+    uint32_t eventChanPort;
+    uint32_t mediaChanPort;
+    uint32_t commandBufferChanPort;
+    uint32_t inspectorChanPort;
+    xr::TrDeviceInit xrDeviceInit;
+    uint64_t startedAt;
+    /**
    * The host `WebGL2Context` instances list for the client.
    */
-  WebGLContextsList hostWebGLContexts;
-  /**
+    WebGLContextsList hostWebGLContexts;
+    /**
    * The built-in scene for the DOM rendering.
    */
-  std::shared_ptr<builtin_scene::Scene> builtinScene;
-  /**
+    std::shared_ptr<builtin_scene::Scene> builtinScene;
+    /**
    * The main `BrowsingContext` instance for the client process.
    */
-  std::shared_ptr<::dom::BrowsingContext> browsingContext;
-  /**
+    std::shared_ptr<::dom::BrowsingContext> browsingContext;
+    /**
    * The `Window` instance for the client process.
    */
-  std::shared_ptr<::browser::Window> window;
+    std::shared_ptr<::browser::Window> window;
 
-private: // event fields
-  TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
-  events_comm::TrNativeEventSender *eventChanSender = nullptr;
-  events_comm::TrNativeEventReceiver *eventChanReceiver = nullptr;
+  private: // event fields
+    TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
+    events_comm::TrNativeEventSender *eventChanSender = nullptr;
+    events_comm::TrNativeEventReceiver *eventChanReceiver = nullptr;
 
-private: // media fields
-  TrOneShotClient<TrMediaCommandMessage> *mediaChanClient = nullptr;
-  unique_ptr<TrMediaCommandSender> mediaChanSender = nullptr;
-  unique_ptr<TrMediaCommandReceiver> mediaChanReceiver = nullptr;
-  unique_ptr<WorkerThread> mediaEventsPollingWorker = nullptr;
-  vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
+  private: // media fields
+    TrOneShotClient<TrMediaCommandMessage> *mediaChanClient = nullptr;
+    unique_ptr<TrMediaCommandSender> mediaChanSender = nullptr;
+    unique_ptr<TrMediaCommandReceiver> mediaChanReceiver = nullptr;
+    unique_ptr<WorkerThread> mediaEventsPollingWorker = nullptr;
+    vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
 
-private: // command buffer fields
-  // TODO(yorkie): move to a separate WebGLContext manager class?
+  private: // command buffer fields
+    // TODO(yorkie): move to a separate WebGLContext manager class?
 
-  TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
-  TrCommandBufferSender *commandBufferChanSender = nullptr;
-  TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
+    TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
+    TrCommandBufferSender *commandBufferChanSender = nullptr;
+    TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
 
-  unique_ptr<WorkerThread> commandbufferResponseWorker = nullptr;
-  vector<TrCommandBufferResponse *> pendingCommandbufferResponses;
+    unique_ptr<WorkerThread> commandbufferResponseWorker = nullptr;
+    vector<TrCommandBufferResponse *> pendingCommandbufferResponses;
 
-  struct AsyncCommandBufferResponseCallback
-  {
-    const client_graphics::WebGLContext *context = nullptr; // The context that the response belongs to.
-    int requestId = 0;                                      // The request id of the command buffer response.
-    AsyncCommandBufferResponseFunction call;
-  };
-  vector<AsyncCommandBufferResponseCallback> asyncCommandbufferResponseCallbacks;
+    struct AsyncCommandBufferResponseCallback
+    {
+      const client_graphics::WebGLContext *context = nullptr; // The context that the response belongs to.
+      int requestId = 0;                                      // The request id of the command buffer response.
+      AsyncCommandBufferResponseFunction call;
+    };
+    vector<AsyncCommandBufferResponseCallback> asyncCommandbufferResponseCallbacks;
 
-  condition_variable commandbufferResponseCv;
-  mutex mutexForCommandbufferResponses;
-  shared_mutex mutexForAsyncCommandbufferResponseCallbacks;
+    condition_variable commandbufferResponseCv;
+    mutex mutexForCommandbufferResponses;
+    shared_mutex mutexForAsyncCommandbufferResponseCallbacks;
 
-private: // xr fields
-  shared_ptr<client_xr::XRDeviceClient> xrDeviceClient = nullptr;
-  TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
-  xr::TrXRCommandSender *xrCommandChanSender = nullptr;
-  xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
-  unique_ptr<xr::TrXRDeviceContextZone> xrDeviceContextZoneClient;
-  unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
-  int framebufferWidth = 0;
-  int framebufferHeight = 0;
+  private: // xr fields
+    shared_ptr<client_xr::XRDeviceClient> xrDeviceClient = nullptr;
+    TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
+    xr::TrXRCommandSender *xrCommandChanSender = nullptr;
+    xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
+    unique_ptr<xr::TrXRDeviceContextZone> xrDeviceContextZoneClient;
+    unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
+    int framebufferWidth = 0;
+    int framebufferHeight = 0;
 
 #ifdef TR_ENABLE_INSPECTOR
-private: // inspector fields
-  std::unique_ptr<client_inspector::ContentInspector> contentInspector = nullptr;
+  private: // inspector fields
+    std::unique_ptr<client_inspector::ContentInspector> contentInspector = nullptr;
 #endif
 
-private: // frame request fields
-  map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;
-  shared_mutex frameRequestMutex;
+  private: // frame request fields
+    map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;
+    shared_mutex frameRequestMutex;
 
-private: // service & script alive checking fields
-  thread *serviceAliveListener = nullptr;
-  atomic<uint64_t> scriptAliveTime = 0;
+  private: // service & script alive checking fields
+    thread *serviceAliveListener = nullptr;
+    atomic<uint64_t> scriptAliveTime = 0;
 
-private: // other fields
-  uv_loop_t *scriptingEventLoop = nullptr;
-  std::shared_ptr<ScriptEnvironment> scriptingEnv = nullptr;
-  std::optional<std::thread::id> scriptingThreadId = std::nullopt;
-  font::FontCacheManager *fontCacheManager = nullptr;
-  unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
+  private: // other fields
+    uv_loop_t *scriptingEventLoop = nullptr;
+    std::shared_ptr<ScriptEnvironment> scriptingEnv = nullptr;
+    std::optional<std::thread::id> scriptingThreadId = std::nullopt;
+    font::FontCacheManager *fontCacheManager = nullptr;
+    unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 
-private:
-  static TrClientContextPerProcess *s_Instance;
-  static TrIdGenerator *s_IdGenerator;
-};
+  private:
+    static TrClientContextPerProcess *s_Instance;
+    static TrIdGenerator *s_IdGenerator;
+  };
+} // namespace endor
