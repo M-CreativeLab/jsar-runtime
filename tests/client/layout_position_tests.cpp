@@ -58,4 +58,5 @@ TEST_CASE("Layout Position Tests", "[layout-position]")
     
     REQUIRE(true); // Placeholder - actual testing requires DOM setup
   }
+
 }

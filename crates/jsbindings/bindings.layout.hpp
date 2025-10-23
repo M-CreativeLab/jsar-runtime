@@ -170,6 +170,7 @@ namespace crates::layout2
   XX(Clip, "clip")
 
 #define POSITION_MAP(XX)   \
+  XX(Static, "static")     \
   XX(Relative, "relative") \
   XX(Absolute, "absolute")
 
@@ -375,11 +376,15 @@ namespace crates::layout2
     };
 
     class Position : public CSSKeyword<holocron::layout::Position,
-                                       holocron::layout::Position::Relative>
+                                       holocron::layout::Position::Static>
     {
       using CSSKeyword::CSSKeyword;
 
     public:
+      static Position Static()
+      {
+        return Position(holocron::layout::Position::Static);
+      }
       static Position Relative()
       {
         return Position(holocron::layout::Position::Relative);
@@ -392,9 +397,13 @@ namespace crates::layout2
     public:
       Position(const std::string &input)
       {
-        handle_ = parse(input).value_or(holocron::layout::Position::Relative);
+        handle_ = parse(input).value_or(holocron::layout::Position::Static);
       }
 
+      inline bool isStatic() const
+      {
+        return handle_ == holocron::layout::Position::Static;
+      }
       inline bool isRelative() const
       {
         return handle_ == holocron::layout::Position::Relative;
@@ -1035,7 +1044,7 @@ namespace crates::layout2
             // scrollbar_width
             2.0f,
             // position
-            styles::Position::Relative(),
+            styles::Position::Static(),
             // inset
             holocron::layout::LengthPercentageAutoRect{
               .top = styles::LengthPercentageAuto::Auto(),

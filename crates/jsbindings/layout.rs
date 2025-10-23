@@ -262,7 +262,8 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum Position {
-    Relative = 0,
+    Static = 0,
+    Relative,
     Absolute,
   }
 
@@ -667,12 +668,36 @@ impl From<taffy::Rect<f32>> for ffi::NumberRect {
 impl_type_casting_simple!(Display, { Block, Flex, Grid, None }, Block);
 impl_type_casting_simple!(BoxSizing, { ContentBox, BorderBox }, ContentBox);
 impl_type_casting_simple!(Overflow, { Visible, Clip, Hidden, Scroll }, Visible);
-impl_type_casting_simple!(Position, { Relative, Absolute }, Relative);
+#[allow(unreachable_patterns)]
+impl From<ffi::Position> for taffy::Position {
+  fn from(value: ffi::Position) -> Self {
+    match value {
+      // todo:support position: static
+      ffi::Position::Static => Self::Relative, // Static position maps to Relative in taffy
+      ffi::Position::Relative => Self::Relative,
+      ffi::Position::Absolute => Self::Absolute,
+      _ => Self::Relative,
+    }
+  }
+}
+
+#[allow(unreachable_patterns)]
+impl From<taffy::Position> for ffi::Position {
+  fn from(value: taffy::Position) -> Self {
+    match value {
+      // Note: Taffy does not have a Static position, so we map Relative to Static here.
+      // taffy roadmap:https://github.com/DioxusLabs/taffy/issues/345 indicates that Static may be added in the future.
+      taffy::Position::Relative => Self::Static, // Note: Loss of Static vs Relative distinction
+      taffy::Position::Absolute => Self::Absolute,
+      _ => Self::Static,
+    }
+  }
+}
 
 impl_default_for!(Display, Block);
 impl_default_for!(BoxSizing, ContentBox);
 impl_default_for!(Overflow, Visible);
-impl_default_for!(Position, Relative);
+impl_default_for!(Position, Static);
 
 macro_rules! impl_xy_casting {
   ($name:ident, $container:ty) => {
@@ -1346,13 +1371,27 @@ fn grid_line(input_str: &str) -> taffy::GridPlacement {
 
 impl From<ffi::Style> for taffy::Style {
   fn from(value: ffi::Style) -> Self {
+    // According to CSS specification, inset properties (top, right, bottom, left)
+    // should be ignored when position is static
+    let inset = if matches!(value.position, ffi::Position::Static) {
+      // For static positioning, force all inset values to auto
+      taffy::Rect {
+        top: taffy::LengthPercentageAuto::auto(),
+        right: taffy::LengthPercentageAuto::auto(),
+        bottom: taffy::LengthPercentageAuto::auto(),
+        left: taffy::LengthPercentageAuto::auto(),
+      }
+    } else {
+      value.inset.into()
+    };
+
     taffy::Style {
       display: value.display.into(),
       box_sizing: value.box_sizing.into(),
       overflow: value.overflow.into(),
       scrollbar_width: value.scrollbar_width,
       position: value.position.into(),
-      inset: value.inset.into(),
+      inset,
       size: taffy::Size {
         width: value.width.into(),
         height: value.height.into(),
