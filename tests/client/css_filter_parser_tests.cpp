@@ -1,7 +1,8 @@
 #include "../catch2/catch_amalgamated.hpp"
 #include <client/cssom/parsers/css_filter_parser.hpp>
 
-using namespace client_cssom::css_filter_parser;
+using namespace endor;
+using namespace endor::client_cssom::css_filter_parser;
 
 TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
 {

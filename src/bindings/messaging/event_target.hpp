@@ -21,7 +21,7 @@ namespace bindings
       Napi::Value DispatchEvent(const Napi::CallbackInfo &info);
 
     private:
-      TrClientContextPerProcess *clientContext;
+      endor::TrClientContextPerProcess *clientContext;
       Napi::ThreadSafeFunction eventListener;
       thread eventRecvThread;
       bool recvingEvents = false;

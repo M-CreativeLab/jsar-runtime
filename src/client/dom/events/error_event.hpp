@@ -4,38 +4,41 @@
 #include <client/dom/dom_event.hpp>
 #include <client/dom/dom_event_target.hpp>
 
-namespace dom::events
+namespace endor
 {
-  class ErrorEvent : public dom::Event
+  namespace dom::events
   {
-    using dom::Event::Event;
-
-  public:
-    class Options
+    class ErrorEvent : public dom::Event
     {
+      using dom::Event::Event;
+
     public:
-      std::string message;
-      std::string filename;
-      int lineno = 0;
-      int colno = 0;
+      class Options
+      {
+      public:
+        std::string message;
+        std::string filename;
+        int lineno = 0;
+        int colno = 0;
+      };
+
+      ErrorEvent(const std::string &type, const Options &options);
+      bool isErrorEvent() const override final
+      {
+        return true;
+      }
+
+    public:
+      std::string message() const;
+      std::string filename() const;
+      int lineno() const;
+      int colno() const;
+
+    private:
+      std::string message_;
+      std::string filename_;
+      int lineno_ = 0;
+      int colno_ = 0;
     };
-
-    ErrorEvent(const std::string &type, const Options &options);
-    bool isErrorEvent() const override final
-    {
-      return true;
-    }
-
-  public:
-    std::string message() const;
-    std::string filename() const;
-    int lineno() const;
-    int colno() const;
-
-  private:
-    std::string message_;
-    std::string filename_;
-    int lineno_ = 0;
-    int colno_ = 0;
-  };
-}
+  }
+} // namespace endor

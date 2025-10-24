@@ -2,23 +2,26 @@
 
 #include <client/script_bindings/webgl/extension_base.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings::extensions
+  namespace script_bindings
   {
-    class OVR_multiview2 : public WebGLExtension<OVR_multiview2>
+    namespace webgl_bindings::extensions
     {
-      using WebGLExtension<OVR_multiview2>::WebGLExtension;
-
-    public:
-      static std::string Name()
+      class OVR_multiview2 : public WebGLExtension<OVR_multiview2>
       {
-        return "OVR_multiview2";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using WebGLExtension<OVR_multiview2>::WebGLExtension;
 
-    private:
-      void FramebufferTextureMultiviewOVR(const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        static std::string Name()
+        {
+          return "OVR_multiview2";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      private:
+        void FramebufferTextureMultiviewOVR(const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

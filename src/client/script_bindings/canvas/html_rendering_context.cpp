@@ -1,48 +1,51 @@
 #include "html_rendering_context.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace canvas_bindings
+  namespace script_bindings
   {
-    using namespace v8;
-
-    void HTMLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace canvas_bindings
     {
-      HandleScope scope(isolate);
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+      using namespace v8;
 
-      // Properties (read-only)
-      InstanceReadonlyAccessor(isolate, instanceTemplate, "canvas", &HTMLRenderingContext::CanvasGetter);
+      void HTMLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+        HandleScope scope(isolate);
+        Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+        Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
-      // Methods
-      InstanceMethod(isolate, prototypeTemplate, "getContextAttributes", &HTMLRenderingContext::GetContextAttributes);
-    }
+        // Properties (read-only)
+        InstanceReadonlyAccessor(isolate, instanceTemplate, "canvas", &HTMLRenderingContext::CanvasGetter);
 
-    Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate)
-    {
-      EscapableHandleScope scope(isolate);
-      return scope.Escape(HTMLRenderingContextBase::NewInstance(isolate, nullptr).As<Object>());
-    }
+        // Methods
+        InstanceMethod(isolate, prototypeTemplate, "getContextAttributes", &HTMLRenderingContext::GetContextAttributes);
+      }
 
-    HTMLRenderingContext::HTMLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : HTMLRenderingContextBase(isolate, args)
-    {
-    }
+      Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate)
+      {
+        EscapableHandleScope scope(isolate);
+        return scope.Escape(HTMLRenderingContextBase::NewInstance(isolate, nullptr).As<Object>());
+      }
 
-    void HTMLRenderingContext::CanvasGetter(const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      info.GetReturnValue().SetNull();
-    }
+      HTMLRenderingContext::HTMLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+          : HTMLRenderingContextBase(isolate, args)
+      {
+      }
 
-    void HTMLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      // TODO: Implement getContextAttributes method
-      // This should return an object with context attributes
-      Local<Object> attributes = Object::New(isolate);
-      info.GetReturnValue().Set(attributes);
+      void HTMLRenderingContext::CanvasGetter(const PropertyCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        info.GetReturnValue().SetNull();
+      }
+
+      void HTMLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        // TODO: Implement getContextAttributes method
+        // This should return an object with context attributes
+        Local<Object> attributes = Object::New(isolate);
+        info.GetReturnValue().Set(attributes);
+      }
     }
   }
-}
+} // namespace endor

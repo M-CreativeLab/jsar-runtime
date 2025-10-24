@@ -1,5 +1,8 @@
 #include "./dom_rect.hpp"
 
-namespace dom::geometry
+namespace endor
 {
-}
+  namespace dom::geometry
+  {
+  }
+} // namespace endor

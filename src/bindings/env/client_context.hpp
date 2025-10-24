@@ -1,7 +1,7 @@
 #pragma once
 
 #include <napi.h>
-#include "client/per_process.hpp"
+#include <client/per_process.hpp>
 
 using namespace std;
 
@@ -18,7 +18,7 @@ namespace bindings
     Napi::Value FastPerformanceNow(const Napi::CallbackInfo &info);
 
   private:
-    TrClientContextPerProcess *clientContext = nullptr;
+    endor::TrClientContextPerProcess *clientContext = nullptr;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

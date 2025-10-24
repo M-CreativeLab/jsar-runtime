@@ -3,11 +3,14 @@
 #include <string>
 #include <client/dom/dom_event_target.hpp>
 
-namespace client_workers
+namespace endor
 {
-  class Worker : public dom::DOMEventTarget
+  namespace client_workers
   {
-  public:
-    Worker(const std::string &url);
-  };
-}
+    class Worker : public dom::DOMEventTarget
+    {
+    public:
+      Worker(const std::string &url);
+    };
+  }
+} // namespace endor

@@ -5,31 +5,34 @@
 #include <client/script_bindings/html/html_element.hpp>
 #include <client/html/html_div_element.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLDivElement;
-    using HTMLDivElementBase = scripting_base::ObjectWrap<HTMLDivElement,
-                                                          dom::HTMLDivElement,
-                                                          html_bindings::HTMLElement>;
-
-    class HTMLDivElement : public HTMLDivElementBase
+    namespace html_bindings
     {
-      using HTMLDivElementBase::ObjectWrap;
+      class HTMLDivElement;
+      using HTMLDivElementBase = scripting_base::ObjectWrap<HTMLDivElement,
+                                                            dom::HTMLDivElement,
+                                                            html_bindings::HTMLElement>;
 
-    public:
-      /**
+      class HTMLDivElement : public HTMLDivElementBase
+      {
+        using HTMLDivElementBase::ObjectWrap;
+
+      public:
+        /**
        * The name of the HTMLDivElement class for V8.
        */
-      static std::string Name()
-      {
-        return "HTMLDivElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static std::string Name()
+        {
+          return "HTMLDivElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    public:
-      HTMLDivElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        HTMLDivElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

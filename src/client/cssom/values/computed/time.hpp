@@ -2,7 +2,10 @@
 
 #include <client/cssom/values/generics/time.hpp>
 
-namespace client_cssom::values::computed
+namespace endor
 {
-  using Time = generics::GenericTime;
-}
+  namespace client_cssom::values::computed
+  {
+    using Time = generics::GenericTime;
+  }
+} // namespace endor

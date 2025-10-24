@@ -9,6 +9,7 @@
 #include "./hive_server.hpp"
 
 using namespace std;
+using namespace endor;
 
 TrClientEntry::TrClientEntry(TrClientMode mode)
     : mode(mode)

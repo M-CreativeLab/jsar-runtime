@@ -6,170 +6,173 @@
 #include "./document.hpp"
 #include "./node_list-inl.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  DocumentFragment::DocumentFragment(shared_ptr<Document> ownerDocument)
-      : Node(NodeType::DOCUMENT_FRAGMENT_NODE, "#document-fragment", ownerDocument)
+  namespace dom
   {
-  }
+    using namespace std;
 
-  DocumentFragment::DocumentFragment(const DocumentFragment &other)
-      : Node(other)
-  {
-  }
-
-  shared_ptr<Node> DocumentFragment::CloneDocumentFragment(shared_ptr<Node> srcFragment)
-  {
-    auto fragmentNode = dynamic_pointer_cast<DocumentFragment>(srcFragment);
-    assert(fragmentNode != nullptr && "The source node is not a document fragment.");
-    return make_shared<DocumentFragment>(*fragmentNode);
-  }
-
-  size_t DocumentFragment::childElementCount() const
-  {
-    size_t count = 0;
-    for (auto childNode : childNodes)
+    DocumentFragment::DocumentFragment(shared_ptr<Document> ownerDocument)
+        : Node(NodeType::DOCUMENT_FRAGMENT_NODE, "#document-fragment", ownerDocument)
     {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        count++;
     }
-    return count;
-  }
 
-  shared_ptr<Element> DocumentFragment::firstElementChild() const
-  {
-    for (auto childNode : childNodes)
+    DocumentFragment::DocumentFragment(const DocumentFragment &other)
+        : Node(other)
     {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        return Node::As<Element>(childNode);
     }
-    return nullptr;
-  }
 
-  shared_ptr<Element> DocumentFragment::lastElementChild() const
-  {
-    for (auto it = childNodes.rbegin(); it != childNodes.rend(); it++)
+    shared_ptr<Node> DocumentFragment::CloneDocumentFragment(shared_ptr<Node> srcFragment)
     {
-      shared_ptr<Node> childNode = *it;
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        return Node::As<Element>(childNode);
+      auto fragmentNode = dynamic_pointer_cast<DocumentFragment>(srcFragment);
+      assert(fragmentNode != nullptr && "The source node is not a document fragment.");
+      return make_shared<DocumentFragment>(*fragmentNode);
     }
-    return nullptr;
-  }
 
-  shared_ptr<Element> DocumentFragment::querySelector(const string &selectors)
-  {
-    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
-    if (s == nullopt)
-      throw runtime_error("Failed to parse the CSS selectors: " + selectors);
-
-    const auto &selectorList = s.value();
-
-    // Helper function for recursive search
-    function<shared_ptr<Element>(shared_ptr<Node>)> searchInNode = [&](shared_ptr<Node> node) -> shared_ptr<Element>
+    size_t DocumentFragment::childElementCount() const
     {
-      if (!Node::Is<Element>(node))
-        return nullptr;
-
-      auto element = Node::As<Element>(node);
-      if (Node::Is<HTMLElement>(element))
+      size_t count = 0;
+      for (auto childNode : childNodes)
       {
-        if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
-          return element;
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+          count++;
       }
+      return count;
+    }
 
-      // Search in children
-      for (const auto &child : node->childNodes)
+    shared_ptr<Element> DocumentFragment::firstElementChild() const
+    {
+      for (auto childNode : childNodes)
       {
-        auto found = searchInNode(child);
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+          return Node::As<Element>(childNode);
+      }
+      return nullptr;
+    }
+
+    shared_ptr<Element> DocumentFragment::lastElementChild() const
+    {
+      for (auto it = childNodes.rbegin(); it != childNodes.rend(); it++)
+      {
+        shared_ptr<Node> childNode = *it;
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+          return Node::As<Element>(childNode);
+      }
+      return nullptr;
+    }
+
+    shared_ptr<Element> DocumentFragment::querySelector(const string &selectors)
+    {
+      auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
+      if (s == nullopt)
+        throw runtime_error("Failed to parse the CSS selectors: " + selectors);
+
+      const auto &selectorList = s.value();
+
+      // Helper function for recursive search
+      function<shared_ptr<Element>(shared_ptr<Node>)> searchInNode = [&](shared_ptr<Node> node) -> shared_ptr<Element>
+      {
+        if (!Node::Is<Element>(node))
+          return nullptr;
+
+        auto element = Node::As<Element>(node);
+        if (Node::Is<HTMLElement>(element))
+        {
+          if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
+            return element;
+        }
+
+        // Search in children
+        for (const auto &child : node->childNodes)
+        {
+          auto found = searchInNode(child);
+          if (found != nullptr)
+            return found;
+        }
+        return nullptr;
+      };
+
+      // Search in direct children and their descendants
+      for (const auto &childNode : childNodes)
+      {
+        auto found = searchInNode(childNode);
         if (found != nullptr)
           return found;
       }
       return nullptr;
-    };
-
-    // Search in direct children and their descendants
-    for (const auto &childNode : childNodes)
-    {
-      auto found = searchInNode(childNode);
-      if (found != nullptr)
-        return found;
     }
-    return nullptr;
-  }
 
-  NodeList<Element> DocumentFragment::querySelectorAll(const string &selectors)
-  {
-    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
-    if (s == nullopt)
-      throw runtime_error("Failed to parse the CSS selectors: " + selectors);
-
-    NodeList<Element> elements(false);
-    const auto &selectorList = s.value();
-
-    // Helper function for recursive search
-    function<void(shared_ptr<Node>)> searchInNode = [&](shared_ptr<Node> node)
+    NodeList<Element> DocumentFragment::querySelectorAll(const string &selectors)
     {
-      if (!Node::Is<Element>(node))
-        return;
+      auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
+      if (s == nullopt)
+        throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
-      auto element = Node::As<Element>(node);
-      if (Node::Is<HTMLElement>(element))
+      NodeList<Element> elements(false);
+      const auto &selectorList = s.value();
+
+      // Helper function for recursive search
+      function<void(shared_ptr<Node>)> searchInNode = [&](shared_ptr<Node> node)
       {
-        if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
-          elements.push_back(element);
+        if (!Node::Is<Element>(node))
+          return;
+
+        auto element = Node::As<Element>(node);
+        if (Node::Is<HTMLElement>(element))
+        {
+          if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
+            elements.push_back(element);
+        }
+
+        // Search in children
+        for (const auto &child : node->childNodes)
+        {
+          searchInNode(child);
+        }
+      };
+
+      // Search in direct children and their descendants
+      for (const auto &childNode : childNodes)
+      {
+        searchInNode(childNode);
       }
+      return elements;
+    }
 
-      // Search in children
-      for (const auto &child : node->childNodes)
+    NodeList<Element> DocumentFragment::children() const
+    {
+      NodeList<Element> elementChildren(false);
+      for (const auto &childNode : childNodes)
       {
-        searchInNode(child);
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+          elementChildren.push_back(Node::As<Element>(childNode));
       }
-    };
-
-    // Search in direct children and their descendants
-    for (const auto &childNode : childNodes)
-    {
-      searchInNode(childNode);
+      return elementChildren;
     }
-    return elements;
-  }
 
-  NodeList<Element> DocumentFragment::children() const
-  {
-    NodeList<Element> elementChildren(false);
-    for (const auto &childNode : childNodes)
+    void DocumentFragment::append(const vector<shared_ptr<Node>> &nodes)
     {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        elementChildren.push_back(Node::As<Element>(childNode));
-    }
-    return elementChildren;
-  }
-
-  void DocumentFragment::append(const vector<shared_ptr<Node>> &nodes)
-  {
-    for (auto node : nodes)
-    {
-      if (node != nullptr)
-        appendChild(node);
-    }
-  }
-
-  void DocumentFragment::prepend(const vector<shared_ptr<Node>> &nodes)
-  {
-    // Insert nodes at the beginning in reverse order to maintain order
-    for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
-    {
-      auto node = *it;
-      if (node != nullptr)
+      for (auto node : nodes)
       {
-        if (childNodes.empty())
+        if (node != nullptr)
           appendChild(node);
-        else
-          insertBefore(node, childNodes.front());
+      }
+    }
+
+    void DocumentFragment::prepend(const vector<shared_ptr<Node>> &nodes)
+    {
+      // Insert nodes at the beginning in reverse order to maintain order
+      for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
+      {
+        auto node = *it;
+        if (node != nullptr)
+        {
+          if (childNodes.empty())
+            appendChild(node);
+          else
+            insertBefore(node, childNodes.front());
+        }
       }
     }
   }
-}
+} // namespace endor

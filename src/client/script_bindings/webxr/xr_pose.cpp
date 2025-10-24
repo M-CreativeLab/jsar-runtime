@@ -7,71 +7,74 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace endor
 {
-  namespace webxr_bindings
+  namespace script_bindings
   {
-    // XRPose implementation
-
-    void XRPose::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace webxr_bindings
     {
-      HandleScope scope(isolate);
-      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+      // XRPose implementation
 
-      // Add property accessors
-      InstanceReadonlyAccessor(isolate, instance, "transform", &XRPose::TransformGetter);
-      InstanceReadonlyAccessor(isolate, instance, "emulatedPosition", &XRPose::EmulatedPositionGetter);
-    }
-
-    // Property getters
-
-    void XRPose::TransformGetter(const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-      info.GetReturnValue().Set(XRRigidTransform::NewInstance(isolate,
-                                                              handle()->transform));
-    }
-
-    void XRPose::EmulatedPositionGetter(const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-      info.GetReturnValue().Set(Boolean::New(isolate,
-                                             handle()->emulatedPosition));
-    }
-
-    // XRViewerPose implementation
-
-    void XRViewerPose::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
-    {
-      HandleScope scope(isolate);
-      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
-
-      // Add property accessors
-      InstanceReadonlyAccessor(isolate, instance, "views", &XRViewerPose::ViewsGetter);
-    }
-
-    // Property getters
-
-    void XRViewerPose::ViewsGetter(const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-
-      const auto &views = handle()->views();
-      Local<Array> viewsArray = Array::New(isolate, static_cast<int>(views.size()));
-
-      for (size_t i = 0; i < views.size(); ++i)
+      void XRPose::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
       {
-        auto view = views[i];
-        viewsArray->Set(context,
-                        static_cast<uint32_t>(i),
-                        XRView::GetOrNewInstance(isolate, view))
-          .Check();
+        HandleScope scope(isolate);
+        Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+
+        // Add property accessors
+        InstanceReadonlyAccessor(isolate, instance, "transform", &XRPose::TransformGetter);
+        InstanceReadonlyAccessor(isolate, instance, "emulatedPosition", &XRPose::EmulatedPositionGetter);
       }
-      info.GetReturnValue().Set(viewsArray);
+
+      // Property getters
+
+      void XRPose::TransformGetter(const PropertyCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+        info.GetReturnValue().Set(XRRigidTransform::NewInstance(isolate,
+                                                                handle()->transform));
+      }
+
+      void XRPose::EmulatedPositionGetter(const PropertyCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+        info.GetReturnValue().Set(Boolean::New(isolate,
+                                               handle()->emulatedPosition));
+      }
+
+      // XRViewerPose implementation
+
+      void XRViewerPose::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+        HandleScope scope(isolate);
+        Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+
+        // Add property accessors
+        InstanceReadonlyAccessor(isolate, instance, "views", &XRViewerPose::ViewsGetter);
+      }
+
+      // Property getters
+
+      void XRViewerPose::ViewsGetter(const PropertyCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+
+        const auto &views = handle()->views();
+        Local<Array> viewsArray = Array::New(isolate, static_cast<int>(views.size()));
+
+        for (size_t i = 0; i < views.size(); ++i)
+        {
+          auto view = views[i];
+          viewsArray->Set(context,
+                          static_cast<uint32_t>(i),
+                          XRView::GetOrNewInstance(isolate, view))
+            .Check();
+        }
+        info.GetReturnValue().Set(viewsArray);
+      }
     }
   }
-}
+} // namespace endor

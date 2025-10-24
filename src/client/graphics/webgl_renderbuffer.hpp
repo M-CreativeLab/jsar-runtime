@@ -3,19 +3,22 @@
 #include "common/command_buffers/details/program.hpp"
 #include "./webgl_object.hpp"
 
-namespace client_graphics
+namespace endor
 {
-  enum class WebGLRenderbufferBindingTarget : uint32_t
+  namespace client_graphics
   {
-    kRenderbuffer = WEBGL_RENDERBUFFER,
-  };
-
-  class WebGLRenderbuffer : public WebGLObject
-  {
-  public:
-    WebGLRenderbuffer()
-        : WebGLObject(WebGLObjectType::Renderbuffer)
+    enum class WebGLRenderbufferBindingTarget : uint32_t
     {
-    }
-  };
-}
+      kRenderbuffer = WEBGL_RENDERBUFFER,
+    };
+
+    class WebGLRenderbuffer : public WebGLObject
+    {
+    public:
+      WebGLRenderbuffer()
+          : WebGLObject(WebGLObjectType::Renderbuffer)
+      {
+      }
+    };
+  }
+} // namespace endor

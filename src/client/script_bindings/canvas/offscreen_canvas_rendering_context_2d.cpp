@@ -1,15 +1,18 @@
 #include "./offscreen_canvas_rendering_context_2d.hpp"
 #include "./canvas_rendering_context_2d.hpp"
 
-namespace script_bindings::canvas_bindings
+namespace endor
 {
-  using namespace std;
-  using namespace v8;
-
-  void OffscreenCanvasRenderingContext2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings::canvas_bindings
   {
-    CanvasRenderingContext2DBase::ConfigureFunctionTemplate(isolate, tpl);
+    using namespace std;
+    using namespace v8;
 
-    // TODO(yorkie): Add OffscreenCanvasRenderingContext2D specific methods and properties here.
+    void OffscreenCanvasRenderingContext2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    {
+      CanvasRenderingContext2DBase::ConfigureFunctionTemplate(isolate, tpl);
+
+      // TODO(yorkie): Add OffscreenCanvasRenderingContext2D specific methods and properties here.
+    }
   }
-}
+} // namespace endor

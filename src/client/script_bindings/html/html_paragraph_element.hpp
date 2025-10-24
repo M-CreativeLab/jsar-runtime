@@ -5,26 +5,29 @@
 #include <client/html/html_paragraph_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLParagraphElement;
-    using HTMLParagraphElementBase = scripting_base::ObjectWrap<HTMLParagraphElement, dom::HTMLParagraphElement, HTMLElement>;
-
-    class HTMLParagraphElement : public HTMLParagraphElementBase
+    namespace html_bindings
     {
-      using HTMLParagraphElementBase::ObjectWrap;
+      class HTMLParagraphElement;
+      using HTMLParagraphElementBase = scripting_base::ObjectWrap<HTMLParagraphElement, dom::HTMLParagraphElement, HTMLElement>;
 
-    public:
-      static std::string Name()
+      class HTMLParagraphElement : public HTMLParagraphElementBase
       {
-        return "HTMLParagraphElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using HTMLParagraphElementBase::ObjectWrap;
 
-    public:
-      HTMLParagraphElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        static std::string Name()
+        {
+          return "HTMLParagraphElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      public:
+        HTMLParagraphElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

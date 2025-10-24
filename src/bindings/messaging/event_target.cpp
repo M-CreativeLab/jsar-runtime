@@ -1,5 +1,7 @@
 #include "./event_target.hpp"
 
+using namespace endor;
+
 namespace bindings
 {
   namespace messaging
@@ -45,7 +47,7 @@ namespace bindings
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
 
-      clientContext = TrClientContextPerProcess::Get();
+      clientContext = endor::TrClientContextPerProcess::Get();
       if (clientContext == nullptr)
       {
         Napi::Error::New(env, "The client context is not initialized.").ThrowAsJavaScriptException();

@@ -1,20 +1,23 @@
 #include "./renderbuffer.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    using namespace std;
-    using namespace v8;
-
-    void WebGLRenderbuffer::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace webgl_bindings
     {
-    }
+      using namespace std;
+      using namespace v8;
 
-    WebGLRenderbuffer::WebGLRenderbuffer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGLRenderbufferBase(isolate, args)
-    {
-      // WebGLRenderbuffer objects are created by WebGL context, not by user code
-    }
-  } // namespace webgl
-} // namespace script_bindings
+      void WebGLRenderbuffer::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+      }
+
+      WebGLRenderbuffer::WebGLRenderbuffer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+          : WebGLRenderbufferBase(isolate, args)
+      {
+        // WebGLRenderbuffer objects are created by WebGL context, not by user code
+      }
+    } // namespace webgl
+  }   // namespace script_bindings
+} // namespace endor

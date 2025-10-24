@@ -8,36 +8,39 @@
 
 #include "./webgl_object.hpp"
 
-namespace client_graphics
+namespace endor
 {
-  class WebGLShaderPrecisionFormat : public scripting_base::JSObjectHolder
+  namespace client_graphics
   {
-  public:
-    WebGLShaderPrecisionFormat() = default;
-    WebGLShaderPrecisionFormat(int rangeMin, int rangeMax, int precision)
-        : rangeMin(rangeMin)
-        , rangeMax(rangeMax)
-        , precision(precision)
+    class WebGLShaderPrecisionFormat : public scripting_base::JSObjectHolder
     {
-    }
-    WebGLShaderPrecisionFormat(commandbuffers::GetShaderPrecisionFormatCommandBufferResponse &resp)
-        : rangeMin(resp.rangeMin)
-        , rangeMax(resp.rangeMax)
-        , precision(resp.precision)
-    {
-    }
+    public:
+      WebGLShaderPrecisionFormat() = default;
+      WebGLShaderPrecisionFormat(int rangeMin, int rangeMax, int precision)
+          : rangeMin(rangeMin)
+          , rangeMax(rangeMax)
+          , precision(precision)
+      {
+      }
+      WebGLShaderPrecisionFormat(commandbuffers::GetShaderPrecisionFormatCommandBufferResponse &resp)
+          : rangeMin(resp.rangeMin)
+          , rangeMax(resp.rangeMax)
+          , precision(resp.precision)
+      {
+      }
 
-    friend std::ostream &operator<<(std::ostream &os, const WebGLShaderPrecisionFormat &format)
-    {
-      os << "WebGLShaderPrecisionFormat("
-         << "[" << format.rangeMin << ", " << format.rangeMax << "], "
-         << format.precision << ")";
-      return os;
-    }
+      friend std::ostream &operator<<(std::ostream &os, const WebGLShaderPrecisionFormat &format)
+      {
+        os << "WebGLShaderPrecisionFormat("
+           << "[" << format.rangeMin << ", " << format.rangeMax << "], "
+           << format.precision << ")";
+        return os;
+      }
 
-  public:
-    int rangeMin = 0;
-    int rangeMax = 0;
-    int precision = 0;
-  };
-}
+    public:
+      int rangeMin = 0;
+      int rangeMax = 0;
+      int precision = 0;
+    };
+  }
+} // namespace endor

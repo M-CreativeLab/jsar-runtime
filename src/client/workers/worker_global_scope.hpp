@@ -3,11 +3,14 @@
 #include <string>
 #include <client/dom/dom_event_target.hpp>
 
-namespace client_workers
+namespace endor
 {
-  class WorkerGlobalScope : public dom::DOMEventTarget
+  namespace client_workers
   {
-  public:
-    WorkerGlobalScope();
-  };
-}
+    class WorkerGlobalScope : public dom::DOMEventTarget
+    {
+    public:
+      WorkerGlobalScope();
+    };
+  }
+} // namespace endor

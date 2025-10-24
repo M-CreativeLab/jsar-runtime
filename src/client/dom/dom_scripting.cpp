@@ -12,167 +12,169 @@
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-  using namespace v8;
-
-  int const ContextEmbedderTag::kMyContextTag = 0x8e8f99;
-  void *const ContextEmbedderTag::kMyContextTagPtr = const_cast<void *>(
-    static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));
-
-  DOMScriptingContext *DOMScriptingContext::GetCurrent(Local<Context> context)
+  namespace dom
   {
-    auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal).As<External>();
-    if (!externalObject.IsEmpty())
-      return static_cast<DOMScriptingContext *>(externalObject->Value());
-    else
-      return nullptr;
-  }
+    using namespace std;
+    using namespace v8;
 
-  MaybeLocal<Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(Local<Context> context,
-                                                                           Local<Data> hostDefinedOptions,
-                                                                           Local<Value> resourceName,
-                                                                           Local<String> specifier,
-                                                                           Local<FixedArray> importAssertions)
-  {
-    auto isolate = context->GetIsolate();
-    EscapableHandleScope handleScope(isolate);
+    int const ContextEmbedderTag::kMyContextTag = 0x8e8f99;
+    void *const ContextEmbedderTag::kMyContextTagPtr = const_cast<void *>(
+      static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));
 
-    Local<FixedArray> options = hostDefinedOptions.As<FixedArray>();
-    DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
-    if (scriptingContext == nullptr)
+    DOMScriptingContext *DOMScriptingContext::GetCurrent(Local<Context> context)
     {
-      cerr << "Failed to get the scripting context object" << endl;
-      return MaybeLocal<Promise>();
+      auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal).As<External>();
+      if (!externalObject.IsEmpty())
+        return static_cast<DOMScriptingContext *>(externalObject->Value());
+      else
+        return nullptr;
     }
 
-    String::Utf8Value specifier_utf8(isolate, specifier);
-    string specifierStr(*specifier_utf8, specifier_utf8.length());
-
-    auto type = options->Get(context, HostDefinedOptions::kType).As<Number>()->Int32Value(context).ToChecked();
-    auto id = options->Get(context, HostDefinedOptions::kID).As<Number>()->Int32Value(context).ToChecked();
-
-    if (type != (int)SourceTextType::ESM)
+    MaybeLocal<Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(Local<Context> context,
+                                                                             Local<Data> hostDefinedOptions,
+                                                                             Local<Value> resourceName,
+                                                                             Local<String> specifier,
+                                                                             Local<FixedArray> importAssertions)
     {
-      Local<Promise::Resolver> resolver;
-      if (!Promise::Resolver::New(context).ToLocal(&resolver))
-        return MaybeLocal<Promise>();
+      auto isolate = context->GetIsolate();
+      EscapableHandleScope handleScope(isolate);
 
-      auto typeError = Exception::TypeError(String::NewFromUtf8(isolate, "dynamic import() is only supported in ECMAScript module.").ToLocalChecked());
-      resolver->Reject(context, typeError).ToChecked();
-      return handleScope.Escape(resolver->GetPromise());
-    }
-    else
-    {
-      shared_ptr<DOMModule> dependent = nullptr;
+      Local<FixedArray> options = hostDefinedOptions.As<FixedArray>();
+      DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
+      if (scriptingContext == nullptr)
       {
-        auto &map = scriptingContext->idToModuleMap;
-        if (!map.empty())
+        cerr << "Failed to get the scripting context object" << endl;
+        return MaybeLocal<Promise>();
+      }
+
+      String::Utf8Value specifier_utf8(isolate, specifier);
+      string specifierStr(*specifier_utf8, specifier_utf8.length());
+
+      auto type = options->Get(context, HostDefinedOptions::kType).As<Number>()->Int32Value(context).ToChecked();
+      auto id = options->Get(context, HostDefinedOptions::kID).As<Number>()->Int32Value(context).ToChecked();
+
+      if (type != (int)SourceTextType::ESM)
+      {
+        Local<Promise::Resolver> resolver;
+        if (!Promise::Resolver::New(context).ToLocal(&resolver))
+          return MaybeLocal<Promise>();
+
+        auto typeError = Exception::TypeError(String::NewFromUtf8(isolate, "dynamic import() is only supported in ECMAScript module.").ToLocalChecked());
+        resolver->Reject(context, typeError).ToChecked();
+        return handleScope.Escape(resolver->GetPromise());
+      }
+      else
+      {
+        shared_ptr<DOMModule> dependent = nullptr;
         {
-          auto it = map.find(id);
-          if (it != map.end())
-            dependent = it->second;
+          auto &map = scriptingContext->idToModuleMap;
+          if (!map.empty())
+          {
+            auto it = map.find(id);
+            if (it != map.end())
+              dependent = it->second;
+          }
         }
+        if (dependent == nullptr)
+        {
+          cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
+          return MaybeLocal<Promise>();
+        }
+
+        auto moduleUrl = dependent->getUrlBySpecifier(specifierStr);
+        if (moduleUrl == "")
+        {
+          cerr << "Failed to create URL for '" << specifierStr << "'" << endl;
+          return MaybeLocal<Promise>();
+        }
+
+        Local<Promise::Resolver> resolver;
+        if (!Promise::Resolver::New(context).ToLocal(&resolver))
+          return MaybeLocal<Promise>();
+
+        auto scriptingContext = dependent->runtimeContext.lock()->scriptingContext;
+        auto persistentResolver = make_shared<Persistent<Promise::Resolver>>(isolate, resolver);
+        auto specifierRef = make_shared<string>(specifierStr);
+        auto onModuleLoaded = [isolate, persistentResolver, dependent, scriptingContext, specifierRef](shared_ptr<DOMModule> module)
+        {
+          Isolate::Scope isolateScope(isolate);
+          HandleScope handleScope(isolate);
+
+          auto resolver = persistentResolver->Get(isolate);
+          dependent->resolveCache.insert({*specifierRef, module});
+          scriptingContext->evaluate(dynamic_pointer_cast<DOMScript>(module));
+          resolver->Resolve(isolate->GetCurrentContext(), module->getExports(isolate)).ToChecked();
+          persistentResolver->Reset();
+        };
+        scriptingContext->tryImportModule(moduleUrl, false, onModuleLoaded);
+        return handleScope.Escape(resolver->GetPromise());
       }
-      if (dependent == nullptr)
-      {
-        cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
-        return MaybeLocal<Promise>();
-      }
-
-      auto moduleUrl = dependent->getUrlBySpecifier(specifierStr);
-      if (moduleUrl == "")
-      {
-        cerr << "Failed to create URL for '" << specifierStr << "'" << endl;
-        return MaybeLocal<Promise>();
-      }
-
-      Local<Promise::Resolver> resolver;
-      if (!Promise::Resolver::New(context).ToLocal(&resolver))
-        return MaybeLocal<Promise>();
-
-      auto scriptingContext = dependent->runtimeContext.lock()->scriptingContext;
-      auto persistentResolver = make_shared<Persistent<Promise::Resolver>>(isolate, resolver);
-      auto specifierRef = make_shared<string>(specifierStr);
-      auto onModuleLoaded = [isolate, persistentResolver, dependent, scriptingContext, specifierRef](shared_ptr<DOMModule> module)
-      {
-        Isolate::Scope isolateScope(isolate);
-        HandleScope handleScope(isolate);
-
-        auto resolver = persistentResolver->Get(isolate);
-        dependent->resolveCache.insert({*specifierRef, module});
-        scriptingContext->evaluate(dynamic_pointer_cast<DOMScript>(module));
-        resolver->Resolve(isolate->GetCurrentContext(), module->getExports(isolate)).ToChecked();
-        persistentResolver->Reset();
-      };
-      scriptingContext->tryImportModule(moduleUrl, false, onModuleLoaded);
-      return handleScope.Escape(resolver->GetPromise());
     }
-  }
 
-  DOMScriptingContext::DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext)
-      : isolate_(Isolate::GetCurrent())
-      , runtimeContext(runtimeContext)
-  {
-    assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
-
-    // Enable stack trace for uncaught exceptions
-    isolate_->SetCaptureStackTraceForUncaughtExceptions(true, 20, StackTrace::kDetailed);
-  }
-
-  void DOMScriptingContext::enableDynamicImport()
-  {
-    auto mainContext = isolate_->GetCurrentContext();
-    Isolate::Scope isolateScope(isolate_);
-    Context::Scope contextScope(mainContext);
-    isolate_->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
-  }
-
-  Local<Value> DOMScriptingContext::getGlobalProperty(Isolate *isolate, const char *name) const
-  {
-    assert(!v8ContextHandle.IsEmpty() && "The V8 context is not initialized.");
-    EscapableHandleScope scope(isolate);
-    Local<Context> context = v8ContextHandle.Get(isolate);
-
-    Local<Object> global = context->Global();
-    Local<Value> value;
-    if (global->Get(context, String::NewFromUtf8(isolate, name).ToLocalChecked()).ToLocal(&value))
-      return scope.Escape(value);
-    return Undefined(isolate);
-  }
-
-  void DOMScriptingContext::makeMainContext(shared_ptr<dom::Node> nativeDocument,
-                                            shared_ptr<browser::Window> nativeWindow)
-  {
-    assert(!isContextInitialized);
-    assert(v8ContextHandle.IsEmpty() && "Each scripting context can only be initialized once.");
-    assert(nativeDocument != nullptr && nativeDocument->isHTMLDocument() &&
-           "The document must be an HTML document.");
-    assert(nativeWindow != nullptr && "The window must not be null.");
-
-    auto hostContext = isolate_->GetCurrentContext();
+    DOMScriptingContext::DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext)
+        : isolate_(Isolate::GetCurrent())
+        , runtimeContext(runtimeContext)
     {
+      assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
+
+      // Enable stack trace for uncaught exceptions
+      isolate_->SetCaptureStackTraceForUncaughtExceptions(true, 20, StackTrace::kDetailed);
+    }
+
+    void DOMScriptingContext::enableDynamicImport()
+    {
+      auto mainContext = isolate_->GetCurrentContext();
       Isolate::Scope isolateScope(isolate_);
-      Context::Scope contextScope(hostContext);
-      HandleScope handleScope(isolate_);
+      Context::Scope contextScope(mainContext);
+      isolate_->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
+    }
 
-      // Initialize the Window firstly
-      auto Window = script_bindings::Window::Initialize(isolate_);
+    Local<Value> DOMScriptingContext::getGlobalProperty(Isolate *isolate, const char *name) const
+    {
+      assert(!v8ContextHandle.IsEmpty() && "The V8 context is not initialized.");
+      EscapableHandleScope scope(isolate);
+      Local<Context> context = v8ContextHandle.Get(isolate);
 
-      // Initialize the `Context` with the window object.
-      Local<Context> scriptingContext = Context::New(isolate_,
-                                                     nullptr,
-                                                     script_bindings::Window::GetInstanceTemplate(isolate_));
+      Local<Object> global = context->Global();
+      Local<Value> value;
+      if (global->Get(context, String::NewFromUtf8(isolate, name).ToLocalChecked()).ToLocal(&value))
+        return scope.Escape(value);
+      return Undefined(isolate);
+    }
+
+    void DOMScriptingContext::makeMainContext(shared_ptr<dom::Node> nativeDocument,
+                                              shared_ptr<browser::Window> nativeWindow)
+    {
+      assert(!isContextInitialized);
+      assert(v8ContextHandle.IsEmpty() && "Each scripting context can only be initialized once.");
+      assert(nativeDocument != nullptr && nativeDocument->isHTMLDocument() &&
+             "The document must be an HTML document.");
+      assert(nativeWindow != nullptr && "The window must not be null.");
+
+      auto hostContext = isolate_->GetCurrentContext();
       {
-        Context::Scope contextScope(scriptingContext);
+        Isolate::Scope isolateScope(isolate_);
+        Context::Scope contextScope(hostContext);
         HandleScope handleScope(isolate_);
 
-        // Setup the global/window object
-        Local<Object> global = scriptingContext->Global();
-        script_bindings::Window::MakeAndWrap(isolate_, global, nativeWindow);
+        // Initialize the Window firstly
+        auto Window = script_bindings::Window::Initialize(isolate_);
 
-        /**
+        // Initialize the `Context` with the window object.
+        Local<Context> scriptingContext = Context::New(isolate_,
+                                                       nullptr,
+                                                       script_bindings::Window::GetInstanceTemplate(isolate_));
+        {
+          Context::Scope contextScope(scriptingContext);
+          HandleScope handleScope(isolate_);
+
+          // Setup the global/window object
+          Local<Object> global = scriptingContext->Global();
+          script_bindings::Window::MakeAndWrap(isolate_, global, nativeWindow);
+
+          /**
          * Configure the global objects and functions.
          */
 
@@ -211,105 +213,105 @@ namespace dom
     }                                                                                                                 \
   } while (0)
 
-        // Dependents for the following globals
-        V8_SET_GLOBAL_FROM_HOST(__WorkerImpl);
+          // Dependents for the following globals
+          V8_SET_GLOBAL_FROM_HOST(__WorkerImpl);
 
-        // Initialize the scripting context from script bindings
-        script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);
+          // Initialize the scripting context from script bindings
+          script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);
 
-        // Baisc objects
-        V8_SET_GLOBAL_FROM_HOST(performance);
-        V8_SET_GLOBAL_FROM_HOST(console);
+          // Baisc objects
+          V8_SET_GLOBAL_FROM_HOST(performance);
+          V8_SET_GLOBAL_FROM_HOST(console);
 
-        // Basic constructors
-        V8_SET_GLOBAL_FROM_HOST(FormData);
-        V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
-        V8_SET_GLOBAL_FROM_HOST(WebSocket);
-        V8_SET_GLOBAL_FROM_HOST(EventSource);
-        V8_SET_GLOBAL_FROM_HOST(TextDecoder);
-        V8_SET_GLOBAL_FROM_HOST(AbortController);
-        V8_SET_GLOBAL_FROM_HOST(AbortSignal);
+          // Basic constructors
+          V8_SET_GLOBAL_FROM_HOST(FormData);
+          V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
+          V8_SET_GLOBAL_FROM_HOST(WebSocket);
+          V8_SET_GLOBAL_FROM_HOST(EventSource);
+          V8_SET_GLOBAL_FROM_HOST(TextDecoder);
+          V8_SET_GLOBAL_FROM_HOST(AbortController);
+          V8_SET_GLOBAL_FROM_HOST(AbortSignal);
 
-        // Global functions
-        V8_SET_GLOBAL_FROM_HOST(atob);
-        V8_SET_GLOBAL_FROM_HOST(btoa);
-        V8_SET_GLOBAL_FROM_HOST(setTimeout);
-        V8_SET_GLOBAL_FROM_HOST(clearTimeout);
-        V8_SET_GLOBAL_FROM_HOST(setInterval);
-        V8_SET_GLOBAL_FROM_HOST(clearInterval);
-        V8_SET_GLOBAL_FROM_HOST(queueMicrotask);
+          // Global functions
+          V8_SET_GLOBAL_FROM_HOST(atob);
+          V8_SET_GLOBAL_FROM_HOST(btoa);
+          V8_SET_GLOBAL_FROM_HOST(setTimeout);
+          V8_SET_GLOBAL_FROM_HOST(clearTimeout);
+          V8_SET_GLOBAL_FROM_HOST(setInterval);
+          V8_SET_GLOBAL_FROM_HOST(clearInterval);
+          V8_SET_GLOBAL_FROM_HOST(queueMicrotask);
 
-        // Fetch API related objects
-        V8_SET_GLOBAL_FROM_HOST(Headers);
-        V8_SET_GLOBAL_FROM_HOST(Request);
+          // Fetch API related objects
+          V8_SET_GLOBAL_FROM_HOST(Headers);
+          V8_SET_GLOBAL_FROM_HOST(Request);
 
 #undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
 #undef V8_SET_GLOBAL_FROM_VALUE
 
-        // Set the `window` and `self` properties to refer to the global object itself
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "Window").ToLocalChecked(),
-                    Window)
-          .Check();
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "window").ToLocalChecked(),
-                    global)
-          .Check();
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
-                    global)
-          .Check();
+          // Set the `window` and `self` properties to refer to the global object itself
+          global->Set(scriptingContext,
+                      String::NewFromUtf8(isolate_, "Window").ToLocalChecked(),
+                      Window)
+            .Check();
+          global->Set(scriptingContext,
+                      String::NewFromUtf8(isolate_, "window").ToLocalChecked(),
+                      global)
+            .Check();
+          global->Set(scriptingContext,
+                      String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
+                      global)
+            .Check();
 
-        // Set the `document` property to refer to the document object
-        auto document = script_bindings::dom_bindings::Document::NewInstance(
-          isolate_, static_pointer_cast<dom::Document>(nativeDocument));
-        global->Set(scriptingContext,
-                    String::NewFromUtf8(isolate_, "document").ToLocalChecked(),
-                    document)
-          .Check();
+          // Set the `document` property to refer to the document object
+          auto document = script_bindings::dom_bindings::Document::NewInstance(
+            isolate_, static_pointer_cast<dom::Document>(nativeDocument));
+          global->Set(scriptingContext,
+                      String::NewFromUtf8(isolate_, "document").ToLocalChecked(),
+                      document)
+            .Check();
+        }
+
+        ContextEmbedderTag::TagMyContext(scriptingContext);
+        scriptingContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
+        scriptingContext->SetSecurityToken(hostContext->GetSecurityToken());
+        v8ContextHandle.Reset(isolate_, scriptingContext);
       }
-
-      ContextEmbedderTag::TagMyContext(scriptingContext);
-      scriptingContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
-      scriptingContext->SetSecurityToken(hostContext->GetSecurityToken());
-      v8ContextHandle.Reset(isolate_, scriptingContext);
+      isContextInitialized = true;
     }
-    isContextInitialized = true;
-  }
 
-  void DOMScriptingContext::makeWorkerContext()
-  {
-    assert(!isContextInitialized);
-    assert(v8ContextHandle.IsEmpty());
-
-    Isolate::Scope isolateScope(isolate_);
-    HandleScope handleScope(isolate_);
-    Local<Context> hostContext = isolate_->GetCurrentContext();
+    void DOMScriptingContext::makeWorkerContext()
     {
-      using namespace script_bindings;
-      Context::Scope contextScope(hostContext);
+      assert(!isContextInitialized);
+      assert(v8ContextHandle.IsEmpty());
 
-      // Initialize the `WorkerGlobalScope` firstly
-      auto WorkerGlobalScope = workers_bindings::WorkerGlobalScope::Initialize(isolate_);
-      event_bindings::UIEvent::Initialize(isolate_);
-
-      // Initialize the `Context`.
-      Local<Context> workerContext = Context::New(isolate_,
-                                                  nullptr,
-                                                  workers_bindings::WorkerGlobalScope::GetInstanceTemplate(isolate_));
-      assert(!workerContext.IsEmpty() && "Created Context must not be empty.");
+      Isolate::Scope isolateScope(isolate_);
+      HandleScope handleScope(isolate_);
+      Local<Context> hostContext = isolate_->GetCurrentContext();
       {
-        Context::Scope contextScope(workerContext);
-        HandleScope handleScope(isolate_);
+        using namespace script_bindings;
+        Context::Scope contextScope(hostContext);
 
-        // Setup the global object
-        Local<Object> global = workerContext->Global();
-        workers_bindings::WorkerGlobalScope::MakeAndWrap(isolate_,
-                                                         global,
-                                                         make_shared<client_workers::WorkerGlobalScope>());
+        // Initialize the `WorkerGlobalScope` firstly
+        auto WorkerGlobalScope = workers_bindings::WorkerGlobalScope::Initialize(isolate_);
+        event_bindings::UIEvent::Initialize(isolate_);
 
-        /**
+        // Initialize the `Context`.
+        Local<Context> workerContext = Context::New(isolate_,
+                                                    nullptr,
+                                                    workers_bindings::WorkerGlobalScope::GetInstanceTemplate(isolate_));
+        assert(!workerContext.IsEmpty() && "Created Context must not be empty.");
+        {
+          Context::Scope contextScope(workerContext);
+          HandleScope handleScope(isolate_);
+
+          // Setup the global object
+          Local<Object> global = workerContext->Global();
+          workers_bindings::WorkerGlobalScope::MakeAndWrap(isolate_,
+                                                           global,
+                                                           make_shared<client_workers::WorkerGlobalScope>());
+
+          /**
          * Configure the global objects and functions.
          */
 
@@ -348,936 +350,937 @@ namespace dom
     }                                                                                                                 \
   } while (0)
 
-        /**
+          /**
          * Configure the WorkerGlobalScope objects and functions.
          *
          * See https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope
          */
 
-        // Private classes
-        V8_SET_GLOBAL_FROM_HOST(__WorkerImpl);
+          // Private classes
+          V8_SET_GLOBAL_FROM_HOST(__WorkerImpl);
 
-        // Update context globals from script bindings
-        script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
+          // Update context globals from script bindings
+          script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
 
-        // Baisc objects
-        V8_SET_GLOBAL_FROM_HOST(performance);
-        V8_SET_GLOBAL_FROM_HOST(console);
+          // Baisc objects
+          V8_SET_GLOBAL_FROM_HOST(performance);
+          V8_SET_GLOBAL_FROM_HOST(console);
 
-        // Basic constructors
-        V8_SET_GLOBAL_FROM_HOST(FormData);
-        V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
-        V8_SET_GLOBAL_FROM_HOST(WebSocket);
-        V8_SET_GLOBAL_FROM_HOST(EventSource);
-        V8_SET_GLOBAL_FROM_HOST(TextDecoder);
-        V8_SET_GLOBAL_FROM_HOST(AbortController);
-        V8_SET_GLOBAL_FROM_HOST(AbortSignal);
+          // Basic constructors
+          V8_SET_GLOBAL_FROM_HOST(FormData);
+          V8_SET_GLOBAL_FROM_HOST(XMLHttpRequest);
+          V8_SET_GLOBAL_FROM_HOST(WebSocket);
+          V8_SET_GLOBAL_FROM_HOST(EventSource);
+          V8_SET_GLOBAL_FROM_HOST(TextDecoder);
+          V8_SET_GLOBAL_FROM_HOST(AbortController);
+          V8_SET_GLOBAL_FROM_HOST(AbortSignal);
 
-        // Global functions
-        V8_SET_GLOBAL_FROM_HOST(atob);
-        V8_SET_GLOBAL_FROM_HOST(btoa);
-        V8_SET_GLOBAL_FROM_HOST(setTimeout);
-        V8_SET_GLOBAL_FROM_HOST(clearTimeout);
-        V8_SET_GLOBAL_FROM_HOST(setInterval);
-        V8_SET_GLOBAL_FROM_HOST(clearInterval);
-        V8_SET_GLOBAL_FROM_HOST(queueMicrotask);
-        V8_SET_GLOBAL_FROM_HOST(postMessage);
+          // Global functions
+          V8_SET_GLOBAL_FROM_HOST(atob);
+          V8_SET_GLOBAL_FROM_HOST(btoa);
+          V8_SET_GLOBAL_FROM_HOST(setTimeout);
+          V8_SET_GLOBAL_FROM_HOST(clearTimeout);
+          V8_SET_GLOBAL_FROM_HOST(setInterval);
+          V8_SET_GLOBAL_FROM_HOST(clearInterval);
+          V8_SET_GLOBAL_FROM_HOST(queueMicrotask);
+          V8_SET_GLOBAL_FROM_HOST(postMessage);
 
-        // Fetch API related objects
-        V8_SET_GLOBAL_FROM_HOST(Headers);
-        V8_SET_GLOBAL_FROM_HOST(Request);
+          // Fetch API related objects
+          V8_SET_GLOBAL_FROM_HOST(Headers);
+          V8_SET_GLOBAL_FROM_HOST(Request);
 
 #undef V8_SET_GLOBAL_FROM_HOST
 #undef V8_SET_GLOBAL_FROM_VALUE
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
 
-        // Set the `WorkerGlobalScope` and `self` properties to refer to the global object itself
-        global->Set(workerContext,
-                    String::NewFromUtf8(isolate_, "WorkerGlobalScope").ToLocalChecked(),
-                    WorkerGlobalScope)
-          .Check();
-        global->Set(workerContext,
-                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
-                    global)
-          .Check();
+          // Set the `WorkerGlobalScope` and `self` properties to refer to the global object itself
+          global->Set(workerContext,
+                      String::NewFromUtf8(isolate_, "WorkerGlobalScope").ToLocalChecked(),
+                      WorkerGlobalScope)
+            .Check();
+          global->Set(workerContext,
+                      String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
+                      global)
+            .Check();
+        }
+
+        ContextEmbedderTag::TagMyContext(workerContext);
+        workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
+        workerContext->SetSecurityToken(hostContext->GetSecurityToken());
+        v8ContextHandle.Reset(isolate_, workerContext);
+      }
+      isContextInitialized = true;
+    }
+
+    shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<RuntimeContext> runtimeContext,
+                                                      const string &url,
+                                                      SourceTextType type)
+    {
+      assert(isContextInitialized);
+      shared_ptr<DOMScript> script;
+      if (type == SourceTextType::Classic)
+      {
+        auto classicScript = make_shared<DOMClassicScript>(runtimeContext);
+        classicScript->url = url;
+        idToScriptMap.insert({classicScript->id, classicScript});
+        script = dynamic_pointer_cast<DOMScript>(classicScript);
+      }
+      else if (type == SourceTextType::ESM)
+      {
+        auto module = make_shared<DOMModule>(runtimeContext);
+        module->url = url;
+        idToModuleMap.insert({module->id, module});
+        urlToModuleMap.insert({url, module});
+        script = dynamic_pointer_cast<DOMScript>(module);
+      }
+      return script;
+    }
+
+    bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const string &source, bool isTypeScript)
+    {
+      assert(isContextInitialized);
+
+      // Create a handle scope to store the context, that is a `Local<Context>`.
+      Isolate::Scope isolateScope(isolate_);
+      HandleScope handleScope(isolate_);
+
+      Local<Context> context = v8ContextHandle.Get(isolate_);
+      Context::Scope contextScope(context);
+
+      if (!script->compile(isolate_, source, isTypeScript))
+        return false;
+
+      // If the script is ESM, add it to the module map
+      if (script->sourceTextType == SourceTextType::ESM)
+      {
+        auto module = dynamic_pointer_cast<DOMModule>(script);
+        hashToModuleMap.insert({module->getModuleHash(), module});
+        module->link(isolate_);
+      }
+      return true;
+    }
+
+    MaybeLocal<Function> DOMScriptingContext::compileFunction(const string &funcSource)
+    {
+      assert(isContextInitialized);
+
+      // Create a handle scope to store the context, that is a `Local<Context>`.
+      EscapableHandleScope handleScope(isolate_);
+
+      Local<Context> context = v8ContextHandle.Get(isolate_);
+      Context::Scope contextScope(context);
+
+      // Wrap the handler code in a function that accepts an event parameter
+      string functionCode = "(function(event) { " + funcSource + " })";
+
+      TryCatch tryCatch(isolate_);
+      Local<String> source = String::NewFromUtf8(isolate_, functionCode.c_str()).ToLocalChecked();
+
+      // Compile the function expression
+      Local<Script> script;
+      if (!Script::Compile(context, source).ToLocal(&script))
+      {
+        if (tryCatch.HasCaught())
+        {
+          String::Utf8Value exception(isolate_, tryCatch.Exception());
+          cerr << "Failed to compile event handler: " << *exception << endl;
+        }
+        return MaybeLocal<Function>();
       }
 
-      ContextEmbedderTag::TagMyContext(workerContext);
-      workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
-      workerContext->SetSecurityToken(hostContext->GetSecurityToken());
-      v8ContextHandle.Reset(isolate_, workerContext);
+      // Execute the script to get the function
+      Local<Value> result;
+      if (!script->Run(context).ToLocal(&result))
+      {
+        if (tryCatch.HasCaught())
+        {
+          String::Utf8Value exception(isolate_, tryCatch.Exception());
+          cerr << "Failed to execute event handler compilation: " << *exception << endl;
+        }
+        return MaybeLocal<Function>();
+      }
+
+      // Ensure the result is a function
+      if (!result->IsFunction())
+      {
+        cerr << "Event handler compilation did not result in a function" << endl;
+        return MaybeLocal<Function>();
+      }
+
+      return handleScope.Escape(result.As<Function>());
     }
-    isContextInitialized = true;
-  }
 
-  shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<RuntimeContext> runtimeContext,
-                                                    const string &url,
-                                                    SourceTextType type)
-  {
-    assert(isContextInitialized);
-    shared_ptr<DOMScript> script;
-    if (type == SourceTextType::Classic)
+    bool DOMScriptingContext::compileAsSyntheticModule(shared_ptr<DOMModule> module, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
     {
-      auto classicScript = make_shared<DOMClassicScript>(runtimeContext);
-      classicScript->url = url;
-      idToScriptMap.insert({classicScript->id, classicScript});
-      script = dynamic_pointer_cast<DOMScript>(classicScript);
-    }
-    else if (type == SourceTextType::ESM)
-    {
-      auto module = make_shared<DOMModule>(runtimeContext);
-      module->url = url;
-      idToModuleMap.insert({module->id, module});
-      urlToModuleMap.insert({url, module});
-      script = dynamic_pointer_cast<DOMScript>(module);
-    }
-    return script;
-  }
+      assert(isContextInitialized);
+      Isolate::Scope isolateScope(isolate_);
+      HandleScope handleScope(isolate_);
 
-  bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const string &source, bool isTypeScript)
-  {
-    assert(isContextInitialized);
+      auto context = v8ContextHandle.Get(isolate_);
+      Context::Scope contextScope(context);
 
-    // Create a handle scope to store the context, that is a `Local<Context>`.
-    Isolate::Scope isolateScope(isolate_);
-    HandleScope handleScope(isolate_);
+      if (!module->compileAsSyntheticModule(isolate_, type, sourceData, sourceByteLength))
+        return false;
 
-    Local<Context> context = v8ContextHandle.Get(isolate_);
-    Context::Scope contextScope(context);
-
-    if (!script->compile(isolate_, source, isTypeScript))
-      return false;
-
-    // If the script is ESM, add it to the module map
-    if (script->sourceTextType == SourceTextType::ESM)
-    {
-      auto module = dynamic_pointer_cast<DOMModule>(script);
       hashToModuleMap.insert({module->getModuleHash(), module});
       module->link(isolate_);
+      return true;
     }
-    return true;
-  }
 
-  MaybeLocal<Function> DOMScriptingContext::compileFunction(const string &funcSource)
-  {
-    assert(isContextInitialized);
-
-    // Create a handle scope to store the context, that is a `Local<Context>`.
-    EscapableHandleScope handleScope(isolate_);
-
-    Local<Context> context = v8ContextHandle.Get(isolate_);
-    Context::Scope contextScope(context);
-
-    // Wrap the handler code in a function that accepts an event parameter
-    string functionCode = "(function(event) { " + funcSource + " })";
-
-    TryCatch tryCatch(isolate_);
-    Local<String> source = String::NewFromUtf8(isolate_, functionCode.c_str()).ToLocalChecked();
-
-    // Compile the function expression
-    Local<Script> script;
-    if (!Script::Compile(context, source).ToLocal(&script))
+    void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
     {
-      if (tryCatch.HasCaught())
+      assert(isContextInitialized);
+      Isolate::Scope isolateScope(isolate_);
+      HandleScope handleScope(isolate_);
+
+      Local<Context> context = v8ContextHandle.Get(isolate_);
+      Context::Scope contextScope(context);
       {
-        String::Utf8Value exception(isolate_, tryCatch.Exception());
-        cerr << "Failed to compile event handler: " << *exception << endl;
-      }
-      return MaybeLocal<Function>();
-    }
-
-    // Execute the script to get the function
-    Local<Value> result;
-    if (!script->Run(context).ToLocal(&result))
-    {
-      if (tryCatch.HasCaught())
-      {
-        String::Utf8Value exception(isolate_, tryCatch.Exception());
-        cerr << "Failed to execute event handler compilation: " << *exception << endl;
-      }
-      return MaybeLocal<Function>();
-    }
-
-    // Ensure the result is a function
-    if (!result->IsFunction())
-    {
-      cerr << "Event handler compilation did not result in a function" << endl;
-      return MaybeLocal<Function>();
-    }
-
-    return handleScope.Escape(result.As<Function>());
-  }
-
-  bool DOMScriptingContext::compileAsSyntheticModule(shared_ptr<DOMModule> module, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
-  {
-    assert(isContextInitialized);
-    Isolate::Scope isolateScope(isolate_);
-    HandleScope handleScope(isolate_);
-
-    auto context = v8ContextHandle.Get(isolate_);
-    Context::Scope contextScope(context);
-
-    if (!module->compileAsSyntheticModule(isolate_, type, sourceData, sourceByteLength))
-      return false;
-
-    hashToModuleMap.insert({module->getModuleHash(), module});
-    module->link(isolate_);
-    return true;
-  }
-
-  void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
-  {
-    assert(isContextInitialized);
-    Isolate::Scope isolateScope(isolate_);
-    HandleScope handleScope(isolate_);
-
-    Local<Context> context = v8ContextHandle.Get(isolate_);
-    Context::Scope contextScope(context);
-    {
-      script->evaluate(isolate_);
-    }
-  }
-
-  shared_ptr<DOMModule> DOMScriptingContext::getModuleFromV8(Local<Module> module)
-  {
-    auto range = hashToModuleMap.equal_range(module->GetIdentityHash());
-    for (auto it = range.first; it != range.second; ++it)
-    {
-      if (it->second->moduleStore.Get(isolate_) == module)
-      {
-        return it->second;
+        script->evaluate(isolate_);
       }
     }
-    return nullptr;
-  }
 
-  shared_ptr<DOMModule> DOMScriptingContext::getModuleFromUrl(const string &url)
-  {
-    auto it = urlToModuleMap.find(url);
-    if (it != urlToModuleMap.end())
-      return it->second;
-    else
-      return nullptr;
-  }
-
-  bool DOMScriptingContext::updateImportMapFromJSON(const string &json)
-  {
-    rapidjson::Document importMapDocument;
-    importMapDocument.Parse(json.c_str());
-    if (importMapDocument.HasParseError())
-      return false;
-
-    if (importMapDocument.IsObject())
+    shared_ptr<DOMModule> DOMScriptingContext::getModuleFromV8(Local<Module> module)
     {
-      if (importMapDocument.HasMember("imports"))
+      auto range = hashToModuleMap.equal_range(module->GetIdentityHash());
+      for (auto it = range.first; it != range.second; ++it)
       {
-        auto imports = importMapDocument["imports"].GetObject();
-        for (auto it = imports.MemberBegin(); it != imports.MemberEnd(); ++it)
+        if (it->second->moduleStore.Get(isolate_) == module)
         {
-          string key = it->name.GetString();
-          string value = it->value.GetString();
-          // check the key ends with "/"
+          return it->second;
+        }
+      }
+      return nullptr;
+    }
 
-          if (key.back() == '/')
+    shared_ptr<DOMModule> DOMScriptingContext::getModuleFromUrl(const string &url)
+    {
+      auto it = urlToModuleMap.find(url);
+      if (it != urlToModuleMap.end())
+        return it->second;
+      else
+        return nullptr;
+    }
+
+    bool DOMScriptingContext::updateImportMapFromJSON(const string &json)
+    {
+      rapidjson::Document importMapDocument;
+      importMapDocument.Parse(json.c_str());
+      if (importMapDocument.HasParseError())
+        return false;
+
+      if (importMapDocument.IsObject())
+      {
+        if (importMapDocument.HasMember("imports"))
+        {
+          auto imports = importMapDocument["imports"].GetObject();
+          for (auto it = imports.MemberBegin(); it != imports.MemberEnd(); ++it)
           {
-            /**
+            string key = it->name.GetString();
+            string value = it->value.GetString();
+            // check the key ends with "/"
+
+            if (key.back() == '/')
+            {
+              /**
              * Only the key and value are both end with "/", it is a prefix match.
              *
              * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
              */
-            if (value.back() == '/')
+              if (value.back() == '/')
+              {
+                importPrefixMap.insert({key, value});
+              }
+            }
+            else
             {
-              importPrefixMap.insert({key, value});
+              importExactMap.insert({key, value});
             }
           }
-          else
-          {
-            importExactMap.insert({key, value});
-          }
+        }
+        // TODO: support "integrity"
+      }
+      return true;
+    }
+
+    optional<string> DOMScriptingContext::exactMatchImportMap(const string &specifier)
+    {
+      if (importExactMap.count(specifier) == 1)
+        return importExactMap[specifier];
+      else
+        return nullopt;
+    }
+
+    optional<string> DOMScriptingContext::prefixMatchImportMap(const string &specifier)
+    {
+      for (auto it = importPrefixMap.begin(); it != importPrefixMap.end(); ++it)
+      {
+        if (specifier.find(it->first) == 0)
+        {
+          auto prefix = it->second;
+          return prefix + specifier.substr(it->first.length());
         }
       }
-      // TODO: support "integrity"
-    }
-    return true;
-  }
-
-  optional<string> DOMScriptingContext::exactMatchImportMap(const string &specifier)
-  {
-    if (importExactMap.count(specifier) == 1)
-      return importExactMap[specifier];
-    else
       return nullopt;
-  }
-
-  optional<string> DOMScriptingContext::prefixMatchImportMap(const string &specifier)
-  {
-    for (auto it = importPrefixMap.begin(); it != importPrefixMap.end(); ++it)
-    {
-      if (specifier.find(it->first) == 0)
-      {
-        auto prefix = it->second;
-        return prefix + specifier.substr(it->first.length());
-      }
     }
-    return nullopt;
-  }
 
-  void DOMScriptingContext::tryImportModule(const string &url,
-                                            const bool disableCache,
-                                            function<void(shared_ptr<DOMModule>)> loadedCallback,
-                                            function<void(const string &)> errorCallback)
-  {
-    if (!disableCache)
+    void DOMScriptingContext::tryImportModule(const string &url,
+                                              const bool disableCache,
+                                              function<void(shared_ptr<DOMModule>)> loadedCallback,
+                                              function<void(const string &)> errorCallback)
     {
-      auto module = getModuleFromUrl(url);
-      if (module)
+      if (!disableCache)
       {
-        module->registerLinkedCallback(loadedCallback);
-        return;
-      }
-    }
-    shared_ptr<DOMScript> script = create(runtimeContext, url, SourceTextType::ESM);
-    auto onModuleSourceLoaded = [this, script, loadedCallback](const void *sourceData, size_t sourceByteLength)
-    {
-      auto module = dynamic_pointer_cast<DOMModule>(script);
-      module->registerLinkedCallback(loadedCallback, false /** Do not check for linked */);
-
-      auto extension = crates::UrlHelper::ParseUrlToModuleExtension(module->url);
-      if (extension.isTextSourceModule())
-      {
-        string source(static_cast<const char *>(sourceData), sourceByteLength);
-        compile(script, source, extension.isTypeScript());
-      }
-      else if (
-        extension.isBinary() ||
-        extension.isWebAssembly() ||
-        extension.isAudio() ||
-        extension.isImage())
-      {
-        compileAsSyntheticModule(module, SyntheticModuleType::ArrayBuffer, sourceData, sourceByteLength);
-      }
-      else if (extension.isJson())
-      {
-        compileAsSyntheticModule(module, SyntheticModuleType::JSON, sourceData, sourceByteLength);
-      }
-      else
-      {
-        cerr << "Failed to load the module: " << module->url << ", the extension is not supported." << endl;
-      }
-    };
-    runtimeContext->fetchArrayBufferLikeResource(url, onModuleSourceLoaded);
-  }
-
-  bool DOMScriptingContext::dispatchEvent(Local<Object> event)
-  {
-    assert(isContextInitialized);
-    assert(!v8ContextHandle.IsEmpty());
-
-    auto context = v8ContextHandle.Get(isolate_);
-    Isolate::Scope isolateScope(isolate_);
-    Context::Scope contextScope(context);
-
-    auto eventType = event->Get(context, String::NewFromUtf8(isolate_, "type").ToLocalChecked()).ToLocalChecked();
-    auto eventType_utf8 = String::Utf8Value(isolate_, eventType);
-
-    auto global = context->Global();
-    auto listenerName = "on" + string(*eventType_utf8, eventType_utf8.length());
-
-    auto eventListener = global->Get(context, String::NewFromUtf8(isolate_, listenerName.c_str()).ToLocalChecked());
-    if (!eventListener.IsEmpty() && eventListener.ToLocalChecked()->IsFunction())
-    {
-      TryCatch tryCatch(isolate_);
-      auto function = eventListener.ToLocalChecked().As<Function>();
-      Local<Value> argv[] = {event};
-      Local<Value> result;
-      if (!function->Call(context, global, 1, argv).ToLocal(&result))
-      {
-        if (tryCatch.HasCaught())
+        auto module = getModuleFromUrl(url);
+        if (module)
         {
-          Local<Message> message = tryCatch.Message();
-          String::Utf8Value messageUtf8(isolate_, message->Get());
-          cerr << "Failed to call the event listener: " << listenerName << ", ";
-          cerr << "occurred an error: " << *messageUtf8 << endl;
+          module->registerLinkedCallback(loadedCallback);
+          return;
+        }
+      }
+      shared_ptr<DOMScript> script = create(runtimeContext, url, SourceTextType::ESM);
+      auto onModuleSourceLoaded = [this, script, loadedCallback](const void *sourceData, size_t sourceByteLength)
+      {
+        auto module = dynamic_pointer_cast<DOMModule>(script);
+        module->registerLinkedCallback(loadedCallback, false /** Do not check for linked */);
+
+        auto extension = crates::UrlHelper::ParseUrlToModuleExtension(module->url);
+        if (extension.isTextSourceModule())
+        {
+          string source(static_cast<const char *>(sourceData), sourceByteLength);
+          compile(script, source, extension.isTypeScript());
+        }
+        else if (
+          extension.isBinary() ||
+          extension.isWebAssembly() ||
+          extension.isAudio() ||
+          extension.isImage())
+        {
+          compileAsSyntheticModule(module, SyntheticModuleType::ArrayBuffer, sourceData, sourceByteLength);
+        }
+        else if (extension.isJson())
+        {
+          compileAsSyntheticModule(module, SyntheticModuleType::JSON, sourceData, sourceByteLength);
         }
         else
         {
-          cerr << "Failed to call the event listener: " << listenerName << endl;
+          cerr << "Failed to load the module: " << module->url << ", the extension is not supported." << endl;
+        }
+      };
+      runtimeContext->fetchArrayBufferLikeResource(url, onModuleSourceLoaded);
+    }
+
+    bool DOMScriptingContext::dispatchEvent(Local<Object> event)
+    {
+      assert(isContextInitialized);
+      assert(!v8ContextHandle.IsEmpty());
+
+      auto context = v8ContextHandle.Get(isolate_);
+      Isolate::Scope isolateScope(isolate_);
+      Context::Scope contextScope(context);
+
+      auto eventType = event->Get(context, String::NewFromUtf8(isolate_, "type").ToLocalChecked()).ToLocalChecked();
+      auto eventType_utf8 = String::Utf8Value(isolate_, eventType);
+
+      auto global = context->Global();
+      auto listenerName = "on" + string(*eventType_utf8, eventType_utf8.length());
+
+      auto eventListener = global->Get(context, String::NewFromUtf8(isolate_, listenerName.c_str()).ToLocalChecked());
+      if (!eventListener.IsEmpty() && eventListener.ToLocalChecked()->IsFunction())
+      {
+        TryCatch tryCatch(isolate_);
+        auto function = eventListener.ToLocalChecked().As<Function>();
+        Local<Value> argv[] = {event};
+        Local<Value> result;
+        if (!function->Call(context, global, 1, argv).ToLocal(&result))
+        {
+          if (tryCatch.HasCaught())
+          {
+            Local<Message> message = tryCatch.Message();
+            String::Utf8Value messageUtf8(isolate_, message->Get());
+            cerr << "Failed to call the event listener: " << listenerName << ", ";
+            cerr << "occurred an error: " << *messageUtf8 << endl;
+          }
+          else
+          {
+            cerr << "Failed to call the event listener: " << listenerName << endl;
+          }
         }
       }
-    }
-    // TODO: call dispatchEvent?
-    return true;
-  }
-
-  DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext)
-      : sourceTextType(sourceTextType)
-      , runtimeContext(runtimeContext)
-  {
-    static TrIdGenerator scriptIdGen(0xf9);
-    id = scriptIdGen.get();
-  }
-
-  DOMClassicScript::DOMClassicScript(shared_ptr<RuntimeContext> runtimeContext)
-      : DOMScript(SourceTextType::Classic, runtimeContext)
-  {
-  }
-
-  DOMClassicScript::~DOMClassicScript()
-  {
-    scriptStore.Reset();
-  }
-
-  bool DOMClassicScript::compile(Isolate *isolate, const string &sourceStr, bool isTypeScript)
-  {
-    HandleScope scope(isolate);
-
-    // create the script origin
-    auto urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
-    int lineOffset = 0;
-    int columnOffset = 0;
-
-    Local<PrimitiveArray> hostDefinedOptions = PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, Number::New(isolate, (int)SourceTextType::Classic));
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, Number::New(isolate, id));
-
-    ScriptOrigin origin(isolate,
-                        urlString,
-                        lineOffset,
-                        columnOffset,
-                        crossOrigin,
-                        id,
-                        Local<Value>(),
-                        false,
-                        false,
-                        false,
-                        hostDefinedOptions);
-
-    // Transpile the TypeScript source code if necessary.
-    string scriptSourceString;
-    if (isTypeScript)
-    {
-      try
-      {
-        scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
-      }
-      catch (const exception &e)
-      {
-        cerr << "Failed to compile TypeScript: " << e.what() << endl;
-        return false;
-      }
-    }
-    else
-    {
-      scriptSourceString = sourceStr;
-    }
-
-    // create the script
-    auto sourceString = String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
-    ScriptCompiler::Source source(sourceString, origin);
-
-    // compile the script
-    auto context = isolate->GetCurrentContext();
-    auto maybeScript = ScriptCompiler::Compile(context, &source, ScriptCompiler::kNoCompileOptions);
-
-    Local<Script> script;
-    if (maybeScript.ToLocal(&script))
-    {
-      scriptStore.Reset(isolate, script);
+      // TODO: call dispatchEvent?
       return true;
     }
-    else
+
+    DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext)
+        : sourceTextType(sourceTextType)
+        , runtimeContext(runtimeContext)
     {
-      cerr << "Failed to compile script" << endl;
-      cerr << "  URL: " << url << endl;
-      cerr << "  Source: " << endl;
-      cerr << scriptSourceString << endl;
-      throw runtime_error("Failed to compile script(" + url + ")");
+      static TrIdGenerator scriptIdGen(0xf9);
+      id = scriptIdGen.get();
     }
-  }
 
-  void DOMClassicScript::evaluate(Isolate *isolate)
-  {
-    HandleScope handleScope(isolate);
-    Local<Script> script = scriptStore.Get(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    TryCatch tryCatch(isolate);
-    MaybeLocal<Value> result = script->Run(context);
-
-    if (result.IsEmpty() ||
-        tryCatch.HasCaught())
+    DOMClassicScript::DOMClassicScript(shared_ptr<RuntimeContext> runtimeContext)
+        : DOMScript(SourceTextType::Classic, runtimeContext)
     {
-      cerr << "#" << endl;
-      cerr << "# Failed to execute script" << endl;
-      cerr << "# URL: " << url << endl;
-      cerr << "#" << endl;
+    }
 
-      Local<Message> message = tryCatch.Message();
-      if (!message.IsEmpty())
+    DOMClassicScript::~DOMClassicScript()
+    {
+      scriptStore.Reset();
+    }
+
+    bool DOMClassicScript::compile(Isolate *isolate, const string &sourceStr, bool isTypeScript)
+    {
+      HandleScope scope(isolate);
+
+      // create the script origin
+      auto urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+      int lineOffset = 0;
+      int columnOffset = 0;
+
+      Local<PrimitiveArray> hostDefinedOptions = PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
+      hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, Number::New(isolate, (int)SourceTextType::Classic));
+      hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, Number::New(isolate, id));
+
+      ScriptOrigin origin(isolate,
+                          urlString,
+                          lineOffset,
+                          columnOffset,
+                          crossOrigin,
+                          id,
+                          Local<Value>(),
+                          false,
+                          false,
+                          false,
+                          hostDefinedOptions);
+
+      // Transpile the TypeScript source code if necessary.
+      string scriptSourceString;
+      if (isTypeScript)
       {
-        String::Utf8Value messageUtf8(isolate, message->Get());
-        string messageStr(*messageUtf8, messageUtf8.length());
-        cerr << "# Error: " << messageStr << endl;
-
-        Local<StackTrace> stacktrace = message->GetStackTrace();
-        if (!stacktrace.IsEmpty())
+        try
         {
-          for (int i = 0; i < stacktrace->GetFrameCount(); i++)
+          scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
+        }
+        catch (const exception &e)
+        {
+          cerr << "Failed to compile TypeScript: " << e.what() << endl;
+          return false;
+        }
+      }
+      else
+      {
+        scriptSourceString = sourceStr;
+      }
+
+      // create the script
+      auto sourceString = String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
+      ScriptCompiler::Source source(sourceString, origin);
+
+      // compile the script
+      auto context = isolate->GetCurrentContext();
+      auto maybeScript = ScriptCompiler::Compile(context, &source, ScriptCompiler::kNoCompileOptions);
+
+      Local<Script> script;
+      if (maybeScript.ToLocal(&script))
+      {
+        scriptStore.Reset(isolate, script);
+        return true;
+      }
+      else
+      {
+        cerr << "Failed to compile script" << endl;
+        cerr << "  URL: " << url << endl;
+        cerr << "  Source: " << endl;
+        cerr << scriptSourceString << endl;
+        throw runtime_error("Failed to compile script(" + url + ")");
+      }
+    }
+
+    void DOMClassicScript::evaluate(Isolate *isolate)
+    {
+      HandleScope handleScope(isolate);
+      Local<Script> script = scriptStore.Get(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      TryCatch tryCatch(isolate);
+      MaybeLocal<Value> result = script->Run(context);
+
+      if (result.IsEmpty() ||
+          tryCatch.HasCaught())
+      {
+        cerr << "#" << endl;
+        cerr << "# Failed to execute script" << endl;
+        cerr << "# URL: " << url << endl;
+        cerr << "#" << endl;
+
+        Local<Message> message = tryCatch.Message();
+        if (!message.IsEmpty())
+        {
+          String::Utf8Value messageUtf8(isolate, message->Get());
+          string messageStr(*messageUtf8, messageUtf8.length());
+          cerr << "# Error: " << messageStr << endl;
+
+          Local<StackTrace> stacktrace = message->GetStackTrace();
+          if (!stacktrace.IsEmpty())
           {
-            Local<StackFrame> frame = stacktrace->GetFrame(isolate, i);
-            String::Utf8Value scriptName(isolate, frame->GetScriptName());
-            String::Utf8Value functionName(isolate, frame->GetFunctionName());
-            int lineNumber = frame->GetLineNumber();
-            int column = frame->GetColumn();
-            cerr << "#   at "
-                 << *functionName << " (" << *scriptName << ":" << lineNumber << ":" << column << ")" << endl;
+            for (int i = 0; i < stacktrace->GetFrameCount(); i++)
+            {
+              Local<StackFrame> frame = stacktrace->GetFrame(isolate, i);
+              String::Utf8Value scriptName(isolate, frame->GetScriptName());
+              String::Utf8Value functionName(isolate, frame->GetFunctionName());
+              int lineNumber = frame->GetLineNumber();
+              int column = frame->GetColumn();
+              cerr << "#   at "
+                   << *functionName << " (" << *scriptName << ":" << lineNumber << ":" << column << ")" << endl;
+            }
           }
         }
       }
     }
-  }
 
-  MaybeLocal<Module> DOMModule::ResolveModuleCallback(Local<Context> context,
-                                                      Local<String> specifier,
-                                                      Local<FixedArray> importAssertions,
-                                                      Local<Module> referrer)
-  {
-    Isolate *isolate = context->GetIsolate();
-
-    auto specifier_utf8 = String::Utf8Value(isolate, specifier);
-    string specifierStr(*specifier_utf8, specifier_utf8.length());
-
-    DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
-    if (scriptingContext == nullptr)
+    MaybeLocal<Module> DOMModule::ResolveModuleCallback(Local<Context> context,
+                                                        Local<String> specifier,
+                                                        Local<FixedArray> importAssertions,
+                                                        Local<Module> referrer)
     {
-      cerr << "request for '" << specifierStr << "' failed, scripting context is valid" << endl;
-      return MaybeLocal<Module>();
-    }
+      Isolate *isolate = context->GetIsolate();
 
-    auto dependent = scriptingContext->getModuleFromV8(referrer);
-    if (dependent == nullptr)
-    {
-      cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
-      return MaybeLocal<Module>();
-    }
-    if (dependent->resolveCache.count(specifierStr) != 1)
-    {
-      cerr << "request for '" << specifierStr << "' is not in cache" << endl;
-      return MaybeLocal<Module>();
-    }
+      auto specifier_utf8 = String::Utf8Value(isolate, specifier);
+      string specifierStr(*specifier_utf8, specifier_utf8.length());
 
-    auto module = dependent->resolveCache[specifierStr];
-    auto res = module->moduleStore.Get(isolate);
-    return res;
-  }
-
-  MaybeLocal<Value> DOMModule::SyntheticModuleEvaluationStepsCallback(Local<Context> context,
-                                                                      Local<Module> v8module)
-  {
-    Isolate *isolate = context->GetIsolate();
-    HandleScope handleScope(isolate);
-
-    DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
-    if (scriptingContext == nullptr)
-      return MaybeLocal<Value>();
-
-    shared_ptr<DOMModule> module = scriptingContext->getModuleFromV8(v8module);
-    if (module == nullptr)
-      return MaybeLocal<Value>();
-
-    Local<Promise::Resolver> resolver;
-    if (!Promise::Resolver::New(context).ToLocal(&resolver))
-      return MaybeLocal<Value>();
-
-    auto defaultExportName = String::NewFromUtf8(isolate, "default").ToLocalChecked();
-    USE(v8module->SetSyntheticModuleExport(isolate, defaultExportName, module->getExports(isolate)));
-
-    resolver->Resolve(context, Undefined(isolate)).ToChecked();
-    return resolver->GetPromise();
-  }
-
-  DOMModule::DOMModule(shared_ptr<RuntimeContext> runtimeContext)
-      : DOMScript(SourceTextType::ESM, runtimeContext)
-  {
-  }
-
-  DOMModule::~DOMModule()
-  {
-    moduleStore.Reset();
-  }
-
-  bool DOMModule::compile(Isolate *isolate, const string &sourceStr, bool isTypeScript)
-  {
-    HandleScope scope(isolate);
-
-    // create the script origin
-    auto urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
-    int lineOffset = 0;
-    int columnOffset = 0;
-
-    Local<PrimitiveArray> hostDefinedOptions = PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, Number::New(isolate, (int)SourceTextType::ESM));
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, Number::New(isolate, id));
-
-    ScriptOrigin origin(isolate,
-                        urlString,
-                        lineOffset,
-                        columnOffset,
-                        crossOrigin,
-                        id,
-                        Local<Value>(),
-                        false,
-                        false,
-                        true,
-                        hostDefinedOptions);
-
-    // Transpile the TypeScript source code if necessary.
-    string scriptSourceString;
-    if (isTypeScript)
-    {
-      try
+      DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
+      if (scriptingContext == nullptr)
       {
-        scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
+        cerr << "request for '" << specifierStr << "' failed, scripting context is valid" << endl;
+        return MaybeLocal<Module>();
       }
-      catch (const exception &e)
+
+      auto dependent = scriptingContext->getModuleFromV8(referrer);
+      if (dependent == nullptr)
       {
-        cerr << "Failed to compile TypeScript: " << e.what() << endl;
+        cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
+        return MaybeLocal<Module>();
+      }
+      if (dependent->resolveCache.count(specifierStr) != 1)
+      {
+        cerr << "request for '" << specifierStr << "' is not in cache" << endl;
+        return MaybeLocal<Module>();
+      }
+
+      auto module = dependent->resolveCache[specifierStr];
+      auto res = module->moduleStore.Get(isolate);
+      return res;
+    }
+
+    MaybeLocal<Value> DOMModule::SyntheticModuleEvaluationStepsCallback(Local<Context> context,
+                                                                        Local<Module> v8module)
+    {
+      Isolate *isolate = context->GetIsolate();
+      HandleScope handleScope(isolate);
+
+      DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
+      if (scriptingContext == nullptr)
+        return MaybeLocal<Value>();
+
+      shared_ptr<DOMModule> module = scriptingContext->getModuleFromV8(v8module);
+      if (module == nullptr)
+        return MaybeLocal<Value>();
+
+      Local<Promise::Resolver> resolver;
+      if (!Promise::Resolver::New(context).ToLocal(&resolver))
+        return MaybeLocal<Value>();
+
+      auto defaultExportName = String::NewFromUtf8(isolate, "default").ToLocalChecked();
+      USE(v8module->SetSyntheticModuleExport(isolate, defaultExportName, module->getExports(isolate)));
+
+      resolver->Resolve(context, Undefined(isolate)).ToChecked();
+      return resolver->GetPromise();
+    }
+
+    DOMModule::DOMModule(shared_ptr<RuntimeContext> runtimeContext)
+        : DOMScript(SourceTextType::ESM, runtimeContext)
+    {
+    }
+
+    DOMModule::~DOMModule()
+    {
+      moduleStore.Reset();
+    }
+
+    bool DOMModule::compile(Isolate *isolate, const string &sourceStr, bool isTypeScript)
+    {
+      HandleScope scope(isolate);
+
+      // create the script origin
+      auto urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+      int lineOffset = 0;
+      int columnOffset = 0;
+
+      Local<PrimitiveArray> hostDefinedOptions = PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
+      hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, Number::New(isolate, (int)SourceTextType::ESM));
+      hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, Number::New(isolate, id));
+
+      ScriptOrigin origin(isolate,
+                          urlString,
+                          lineOffset,
+                          columnOffset,
+                          crossOrigin,
+                          id,
+                          Local<Value>(),
+                          false,
+                          false,
+                          true,
+                          hostDefinedOptions);
+
+      // Transpile the TypeScript source code if necessary.
+      string scriptSourceString;
+      if (isTypeScript)
+      {
+        try
+        {
+          scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
+        }
+        catch (const exception &e)
+        {
+          cerr << "Failed to compile TypeScript: " << e.what() << endl;
+          return false;
+        }
+      }
+      else
+      {
+        scriptSourceString = sourceStr;
+      }
+
+      // create the script
+      auto sourceString = String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
+      ScriptCompiler::Source source(sourceString, origin);
+      ScriptCompiler::CompileOptions options = ScriptCompiler::kNoCompileOptions;
+
+      // compile the script
+      Local<Module> module;
+      auto context = isolate->GetCurrentContext();
+
+      if (!ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
+      {
+        cerr << "#" << endl;
+        cerr << "# Occurred module compilation error" << endl;
+        cerr << "# URL: " << url << endl;
+        cerr << "#" << endl;
+        cerr << sourceStr << endl;
         return false;
       }
-    }
-    else
-    {
-      scriptSourceString = sourceStr;
+      else
+      {
+        moduleStore.Reset(isolate, module);
+        return true;
+      }
     }
 
-    // create the script
-    auto sourceString = String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
-    ScriptCompiler::Source source(sourceString, origin);
-    ScriptCompiler::CompileOptions options = ScriptCompiler::kNoCompileOptions;
-
-    // compile the script
-    Local<Module> module;
-    auto context = isolate->GetCurrentContext();
-
-    if (!ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
+    bool DOMModule::compileAsSyntheticModule(Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
     {
-      cerr << "#" << endl;
-      cerr << "# Occurred module compilation error" << endl;
-      cerr << "# URL: " << url << endl;
-      cerr << "#" << endl;
-      cerr << sourceStr << endl;
-      return false;
-    }
-    else
-    {
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      TryCatch tryCatch(isolate);
+      Local<String> urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+      Local<String> defaultExportName = String::NewFromUtf8(isolate, "default").ToLocalChecked();
+
+      switch (type)
+      {
+      case SyntheticModuleType::JSON:
+      {
+        Local<Value> sourceJsonObject;
+        Local<String> sourceString = String::NewFromUtf8(isolate, static_cast<const char *>(sourceData), NewStringType::kNormal, sourceByteLength).ToLocalChecked();
+        if (JSON::Parse(context, sourceString).ToLocal(&sourceJsonObject))
+          syntheticModuleNamespaceStore.Reset(isolate, sourceJsonObject);
+        break;
+      }
+      case SyntheticModuleType::ArrayBuffer:
+      {
+        Local<ArrayBuffer> sourceArrayBuffer = ArrayBuffer::New(isolate, sourceByteLength);
+        memcpy(sourceArrayBuffer->GetBackingStore()->Data(), sourceData, sourceByteLength);
+        syntheticModuleNamespaceStore.Reset(isolate, sourceArrayBuffer.As<Value>());
+        break;
+      }
+      default:
+        break;
+      }
+
+      if (tryCatch.HasCaught())
+      {
+        cerr << "#" << endl;
+        cerr << "# Occurred synthetic module compilation error" << endl;
+        cerr << "# URL: " << url << endl;
+        {
+          // Print the exception message
+          Local<Message> message = tryCatch.Message();
+          String::Utf8Value messageUtf8(isolate, message->Get());
+          string messageStr(*messageUtf8, messageUtf8.length());
+          cerr << "# Error: " << messageStr << endl;
+        }
+        cerr << "#" << endl;
+        return false;
+      }
+
+      Local<Module> module = Module::CreateSyntheticModule(isolate,
+                                                           urlString,
+                                                           {defaultExportName},
+                                                           SyntheticModuleEvaluationStepsCallback);
       moduleStore.Reset(isolate, module);
       return true;
     }
-  }
 
-  bool DOMModule::compileAsSyntheticModule(Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
-  {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    TryCatch tryCatch(isolate);
-    Local<String> urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
-    Local<String> defaultExportName = String::NewFromUtf8(isolate, "default").ToLocalChecked();
-
-    switch (type)
+    void DOMModule::evaluate(Isolate *isolate)
     {
-    case SyntheticModuleType::JSON:
-    {
-      Local<Value> sourceJsonObject;
-      Local<String> sourceString = String::NewFromUtf8(isolate, static_cast<const char *>(sourceData), NewStringType::kNormal, sourceByteLength).ToLocalChecked();
-      if (JSON::Parse(context, sourceString).ToLocal(&sourceJsonObject))
-        syntheticModuleNamespaceStore.Reset(isolate, sourceJsonObject);
-      break;
-    }
-    case SyntheticModuleType::ArrayBuffer:
-    {
-      Local<ArrayBuffer> sourceArrayBuffer = ArrayBuffer::New(isolate, sourceByteLength);
-      memcpy(sourceArrayBuffer->GetBackingStore()->Data(), sourceData, sourceByteLength);
-      syntheticModuleNamespaceStore.Reset(isolate, sourceArrayBuffer.As<Value>());
-      break;
-    }
-    default:
-      break;
-    }
-
-    if (tryCatch.HasCaught())
-    {
-      cerr << "#" << endl;
-      cerr << "# Occurred synthetic module compilation error" << endl;
-      cerr << "# URL: " << url << endl;
+      if (linked)
       {
-        // Print the exception message
-        Local<Message> message = tryCatch.Message();
-        String::Utf8Value messageUtf8(isolate, message->Get());
-        string messageStr(*messageUtf8, messageUtf8.length());
-        cerr << "# Error: " << messageStr << endl;
+        doEvaluate(isolate);
       }
-      cerr << "#" << endl;
-      return false;
+      else
+      {
+        evaluationScheduled = true;
+      }
     }
 
-    Local<Module> module = Module::CreateSyntheticModule(isolate,
-                                                         urlString,
-                                                         {defaultExportName},
-                                                         SyntheticModuleEvaluationStepsCallback);
-    moduleStore.Reset(isolate, module);
-    return true;
-  }
-
-  void DOMModule::evaluate(Isolate *isolate)
-  {
-    if (linked)
+    int DOMModule::getModuleHash()
     {
-      doEvaluate(isolate);
+      assert(!moduleStore.IsEmpty());
+      auto module = moduleStore.Get(Isolate::GetCurrent());
+      return module->GetIdentityHash();
     }
-    else
+
+    string DOMModule::getUrlBySpecifier(const string &specifier)
     {
-      evaluationScheduled = true;
-    }
-  }
-
-  int DOMModule::getModuleHash()
-  {
-    assert(!moduleStore.IsEmpty());
-    auto module = moduleStore.Get(Isolate::GetCurrent());
-    return module->GetIdentityHash();
-  }
-
-  string DOMModule::getUrlBySpecifier(const string &specifier)
-  {
-    /**
+      /**
      * When specifier starts with "http:" or "https:", it is a URL string and should be used directly.
      */
-    if (specifier.find("http:") == 0 || specifier.find("https:") == 0)
-      return specifier;
+      if (specifier.find("http:") == 0 || specifier.find("https:") == 0)
+        return specifier;
 
-    /**
+      /**
      * TODO: support jsr: scheme
      * @see https://jsr.io/docs/api#jsr-registry-api
      */
 
-    string nextSpecifier;
-    auto scriptingContext = runtimeContext.lock()->scriptingContext;
-    auto exactMatchUrl = scriptingContext->exactMatchImportMap(specifier);
-    if (exactMatchUrl.has_value())
-    {
-      nextSpecifier = exactMatchUrl.value();
+      string nextSpecifier;
+      auto scriptingContext = runtimeContext.lock()->scriptingContext;
+      auto exactMatchUrl = scriptingContext->exactMatchImportMap(specifier);
+      if (exactMatchUrl.has_value())
+      {
+        nextSpecifier = exactMatchUrl.value();
+      }
+      else
+      {
+        auto prefixMatchUrl = scriptingContext->prefixMatchImportMap(specifier);
+        if (prefixMatchUrl.has_value())
+          nextSpecifier = prefixMatchUrl.value();
+      }
+
+      if (nextSpecifier.empty())
+        nextSpecifier = specifier;
+      return crates::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
     }
-    else
+
+    void DOMModule::registerLinkedCallback(ModuleLinkedCallback callback, bool checkLinked)
     {
-      auto prefixMatchUrl = scriptingContext->prefixMatchImportMap(specifier);
-      if (prefixMatchUrl.has_value())
-        nextSpecifier = prefixMatchUrl.value();
+      if (checkLinked && linked)
+        callback(dynamic_pointer_cast<DOMModule>(shared_from_this()));
+      else
+        linkedCallbacks.push_back(callback);
     }
 
-    if (nextSpecifier.empty())
-      nextSpecifier = specifier;
-    return crates::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
-  }
-
-  void DOMModule::registerLinkedCallback(ModuleLinkedCallback callback, bool checkLinked)
-  {
-    if (checkLinked && linked)
-      callback(dynamic_pointer_cast<DOMModule>(shared_from_this()));
-    else
-      linkedCallbacks.push_back(callback);
-  }
-
-  Local<Value> DOMModule::getExports(Isolate *isolate)
-  {
-    EscapableHandleScope handleScope(isolate);
-    Local<Module> module = moduleStore.Get(isolate);
-    if (module.IsEmpty())
-      return handleScope.Escape(Undefined(isolate));
-
-    if (module->IsSyntheticModule())
+    Local<Value> DOMModule::getExports(Isolate *isolate)
     {
-      if (syntheticModuleNamespaceStore.IsEmpty())
+      EscapableHandleScope handleScope(isolate);
+      Local<Module> module = moduleStore.Get(isolate);
+      if (module.IsEmpty())
         return handleScope.Escape(Undefined(isolate));
-      else
-        return handleScope.Escape(syntheticModuleNamespaceStore.Get(isolate));
-    }
-    else
-    {
-      auto modNamespace = module->GetModuleNamespace();
-      if (modNamespace.IsEmpty())
-        return handleScope.Escape(Undefined(isolate));
-      else
-        return handleScope.Escape(modNamespace);
-    }
-  }
 
-  void DOMModule::link(Isolate *isolate)
-  {
-    HandleScope scope(isolate);
-    auto module = moduleStore.Get(isolate);
-
-    if (module->IsSyntheticModule()) // Synthetic module should not be linked
-    {
-      onLinkFinished();
-      return;
-    }
-
-    auto v8Context = isolate->GetCurrentContext();
-    auto scriptingContext = runtimeContext.lock()->scriptingContext;
-
-    // Get module requests
-    vector<ModuleRequestInfo> moduleRequestInfos;
-    auto moduleRequests = module->GetModuleRequests();
-    for (int i = 0; i < moduleRequests->Length(); i++)
-    {
-      auto moduleRequest = moduleRequests->Get(v8Context, i).As<ModuleRequest>();
-      auto specifier = moduleRequest->GetSpecifier();
-      string specifier_utf8(*String::Utf8Value(isolate, specifier));
-
-      auto moduleUrl = getUrlBySpecifier(specifier_utf8);
-      if (moduleUrl != "")
-        moduleRequestInfos.push_back({specifier_utf8, moduleUrl});
-    }
-
-    validModuleRequestsCount = moduleRequestInfos.size();
-    if (validModuleRequestsCount == 0)
-    {
-      onLinkFinished();
-    }
-    else
-    {
-      for (auto moduleRequestInfo : moduleRequestInfos)
+      if (module->IsSyntheticModule())
       {
-        auto specifierRef = make_shared<string>(moduleRequestInfo.specifier); // reference to ensure lifetime when callback is called.
-        scriptingContext->tryImportModule(moduleRequestInfo.url, false, [this, specifierRef](shared_ptr<DOMModule> module)
-                                          { handleModuleLoaded(*specifierRef, module); });
-      }
-    }
-  }
-
-  bool DOMModule::instantiate(Isolate *isolate)
-  {
-    HandleScope scope(isolate);
-    Local<Module> module = moduleStore.Get(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-    TryCatch tryCatch(isolate);
-
-    USE(module->InstantiateModule(context, ResolveModuleCallback));
-    resolveCache.clear(); // clear the resolve cache after instantiation, which is used in module initialization.
-
-    if (tryCatch.HasCaught() && !tryCatch.HasTerminated())
-    {
-      assert(tryCatch.Message().IsEmpty() != true);
-      assert(tryCatch.Exception().IsEmpty() != true);
-      auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();
-      if (!stackTrace.IsEmpty())
-      {
-        auto stackTraceString = stackTrace->ToString(context).ToLocalChecked();
-        String::Utf8Value stackTraceUtf8(isolate, stackTraceString);
-        cerr << "#" << endl;
-        cerr << "# Occurred module instantiation error" << endl;
-        cerr << "# URL: " << url << endl;
-        cerr << "# Error:" << *stackTraceUtf8 << endl;
-        cerr << "#" << endl;
-      }
-      return false;
-    }
-    else
-    {
-      return true;
-    }
-  }
-
-  void DOMModule::handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> newModule)
-  {
-    assert(newModule != nullptr);
-    resolveCache.insert({specifier, newModule});
-    validModuleRequestsCount--;
-    checkLinkFinished();
-  }
-
-  void DOMModule::checkLinkFinished()
-  {
-    if (validModuleRequestsCount == 0)
-      onLinkFinished();
-  }
-
-  void DOMModule::onLinkFinished()
-  {
-    if (TR_UNLIKELY(linked))
-      return;
-
-    Isolate *isolate = Isolate::GetCurrent();
-    instantiate(isolate);
-
-    linked = true;
-    if (linkedCallbacks.size() > 0)
-    {
-      auto selfRef = dynamic_pointer_cast<DOMModule>(shared_from_this());
-      for (auto callback : linkedCallbacks)
-        callback(selfRef);
-      linkedCallbacks.clear();
-    }
-
-    if (evaluationScheduled)
-      doEvaluate(isolate);
-  }
-
-  void DOMModule::doEvaluate(Isolate *isolate)
-  {
-    if (evaluatedOnce)
-      return;
-    evaluatedOnce = true;
-
-    HandleScope scope(isolate);
-    Local<Module> module = moduleStore.Get(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (module->IsSyntheticModule()) // Synthetic module should not be evaluated
-      return;
-    if (module->GetStatus() != Module::Status::kInstantiated)
-    {
-      cerr << "Failed to evaluate the module: " << url << ", the module is not instantiated." << endl;
-      return;
-    }
-
-    Local<Value> resultValue;
-    {
-      TryCatch tryCatch(isolate);
-      MaybeLocal<Value> resultMaybeValue = module->Evaluate(context);
-
-      if (resultMaybeValue.IsEmpty() ||
-          tryCatch.HasCaught()) [[unlikely]]
-      {
-        cerr << "#" << endl;
-        cerr << "# Failed to execute module script" << endl;
-        cerr << "# URL: " << url << endl;
-        cerr << "#" << endl;
-        cerr << scripting_base::ReportExceptionToString(isolate, tryCatch.Exception());
+        if (syntheticModuleNamespaceStore.IsEmpty())
+          return handleScope.Escape(Undefined(isolate));
+        else
+          return handleScope.Escape(syntheticModuleNamespaceStore.Get(isolate));
       }
       else
       {
-        resultValue = resultMaybeValue.ToLocalChecked();
-        if (!resultValue->IsPromise())
+        auto modNamespace = module->GetModuleNamespace();
+        if (modNamespace.IsEmpty())
+          return handleScope.Escape(Undefined(isolate));
+        else
+          return handleScope.Escape(modNamespace);
+      }
+    }
+
+    void DOMModule::link(Isolate *isolate)
+    {
+      HandleScope scope(isolate);
+      auto module = moduleStore.Get(isolate);
+
+      if (module->IsSyntheticModule()) // Synthetic module should not be linked
+      {
+        onLinkFinished();
+        return;
+      }
+
+      auto v8Context = isolate->GetCurrentContext();
+      auto scriptingContext = runtimeContext.lock()->scriptingContext;
+
+      // Get module requests
+      vector<ModuleRequestInfo> moduleRequestInfos;
+      auto moduleRequests = module->GetModuleRequests();
+      for (int i = 0; i < moduleRequests->Length(); i++)
+      {
+        auto moduleRequest = moduleRequests->Get(v8Context, i).As<ModuleRequest>();
+        auto specifier = moduleRequest->GetSpecifier();
+        string specifier_utf8(*String::Utf8Value(isolate, specifier));
+
+        auto moduleUrl = getUrlBySpecifier(specifier_utf8);
+        if (moduleUrl != "")
+          moduleRequestInfos.push_back({specifier_utf8, moduleUrl});
+      }
+
+      validModuleRequestsCount = moduleRequestInfos.size();
+      if (validModuleRequestsCount == 0)
+      {
+        onLinkFinished();
+      }
+      else
+      {
+        for (auto moduleRequestInfo : moduleRequestInfos)
         {
-          cerr << "Failed to execute script: the result is not a promise" << endl;
-          return;
+          auto specifierRef = make_shared<string>(moduleRequestInfo.specifier); // reference to ensure lifetime when callback is called.
+          scriptingContext->tryImportModule(moduleRequestInfo.url, false, [this, specifierRef](shared_ptr<DOMModule> module)
+                                            { handleModuleLoaded(*specifierRef, module); });
         }
+      }
+    }
 
-        auto onModuleRejected = [](const FunctionCallbackInfo<Value> &info)
+    bool DOMModule::instantiate(Isolate *isolate)
+    {
+      HandleScope scope(isolate);
+      Local<Module> module = moduleStore.Get(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+      TryCatch tryCatch(isolate);
+
+      USE(module->InstantiateModule(context, ResolveModuleCallback));
+      resolveCache.clear(); // clear the resolve cache after instantiation, which is used in module initialization.
+
+      if (tryCatch.HasCaught() && !tryCatch.HasTerminated())
+      {
+        assert(tryCatch.Message().IsEmpty() != true);
+        assert(tryCatch.Exception().IsEmpty() != true);
+        auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();
+        if (!stackTrace.IsEmpty())
         {
-          Isolate *isolate = info.GetIsolate();
-          HandleScope scope(isolate);
+          auto stackTraceString = stackTrace->ToString(context).ToLocalChecked();
+          String::Utf8Value stackTraceUtf8(isolate, stackTraceString);
+          cerr << "#" << endl;
+          cerr << "# Occurred module instantiation error" << endl;
+          cerr << "# URL: " << url << endl;
+          cerr << "# Error:" << *stackTraceUtf8 << endl;
+          cerr << "#" << endl;
+        }
+        return false;
+      }
+      else
+      {
+        return true;
+      }
+    }
 
-          // TODO(yorkie): report the script info?
-          cerr << "Failed to evaluate the module script: "
-               << scripting_base::ReportExceptionToString(isolate, info[0], "Module evaluation failed")
-               << endl;
-        };
-        Local<Function> rejectCallback = Function::New(context, onModuleRejected).ToLocalChecked();
-        resultValue.As<Promise>()->Catch(context, rejectCallback).ToLocalChecked();
+    void DOMModule::handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> newModule)
+    {
+      assert(newModule != nullptr);
+      resolveCache.insert({specifier, newModule});
+      validModuleRequestsCount--;
+      checkLinkFinished();
+    }
+
+    void DOMModule::checkLinkFinished()
+    {
+      if (validModuleRequestsCount == 0)
+        onLinkFinished();
+    }
+
+    void DOMModule::onLinkFinished()
+    {
+      if (TR_UNLIKELY(linked))
+        return;
+
+      Isolate *isolate = Isolate::GetCurrent();
+      instantiate(isolate);
+
+      linked = true;
+      if (linkedCallbacks.size() > 0)
+      {
+        auto selfRef = dynamic_pointer_cast<DOMModule>(shared_from_this());
+        for (auto callback : linkedCallbacks)
+          callback(selfRef);
+        linkedCallbacks.clear();
+      }
+
+      if (evaluationScheduled)
+        doEvaluate(isolate);
+    }
+
+    void DOMModule::doEvaluate(Isolate *isolate)
+    {
+      if (evaluatedOnce)
+        return;
+      evaluatedOnce = true;
+
+      HandleScope scope(isolate);
+      Local<Module> module = moduleStore.Get(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (module->IsSyntheticModule()) // Synthetic module should not be evaluated
+        return;
+      if (module->GetStatus() != Module::Status::kInstantiated)
+      {
+        cerr << "Failed to evaluate the module: " << url << ", the module is not instantiated." << endl;
+        return;
+      }
+
+      Local<Value> resultValue;
+      {
+        TryCatch tryCatch(isolate);
+        MaybeLocal<Value> resultMaybeValue = module->Evaluate(context);
+
+        if (resultMaybeValue.IsEmpty() ||
+            tryCatch.HasCaught()) [[unlikely]]
+        {
+          cerr << "#" << endl;
+          cerr << "# Failed to execute module script" << endl;
+          cerr << "# URL: " << url << endl;
+          cerr << "#" << endl;
+          cerr << scripting_base::ReportExceptionToString(isolate, tryCatch.Exception());
+        }
+        else
+        {
+          resultValue = resultMaybeValue.ToLocalChecked();
+          if (!resultValue->IsPromise())
+          {
+            cerr << "Failed to execute script: the result is not a promise" << endl;
+            return;
+          }
+
+          auto onModuleRejected = [](const FunctionCallbackInfo<Value> &info)
+          {
+            Isolate *isolate = info.GetIsolate();
+            HandleScope scope(isolate);
+
+            // TODO(yorkie): report the script info?
+            cerr << "Failed to evaluate the module script: "
+                 << scripting_base::ReportExceptionToString(isolate, info[0], "Module evaluation failed")
+                 << endl;
+          };
+          Local<Function> rejectCallback = Function::New(context, onModuleRejected).ToLocalChecked();
+          resultValue.As<Promise>()->Catch(context, rejectCallback).ToLocalChecked();
+        }
       }
     }
   }
-}
+} // namespace endor

@@ -2,32 +2,35 @@
 
 #include <client/inspector/content_cdp_handler.hpp>
 
-namespace client_inspector::domains
+namespace endor
 {
-  // Content-side Runtime domain implementation
-  class CdpRuntimeDomain : public ContentCdpDomainHandler
+  namespace client_inspector::domains
   {
-  public:
-    CdpRuntimeDomain();
-    ~CdpRuntimeDomain() override = default;
-
-    // ContentCdpDomainHandler interface
-    std::string handleMethod(const std::string &method, const CdpMessage &message) override;
-    std::string getDomainName() const override
+    // Content-side Runtime domain implementation
+    class CdpRuntimeDomain : public ContentCdpDomainHandler
     {
-      return "Runtime";
-    }
-    std::string getDomainDescription() const override
-    {
-      return "Content-side Runtime domain";
-    }
+    public:
+      CdpRuntimeDomain();
+      ~CdpRuntimeDomain() override = default;
 
-  private:
-    // Method handlers
-    std::string enable(const CdpMessage &message);
-    std::string disable(const CdpMessage &message);
-    std::string getVersion(const CdpMessage &message);
+      // ContentCdpDomainHandler interface
+      std::string handleMethod(const std::string &method, const CdpMessage &message) override;
+      std::string getDomainName() const override
+      {
+        return "Runtime";
+      }
+      std::string getDomainDescription() const override
+      {
+        return "Content-side Runtime domain";
+      }
 
-    bool enabled_ = false;
-  };
-}
+    private:
+      // Method handlers
+      std::string enable(const CdpMessage &message);
+      std::string disable(const CdpMessage &message);
+      std::string getVersion(const CdpMessage &message);
+
+      bool enabled_ = false;
+    };
+  }
+} // namespace endor

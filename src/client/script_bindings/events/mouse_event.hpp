@@ -8,33 +8,36 @@
 
 #include "./ui_event.hpp"
 
-namespace script_bindings::event_bindings
+namespace endor
 {
-  class MouseEvent;
-  using MouseEventBase = scripting_base::ObjectWrap<MouseEvent, dom::events::MouseEvent, UIEvent>;
+  namespace script_bindings::event_bindings
+  {
+    class MouseEvent;
+    using MouseEventBase = scripting_base::ObjectWrap<MouseEvent, dom::events::MouseEvent, UIEvent>;
 
-  /**
+    /**
    * Event wrapper for V8 objects using scripting_base::ObjectWrap.
    * 
    * This class wraps dom::Event objects for use in V8 JavaScript execution contexts.
    * It provides the standard DOM Event interface including properties like type, bubbles,
    * cancelable and methods like preventDefault().
    */
-  class MouseEvent : public MouseEventBase
-  {
-    using MouseEventBase::ObjectWrap;
-
-  public:
-    static std::string Name()
+    class MouseEvent : public MouseEventBase
     {
-      return "MouseEvent";
-    }
+      using MouseEventBase::ObjectWrap;
 
-    static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                             std::shared_ptr<::dom::events::MouseEvent> nativeEvent);
+    public:
+      static std::string Name()
+      {
+        return "MouseEvent";
+      }
 
-  public:
-    MouseEvent(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-  };
-}
+      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<::endor::dom::events::MouseEvent> nativeEvent);
+
+    public:
+      MouseEvent(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    };
+  }
+} // namespace endor

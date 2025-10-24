@@ -3,66 +3,69 @@
 
 #include "./style_cache.hpp"
 
-namespace client_cssom
+namespace endor
 {
-  using namespace std;
-
-  std::shared_ptr<ComputedStyle> StyleCache::findStyle(shared_ptr<dom::Node> elementOrTextNode) const
+  namespace client_cssom
   {
-    if (TR_UNLIKELY(elementOrTextNode == nullptr))
-      return nullptr;
+    using namespace std;
 
-    auto it = find(elementOrTextNode->uid);
-    if (it != end())
-      return it->second;
-    return nullptr;
-  }
+    std::shared_ptr<ComputedStyle> StyleCache::findStyle(shared_ptr<dom::Node> elementOrTextNode) const
+    {
+      if (TR_UNLIKELY(elementOrTextNode == nullptr))
+        return nullptr;
 
-  shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::Node> elementOrTextNode,
-                                                    bool useElementStyle,
-                                                    bool writeCache)
-  {
-    assert(elementOrTextNode != nullptr);
-
-    shared_ptr<ComputedStyle> newStyle = nullptr;
-    if (elementOrTextNode->isHTMLElement())
-    {
-      auto element = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
-      assert(element != nullptr && "The element must be an HTMLElement");
-      newStyle = make_shared<ComputedStyle>(useElementStyle ? element->style() : element->defaultStyle(),
-                                            values::computed::Context::From(element));
-    }
-    else if (elementOrTextNode->isText())
-    {
-      auto textNode = dynamic_pointer_cast<dom::Text>(elementOrTextNode);
-      newStyle = make_shared<ComputedStyle>(textNode->defaultStyle(),
-                                            values::computed::Context::From(textNode));
-    }
-    else
-    {
-      assert(false && "Only HTMLElement or Text node can be used to create a style.");
+      auto it = find(elementOrTextNode->uid);
+      if (it != end())
+        return it->second;
       return nullptr;
     }
 
-    assert(newStyle != nullptr);
-    if (writeCache)
+    shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::Node> elementOrTextNode,
+                                                      bool useElementStyle,
+                                                      bool writeCache)
     {
-      insert({elementOrTextNode->uid, newStyle});
-    }
-    return newStyle;
-  }
+      assert(elementOrTextNode != nullptr);
 
-  bool StyleCache::resetStyle(shared_ptr<dom::Node> elementOrTextNode)
-  {
-    if (TR_UNLIKELY(elementOrTextNode == nullptr))
+      shared_ptr<ComputedStyle> newStyle = nullptr;
+      if (elementOrTextNode->isHTMLElement())
+      {
+        auto element = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
+        assert(element != nullptr && "The element must be an HTMLElement");
+        newStyle = make_shared<ComputedStyle>(useElementStyle ? element->style() : element->defaultStyle(),
+                                              values::computed::Context::From(element));
+      }
+      else if (elementOrTextNode->isText())
+      {
+        auto textNode = dynamic_pointer_cast<dom::Text>(elementOrTextNode);
+        newStyle = make_shared<ComputedStyle>(textNode->defaultStyle(),
+                                              values::computed::Context::From(textNode));
+      }
+      else
+      {
+        assert(false && "Only HTMLElement or Text node can be used to create a style.");
+        return nullptr;
+      }
+
+      assert(newStyle != nullptr);
+      if (writeCache)
+      {
+        insert({elementOrTextNode->uid, newStyle});
+      }
+      return newStyle;
+    }
+
+    bool StyleCache::resetStyle(shared_ptr<dom::Node> elementOrTextNode)
+    {
+      if (TR_UNLIKELY(elementOrTextNode == nullptr))
+        return false;
+
+      auto it = find(elementOrTextNode->uid);
+      if (it != end())
+      {
+        erase(it);
+        return true;
+      }
       return false;
-
-    auto it = find(elementOrTextNode->uid);
-    if (it != end())
-    {
-      erase(it);
-      return true;
     }
-    return false;
   }
-}
+} // namespace endor

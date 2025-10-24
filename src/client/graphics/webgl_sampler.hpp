@@ -2,14 +2,17 @@
 
 #include "./webgl_object.hpp"
 
-namespace client_graphics
+namespace endor
 {
-  class WebGLSampler : public WebGLObject
+  namespace client_graphics
   {
-  public:
-    WebGLSampler()
-        : WebGLObject(WebGLObjectType::Sampler)
+    class WebGLSampler : public WebGLObject
     {
-    }
-  };
-}
+    public:
+      WebGLSampler()
+          : WebGLObject(WebGLObjectType::Sampler)
+      {
+      }
+    };
+  }
+} // namespace endor

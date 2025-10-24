@@ -16,395 +16,398 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace endor
 {
-  void Window::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings
   {
-    HandleScope handle_scope(isolate);
-    auto context = isolate->GetCurrentContext();
-    auto prototype = tpl->PrototypeTemplate();
-    auto instance = tpl->InstanceTemplate();
-
-    InstanceAccessor(isolate,
-                     instance,
-                     "navigator",
-                     &Window::NavigatorGetter,
-                     nullptr);
-    InstanceAccessor(isolate,
-                     instance,
-                     "location",
-                     &Window::LocationGetter,
-                     &Window::LocationSetter);
-
-    InstanceMethod(isolate, prototype, "fetch", &Window::Fetch);
-    InstanceMethod(isolate, prototype, "alert", &Window::Alert);
-    InstanceMethod(isolate, prototype, "blur", &Window::Blur);
-    InstanceMethod(isolate, prototype, "close", &Window::Close);
-    InstanceMethod(isolate, prototype, "confirm", &Window::Confirm);
-    InstanceMethod(isolate, prototype, "focus", &Window::Focus);
-    InstanceMethod(isolate, prototype, "open", &Window::Open);
-    InstanceMethod(isolate, prototype, "prompt", &Window::Prompt);
-    InstanceMethod(isolate, prototype, "requestAnimationFrame", &Window::RequestAnimationFrame);
-    InstanceMethod(isolate, prototype, "cancelAnimationFrame", &Window::CancelAnimationFrame);
-    InstanceMethod(isolate, prototype, "createImageBitmap", &Window::CreateImageBitmap);
-  }
-
-  Local<ObjectTemplate> Window::GetInstanceTemplate(Isolate *isolate)
-  {
-    return GetFunctionTemplate(isolate)->InstanceTemplate();
-  }
-
-  Local<Object> Window::MakeAndWrap(Isolate *isolate,
-                                    Local<Object> object,
-                                    std::shared_ptr<::browser::Window> nativeWindow)
-  {
-    Window *window = new Window(isolate, nativeWindow);
-    window->onCreated();
-    Wrap(isolate, object, window);
-    return object;
-  }
-
-  Window::Window(Isolate *isolate, std::shared_ptr<::browser::Window> nativeWindow)
-      : WindowBase(isolate)
-  {
-    setData(nativeWindow);
-    assert(handle() != nullptr && "Native Window must not be null.");
-
-    // Start the animation frame provider
-    handle()->startAnimationFrameProvider();
-  }
-
-  Window::Window(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : WindowBase(isolate, args)
-  {
-  }
-
-  void Window::NavigatorGetter(const PropertyCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    Local<Object> navigator = Navigator::GetOrNewInstance(isolate, handle()->navigator());
-    info.GetReturnValue().Set(navigator);
-  }
-
-  void Window::LocationGetter(const PropertyCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    Local<Object> location = Location::GetOrNewInstance(isolate, handle()->location());
-    info.GetReturnValue().Set(location);
-  }
-
-  void Window::LocationSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::TypeError(
-      MakeMethodError(isolate, "location", "Cannot set property location of Window")));
-    return;
-  }
-
-  void Window::Fetch(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    if (info.Length() < 1)
+    void Window::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope handle_scope(isolate);
+      auto context = isolate->GetCurrentContext();
+      auto prototype = tpl->PrototypeTemplate();
+      auto instance = tpl->InstanceTemplate();
+
+      InstanceAccessor(isolate,
+                       instance,
+                       "navigator",
+                       &Window::NavigatorGetter,
+                       nullptr);
+      InstanceAccessor(isolate,
+                       instance,
+                       "location",
+                       &Window::LocationGetter,
+                       &Window::LocationSetter);
+
+      InstanceMethod(isolate, prototype, "fetch", &Window::Fetch);
+      InstanceMethod(isolate, prototype, "alert", &Window::Alert);
+      InstanceMethod(isolate, prototype, "blur", &Window::Blur);
+      InstanceMethod(isolate, prototype, "close", &Window::Close);
+      InstanceMethod(isolate, prototype, "confirm", &Window::Confirm);
+      InstanceMethod(isolate, prototype, "focus", &Window::Focus);
+      InstanceMethod(isolate, prototype, "open", &Window::Open);
+      InstanceMethod(isolate, prototype, "prompt", &Window::Prompt);
+      InstanceMethod(isolate, prototype, "requestAnimationFrame", &Window::RequestAnimationFrame);
+      InstanceMethod(isolate, prototype, "cancelAnimationFrame", &Window::CancelAnimationFrame);
+      InstanceMethod(isolate, prototype, "createImageBitmap", &Window::CreateImageBitmap);
+    }
+
+    Local<ObjectTemplate> Window::GetInstanceTemplate(Isolate *isolate)
+    {
+      return GetFunctionTemplate(isolate)->InstanceTemplate();
+    }
+
+    Local<Object> Window::MakeAndWrap(Isolate *isolate,
+                                      Local<Object> object,
+                                      std::shared_ptr<::endor::browser::Window> nativeWindow)
+    {
+      Window *window = new Window(isolate, nativeWindow);
+      window->onCreated();
+      Wrap(isolate, object, window);
+      return object;
+    }
+
+    Window::Window(Isolate *isolate, std::shared_ptr<::endor::browser::Window> nativeWindow)
+        : WindowBase(isolate)
+    {
+      setData(nativeWindow);
+      assert(handle() != nullptr && "Native Window must not be null.");
+
+      // Start the animation frame provider
+      handle()->startAnimationFrameProvider();
+    }
+
+    Window::Window(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : WindowBase(isolate, args)
+    {
+    }
+
+    void Window::NavigatorGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      Local<Object> navigator = Navigator::GetOrNewInstance(isolate, handle()->navigator());
+      info.GetReturnValue().Set(navigator);
+    }
+
+    void Window::LocationGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      Local<Object> location = Location::GetOrNewInstance(isolate, handle()->location());
+      info.GetReturnValue().Set(location);
+    }
+
+    void Window::LocationSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
       isolate->ThrowException(Exception::TypeError(
-        MakeMethodArgCountError(isolate, "fetch", 1, info.Length())));
+        MakeMethodError(isolate, "location", "Cannot set property location of Window")));
       return;
     }
 
-    assert(handle()->document() != nullptr && "Window must be associated with a Document.");
-    info.GetReturnValue().Set(
-      GlobalFetch::Fetch(handle()->document(), info));
-  }
-
-  void Window::Alert(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1)
+    void Window::Fetch(const FunctionCallbackInfo<Value> &info)
     {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "alert", "1 argument required, but only 0 present.")));
-      return;
-    }
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-    String::Utf8Value message(isolate, info[0]);
-    handle()->alert(*message ? *message : "");
-    info.GetReturnValue().SetNull();
-  }
-
-  void Window::Blur(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::TypeError(
-      MakeMethodError(isolate, "blur", "Not implemented.")));
-    return;
-  }
-
-  void Window::Close(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    handle()->close();
-    info.GetReturnValue().SetNull();
-  }
-
-  void Window::Confirm(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "confirm", "1 argument required, but only 0 present.")));
-      return;
-    }
-
-    String::Utf8Value message(isolate, info[0]);
-    bool result = handle()->confirm(*message ? *message : "");
-    info.GetReturnValue().Set(Boolean::New(isolate, result));
-  }
-
-  void Window::Focus(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::TypeError(
-      MakeMethodError(isolate, "focus", "Not implemented.")));
-    return;
-  }
-
-  void Window::Open(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "open", "1 argument required, but only 0 present.")));
-      return;
-    }
-
-    String::Utf8Value url(isolate, info[0]);
-    browser::WindowTarget target = browser::WindowTarget::Self;
-    if (info.Length() >= 2 && info[1]->IsString())
-    {
-      String::Utf8Value targetValue(isolate, info[1]);
-      string targetStr = *targetValue ? *targetValue : "";
-      if (targetStr == "_self")
-      {
-        target = browser::WindowTarget::Self;
-      }
-      else if (targetStr == "_blank")
-      {
-        target = browser::WindowTarget::Blank;
-      }
-      else if (targetStr == "_blankClassic")
-      {
-        target = browser::WindowTarget::BlankClassic;
-      }
-      else if (targetStr == "_parent")
-      {
-        target = browser::WindowTarget::Parent;
-      }
-      else if (targetStr == "_top")
-      {
-        target = browser::WindowTarget::Top;
-      }
-      else
+      if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "open", ("Invalid target: " + targetStr).c_str())));
+          MakeMethodArgCountError(isolate, "fetch", 1, info.Length())));
         return;
       }
+
+      assert(handle()->document() != nullptr && "Window must be associated with a Document.");
+      info.GetReturnValue().Set(
+        GlobalFetch::Fetch(handle()->document(), info));
     }
 
-    handle()->open(*url ? *url : "", target);
-    info.GetReturnValue().SetNull();
-  }
-
-  void Window::Prompt(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1)
+    void Window::Alert(const FunctionCallbackInfo<Value> &info)
     {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "alert", "1 argument required, but only 0 present.")));
+        return;
+      }
+
+      String::Utf8Value message(isolate, info[0]);
+      handle()->alert(*message ? *message : "");
+      info.GetReturnValue().SetNull();
+    }
+
+    void Window::Blur(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
       isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "prompt", "1 argument required, but only 0 present.")));
+        MakeMethodError(isolate, "blur", "Not implemented.")));
       return;
     }
 
-    String::Utf8Value message(isolate, info[0]);
-    std::string defaultValue = "";
-    if (info.Length() >= 2 && info[1]->IsString())
+    void Window::Close(const FunctionCallbackInfo<Value> &info)
     {
-      String::Utf8Value defaultValueValue(isolate, info[1]);
-      defaultValue = *defaultValueValue ? *defaultValueValue : "";
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      handle()->close();
+      info.GetReturnValue().SetNull();
     }
 
-    handle()->prompt(*message ? *message : "", defaultValue);
-    // TODO(yorkie): Return the actual result from the RPC call.
-    info.GetReturnValue().SetNull();
-  }
-
-  void Window::RequestAnimationFrame(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    Local<Function> callback = info[0].As<Function>();
-    scripting_base::ThreadSafeFunction *tsfn = new scripting_base::ThreadSafeFunction(isolate, info.This(), callback);
-
-    auto frame_callback = [tsfn](uint32_t time)
+    void Window::Confirm(const FunctionCallbackInfo<Value> &info)
     {
-      auto custom_call = [time](Isolate *isolate,
-                                Local<Value> recv,
-                                Local<Function> callback)
-      {
-        HandleScope scope(isolate);
-        Local<Context> context = isolate->GetCurrentContext();
-        Local<Value> argv[] = {Number::New(isolate, time)};
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
 
-        TryCatch try_catch(isolate);
-        auto r = callback->Call(context, recv, 1, argv);
-        if (r.IsEmpty() || try_catch.HasCaught())
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "confirm", "1 argument required, but only 0 present.")));
+        return;
+      }
+
+      String::Utf8Value message(isolate, info[0]);
+      bool result = handle()->confirm(*message ? *message : "");
+      info.GetReturnValue().Set(Boolean::New(isolate, result));
+    }
+
+    void Window::Focus(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "focus", "Not implemented.")));
+      return;
+    }
+
+    void Window::Open(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "open", "1 argument required, but only 0 present.")));
+        return;
+      }
+
+      String::Utf8Value url(isolate, info[0]);
+      browser::WindowTarget target = browser::WindowTarget::Self;
+      if (info.Length() >= 2 && info[1]->IsString())
+      {
+        String::Utf8Value targetValue(isolate, info[1]);
+        string targetStr = *targetValue ? *targetValue : "";
+        if (targetStr == "_self")
         {
-          string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
-          cerr << "Failed to execute frame callback at 'Window': " << message << endl;
+          target = browser::WindowTarget::Self;
+        }
+        else if (targetStr == "_blank")
+        {
+          target = browser::WindowTarget::Blank;
+        }
+        else if (targetStr == "_blankClassic")
+        {
+          target = browser::WindowTarget::BlankClassic;
+        }
+        else if (targetStr == "_parent")
+        {
+          target = browser::WindowTarget::Parent;
+        }
+        else if (targetStr == "_top")
+        {
+          target = browser::WindowTarget::Top;
         }
         else
         {
-          r.ToLocalChecked();
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "open", ("Invalid target: " + targetStr).c_str())));
+          return;
         }
+      }
+
+      handle()->open(*url ? *url : "", target);
+      info.GetReturnValue().SetNull();
+    }
+
+    void Window::Prompt(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "prompt", "1 argument required, but only 0 present.")));
+        return;
+      }
+
+      String::Utf8Value message(isolate, info[0]);
+      std::string defaultValue = "";
+      if (info.Length() >= 2 && info[1]->IsString())
+      {
+        String::Utf8Value defaultValueValue(isolate, info[1]);
+        defaultValue = *defaultValueValue ? *defaultValueValue : "";
+      }
+
+      handle()->prompt(*message ? *message : "", defaultValue);
+      // TODO(yorkie): Return the actual result from the RPC call.
+      info.GetReturnValue().SetNull();
+    }
+
+    void Window::RequestAnimationFrame(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      Local<Function> callback = info[0].As<Function>();
+      scripting_base::ThreadSafeFunction *tsfn = new scripting_base::ThreadSafeFunction(isolate, info.This(), callback);
+
+      auto frame_callback = [tsfn](uint32_t time)
+      {
+        auto custom_call = [time](Isolate *isolate,
+                                  Local<Value> recv,
+                                  Local<Function> callback)
+        {
+          HandleScope scope(isolate);
+          Local<Context> context = isolate->GetCurrentContext();
+          Local<Value> argv[] = {Number::New(isolate, time)};
+
+          TryCatch try_catch(isolate);
+          auto r = callback->Call(context, recv, 1, argv);
+          if (r.IsEmpty() || try_catch.HasCaught())
+          {
+            string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
+            cerr << "Failed to execute frame callback at 'Window': " << message << endl;
+          }
+          else
+          {
+            r.ToLocalChecked();
+          }
+        };
+        tsfn->nonBlockingCall(custom_call);
       };
-      tsfn->nonBlockingCall(custom_call);
-    };
-    auto frame_handle = handle()->requestAnimationFrame(frame_callback);
-    info.GetReturnValue().Set(Integer::New(isolate, frame_handle));
-  }
-
-  void Window::CancelAnimationFrame(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
-      return;
-    }
-    if (!info[0]->IsNumber())
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
-      return;
+      auto frame_handle = handle()->requestAnimationFrame(frame_callback);
+      info.GetReturnValue().Set(Integer::New(isolate, frame_handle));
     }
 
-    uint32_t frame_handle = info[0].As<Number>()->Value();
-    handle()->cancelAnimationFrame(frame_handle);
-  }
-
-  void Window::CreateImageBitmap(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    Local<Context> context = isolate->GetCurrentContext();
-    Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
-    info.GetReturnValue().Set(resolver->GetPromise());
-
-    if (info.Length() < 1)
+    void Window::CancelAnimationFrame(const FunctionCallbackInfo<Value> &info)
     {
-      resolver->Reject(context,
-                       Exception::TypeError(
-                         MakeMethodArgCountError(isolate, "createImageBitmap", 1, info.Length())))
-        .ToChecked();
-      return;
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
+        return;
+      }
+
+      uint32_t frame_handle = info[0].As<Number>()->Value();
+      handle()->cancelAnimationFrame(frame_handle);
     }
 
-    float sx = 0, sy = 0, sw = 0, sh = 0;
-    Local<Object> options = Object::New(isolate);
+    void Window::CreateImageBitmap(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
 
-    if (info.Length() == 2 && info[1]->IsObject())
-    {
-      options = info[1].As<Object>();
-    }
-    else if (info.Length() >= 5)
-    {
-      if (!info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber() || !info[4]->IsNumber())
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+      info.GetReturnValue().Set(resolver->GetPromise());
+
+      if (info.Length() < 1)
       {
         resolver->Reject(context,
                          Exception::TypeError(
-                           MakeMethodError(isolate, "createImageBitmap", "sx, sy, sw, and sh must be numbers.")))
+                           MakeMethodArgCountError(isolate, "createImageBitmap", 1, info.Length())))
           .ToChecked();
         return;
       }
 
-      sx = info[1].As<Number>()->Value();
-      sy = info[2].As<Number>()->Value();
-      sw = info[3].As<Number>()->Value();
-      sh = info[4].As<Number>()->Value();
+      float sx = 0, sy = 0, sw = 0, sh = 0;
+      Local<Object> options = Object::New(isolate);
 
-      if (info.Length() == 6 && info[5]->IsObject())
+      if (info.Length() == 2 && info[1]->IsObject())
       {
-        options = info[5].As<Object>();
+        options = info[1].As<Object>();
+      }
+      else if (info.Length() >= 5)
+      {
+        if (!info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsNumber() || !info[4]->IsNumber())
+        {
+          resolver->Reject(context,
+                           Exception::TypeError(
+                             MakeMethodError(isolate, "createImageBitmap", "sx, sy, sw, and sh must be numbers.")))
+            .ToChecked();
+          return;
+        }
+
+        sx = info[1].As<Number>()->Value();
+        sy = info[2].As<Number>()->Value();
+        sw = info[3].As<Number>()->Value();
+        sh = info[4].As<Number>()->Value();
+
+        if (info.Length() == 6 && info[5]->IsObject())
+        {
+          options = info[5].As<Object>();
+        }
+
+        if (sw == 0 || sh == 0)
+        {
+          resolver->Reject(context,
+                           Exception::RangeError(
+                             MakeMethodError(isolate, "createImageBitmap", "sw and sh must be greater than 0.")))
+            .ToChecked();
+          return;
+        }
       }
 
-      if (sw == 0 || sh == 0)
-      {
-        resolver->Reject(context,
-                         Exception::RangeError(
-                           MakeMethodError(isolate, "createImageBitmap", "sw and sh must be greater than 0.")))
-          .ToChecked();
-        return;
-      }
-    }
+      Local<Value> imageValue = info[0];
+      shared_ptr<canvas::ImageBitmap> imageBitmap;
 
-    Local<Value> imageValue = info[0];
-    shared_ptr<canvas::ImageBitmap> imageBitmap;
-
-    if (fileapi_bindings::Blob::IsInstanceOf(isolate, imageValue))
-    {
-      auto blob = fileapi_bindings::Blob::Unwrap(isolate, imageValue.As<Object>());
-      imageBitmap = canvas::ImageBitmap::CreateImageBitmap(blob->handle(), sx, sy, sw, sh);
-    }
-    else
-    {
-      auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, imageValue);
-      if (imageSource != nullptr)
+      if (fileapi_bindings::Blob::IsInstanceOf(isolate, imageValue))
       {
-        imageBitmap = canvas::ImageBitmap::CreateImageBitmap(imageSource, sx, sy, sw, sh);
+        auto blob = fileapi_bindings::Blob::Unwrap(isolate, imageValue.As<Object>());
+        imageBitmap = canvas::ImageBitmap::CreateImageBitmap(blob->handle(), sx, sy, sw, sh);
       }
       else
       {
-        auto msg = "The first argument must be a Blob or an ImageSource";
-        resolver->Reject(context,
-                         Exception::TypeError(
-                           MakeMethodError(isolate, "createImageBitmap", msg)))
-          .ToChecked();
+        auto imageSource = canvas_bindings::GetImageSourceFromValue(isolate, imageValue);
+        if (imageSource != nullptr)
+        {
+          imageBitmap = canvas::ImageBitmap::CreateImageBitmap(imageSource, sx, sy, sw, sh);
+        }
+        else
+        {
+          auto msg = "The first argument must be a Blob or an ImageSource";
+          resolver->Reject(context,
+                           Exception::TypeError(
+                             MakeMethodError(isolate, "createImageBitmap", msg)))
+            .ToChecked();
+        }
       }
-    }
 
-    assert(imageBitmap != nullptr && "Failed to create ImageBitmap.");
-    resolver->Resolve(context,
-                      canvas_bindings::ImageBitmap::NewInstance(isolate, imageBitmap))
-      .ToChecked();
+      assert(imageBitmap != nullptr && "Failed to create ImageBitmap.");
+      resolver->Resolve(context,
+                        canvas_bindings::ImageBitmap::NewInstance(isolate, imageBitmap))
+        .ToChecked();
+    }
   }
-}
+} // namespace endor

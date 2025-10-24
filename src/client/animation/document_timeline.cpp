@@ -1,19 +1,22 @@
 #include "./document_timeline.hpp"
 
-namespace dom
+namespace endor
 {
-  DocumentTimeline::DocumentTimeline()
-      : AnimationTimeline()
+  namespace dom
   {
-  }
+    DocumentTimeline::DocumentTimeline()
+        : AnimationTimeline()
+    {
+    }
 
-  DocumentTimeline::DocumentTimeline(const DocumentTimeline::DocumentTimelineInit init)
-      : AnimationTimeline()
-  {
-  }
+    DocumentTimeline::DocumentTimeline(const DocumentTimeline::DocumentTimelineInit init)
+        : AnimationTimeline()
+    {
+    }
 
-  void DocumentTimeline::scheduleNextService()
-  {
-    // TODO(yorkie): implement the animation scheduling.
+    void DocumentTimeline::scheduleNextService()
+    {
+      // TODO(yorkie): implement the animation scheduling.
+    }
   }
-}
+} // namespace endor

@@ -7,112 +7,115 @@
 using namespace std;
 using namespace std::chrono;
 
-namespace client_frame
+namespace endor
 {
-  AnimationFrameProvider::AnimationFrameProvider()
+  namespace client_frame
   {
-    auto client_context = TrClientContextPerProcess::Get();
-    event_loop_ = client_context->getScriptingEventLoop();
-    assert(event_loop_ != nullptr && "Failed to start AnimationFrameProvider, event loop is null.");
-
-    tick_handle_.data = this;
-    uv_timer_init(event_loop_, &tick_handle_);
-  }
-
-  AnimationFrameProvider::~AnimationFrameProvider()
-  {
-    if (started_.load())
+    AnimationFrameProvider::AnimationFrameProvider()
     {
-      uv_timer_stop(&tick_handle_);
-      started_ = false;
+      auto client_context = TrClientContextPerProcess::Get();
+      event_loop_ = client_context->getScriptingEventLoop();
+      assert(event_loop_ != nullptr && "Failed to start AnimationFrameProvider, event loop is null.");
+
+      tick_handle_.data = this;
+      uv_timer_init(event_loop_, &tick_handle_);
     }
-  }
 
-  void AnimationFrameProvider::start()
-  {
-    assert(!started_.load() && "AnimationFrameProvider is already started.");
+    AnimationFrameProvider::~AnimationFrameProvider()
     {
-      auto timer_cb = [](uv_timer_t *handle)
+      if (started_.load())
       {
-        auto self = static_cast<AnimationFrameProvider *>(handle->data);
-        self->tick();
-      };
-      uv_timer_start(&tick_handle_, timer_cb, 0, 1);
+        uv_timer_stop(&tick_handle_);
+        started_ = false;
+      }
     }
-    started_ = true;
-  }
 
-  bool AnimationFrameProvider::isStarted() const
-  {
-    return started_.load();
-  }
+    void AnimationFrameProvider::start()
+    {
+      assert(!started_.load() && "AnimationFrameProvider is already started.");
+      {
+        auto timer_cb = [](uv_timer_t *handle)
+        {
+          auto self = static_cast<AnimationFrameProvider *>(handle->data);
+          self->tick();
+        };
+        uv_timer_start(&tick_handle_, timer_cb, 0, 1);
+      }
+      started_ = true;
+    }
+
+    bool AnimationFrameProvider::isStarted() const
+    {
+      return started_.load();
+    }
 
 // TODO(yorkie): use the app frame rate to determine the threshold.
 #define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
-  void AnimationFrameProvider::tick()
-  {
-    if (started_.load() == false) [[unlikely]]
-      return;
-
-    static steady_clock::time_point s_LastFrameTime = steady_clock::now();
-
-    auto current_frame_time = steady_clock::now();
-    auto delta = duration_cast<milliseconds>(current_frame_time - s_LastFrameTime).count();
-    if (delta >= FRAME_TIME_DELTA_THRESHOLD)
+    void AnimationFrameProvider::tick()
     {
-      s_LastFrameTime = current_frame_time;
-      onFrameRequest(duration_cast<milliseconds>(current_frame_time.time_since_epoch()));
-    }
-  }
+      if (started_.load() == false) [[unlikely]]
+        return;
 
-  void AnimationFrameProvider::onFrameRequest(chrono::milliseconds time)
-  {
-    vector<pair<long, AnimationFrameCallback>> pending_callbacks;
-    {
-      unique_lock lock(frame_callbacks_mutex_);
-      pending_callbacks.swap(frame_callbacks_);
-    }
+      static steady_clock::time_point s_LastFrameTime = steady_clock::now();
 
-    for (const auto &[id, callback] : pending_callbacks)
-    {
-      if (callback) [[likely]]
+      auto current_frame_time = steady_clock::now();
+      auto delta = duration_cast<milliseconds>(current_frame_time - s_LastFrameTime).count();
+      if (delta >= FRAME_TIME_DELTA_THRESHOLD)
       {
-        try
+        s_LastFrameTime = current_frame_time;
+        onFrameRequest(duration_cast<milliseconds>(current_frame_time.time_since_epoch()));
+      }
+    }
+
+    void AnimationFrameProvider::onFrameRequest(chrono::milliseconds time)
+    {
+      vector<pair<long, AnimationFrameCallback>> pending_callbacks;
+      {
+        unique_lock lock(frame_callbacks_mutex_);
+        pending_callbacks.swap(frame_callbacks_);
+      }
+
+      for (const auto &[id, callback] : pending_callbacks)
+      {
+        if (callback) [[likely]]
         {
-          callback(static_cast<uint32_t>(time.count()));
-        }
-        catch (const std::exception &e)
-        {
-          // Log the exception but continue executing other callbacks
-          cerr << "Exception in AnimationFrameCallback (id: " << id << "): " << e.what() << endl;
-        }
-        catch (...)
-        {
-          // Catch any other types of exceptions
-          cerr << "Unknown exception in AnimationFrameCallback (id: " << id << ")" << endl;
+          try
+          {
+            callback(static_cast<uint32_t>(time.count()));
+          }
+          catch (const std::exception &e)
+          {
+            // Log the exception but continue executing other callbacks
+            cerr << "Exception in AnimationFrameCallback (id: " << id << "): " << e.what() << endl;
+          }
+          catch (...)
+          {
+            // Catch any other types of exceptions
+            cerr << "Unknown exception in AnimationFrameCallback (id: " << id << ")" << endl;
+          }
         }
       }
     }
-  }
 
-  long AnimationFrameProvider::requestAnimationFrame(AnimationFrameCallback callback)
-  {
-    static TrIdGeneratorBase<long> s_CallbackIdGen(0x1);
-    unique_lock lock(frame_callbacks_mutex_);
+    long AnimationFrameProvider::requestAnimationFrame(AnimationFrameCallback callback)
+    {
+      static TrIdGeneratorBase<long> s_CallbackIdGen(0x1);
+      unique_lock lock(frame_callbacks_mutex_);
 
-    long id = s_CallbackIdGen.get();
-    frame_callbacks_.emplace_back(id, callback);
-    return id;
-  }
+      long id = s_CallbackIdGen.get();
+      frame_callbacks_.emplace_back(id, callback);
+      return id;
+    }
 
-  void AnimationFrameProvider::cancelAnimationFrame(long id)
-  {
-    unique_lock lock(frame_callbacks_mutex_);
-    frame_callbacks_.erase(
-      remove_if(frame_callbacks_.begin(),
-                frame_callbacks_.end(),
-                [id](const pair<long, AnimationFrameCallback> &item)
-                { return item.first == id; }),
-      frame_callbacks_.end());
+    void AnimationFrameProvider::cancelAnimationFrame(long id)
+    {
+      unique_lock lock(frame_callbacks_mutex_);
+      frame_callbacks_.erase(
+        remove_if(frame_callbacks_.begin(),
+                  frame_callbacks_.end(),
+                  [id](const pair<long, AnimationFrameCallback> &item)
+                  { return item.first == id; }),
+        frame_callbacks_.end());
+    }
   }
-}
+} // namespace endor

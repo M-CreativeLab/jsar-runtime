@@ -5,29 +5,32 @@
 #include <client/html/html_html_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLHtmlElement;
-    using HTMLHtmlElementBase = scripting_base::ObjectWrap<HTMLHtmlElement, dom::HTMLHtmlElement, HTMLElement>;
-
-    class HTMLHtmlElement : public HTMLHtmlElementBase
+    namespace html_bindings
     {
-      using HTMLHtmlElementBase::ObjectWrap;
+      class HTMLHtmlElement;
+      using HTMLHtmlElementBase = scripting_base::ObjectWrap<HTMLHtmlElement, dom::HTMLHtmlElement, HTMLElement>;
 
-    public:
-      /**
+      class HTMLHtmlElement : public HTMLHtmlElementBase
+      {
+        using HTMLHtmlElementBase::ObjectWrap;
+
+      public:
+        /**
        * The name of the HTMLHtmlElement class for V8.
        */
-      static std::string Name()
-      {
-        return "HTMLHtmlElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static std::string Name()
+        {
+          return "HTMLHtmlElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    public:
-      HTMLHtmlElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        HTMLHtmlElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

@@ -1,7 +1,10 @@
 #pragma once
 
-namespace browser
+namespace endor
 {
-  class Window;
-  class Location;
-}
+  namespace browser
+  {
+    class Window;
+    class Location;
+  }
+} // namespace endor

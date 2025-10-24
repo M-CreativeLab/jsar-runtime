@@ -9,25 +9,28 @@
 #include "../css_rule.hpp"
 #include "../css_style_declaration.hpp"
 
-namespace client_cssom::rules
+namespace endor
 {
-  class CSSMediaRule : public CSSConditionRule
+  namespace client_cssom::rules
   {
-    using CSSConditionRule::CSSConditionRule;
-
-  public:
-    CSSMediaRule(crates::css2::stylesheets::MediaRule &inner)
-        : CSSConditionRule()
+    class CSSMediaRule : public CSSConditionRule
     {
-    }
+      using CSSConditionRule::CSSConditionRule;
 
-  public:
-    const MediaList &media() const
-    {
-      return *media_;
-    }
+    public:
+      CSSMediaRule(crates::css2::stylesheets::MediaRule &inner)
+          : CSSConditionRule()
+      {
+      }
 
-  private:
-    std::unique_ptr<MediaList> media_;
-  };
-}
+    public:
+      const MediaList &media() const
+      {
+        return *media_;
+      }
+
+    private:
+      std::unique_ptr<MediaList> media_;
+    };
+  }
+} // namespace endor

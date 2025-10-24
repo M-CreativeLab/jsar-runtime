@@ -3,35 +3,38 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace canvas_bindings
+  namespace script_bindings
   {
-    class HTMLRenderingContext;
-    using HTMLRenderingContextBase = scripting_base::ObjectWrap<HTMLRenderingContext>;
-
-    class HTMLRenderingContext : public HTMLRenderingContextBase
+    namespace canvas_bindings
     {
-      using HTMLRenderingContextBase::ObjectWrap;
+      class HTMLRenderingContext;
+      using HTMLRenderingContextBase = scripting_base::ObjectWrap<HTMLRenderingContext>;
 
-    public:
-      static std::string Name()
+      class HTMLRenderingContext : public HTMLRenderingContextBase
       {
-        return "HTMLRenderingContext";
-      }
+        using HTMLRenderingContextBase::ObjectWrap;
 
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate);
+      public:
+        static std::string Name()
+        {
+          return "HTMLRenderingContext";
+        }
 
-    public:
-      HTMLRenderingContext(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate);
 
-    private:
-      // Property getters
-      void CanvasGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      public:
+        HTMLRenderingContext(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
-      // Methods
-      void GetContextAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);
-    };
+      private:
+        // Property getters
+        void CanvasGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+
+        // Methods
+        void GetContextAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);
+      };
+    }
   }
-}
+} // namespace endor

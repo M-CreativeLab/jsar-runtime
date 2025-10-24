@@ -10,47 +10,49 @@
 #include "./renderer/render_pass.hpp"
 #include "./renderer/scene_renderer.hpp"
 
-namespace builtin_scene
+namespace endor
 {
-  class RenderStartupSystem final : public ecs::System
+  namespace builtin_scene
   {
-    using ecs::System::System;
-
-  public:
-    const std::string name() const override
+    class RenderStartupSystem final : public ecs::System
     {
-      return "RenderStartupSystem";
-    }
-    void onExecute() override;
-  };
+      using ecs::System::System;
 
-  class RenderSystem final : public ecs::System
-  {
-    using ecs::System::System;
+    public:
+      const std::string name() const override
+      {
+        return "RenderStartupSystem";
+      }
+      void onExecute() override;
+    };
 
-  public:
-    const std::string name() const override
+    class RenderSystem final : public ecs::System
     {
-      return "RenderSystem";
-    }
-    void onExecute() override;
+      using ecs::System::System;
 
-  private:
-    /**
+    public:
+      const std::string name() const override
+      {
+        return "RenderSystem";
+      }
+      void onExecute() override;
+
+    private:
+      /**
      * Render the scene with the given renderer.
      *
      * @param renderTarget The XR render target.
      */
-    void render(std::optional<XRRenderTarget> renderTarget = std::nullopt);
-    /**
+      void render(std::optional<XRRenderTarget> renderTarget = std::nullopt);
+      /**
      * Render objects and instances in the given render pass.
      * 
      * @param roots The root entities to traverse and render.
      * @param renderPass The render pass to use, which can be used to filter the objects or instances to render.
      * @param renderTarget The XR render target to draw to.
      */
-    void renderPass(vector<ecs::EntityId> &roots, RenderPass, optional<XRRenderTarget>);
-    /**
+      void renderPass(vector<ecs::EntityId> &roots, RenderPass, optional<XRRenderTarget>);
+      /**
      * Render the mesh with the given renderer.
      *
      * @param entity The entity to render.
@@ -59,26 +61,27 @@ namespace builtin_scene
      * @param renderPass The render pass to use, which can be used to filter the objects or instances to render.
      * @param renderTarget The XR render target.
      */
-    void renderMesh(const ecs::EntityId &,
-                    std::shared_ptr<Mesh3d>,
-                    std::shared_ptr<MeshMaterial3d>,
-                    const RenderPass,
-                    std::optional<XRRenderTarget>);
+      void renderMesh(const ecs::EntityId &,
+                      std::shared_ptr<Mesh3d>,
+                      std::shared_ptr<MeshMaterial3d>,
+                      const RenderPass,
+                      std::optional<XRRenderTarget>);
 
-    void onBeforeRender(const RenderPass, std::optional<XRRenderTarget>);
-    void onAfterRender(const RenderPass, std::optional<XRRenderTarget>);
+      void onBeforeRender(const RenderPass, std::optional<XRRenderTarget>);
+      void onAfterRender(const RenderPass, std::optional<XRRenderTarget>);
 
-    // Traverse the entity hierarchy in pre-order and execute the given function for each entity.
-    void traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&);
-    size_t traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget>);
+      // Traverse the entity hierarchy in pre-order and execute the given function for each entity.
+      void traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&);
+      size_t traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget>);
 
-    glm::mat4 getTransformationMatrix(ecs::EntityId);
-    void updateInstancedMeshData(const Mesh3d &, std::optional<XRRenderTarget>);
+      glm::mat4 getTransformationMatrix(ecs::EntityId);
+      void updateInstancedMeshData(const Mesh3d &, std::optional<XRRenderTarget>);
 
-  private:
-    std::shared_ptr<SceneRenderer> renderer_ = nullptr;
-    std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
-  };
+    private:
+      std::shared_ptr<SceneRenderer> renderer_ = nullptr;
+      std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
+    };
 
 
-}
+  }
+} // namespace endor

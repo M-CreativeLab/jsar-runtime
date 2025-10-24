@@ -1,18 +1,21 @@
 #include "./css_animation.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  void CSSAnimation::clearOwningElement()
+  namespace dom
   {
-    owning_element_.reset();
-  }
+    using namespace std;
 
-  shared_ptr<Element> CSSAnimation::owningElement() const
-  {
-    if (owning_element_.expired())
-      return nullptr;
-    return owning_element_.lock();
+    void CSSAnimation::clearOwningElement()
+    {
+      owning_element_.reset();
+    }
+
+    shared_ptr<Element> CSSAnimation::owningElement() const
+    {
+      if (owning_element_.expired())
+        return nullptr;
+      return owning_element_.lock();
+    }
   }
-}
+} // namespace endor

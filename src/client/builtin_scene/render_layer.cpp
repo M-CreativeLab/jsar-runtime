@@ -1,5 +1,8 @@
 #include "./render_layer.hpp"
 
-namespace builtin_scene
+namespace endor
 {
-}
+  namespace builtin_scene
+  {
+  }
+} // namespace endor

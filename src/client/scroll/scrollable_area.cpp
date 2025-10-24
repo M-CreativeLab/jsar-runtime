@@ -7,98 +7,101 @@
 
 #include "./scrollable_area.hpp"
 
-namespace client_scroll
+namespace endor
 {
-  using namespace std;
-  using namespace transmute::common;
-  using namespace client_layout;
-
-  ScrollableArea::ScrollableArea()
-      : scroll_origin_(0.0f, 0.0f, 0.0f)
-      , scroll_offset_(0.0f, 0.0f, 0.0f)
+  namespace client_scroll
   {
-  }
+    using namespace std;
+    using namespace transmute::common;
+    using namespace client_layout;
 
-  glm::vec3 ScrollableArea::scrollOrigin() const
-  {
-    return scroll_origin_;
-  }
-
-  float ScrollableArea::scrollWidth() const
-  {
-    return overflow_rect_ ? overflow_rect_->x : 0;
-  }
-
-  float ScrollableArea::scrollHeight() const
-  {
-    return overflow_rect_ ? overflow_rect_->y : 0;
-  }
-
-  glm::vec3 ScrollableArea::getScrollOffset() const
-  {
-    return scroll_offset_;
-  }
-
-  bool ScrollableArea::scrollTo(const glm::vec3 &offset)
-  {
-    if (!overflow_rect_.has_value())
+    ScrollableArea::ScrollableArea()
+        : scroll_origin_(0.0f, 0.0f, 0.0f)
+        , scroll_offset_(0.0f, 0.0f, 0.0f)
     {
-      cerr << "Skipping scrollTo() because overflow_rect_ is not set." << endl;
-      return false;
     }
 
-    // Optimize scroll bounds checking with early exit and clamping
-    glm::vec3 new_offset = offset;
-
-    // Clamp horizontal scroll
-    if (overflow_rect_->x > scroll_origin_.x)
+    glm::vec3 ScrollableArea::scrollOrigin() const
     {
-      float max_scroll_x = overflow_rect_->x - scroll_origin_.x;
-      new_offset.x = clamp(offset.x, -max_scroll_x, 0.0f);
-    }
-    else
-    {
-      new_offset.x = 0.0f;
+      return scroll_origin_;
     }
 
-    // Clamp vertical scroll (note: negative values for upward scroll)
-    if (overflow_rect_->y > scroll_origin_.y)
+    float ScrollableArea::scrollWidth() const
     {
-      float max_scroll_y = overflow_rect_->y - scroll_origin_.y;
-      new_offset.y = clamp(offset.y, -max_scroll_y, 0.0f);
-    }
-    else
-    {
-      new_offset.y = 0.0f;
+      return overflow_rect_ ? overflow_rect_->x : 0;
     }
 
-    // Only update if the offset actually changed
-    if (new_offset != scroll_offset_)
+    float ScrollableArea::scrollHeight() const
     {
-      scroll_offset_ = new_offset;
-      return true;
+      return overflow_rect_ ? overflow_rect_->y : 0;
     }
-    else
+
+    glm::vec3 ScrollableArea::getScrollOffset() const
     {
-      return false;
+      return scroll_offset_;
+    }
+
+    bool ScrollableArea::scrollTo(const glm::vec3 &offset)
+    {
+      if (!overflow_rect_.has_value())
+      {
+        cerr << "Skipping scrollTo() because overflow_rect_ is not set." << endl;
+        return false;
+      }
+
+      // Optimize scroll bounds checking with early exit and clamping
+      glm::vec3 new_offset = offset;
+
+      // Clamp horizontal scroll
+      if (overflow_rect_->x > scroll_origin_.x)
+      {
+        float max_scroll_x = overflow_rect_->x - scroll_origin_.x;
+        new_offset.x = clamp(offset.x, -max_scroll_x, 0.0f);
+      }
+      else
+      {
+        new_offset.x = 0.0f;
+      }
+
+      // Clamp vertical scroll (note: negative values for upward scroll)
+      if (overflow_rect_->y > scroll_origin_.y)
+      {
+        float max_scroll_y = overflow_rect_->y - scroll_origin_.y;
+        new_offset.y = clamp(offset.y, -max_scroll_y, 0.0f);
+      }
+      else
+      {
+        new_offset.y = 0.0f;
+      }
+
+      // Only update if the offset actually changed
+      if (new_offset != scroll_offset_)
+      {
+        scroll_offset_ = new_offset;
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+    void ScrollableArea::updateAfterLayout(const Fragment &fragment)
+    {
+      scroll_origin_ = fragment.size();
+      overflow_rect_ = fragment.contentSize();
+    }
+
+    ostream &operator<<(ostream &os, const ScrollableArea &scrollable_area)
+    {
+      os << "ScrollableArea(origin=" << glm::to_string(scrollable_area.scroll_origin_)
+         << ", offset=" << glm::to_string(scrollable_area.scroll_offset_);
+      if (scrollable_area.overflow_rect_.has_value())
+        os << ", overflow=" << glm::to_string(scrollable_area.overflow_rect_.value());
+      else
+        os << ", overflow=null";
+      os << ")";
+      return os;
     }
   }
-
-  void ScrollableArea::updateAfterLayout(const Fragment &fragment)
-  {
-    scroll_origin_ = fragment.size();
-    overflow_rect_ = fragment.contentSize();
-  }
-
-  ostream &operator<<(ostream &os, const ScrollableArea &scrollable_area)
-  {
-    os << "ScrollableArea(origin=" << glm::to_string(scrollable_area.scroll_origin_)
-       << ", offset=" << glm::to_string(scrollable_area.scroll_offset_);
-    if (scrollable_area.overflow_rect_.has_value())
-      os << ", overflow=" << glm::to_string(scrollable_area.overflow_rect_.value());
-    else
-      os << ", overflow=null";
-    os << ")";
-    return os;
-  }
-}
+} // namespace endor

@@ -18,94 +18,96 @@
 #include "./texture_altas.hpp"
 #include "./text/sdf/generator.hpp"
 
-namespace builtin_scene
+namespace endor
 {
-  namespace web_renderer
+  namespace builtin_scene
   {
-    class InitSystem;
-    class RenderBaseSystem;
-    class RenderBackgroundSystem;
-    class RenderImageSystem;
-    class RenderTextSystem;
-    class UpdateTextureSystem;
-  }
-
-  struct WebContentFontStyle
-  {
-    SkFontStyle::Slant slant;
-    SkFontStyle::Weight weight;
-    SkFontStyle::Width width;
-  };
-
-  class WebContentTextStyle
-  {
-  public:
-    WebContentTextStyle();
-
-  public:
-    SkColor color;
-    std::optional<SkColor> foregroundColor;
-    std::optional<SkColor> backgroundColor;
-    uint8_t decoration;
-    SkScalar decorationThickness;
-    SkColor decorationColor;
-    WebContentFontStyle fontStyle;
-    std::vector<SkString> fontFamilies;
-    SkScalar fontSize;
-    std::optional<SkScalar> letterSpacing;
-    std::optional<SkScalar> wordSpacing;
-
-    friend std::ostream &operator<<(std::ostream &os, const WebContentTextStyle &style)
+    namespace web_renderer
     {
-      std::string foreground_display = style.foregroundColor.has_value()
-                                         ? std::to_string(style.foregroundColor.value())
-                                         : "null";
-      std::string background_display = style.backgroundColor.has_value()
-                                         ? std::to_string(style.backgroundColor.value())
-                                         : "null";
-
-      os << "WebContentTextStyle { " << std::endl
-         << "       color: " << style.color << std::endl
-         << "  foreground: " << foreground_display << std::endl
-         << "  background: " << background_display << std::endl
-         << "  decoration: " << static_cast<int>(style.decoration) << std::endl
-         << "   font-size: " << style.fontSize << std::endl
-         << "  font-style: " << style.fontStyle.slant << std::endl
-         << "}";
-      return os;
+      class InitSystem;
+      class RenderBaseSystem;
+      class RenderBackgroundSystem;
+      class RenderImageSystem;
+      class RenderTextSystem;
+      class UpdateTextureSystem;
     }
-  };
 
-  class WebContentStyle
-  {
-  public:
-    WebContentStyle();
+    struct WebContentFontStyle
+    {
+      SkFontStyle::Slant slant;
+      SkFontStyle::Weight weight;
+      SkFontStyle::Width width;
+    };
 
-  public:
-    bool disableHinting;
-    size_t maxLines;
-    skia::textlayout::TextAlign textAlign;
-    skia::textlayout::TextDirection textDirection;
-    skia::textlayout::TextHeightBehavior textHeightBehavior;
-    WebContentTextStyle textStyle;
-    SkScalar lineHeight;
-    bool useFixedLineHeight;
-    bool halfLeading;
-    SkScalar leading;
-    bool strutEnabled;
-    bool forceStrutHeight;
-    bool applyRoundingHack;
-  };
+    class WebContentTextStyle
+    {
+    public:
+      WebContentTextStyle();
 
-  class WebContent : public ecs::Component
-  {
-    friend class web_renderer::RenderBackgroundSystem;
-    friend class web_renderer::RenderImageSystem;
-    friend class web_renderer::RenderTextSystem;
-    friend class web_renderer::UpdateTextureSystem;
+    public:
+      SkColor color;
+      std::optional<SkColor> foregroundColor;
+      std::optional<SkColor> backgroundColor;
+      uint8_t decoration;
+      SkScalar decorationThickness;
+      SkColor decorationColor;
+      WebContentFontStyle fontStyle;
+      std::vector<SkString> fontFamilies;
+      SkScalar fontSize;
+      std::optional<SkScalar> letterSpacing;
+      std::optional<SkScalar> wordSpacing;
 
-  public:
-    /**
+      friend std::ostream &operator<<(std::ostream &os, const WebContentTextStyle &style)
+      {
+        std::string foreground_display = style.foregroundColor.has_value()
+                                           ? std::to_string(style.foregroundColor.value())
+                                           : "null";
+        std::string background_display = style.backgroundColor.has_value()
+                                           ? std::to_string(style.backgroundColor.value())
+                                           : "null";
+
+        os << "WebContentTextStyle { " << std::endl
+           << "       color: " << style.color << std::endl
+           << "  foreground: " << foreground_display << std::endl
+           << "  background: " << background_display << std::endl
+           << "  decoration: " << static_cast<int>(style.decoration) << std::endl
+           << "   font-size: " << style.fontSize << std::endl
+           << "  font-style: " << style.fontStyle.slant << std::endl
+           << "}";
+        return os;
+      }
+    };
+
+    class WebContentStyle
+    {
+    public:
+      WebContentStyle();
+
+    public:
+      bool disableHinting;
+      size_t maxLines;
+      skia::textlayout::TextAlign textAlign;
+      skia::textlayout::TextDirection textDirection;
+      skia::textlayout::TextHeightBehavior textHeightBehavior;
+      WebContentTextStyle textStyle;
+      SkScalar lineHeight;
+      bool useFixedLineHeight;
+      bool halfLeading;
+      SkScalar leading;
+      bool strutEnabled;
+      bool forceStrutHeight;
+      bool applyRoundingHack;
+    };
+
+    class WebContent : public ecs::Component
+    {
+      friend class web_renderer::RenderBackgroundSystem;
+      friend class web_renderer::RenderImageSystem;
+      friend class web_renderer::RenderTextSystem;
+      friend class web_renderer::UpdateTextureSystem;
+
+    public:
+      /**
      * Construct a new `WebContent` object for rendering the classic web content.
      *
      * @param name The content name.
@@ -113,172 +115,172 @@ namespace builtin_scene
      * @param initialHeight The initial height of the content.
      * @param layer The layer number based on scrollable container hierarchy.
      */
-    WebContent(std::string name, float initialWidth, float initialHeight, int layer = 0);
+      WebContent(std::string name, float initialWidth, float initialHeight, int layer = 0);
 
-  public:
-    /**
+    public:
+      /**
      * The content name.
      */
-    inline const std::string &name() const
-    {
-      return name_;
-    }
+      inline const std::string &name() const
+      {
+        return name_;
+      }
 
-    /**
+      /**
      * Get the current layer number based on scrollable container hierarchy.
      */
-    inline int layer() const
-    {
-      return layer_;
-    }
+      inline int layer() const
+      {
+        return layer_;
+      }
 
-    /**
+      /**
      * Set the layer number.
      */
-    inline void setLayer(int layer)
-    {
-      layer_ = layer;
-    }
+      inline void setLayer(int layer)
+      {
+        layer_ = layer;
+      }
 
-    inline bool isScrollableContainer() const
-    {
-      return is_scrollable_container_;
-    }
-    inline void setIsScrollableContainer(bool value)
-    {
-      is_scrollable_container_ = value;
-    }
-    inline ecs::EntityId belongsToScrollableContainer() const
-    {
-      return belongs_to_scrollable_container_;
-    }
-    inline void setBelongsToScrollableContainer(ecs::EntityId container)
-    {
-      belongs_to_scrollable_container_ = container;
-    }
+      inline bool isScrollableContainer() const
+      {
+        return is_scrollable_container_;
+      }
+      inline void setIsScrollableContainer(bool value)
+      {
+        is_scrollable_container_ = value;
+      }
+      inline ecs::EntityId belongsToScrollableContainer() const
+      {
+        return belongs_to_scrollable_container_;
+      }
+      inline void setBelongsToScrollableContainer(ecs::EntityId container)
+      {
+        belongs_to_scrollable_container_ = container;
+      }
 
-    // Returns if the surface is valid.
-    bool resetSkSurface(float width, float height);
-    SkCanvas *canvas() const;
+      // Returns if the surface is valid.
+      bool resetSkSurface(float width, float height);
+      SkCanvas *canvas() const;
 
-    inline client_cssom::ComputedStyle &style()
-    {
-      return style_;
-    }
-    inline const client_cssom::ComputedStyle &style() const
-    {
-      return style_;
-    }
-    void setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent = nullptr);
+      inline client_cssom::ComputedStyle &style()
+      {
+        return style_;
+      }
+      inline const client_cssom::ComputedStyle &style() const
+      {
+        return style_;
+      }
+      void setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent = nullptr);
 
-    inline const std::optional<client_layout::Fragment> &fragment() const
-    {
-      return last_fragment_;
-    }
-    inline void setFragment(const client_layout::Fragment &fragment)
-    {
-      last_fragment_ = fragment;
-    }
+      inline const std::optional<client_layout::Fragment> &fragment() const
+      {
+        return last_fragment_;
+      }
+      inline void setFragment(const client_layout::Fragment &fragment)
+      {
+        last_fragment_ = fragment;
+      }
 
-    inline float physicalWidth() const
-    {
-      return surface_ == nullptr ? 0.0f : surface_->width();
-    }
-    inline float physicalHeight() const
-    {
-      return surface_ == nullptr ? 0.0f : surface_->height();
-    }
-    inline float logicalWidth() const
-    {
-      return physicalWidth() / device_pixel_ratio_;
-    }
-    inline float logicalHeight() const
-    {
-      return physicalHeight() / device_pixel_ratio_;
-    }
+      inline float physicalWidth() const
+      {
+        return surface_ == nullptr ? 0.0f : surface_->width();
+      }
+      inline float physicalHeight() const
+      {
+        return surface_ == nullptr ? 0.0f : surface_->height();
+      }
+      inline float logicalWidth() const
+      {
+        return physicalWidth() / device_pixel_ratio_;
+      }
+      inline float logicalHeight() const
+      {
+        return physicalHeight() / device_pixel_ratio_;
+      }
 
-    // Check if the surface needs to be resized.
-    bool needsResize(float w, float h) const;
+      // Check if the surface needs to be resized.
+      bool needsResize(float w, float h) const;
 
-    inline glm::vec4 backgroundColor() const
-    {
-      return background_color_;
-    }
-    inline void setBackgroundColor(float r, float g, float b, float a)
-    {
-      background_color_ = glm::vec4(r, g, b, a);
-    }
-    inline void setBackgroundColor(const SkColor4f color)
-    {
-      background_color_ = glm::vec4(color.fR, color.fG, color.fB, color.fA);
-    }
-    inline glm::vec4 borderRadius() const
-    {
-      return border_radius_;
-    }
-    inline void setBorderRadius(float topLeft,
-                                float topRight,
-                                float bottomRight,
-                                float bottomLeft)
-    {
-      border_radius_ = glm::vec4(topLeft, topRight, bottomRight, bottomLeft);
-    }
-    inline void resetBorderRadius()
-    {
-      border_radius_ = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    }
+      inline glm::vec4 backgroundColor() const
+      {
+        return background_color_;
+      }
+      inline void setBackgroundColor(float r, float g, float b, float a)
+      {
+        background_color_ = glm::vec4(r, g, b, a);
+      }
+      inline void setBackgroundColor(const SkColor4f color)
+      {
+        background_color_ = glm::vec4(color.fR, color.fG, color.fB, color.fA);
+      }
+      inline glm::vec4 borderRadius() const
+      {
+        return border_radius_;
+      }
+      inline void setBorderRadius(float topLeft,
+                                  float topRight,
+                                  float bottomRight,
+                                  float bottomLeft)
+      {
+        border_radius_ = glm::vec4(topLeft, topRight, bottomRight, bottomLeft);
+      }
+      inline void resetBorderRadius()
+      {
+        border_radius_ = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+      }
 
-    inline std::shared_ptr<Texture> textureRect() const
-    {
-      return texture_;
-    }
-    inline const Texture &textureRectRef() const
-    {
-      return *texture_;
-    }
+      inline std::shared_ptr<Texture> textureRect() const
+      {
+        return texture_;
+      }
+      inline const Texture &textureRectRef() const
+      {
+        return *texture_;
+      }
 
-    // Spatial image support
-    inline bool isSpatialized() const
-    {
-      return is_spatialized_;
-    }
-    inline void setSpatialized(bool v)
-    {
-      is_spatialized_ = v;
-    }
+      // Spatial image support
+      inline bool isSpatialized() const
+      {
+        return is_spatialized_;
+      }
+      inline void setSpatialized(bool v)
+      {
+        is_spatialized_ = v;
+      }
 
-    // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
-    inline int texturePad() const
-    {
-      return texture_pad_;
-    }
+      // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
+      inline int texturePad() const
+      {
+        return texture_pad_;
+      }
 
-    /**
+      /**
      * Init or resize the texture.
      *
      * @param textureAtlas The texture atlas to create or resize the texture.
      * @returns The texture or `nullptr` if the texture is not used.
      */
-    std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
+      std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
 
-    /**
+      /**
      * Measure the size of the given text with current text style.
      * 
      * @param text The text to measure.
      * @param max_width The maximum width of the text, if the text exceeds the width, it will be wrapped.
      * @returns The size of the text in logical pixels.
      */
-    glm::vec2 measureText(const std::string &text, float max_width) const;
+      glm::vec2 measureText(const std::string &text, float max_width) const;
 
-    inline void setEnabled(bool enabled)
-    {
-      enabled_ = enabled;
-    }
-    inline bool isEnabled() const
-    {
-      return enabled_;
-    }
-    /**
+      inline void setEnabled(bool enabled)
+      {
+        enabled_ = enabled;
+      }
+      inline bool isEnabled() const
+      {
+        return enabled_;
+      }
+      /**
      * Set the web content to use the texture or not.
      *
      * To reduce the texture memory usage, we will leverage simple rendering in GPU directly in some cases, such as: background
@@ -286,384 +288,385 @@ namespace builtin_scene
      *
      * @param value Whether to use the texture.
      */
-    inline void setTextureUsing(bool value)
-    {
-      if (is_texture_using_ != value)
-        is_texture_using_ = value;
-    }
+      inline void setTextureUsing(bool value)
+      {
+        if (is_texture_using_ != value)
+          is_texture_using_ = value;
+      }
 
-    /**
+      /**
      * Set the texture is a signed distance field (SDF) texture or not.
      */
-    inline void setIsSDFTexture(bool value)
-    {
-      if (is_sdf_texture_ != value)
-        is_sdf_texture_ = value;
-    }
+      inline void setIsSDFTexture(bool value)
+      {
+        if (is_sdf_texture_ != value)
+          is_sdf_texture_ = value;
+      }
 
-    /**
+      /**
      * @returns Whether the content uses SDF texture rendering.
      */
-    inline bool isSDFTexture() const
-    {
-      return is_sdf_texture_;
-    }
+      inline bool isSDFTexture() const
+      {
+        return is_sdf_texture_;
+      }
 
-    // Web content must be transparent objects.
-    inline bool isOpaque() const
-    {
-      return false;
-    }
-    inline bool isTransparent() const
-    {
-      return true;
-    }
+      // Web content must be transparent objects.
+      inline bool isOpaque() const
+      {
+        return false;
+      }
+      inline bool isTransparent() const
+      {
+        return true;
+      }
 
-    inline bool isContentDirty() const
-    {
-      return is_content_dirty_;
-    }
-    inline void setContentDirty(bool dirty)
-    {
-      is_content_dirty_ = dirty;
-    }
-    inline bool isSurfaceDirty() const
-    {
-      return is_surface_dirty_;
-    }
-    inline void setSurfaceDirty(bool dirty)
-    {
-      is_surface_dirty_ = dirty;
-    }
+      inline bool isContentDirty() const
+      {
+        return is_content_dirty_;
+      }
+      inline void setContentDirty(bool dirty)
+      {
+        is_content_dirty_ = dirty;
+      }
+      inline bool isSurfaceDirty() const
+      {
+        return is_surface_dirty_;
+      }
+      inline void setSurfaceDirty(bool dirty)
+      {
+        is_surface_dirty_ = dirty;
+      }
 
-    /**
+      /**
      * Get the rounded rectangle representing the border geometry.
      * 
      * @returns The SkRRect containing border radius information.
      */
-    inline const SkRRect &roundedRect() const
-    {
-      return rounded_rect_;
-    }
-
-  public:
-    skia::textlayout::TextStyle textStyle() const;
-    skia::textlayout::StrutStyle structStyle() const;
-    skia::textlayout::ParagraphStyle paragraphStyle() const;
-
-  private:
-    sk_sp<SkSurface> surface_;
-    std::string name_;
-
-    int layer_;
-    bool is_scrollable_container_;
-    ecs::EntityId belongs_to_scrollable_container_;
-
-    client_cssom::ComputedStyle style_;
-    std::optional<client_layout::Fragment> last_fragment_;
-    WebContentStyle content_style_;
-    SkRRect rounded_rect_;
-    glm::vec4 background_color_;
-    glm::vec4 border_radius_;
-
-    std::shared_ptr<Texture> texture_;
-    float device_pixel_ratio_ = 1.0f;
-    int texture_pad_ = 2;
-    bool enabled_ = true;
-    bool is_texture_using_ = false;
-    bool is_visible_ = true;
-    bool is_spatialized_ = false;
-    bool is_sdf_texture_ = false;
-
-    // The flag to indicate if the content is dirty and needs to be rendered to the surface.
-    bool is_content_dirty_ = true;
-    // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
-    bool is_surface_dirty_ = true;
-  };
-
-  class WebContentContext : public ecs::Resource
-  {
-    friend class web_renderer::InitSystem;
-
-  public:
-    ecs::EntityId instancedMeshEntity() const
-    {
-      return instancedMeshEntity_;
-    }
-
-  private:
-    ecs::EntityId instancedMeshEntity_;
-  };
-
-  /**
-   * Systems for rendering Web content: background, boxes, text, etc.
-   */
-  namespace web_renderer
-  {
-    class InitSystem final : public ecs::System
-    {
-      using ecs::System::System;
+      inline const SkRRect &roundedRect() const
+      {
+        return rounded_rect_;
+      }
 
     public:
-      const std::string name() const override
-      {
-        return "web_render.InitSystem";
-      }
-      void onExecute() override;
+      skia::textlayout::TextStyle textStyle() const;
+      skia::textlayout::StrutStyle structStyle() const;
+      skia::textlayout::ParagraphStyle paragraphStyle() const;
+
+    private:
+      sk_sp<SkSurface> surface_;
+      std::string name_;
+
+      int layer_;
+      bool is_scrollable_container_;
+      ecs::EntityId belongs_to_scrollable_container_;
+
+      client_cssom::ComputedStyle style_;
+      std::optional<client_layout::Fragment> last_fragment_;
+      WebContentStyle content_style_;
+      SkRRect rounded_rect_;
+      glm::vec4 background_color_;
+      glm::vec4 border_radius_;
+
+      std::shared_ptr<Texture> texture_;
+      float device_pixel_ratio_ = 1.0f;
+      int texture_pad_ = 2;
+      bool enabled_ = true;
+      bool is_texture_using_ = false;
+      bool is_visible_ = true;
+      bool is_spatialized_ = false;
+      bool is_sdf_texture_ = false;
+
+      // The flag to indicate if the content is dirty and needs to be rendered to the surface.
+      bool is_content_dirty_ = true;
+      // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
+      bool is_surface_dirty_ = true;
     };
 
-    class RenderBaseSystem : public ecs::System
+    class WebContentContext : public ecs::Resource
     {
-      using ecs::System::System;
+      friend class web_renderer::InitSystem;
 
-    protected:
-      /**
+    public:
+      ecs::EntityId instancedMeshEntity() const
+      {
+        return instancedMeshEntity_;
+      }
+
+    private:
+      ecs::EntityId instancedMeshEntity_;
+    };
+
+    /**
+   * Systems for rendering Web content: background, boxes, text, etc.
+   */
+    namespace web_renderer
+    {
+      class InitSystem final : public ecs::System
+      {
+        using ecs::System::System;
+
+      public:
+        const std::string name() const override
+        {
+          return "web_render.InitSystem";
+        }
+        void onExecute() override;
+      };
+
+      class RenderBaseSystem : public ecs::System
+      {
+        using ecs::System::System;
+
+      protected:
+        /**
        * Get the instanced mesh component.
        *
        * @tparam ComponentType The type of the component.
        * @returns The instanced mesh component.
        */
-      template <typename ComponentType>
-      std::shared_ptr<ComponentType> getInstancedMeshComponent()
-      {
-        if (webContentCtx_ == nullptr)
-          webContentCtx_ = getResource<WebContentContext>();
-        assert(webContentCtx_ != nullptr && "The WebContentContext must be valid.");
+        template <typename ComponentType>
+        std::shared_ptr<ComponentType> getInstancedMeshComponent()
+        {
+          if (webContentCtx_ == nullptr)
+            webContentCtx_ = getResource<WebContentContext>();
+          assert(webContentCtx_ != nullptr && "The WebContentContext must be valid.");
 
-        auto entity = webContentCtx_->instancedMeshEntity();
-        return getComponent<ComponentType>(entity);
-      }
-      /**
+          auto entity = webContentCtx_->instancedMeshEntity();
+          return getComponent<ComponentType>(entity);
+        }
+        /**
        * Get the object reference to the instanced mesh's component, it will expect the component to be valid.
        *
        * @tparam ComponentType The type of the component.
        * @returns The object reference to the instanced mesh's component.
        */
-      template <typename ComponentType>
-      ComponentType &getInstancedMeshComponentChecked()
+        template <typename ComponentType>
+        ComponentType &getInstancedMeshComponentChecked()
+        {
+          auto component = getInstancedMeshComponent<ComponentType>();
+          assert(component != nullptr && "The instanced mesh component must be valid.");
+          return *component;
+        }
+
+      private:
+        std::shared_ptr<WebContentContext> webContentCtx_;
+      };
+
+      class RenderContentBaseSystem : public RenderBaseSystem
       {
-        auto component = getInstancedMeshComponent<ComponentType>();
-        assert(component != nullptr && "The instanced mesh component must be valid.");
-        return *component;
-      }
+        using RenderBaseSystem::RenderBaseSystem;
 
-    private:
-      std::shared_ptr<WebContentContext> webContentCtx_;
-    };
+      public:
+        void onExecute() override final;
 
-    class RenderContentBaseSystem : public RenderBaseSystem
-    {
-      using RenderBaseSystem::RenderBaseSystem;
-
-    public:
-      void onExecute() override final;
-
-    protected:
-      /**
+      protected:
+        /**
        * Render the content for the given entity.
        * 
        * @param entity The entity ID to render.
        * @param content The WebContent to render.
        * @returns Whether the surface is written successfully.
        */
-      virtual bool render(ecs::EntityId entity, WebContent &content) = 0;
-    };
+        virtual bool render(ecs::EntityId entity, WebContent &content) = 0;
+      };
 
-    /**
+      /**
      * Render the background.
      *
      * - background
      * - border
      * - radius
      */
-    class RenderBackgroundSystem final : public RenderContentBaseSystem
-    {
-      using RenderContentBaseSystem::RenderContentBaseSystem;
-
-    public:
-      const std::string name() const override
+      class RenderBackgroundSystem final : public RenderContentBaseSystem
       {
-        return "web_render.RenderBackgroundSystem";
-      }
+        using RenderContentBaseSystem::RenderContentBaseSystem;
 
-    private:
-      bool render(ecs::EntityId entity, WebContent &content) override;
-
-    private:
-      // The clipping area for the background, it can be a path or a rounded rectangle.
-      class ClippingArea : public std::variant<std::monostate, SkPath, SkRRect>
-      {
       public:
-        ClippingArea() = default;
-        ClippingArea(const SkPath &path)
-            : std::variant<std::monostate, SkPath, SkRRect>(path)
+        const std::string name() const override
         {
-        }
-        ClippingArea(const SkRRect &rrect)
-            : std::variant<std::monostate, SkPath, SkRRect>(rrect)
-        {
+          return "web_render.RenderBackgroundSystem";
         }
 
-        inline bool isEmpty() const
-        {
-          return std::holds_alternative<std::monostate>(*this);
-        }
-        inline bool isPath() const
-        {
-          return std::holds_alternative<SkPath>(*this);
-        }
-        inline bool isRRect() const
-        {
-          return std::holds_alternative<SkRRect>(*this);
-        }
+      private:
+        bool render(ecs::EntityId entity, WebContent &content) override;
 
-        inline const SkPath &path() const
+      private:
+        // The clipping area for the background, it can be a path or a rounded rectangle.
+        class ClippingArea : public std::variant<std::monostate, SkPath, SkRRect>
         {
-          return std::get<SkPath>(*this);
-        }
-        inline const SkRRect &roundedRect() const
-        {
-          return std::get<SkRRect>(*this);
-        }
-
-        friend std::ostream &operator<<(std::ostream &os, const ClippingArea &area)
-        {
-          if (area.isEmpty())
-            os << "ClippingArea()";
-          else if (area.isPath())
-            os << "ClippingArea(Path)";
-          else if (area.isRRect())
+        public:
+          ClippingArea() = default;
+          ClippingArea(const SkPath &path)
+              : std::variant<std::monostate, SkPath, SkRRect>(path)
           {
-            auto &rrect = area.roundedRect();
-            os << "ClippingArea(" << rrect.width() << "," << rrect.height() << ")";
           }
-          return os;
-        }
+          ClippingArea(const SkRRect &rrect)
+              : std::variant<std::monostate, SkPath, SkRRect>(rrect)
+          {
+          }
+
+          inline bool isEmpty() const
+          {
+            return std::holds_alternative<std::monostate>(*this);
+          }
+          inline bool isPath() const
+          {
+            return std::holds_alternative<SkPath>(*this);
+          }
+          inline bool isRRect() const
+          {
+            return std::holds_alternative<SkRRect>(*this);
+          }
+
+          inline const SkPath &path() const
+          {
+            return std::get<SkPath>(*this);
+          }
+          inline const SkRRect &roundedRect() const
+          {
+            return std::get<SkRRect>(*this);
+          }
+
+          friend std::ostream &operator<<(std::ostream &os, const ClippingArea &area)
+          {
+            if (area.isEmpty())
+              os << "ClippingArea()";
+            else if (area.isPath())
+              os << "ClippingArea(Path)";
+            else if (area.isRRect())
+            {
+              auto &rrect = area.roundedRect();
+              os << "ClippingArea(" << rrect.width() << "," << rrect.height() << ")";
+            }
+            return os;
+          }
+        };
+
+        // Helper methods for drawing and clipping.
+        SkRRect getBackgroundClippingArea(const SkRRect &,
+                                          const client_layout::Fragment &,
+                                          const client_cssom::ComputedStyle &);
+        std::optional<SkPath> createTextPath(const std::string &textContent, const WebContent &);
+
+        // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
+        std::optional<SkPaint> drawBackground(SkCanvas *,
+                                              SkRRect &originalRRect,
+                                              ClippingArea &,
+                                              const client_layout::Fragment &,
+                                              const client_cssom::ComputedStyle &,
+                                              bool &textureRequired);
+        // Draw the rounded rectangle with the given paint, using the clipping area if provided.
+        void drawRRect(SkCanvas *, const SkRRect &, const SkPaint &, const ClippingArea &);
+        // Draw the image in the positioning area with the given paint.
+        void drawImage(SkCanvas *,
+                       const sk_sp<SkImage> &,
+                       const SkRect &positioningArea,
+                       const SkPaint &,
+                       const client_cssom::ComputedStyle &);
+        // Draw the image with separate positioning and repeatable areas.
+        void drawImage(SkCanvas *,
+                       const sk_sp<SkImage> &,
+                       const SkRect &positioningArea,
+                       const SkRect &repeatableArea,
+                       const SkPaint &,
+                       const client_cssom::ComputedStyle &);
       };
 
-      // Helper methods for drawing and clipping.
-      SkRRect getBackgroundClippingArea(const SkRRect &,
-                                        const client_layout::Fragment &,
-                                        const client_cssom::ComputedStyle &);
-      std::optional<SkPath> createTextPath(const std::string &textContent, const WebContent &);
-
-      // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
-      std::optional<SkPaint> drawBackground(SkCanvas *,
-                                            SkRRect &originalRRect,
-                                            ClippingArea &,
-                                            const client_layout::Fragment &,
-                                            const client_cssom::ComputedStyle &,
-                                            bool &textureRequired);
-      // Draw the rounded rectangle with the given paint, using the clipping area if provided.
-      void drawRRect(SkCanvas *, const SkRRect &, const SkPaint &, const ClippingArea &);
-      // Draw the image in the positioning area with the given paint.
-      void drawImage(SkCanvas *,
-                     const sk_sp<SkImage> &,
-                     const SkRect &positioningArea,
-                     const SkPaint &,
-                     const client_cssom::ComputedStyle &);
-      // Draw the image with separate positioning and repeatable areas.
-      void drawImage(SkCanvas *,
-                     const sk_sp<SkImage> &,
-                     const SkRect &positioningArea,
-                     const SkRect &repeatableArea,
-                     const SkPaint &,
-                     const client_cssom::ComputedStyle &);
-    };
-
-    class RenderImageSystem final : public RenderContentBaseSystem
-    {
-      using RenderContentBaseSystem::RenderContentBaseSystem;
-
-    public:
-      const std::string name() const override
+      class RenderImageSystem final : public RenderContentBaseSystem
       {
-        return "web_render.RenderImageSystem";
-      }
+        using RenderContentBaseSystem::RenderContentBaseSystem;
 
-    private:
-      bool render(ecs::EntityId entity, WebContent &content) override;
-    };
+      public:
+        const std::string name() const override
+        {
+          return "web_render.RenderImageSystem";
+        }
 
-    /**
+      private:
+        bool render(ecs::EntityId entity, WebContent &content) override;
+      };
+
+      /**
      * Render the text.
      *
      * - font
      * - size
      * - color
      */
-    class RenderTextSystem final : public RenderContentBaseSystem
-    {
-      using RenderContentBaseSystem::RenderContentBaseSystem;
-
-    public:
-      RenderTextSystem();
-
-    public:
-      const std::string name() const override
+      class RenderTextSystem final : public RenderContentBaseSystem
       {
-        return "web_render.RenderTextSystem";
-      }
+        using RenderContentBaseSystem::RenderContentBaseSystem;
 
-    private:
-      bool render(ecs::EntityId entity, WebContent &content) override;
+      public:
+        RenderTextSystem();
 
-    private:
-      float getLayoutWidthForText(WebContent &content);
-      bool generateSignedDistanceOn(SkCanvas *canvas);
+      public:
+        const std::string name() const override
+        {
+          return "web_render.RenderTextSystem";
+        }
 
-    private:
-      TrClientContextPerProcess *clientContext_;
-      sk_sp<skia::textlayout::FontCollection> fontCollection_;
-      std::unique_ptr<skia::textlayout::ParagraphBuilder> paragraphBuilder_;
-      text::sdf::SDFGenerator sdfGenerator_;
-    };
+      private:
+        bool render(ecs::EntityId entity, WebContent &content) override;
 
-    class UpdateTextureSystem final : public RenderBaseSystem
-    {
-      using RenderBaseSystem::RenderBaseSystem;
+      private:
+        float getLayoutWidthForText(WebContent &content);
+        bool generateSignedDistanceOn(SkCanvas *canvas);
 
-    public:
-      const std::string name() const override
+      private:
+        TrClientContextPerProcess *clientContext_;
+        sk_sp<skia::textlayout::FontCollection> fontCollection_;
+        std::unique_ptr<skia::textlayout::ParagraphBuilder> paragraphBuilder_;
+        text::sdf::SDFGenerator sdfGenerator_;
+      };
+
+      class UpdateTextureSystem final : public RenderBaseSystem
       {
-        return "web_render.UpdateTextureSystem";
-      }
+        using RenderBaseSystem::RenderBaseSystem;
 
-    public:
-      void onExecute() override final;
-    };
-  }
+      public:
+        const std::string name() const override
+        {
+          return "web_render.UpdateTextureSystem";
+        }
 
-  /**
+      public:
+        void onExecute() override final;
+      };
+    }
+
+    /**
    * The plugin to render Web content spatially.
    */
-  class WebContentPlugin final : public ecs::Plugin
-  {
-  public:
-    using ecs::Plugin::Plugin;
-
-  protected:
-    void build(ecs::App &app) override
+    class WebContentPlugin final : public ecs::Plugin
     {
-      using namespace ecs;
-      using namespace web_renderer;
+    public:
+      using ecs::Plugin::Plugin;
 
-      app.addResource(Resource::Make<WebContentContext>());
-      app.registerComponent<WebContent>();
+    protected:
+      void build(ecs::App &app) override
+      {
+        using namespace ecs;
+        using namespace web_renderer;
 
-      auto initWebContent = System::Make<InitSystem>();
-      app.addSystem(SchedulerLabel::kPostStartup, initWebContent);
+        app.addResource(Resource::Make<WebContentContext>());
+        app.registerComponent<WebContent>();
 
-      auto renderBackground = System::Make<RenderBackgroundSystem>();
-      auto renderImage = System::Make<RenderImageSystem>();
-      auto renderText = System::Make<RenderTextSystem>();
-      auto updateTexture = System::Make<UpdateTextureSystem>();
+        auto initWebContent = System::Make<InitSystem>();
+        app.addSystem(SchedulerLabel::kPostStartup, initWebContent);
 
-      renderBackground
-        ->chain(renderImage)
-        ->chain(renderText)
-        ->chain(updateTexture);
-      app.addSystem(SchedulerLabel::kUpdate, renderBackground);
-    }
-  };
-}
+        auto renderBackground = System::Make<RenderBackgroundSystem>();
+        auto renderImage = System::Make<RenderImageSystem>();
+        auto renderText = System::Make<RenderTextSystem>();
+        auto updateTexture = System::Make<UpdateTextureSystem>();
+
+        renderBackground
+          ->chain(renderImage)
+          ->chain(renderText)
+          ->chain(updateTexture);
+        app.addSystem(SchedulerLabel::kUpdate, renderBackground);
+      }
+    };
+  }
+} // namespace endor

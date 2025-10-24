@@ -1,16 +1,19 @@
 #pragma once
 
-namespace client_cssom
+namespace endor
 {
-  class BoxOffset
+  namespace client_cssom
   {
-  public:
-    virtual ~BoxOffset() = default;
+    class BoxOffset
+    {
+    public:
+      virtual ~BoxOffset() = default;
 
-  public:
-    virtual float offsetWidth() const = 0;
-    virtual float &offsetWidth() = 0;
-    virtual float offsetHeight() const = 0;
-    virtual float &offsetHeight() = 0;
-  };
-}
+    public:
+      virtual float offsetWidth() const = 0;
+      virtual float &offsetWidth() = 0;
+      virtual float offsetHeight() const = 0;
+      virtual float &offsetHeight() = 0;
+    };
+  }
+} // namespace endor

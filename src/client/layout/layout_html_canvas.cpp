@@ -5,65 +5,68 @@
 
 #include "./layout_html_canvas.hpp"
 
-namespace client_layout
+namespace endor
 {
-  using namespace std;
-  using namespace dom;
-  using namespace builtin_scene;
-  using namespace crates::layout2::styles;
-
-  bool LayoutHTMLCanvas::adjustDrawingSize()
+  namespace client_layout
   {
-    const auto &canvas_element = dom::Node::AsChecked<const HTMLCanvasElement>(node());
-    formattingContext().setContentSize(canvas_element.width(),
-                                       canvas_element.height());
-    return true;
-  }
+    using namespace std;
+    using namespace dom;
+    using namespace builtin_scene;
+    using namespace crates::layout2::styles;
 
-  void LayoutHTMLCanvas::setDrawingBitmap(std::shared_ptr<const SkBitmap> src_bitmap)
-  {
-    adjustDrawingSize();
-
-    auto setBitmap = [this, &src_bitmap](Scene &scene)
+    bool LayoutHTMLCanvas::adjustDrawingSize()
     {
-      Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity());
-      // TODO(yorkie): use const in Image2d?
-      imageComponent.bitmap = const_pointer_cast<SkBitmap>(src_bitmap);
-      imageComponent.setVisible(true);
-    };
-    useSceneWithCallback(setBitmap);
-    markCanvasAsDirty(); // Mark the canvas as dirty after setting the bitmap.
-  }
+      const auto &canvas_element = dom::Node::AsChecked<const HTMLCanvasElement>(node());
+      formattingContext().setContentSize(canvas_element.width(),
+                                         canvas_element.height());
+      return true;
+    }
 
-  void LayoutHTMLCanvas::markCanvasAsDirty()
-  {
-    auto markAsDirty = [this](Scene &scene)
+    void LayoutHTMLCanvas::setDrawingBitmap(std::shared_ptr<const SkBitmap> src_bitmap)
     {
-      WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
-      webContent.setContentDirty(true);
-    };
-    useSceneWithCallback(markAsDirty);
-  }
+      adjustDrawingSize();
 
-  void LayoutHTMLCanvas::entityDidCreate(ecs::EntityId entity)
-  {
-    LayoutReplaced::entityDidCreate(entity);
+      auto setBitmap = [this, &src_bitmap](Scene &scene)
+      {
+        Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity());
+        // TODO(yorkie): use const in Image2d?
+        imageComponent.bitmap = const_pointer_cast<SkBitmap>(src_bitmap);
+        imageComponent.setVisible(true);
+      };
+      useSceneWithCallback(setBitmap);
+      markCanvasAsDirty(); // Mark the canvas as dirty after setting the bitmap.
+    }
 
-    auto addImageComponent = [&entity](Scene &scene)
+    void LayoutHTMLCanvas::markCanvasAsDirty()
     {
-      scene.addComponent(entity, Image2d("", nullptr));
-    };
-    useSceneWithCallback(addImageComponent);
-  }
+      auto markAsDirty = [this](Scene &scene)
+      {
+        WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
+        webContent.setContentDirty(true);
+      };
+      useSceneWithCallback(markAsDirty);
+    }
 
-  void LayoutHTMLCanvas::entityWillBeDestroyed(ecs::EntityId entity)
-  {
-    auto removeImageComponent = [&entity](Scene &scene)
+    void LayoutHTMLCanvas::entityDidCreate(ecs::EntityId entity)
     {
-      scene.removeComponent<Image2d>(entity);
-    };
-    useSceneWithCallback(removeImageComponent);
+      LayoutReplaced::entityDidCreate(entity);
 
-    LayoutReplaced::entityWillBeDestroyed(entity);
+      auto addImageComponent = [&entity](Scene &scene)
+      {
+        scene.addComponent(entity, Image2d("", nullptr));
+      };
+      useSceneWithCallback(addImageComponent);
+    }
+
+    void LayoutHTMLCanvas::entityWillBeDestroyed(ecs::EntityId entity)
+    {
+      auto removeImageComponent = [&entity](Scene &scene)
+      {
+        scene.removeComponent<Image2d>(entity);
+      };
+      useSceneWithCallback(removeImageComponent);
+
+      LayoutReplaced::entityWillBeDestroyed(entity);
+    }
   }
-}
+} // namespace endor

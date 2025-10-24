@@ -2,43 +2,46 @@
 #include "./webxr_spaces.hpp"
 #include "./webxr_input_sources.hpp"
 
-namespace client_xr
+namespace endor
 {
-  using namespace std;
-
-  XRHand::XRHand(shared_ptr<XRInputSource> inputSource)
+  namespace client_xr
   {
-    for (auto joint : inputSource->inputSourceData_->joints)
-      push_back(XRJointSpace::Make(inputSource, joint.index));
-  }
+    using namespace std;
 
-  XRHand::XRHand(const XRHand &that)
-      : vector<shared_ptr<XRJointSpace>>(that)
-      , inputSource_(that.inputSource_)
-  {
-  }
+    XRHand::XRHand(shared_ptr<XRInputSource> inputSource)
+    {
+      for (auto joint : inputSource->inputSourceData_->joints)
+        push_back(XRJointSpace::Make(inputSource, joint.index));
+    }
 
-  shared_ptr<XRJointSpace> XRHand::get(client_xr::XRJointIndex index)
-  {
-    for (auto joint : *this)
-      if (joint->index == index)
-        return joint;
-    return nullptr;
-  }
+    XRHand::XRHand(const XRHand &that)
+        : vector<shared_ptr<XRJointSpace>>(that)
+        , inputSource_(that.inputSource_)
+    {
+    }
 
-  shared_ptr<XRJointSpace> XRHand::get(const string key)
-  {
-    for (auto joint : *this)
-      if (joint->name == key)
-        return joint;
-    return nullptr;
-  }
+    shared_ptr<XRJointSpace> XRHand::get(client_xr::XRJointIndex index)
+    {
+      for (auto joint : *this)
+        if (joint->index == index)
+          return joint;
+      return nullptr;
+    }
 
-  vector<string> XRHand::keys()
-  {
-    vector<string> keys;
-    for (auto joint : *this)
-      keys.push_back(joint->name);
-    return keys;
+    shared_ptr<XRJointSpace> XRHand::get(const string key)
+    {
+      for (auto joint : *this)
+        if (joint->name == key)
+          return joint;
+      return nullptr;
+    }
+
+    vector<string> XRHand::keys()
+    {
+      vector<string> keys;
+      for (auto joint : *this)
+        keys.push_back(joint->name);
+      return keys;
+    }
   }
-}
+} // namespace endor

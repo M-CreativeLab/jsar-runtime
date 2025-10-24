@@ -21,7 +21,11 @@
 #include "./transform.hpp"
 
 // Forward declarations that not included to avoid circular dependencies
-namespace client_cssom::values::computed
+
+namespace endor
 {
-  class Context;
-}
+  namespace client_cssom::values::computed
+  {
+    class Context;
+  }
+} // namespace endor

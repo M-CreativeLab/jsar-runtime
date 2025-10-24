@@ -3,7 +3,8 @@
 #include <client/builtin_scene/ecs.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 
-using namespace builtin_scene::ecs;
+using namespace endor;
+using namespace endor::builtin_scene::ecs;
 
 class TestComponent : public Component
 {

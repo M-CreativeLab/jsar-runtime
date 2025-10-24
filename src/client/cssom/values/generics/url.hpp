@@ -2,35 +2,38 @@
 
 #include <optional>
 
-namespace client_cssom::values::generics
+namespace endor
 {
-  template <typename U>
-  class GenericUrlOrNone
+  namespace client_cssom::values::generics
   {
-    using T = GenericUrlOrNone<U>;
-
-  public:
-    static T None()
+    template <typename U>
+    class GenericUrlOrNone
     {
-      return T();
-    }
-    static T Url(const U &url)
-    {
-      return T(url);
-    }
+      using T = GenericUrlOrNone<U>;
 
-  private:
-    GenericUrlOrNone(std::optional<U> url = std::nullopt)
-        : url(url)
-    {
-    }
+    public:
+      static T None()
+      {
+        return T();
+      }
+      static T Url(const U &url)
+      {
+        return T(url);
+      }
 
-    inline bool isNone() const
-    {
-      return !url.has_value();
-    }
+    private:
+      GenericUrlOrNone(std::optional<U> url = std::nullopt)
+          : url(url)
+      {
+      }
 
-  public:
-    std::optional<U> url = std::nullopt;
-  };
-}
+      inline bool isNone() const
+      {
+        return !url.has_value();
+      }
+
+    public:
+      std::optional<U> url = std::nullopt;
+    };
+  }
+} // namespace endor

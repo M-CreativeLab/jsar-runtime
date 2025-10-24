@@ -3,39 +3,42 @@
 #include "./keyframe_effect.hpp"
 #include "./keyframes.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-
-  KeyframeEffect::KeyframeEffect(shared_ptr<dom::Element> target,
-                                 optional<Keyframes> keyframes,
-                                 const KeyframeEffectOptions options)
-      : AnimationEffect()
-      , target_(target)
-      , keyframes_(make_unique<Keyframes>(*keyframes))
-      , composite_(options.composite.value_or(CompositeReplace))
-      , iteration_composite_(options.iterationComposite.value_or(CompositeReplace))
-      , pseudo_element_str_(options.pseudoElement)
+  namespace dom
   {
-  }
+    using namespace std;
 
-  Keyframes KeyframeEffect::getKeyframes() const
-  {
-    return *keyframes_;
-  }
+    KeyframeEffect::KeyframeEffect(shared_ptr<dom::Element> target,
+                                   optional<Keyframes> keyframes,
+                                   const KeyframeEffectOptions options)
+        : AnimationEffect()
+        , target_(target)
+        , keyframes_(make_unique<Keyframes>(*keyframes))
+        , composite_(options.composite.value_or(CompositeReplace))
+        , iteration_composite_(options.iterationComposite.value_or(CompositeReplace))
+        , pseudo_element_str_(options.pseudoElement)
+    {
+    }
 
-  void KeyframeEffect::setKeyframes(optional<Keyframes> keyframes)
-  {
-    if (keyframes.has_value())
-      keyframes_ = make_unique<Keyframes>(*keyframes);
-    else
-      keyframes_->empty();
-  }
+    Keyframes KeyframeEffect::getKeyframes() const
+    {
+      return *keyframes_;
+    }
 
-  shared_ptr<Element> KeyframeEffect::effectTarget() const
-  {
-    if (target_.expired())
-      return nullptr;
-    return target_.lock();
+    void KeyframeEffect::setKeyframes(optional<Keyframes> keyframes)
+    {
+      if (keyframes.has_value())
+        keyframes_ = make_unique<Keyframes>(*keyframes);
+      else
+        keyframes_->empty();
+    }
+
+    shared_ptr<Element> KeyframeEffect::effectTarget() const
+    {
+      if (target_.expired())
+        return nullptr;
+      return target_.lock();
+    }
   }
-}
+} // namespace endor

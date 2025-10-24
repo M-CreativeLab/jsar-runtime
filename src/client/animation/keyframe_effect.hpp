@@ -7,58 +7,61 @@
 
 #include "./animation_effect.hpp"
 
-namespace dom
+namespace endor
 {
-  class Keyframes;
-  class KeyframeEffect : public AnimationEffect
+  namespace dom
   {
-  public:
-    enum Composite
+    class Keyframes;
+    class KeyframeEffect : public AnimationEffect
     {
-      CompositeReplace,
-      CompositeAdd,
-      CompositeAccumulate
+    public:
+      enum Composite
+      {
+        CompositeReplace,
+        CompositeAdd,
+        CompositeAccumulate
+      };
+
+      struct KeyframeEffectOptions
+      {
+        std::optional<float> delay;
+        std::optional<float> duration;
+        std::optional<float> endDelay;
+
+        std::optional<size_t> iterations;
+        std::optional<float> iterationStart;
+
+        std::optional<AnimationEffect::FillMode> fill;
+        std::optional<AnimationEffect::Direction> direction;
+        std::unique_ptr<TimingFunction> easing = nullptr;
+
+        std::optional<Composite> composite;
+        std::optional<Composite> iterationComposite;
+        std::optional<std::string> pseudoElement;
+      };
+
+      KeyframeEffect(std::shared_ptr<Element> target, std::optional<Keyframes>, const KeyframeEffectOptions);
+
+    public:
+      Keyframes getKeyframes() const;
+      void setKeyframes(std::optional<Keyframes>);
+
+      std::shared_ptr<Element> effectTarget() const;
+      Composite composite() const
+      {
+        return composite_;
+      }
+      Composite iterationComposite() const
+      {
+        return iteration_composite_;
+      }
+
+    private:
+      Composite composite_ = CompositeReplace;
+      Composite iteration_composite_ = CompositeReplace;
+      std::weak_ptr<Element> target_;
+      std::optional<std::string> pseudo_element_str_;
+      std::unique_ptr<Keyframes> keyframes_;
     };
-
-    struct KeyframeEffectOptions
-    {
-      std::optional<float> delay;
-      std::optional<float> duration;
-      std::optional<float> endDelay;
-
-      std::optional<size_t> iterations;
-      std::optional<float> iterationStart;
-
-      std::optional<AnimationEffect::FillMode> fill;
-      std::optional<AnimationEffect::Direction> direction;
-      std::unique_ptr<TimingFunction> easing = nullptr;
-
-      std::optional<Composite> composite;
-      std::optional<Composite> iterationComposite;
-      std::optional<std::string> pseudoElement;
-    };
-
-    KeyframeEffect(std::shared_ptr<Element> target, std::optional<Keyframes>, const KeyframeEffectOptions);
-
-  public:
-    Keyframes getKeyframes() const;
-    void setKeyframes(std::optional<Keyframes>);
-
-    std::shared_ptr<Element> effectTarget() const;
-    Composite composite() const
-    {
-      return composite_;
-    }
-    Composite iterationComposite() const
-    {
-      return iteration_composite_;
-    }
-
-  private:
-    Composite composite_ = CompositeReplace;
-    Composite iteration_composite_ = CompositeReplace;
-    std::weak_ptr<Element> target_;
-    std::optional<std::string> pseudo_element_str_;
-    std::unique_ptr<Keyframes> keyframes_;
-  };
-}
+  }
+} // namespace endor
