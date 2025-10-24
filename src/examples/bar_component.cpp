@@ -143,7 +143,6 @@ namespace jsar::example
   void BarComponent::initGLProgram()
   {
     barShader_ = Shader(barVertSource_, barFragSource_);
-    auto program = barShader_.ID;
   }
 
   void BarComponent::createGeometry()
