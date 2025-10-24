@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include "./common.hpp"
+#include "./program.hpp"
 
 using namespace std;
 
@@ -31,8 +32,8 @@ namespace gles
     void PrintMemoryUsage();
 
   public:
-    GLuint CreateProgram(uint32_t clientId);
-    GLuint FindProgram(uint32_t clientId);
+    std::shared_ptr<GLProgram> CreateProgram(uint32_t clientId);
+    std::shared_ptr<GLProgram> FindProgram(uint32_t clientId) const;
     void DeleteProgram(uint32_t clientId);
     size_t ClearPrograms();
 
@@ -72,7 +73,7 @@ namespace gles
 
   private:
     std::string name;
-    unordered_map<uint32_t, GLuint> programs;
+    unordered_map<uint32_t, std::shared_ptr<GLProgram>> programs;
     unordered_map<uint32_t, GLuint> shaders;
 
   private:

@@ -158,6 +158,8 @@ namespace endor
       program->link();
 
       auto req = LinkProgramCommandBufferRequest(program->id);
+      req.attribLocations = program->getAttribLocations();
+
       if (!sendCommandBufferRequest(req, true))
         throw LinkProgramException(*program, "Failed to send the command buffer.");
 
@@ -181,12 +183,6 @@ namespace endor
           for (auto &activeInfo : resp.activeUniforms)
             program->setActiveUniform(index++, activeInfo);
         }
-
-        /**
-         * Update the program's attribute locations.
-         */
-        for (auto &attribLocation : resp.attribLocations)
-          program->setAttribLocation(attribLocation.name, attribLocation.location);
 
         /**
          * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
@@ -945,7 +941,7 @@ namespace endor
     optional<WebGLActiveInfo> WebGLContext::getActiveAttrib(shared_ptr<WebGLProgram> program, unsigned int index)
     {
       assert(program != nullptr && "Program is not null");
-      program->waitForCompleted();
+      program->waitForCompleted("getActiveAttrib");
 
       if (program->hasActiveAttrib(index))
         return program->getActiveAttrib(index);
@@ -956,7 +952,7 @@ namespace endor
     optional<WebGLActiveInfo> WebGLContext::getActiveUniform(shared_ptr<WebGLProgram> program, unsigned int index)
     {
       assert(program != nullptr && "Program is not null");
-      program->waitForCompleted();
+      program->waitForCompleted("getActiveUniform");
 
       if (program->hasActiveUniform(index))
         return program->getActiveUniform(index);
@@ -966,9 +962,6 @@ namespace endor
 
     optional<WebGLAttribLocation> WebGLContext::getAttribLocation(shared_ptr<WebGLProgram> program, const string &name)
     {
-      assert(program != nullptr && "Program is not null");
-      program->waitForCompleted();
-
       // Returns `nullopt` if the program is incomplete or not linked.
       if (!program->hasAttribLocation(name))
         return nullopt;
@@ -2197,7 +2190,7 @@ namespace endor
     int WebGL2Context::getUniformBlockIndex(shared_ptr<WebGLProgram> program, const string &uniformBlockName)
     {
       assert(program != nullptr && "Program must not be null.");
-      program->waitForCompleted();
+      program->waitForCompleted("getUniformBlockIndex");
 
       if (program == nullptr || !program->isValid() || !program->hasUniformBlockIndex(uniformBlockName))
         return -1;

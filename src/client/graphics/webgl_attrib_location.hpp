@@ -2,6 +2,7 @@
 
 #include <string>
 #include <optional>
+#include <ostream>
 
 namespace endor
 {
@@ -27,6 +28,18 @@ namespace endor
           , index(index)
           , name(name)
       {
+      }
+
+      friend std::ostream &operator<<(std::ostream &os, const WebGLAttribLocation &loc)
+      {
+        os << "WebGLAttribLocation("
+           << "name='" << loc.name << "'";
+        if (loc.index.has_value())
+          os << ", index=" << loc.index.value();
+        else
+          os << ", index=nullopt";
+        os << ")";
+        return os;
       }
 
     public:

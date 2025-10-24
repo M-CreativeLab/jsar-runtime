@@ -5,6 +5,77 @@
 
 namespace commandbuffers
 {
+  enum LinkProgramDataSegmentType
+  {
+    SEGMENT_ACTIVE_ATTRIB,
+    SEGMENT_ACTIVE_UNIFORM,
+    SEGMENT_ATTRIB_LOCATION,
+    SEGMENT_UNIFORM_LOCATION,
+    SEGMENT_UNIFORM_BLOCK
+  };
+
+  class ActiveInfo
+  {
+  public:
+    ActiveInfo() = default;
+    ActiveInfo(const ActiveInfo &that) = default;
+    ActiveInfo(string name, int size, int type)
+        : name(name)
+        , size(size)
+        , type(type)
+    {
+    }
+
+  public:
+    std::string name;
+    int size;
+    int type;
+  };
+
+  class AttribLocation
+  {
+  public:
+    AttribLocation(string name, int location)
+        : name(name)
+        , location(location)
+    {
+    }
+
+  public:
+    std::string name;
+    int location;
+  };
+
+  class UniformLocation
+  {
+  public:
+    UniformLocation(string name, int location, int size)
+        : name(name)
+        , location(location)
+        , size(size)
+    {
+    }
+
+  public:
+    std::string name;
+    int location;
+    int size;
+  };
+
+  class UniformBlock
+  {
+  public:
+    UniformBlock(string name, int index)
+        : name(name)
+        , index(index)
+    {
+    }
+
+  public:
+    std::string name;
+    int index;
+  };
+
   class CreateProgramCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<CreateProgramCommandBufferRequest,
                                             COMMAND_BUFFER_CREATE_PROGRAM_REQ>
@@ -95,6 +166,10 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that)
         , clientId(that.clientId)
     {
+      if (clone)
+      {
+        attribLocations = that.attribLocations;
+      }
     }
 
     std::string toString(const char *line_prefix) const override
@@ -105,7 +180,78 @@ namespace commandbuffers
     }
 
   public:
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(type, size, this);
+      for (auto &attribLocation : attribLocations)
+        addAttribLocationSegment(attribLocation, message);
+      return message;
+    }
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      for (size_t i = 0; i < message.getSegmentCount(); i++)
+      {
+        auto segment = message.getSegment(i);
+        if (segment == nullptr)
+          continue;
+
+        auto segmentChars = segment->toVec<char>();
+        char *pSourceData = segmentChars.data();
+
+        LinkProgramDataSegmentType segmentType;
+        memcpy(&segmentType, pSourceData, sizeof(LinkProgramDataSegmentType));
+        pSourceData += sizeof(LinkProgramDataSegmentType);
+
+        size_t nameSize;
+        memcpy(&nameSize, pSourceData, sizeof(size_t));
+        pSourceData += sizeof(size_t);
+
+        string name(pSourceData, nameSize);
+        pSourceData += nameSize;
+
+        switch (segmentType)
+        {
+        case SEGMENT_ATTRIB_LOCATION:
+        {
+          int location;
+          memcpy(&location, pSourceData, sizeof(int));
+          pSourceData += sizeof(int);
+          attribLocations.push_back(AttribLocation(name, location));
+          break;
+        };
+        default:
+          break;
+        }
+      }
+    }
+
+  private:
+    vector<char> getSegmentBase(LinkProgramDataSegmentType type,
+                                string &name)
+    {
+      vector<char> base;
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&type),
+                  reinterpret_cast<char *>(&type) + sizeof(LinkProgramDataSegmentType));
+      size_t nameSize = name.size();
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&nameSize),
+                  reinterpret_cast<char *>(&nameSize) + sizeof(size_t));
+      base.insert(base.end(), name.begin(), name.end());
+      return base;
+    }
+    void addAttribLocationSegment(AttribLocation &attribLocation, TrCommandBufferMessage *message)
+    {
+      auto base = getSegmentBase(SEGMENT_ATTRIB_LOCATION, attribLocation.name);
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&attribLocation.location),
+                  reinterpret_cast<char *>(&attribLocation.location) + sizeof(attribLocation.location));
+      message->addSegment(new ipc::TrIpcMessageSegment(base));
+    }
+
+  public:
     uint32_t clientId;
+    vector<AttribLocation> attribLocations;
   };
 
   class ValidateProgramCommandBufferRequest final
@@ -134,77 +280,6 @@ namespace commandbuffers
 
   public:
     uint32_t clientId;
-  };
-
-  class ActiveInfo
-  {
-  public:
-    ActiveInfo() = default;
-    ActiveInfo(const ActiveInfo &that) = default;
-    ActiveInfo(string name, int size, int type)
-        : name(name)
-        , size(size)
-        , type(type)
-    {
-    }
-
-  public:
-    string name;
-    int size;
-    int type;
-  };
-
-  class AttribLocation
-  {
-  public:
-    AttribLocation(string name, int location)
-        : name(name)
-        , location(location)
-    {
-    }
-
-  public:
-    string name;
-    int location;
-  };
-
-  class UniformLocation
-  {
-  public:
-    UniformLocation(string name, int location, int size)
-        : name(name)
-        , location(location)
-        , size(size)
-    {
-    }
-
-  public:
-    string name;
-    int location;
-    int size;
-  };
-
-  class UniformBlock
-  {
-  public:
-    UniformBlock(string name, int index)
-        : name(name)
-        , index(index)
-    {
-    }
-
-  public:
-    string name;
-    int index;
-  };
-
-  enum LinkProgramCommandBufferResponseSegmentType
-  {
-    SEGMENT_ACTIVE_ATTRIB,
-    SEGMENT_ACTIVE_UNIFORM,
-    SEGMENT_ATTRIB_LOCATION,
-    SEGMENT_UNIFORM_LOCATION,
-    SEGMENT_UNIFORM_BLOCK
   };
 
   class LinkProgramCommandBufferResponse final
@@ -262,9 +337,9 @@ namespace commandbuffers
         auto segmentChars = segment->toVec<char>();
         char *pSourceData = segmentChars.data();
 
-        LinkProgramCommandBufferResponseSegmentType segmentType;
-        memcpy(&segmentType, pSourceData, sizeof(LinkProgramCommandBufferResponseSegmentType));
-        pSourceData += sizeof(LinkProgramCommandBufferResponseSegmentType);
+        LinkProgramDataSegmentType segmentType;
+        memcpy(&segmentType, pSourceData, sizeof(LinkProgramDataSegmentType));
+        pSourceData += sizeof(LinkProgramDataSegmentType);
 
         size_t nameSize;
         memcpy(&nameSize, pSourceData, sizeof(size_t));
@@ -319,13 +394,13 @@ namespace commandbuffers
     }
 
   private:
-    vector<char> getSegmentBase(LinkProgramCommandBufferResponseSegmentType type,
+    vector<char> getSegmentBase(LinkProgramDataSegmentType type,
                                 string &name)
     {
       vector<char> base;
       base.insert(base.end(),
                   reinterpret_cast<char *>(&type),
-                  reinterpret_cast<char *>(&type) + sizeof(LinkProgramCommandBufferResponseSegmentType));
+                  reinterpret_cast<char *>(&type) + sizeof(LinkProgramDataSegmentType));
       size_t nameSize = name.size();
       base.insert(base.end(),
                   reinterpret_cast<char *>(&nameSize),
@@ -350,7 +425,7 @@ namespace commandbuffers
       return ActiveInfo(name, size, type);
     }
 
-    void addActiveInfoSegment(ActiveInfo &activeInfo, LinkProgramCommandBufferResponseSegmentType segmentType, TrCommandBufferMessage *message)
+    void addActiveInfoSegment(ActiveInfo &activeInfo, LinkProgramDataSegmentType segmentType, TrCommandBufferMessage *message)
     {
       auto base = getSegmentBase(segmentType, activeInfo.name);
       base.insert(base.end(),

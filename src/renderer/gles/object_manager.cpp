@@ -45,40 +45,33 @@ namespace gles
     PrintBuffers();
   }
 
-  GLuint GLObjectManager::CreateProgram(uint32_t clientId)
+  std::shared_ptr<GLProgram> GLObjectManager::CreateProgram(uint32_t clientId)
   {
-    GLuint program = glCreateProgram();
+    auto program = make_shared<GLProgram>(glCreateProgram());
     programs[clientId] = program;
     return program;
   }
 
-  GLuint GLObjectManager::FindProgram(uint32_t clientId)
+  std::shared_ptr<GLProgram> GLObjectManager::FindProgram(uint32_t clientId) const
   {
     if (clientId == 0)
-      return 0;
-    return programs[clientId];
+      return nullptr;
+
+    auto program = programs.find(clientId);
+    if (program == programs.end())
+      return nullptr;
+    else
+      return program->second;
   }
 
   void GLObjectManager::DeleteProgram(uint32_t clientId)
   {
-    GLuint program = programs[clientId];
-    if (program > 0)
-      glDeleteProgram(program);
     programs.erase(clientId);
   }
 
   size_t GLObjectManager::ClearPrograms()
   {
-    size_t removed = 0;
-    for (auto it = programs.begin(); it != programs.end(); ++it)
-    {
-      GLuint program = it->second;
-      if (program > 0)
-      {
-        glDeleteProgram(program);
-        removed++;
-      }
-    }
+    size_t removed = programs.size();
     programs.clear();
     return removed;
   }

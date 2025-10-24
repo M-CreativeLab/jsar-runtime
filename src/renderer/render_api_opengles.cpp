@@ -10,6 +10,7 @@
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
 #include "gles/framebuffer.hpp"
+#include "gles/program.hpp"
 #include "gles/object_manager.hpp"
 #include "gles/gpu_device_impl.hpp"
 
@@ -505,28 +506,26 @@ private:
                                     ApiCallOptions &options)
   {
     auto glContext = reqContentRenderer->getContextGL();
-    GLuint program = glContext->ObjectManagerRef().FindProgram(req->clientId);
-    glLinkProgram(program);
-    reqContentRenderer->getContextGL()->MarkAsDirty();
-
-    /**
-		 * Check the link status of the program.
-		 */
-    GLenum status;
-    glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
-    if (status == GL_FALSE)
+    auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+    if (program == nullptr) [[unlikely]]
     {
-      GLint errorLength;
-      glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
-      GLchar *errorStr = new GLchar[errorLength];
-      glGetProgramInfoLog(program, errorLength, NULL, errorStr);
-      DEBUG(LOG_TAG_ERROR, "Failed to link program(%d): %s", program, errorStr);
-      delete[] errorStr;
-
-      LinkProgramCommandBufferResponse failureRes(req, false);
-      // reqContentRenderer->sendCommandBufferResponse(failureRes);
       return;
     }
+
+    for (const auto &attrib : req->attribLocations)
+    {
+      glBindAttribLocation(program->id, attrib.location, attrib.name.c_str());
+      cout << "BindAttribLocation(program=" << program->id << ", location=" << attrib.location
+           << ", name=" << attrib.name.c_str() << ")" << endl;
+    }
+
+    // Do program linking and update attribute locations
+    program->link();
+    for (const auto &attrib : req->attribLocations)
+      program->updateAttribLocation(attrib.location, attrib.name.c_str());
+
+    // Mark context as dirty
+    reqContentRenderer->getContextGL()->MarkAsDirty();
 
     // Create response object
     LinkProgramCommandBufferResponse res(req, true);
@@ -535,7 +534,7 @@ private:
 		 * Fetch the locations of the attributes when link successfully.
 		 */
     GLint numAttributes = 0;
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+    glGetProgramiv(program->id, GL_ACTIVE_ATTRIBUTES, &numAttributes);
     for (int i = 0; i < numAttributes; i++)
     {
       GLsizei nameLength;
@@ -543,11 +542,11 @@ private:
       GLenum type;
       GLchar name[256];
 
-      glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+      glGetActiveAttrib(program->id, i, sizeof(name) - 1, &nameLength, &size, &type, name);
       name[nameLength] = '\0';
       res.activeAttribs.push_back(ActiveInfo(name, size, type));
 
-      GLint location = glGetAttribLocation(program, name);
+      GLint location = glGetAttribLocation(program->id, name);
       res.attribLocations.push_back(AttribLocation(name, location));
       DEBUG(DEBUG_TAG,
             "    Attribute[%d](%s) => (size=%d, type=%s)",
@@ -561,7 +560,7 @@ private:
 		 * Fetch the locations of the uniforms and attributes when link successfully.
 		 */
     GLint numUniforms = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
+    glGetProgramiv(program->id, GL_ACTIVE_UNIFORMS, &numUniforms);
     for (int i = 0; i < numUniforms; i++)
     {
       GLsizei nameLength;
@@ -569,11 +568,11 @@ private:
       GLenum type;
       GLchar name[256];
 
-      glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+      glGetActiveUniform(program->id, i, sizeof(name) - 1, &nameLength, &size, &type, name);
       name[nameLength] = '\0';
       res.activeUniforms.push_back(ActiveInfo(name, size, type));
 
-      GLint location = glGetUniformLocation(program, name);
+      GLint location = glGetUniformLocation(program->id, name);
       if (location <= -1)
         continue;
 
@@ -591,22 +590,22 @@ private:
 		 * Fetch the uniform blocks when link successfully.
 		 */
     GLint numUniformBlocks = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
+    glGetProgramiv(program->id, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
     for (int i = 0; i < numUniformBlocks; i++)
     {
       GLsizei nameLength;
       GLchar name[256];
 
-      glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
+      glGetActiveUniformBlockName(program->id, i, sizeof(name) - 1, &nameLength, name);
       name[nameLength] = '\0';
 
-      GLuint index = glGetUniformBlockIndex(program, name);
+      GLuint index = glGetUniformBlockIndex(program->id, name);
       res.uniformBlocks.push_back(UniformBlock(name, index));
       DEBUG(DEBUG_TAG, "    UniformBlock[%s] => %d", name, index);
     }
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      PrintDebugInfo(req, to_string(program).c_str(), nullptr, options);
+      PrintDebugInfo(req, to_string(program->id).c_str(), nullptr, options);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnUseProgram(UseProgramCommandBufferRequest *req,
@@ -623,9 +622,12 @@ private:
                                         ApiCallOptions &options)
   {
     auto glContext = reqContentRenderer->getContextGL();
-    GLuint program = glContext->ObjectManagerRef().FindProgram(req->clientId);
-    glValidateProgram(program);
-    reqContentRenderer->getContextGL()->MarkAsDirty();
+    auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+    if (program != nullptr) [[likely]]
+    {
+      program->validate();
+      reqContentRenderer->getContextGL()->MarkAsDirty();
+    }
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -635,13 +637,13 @@ private:
   {
     auto glContext = reqContentRenderer->getContextGL();
     auto program = glContext->ObjectManagerRef().FindProgram(req->program);
-    glBindAttribLocation(program, req->attribIndex, req->attribName.c_str());
+    glBindAttribLocation(program->id, req->attribIndex, req->attribName.c_str());
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG,
             "[%d] GL::BindAttribLocation(program=%d, index=%d, name=%s)",
             options.isDefaultQueue(),
-            program,
+            program->id,
             req->attribIndex,
             req->attribName.c_str());
   }
@@ -653,7 +655,7 @@ private:
     auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
 
     GLint value;
-    glGetProgramiv(program, req->pname, &value);
+    glGetProgramiv(program->id, req->pname, &value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, to_string(value).c_str(), nullptr, options);
 
@@ -667,9 +669,9 @@ private:
     auto glContext = reqContentRenderer->getContextGL();
     auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
     GLint retSize;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &retSize);
+    glGetProgramiv(program->id, GL_INFO_LOG_LENGTH, &retSize);
     GLchar *infoLog = new GLchar[retSize];
-    glGetProgramInfoLog(program, retSize, NULL, infoLog);
+    glGetProgramInfoLog(program->id, retSize, NULL, infoLog);
 
     GetProgramInfoLogCommandBufferResponse res(req, string(infoLog));
     delete[] infoLog;
@@ -687,9 +689,9 @@ private:
                                      ApiCallOptions &options)
   {
     auto glContext = reqContentRenderer->getContextGL();
-    GLuint program = glContext->ObjectManagerRef().FindProgram(req->program);
-    GLuint shader = glContext->ObjectManagerRef().FindShader(req->shader);
-    glAttachShader(program, shader);
+    auto program = glContext->ObjectManagerRef().FindProgram(req->program);
+    auto shader = glContext->ObjectManagerRef().FindShader(req->shader);
+    glAttachShader(program->id, shader);
     reqContentRenderer->getContextGL()->MarkAsDirty();
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
@@ -699,9 +701,9 @@ private:
                                      ApiCallOptions &options)
   {
     auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
-    GLuint program = glObjectManager.FindProgram(req->program);
-    GLuint shader = glObjectManager.FindShader(req->shader);
-    glDetachShader(program, shader);
+    auto program = glObjectManager.FindProgram(req->program);
+    auto shader = glObjectManager.FindShader(req->shader);
+    glDetachShader(program->id, shader);
     reqContentRenderer->getContextGL()->MarkAsDirty();
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
@@ -1724,7 +1726,7 @@ private:
     auto program = glObjectManager.FindProgram(req->program);
     auto uniformBlockIndex = req->uniformBlockIndex;
     auto uniformBlockBinding = req->uniformBlockBinding;
-    glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+    glUniformBlockBinding(program->id, uniformBlockIndex, uniformBlockBinding);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);

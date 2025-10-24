@@ -325,29 +325,39 @@ void ContextGLApp::setClearStencil(GLint s)
 
 GLuint ContextGLApp::createProgram(uint32_t id)
 {
-  GLuint program = ObjectManagerRef().CreateProgram(id);
-  RecordProgramOnCreated(program);
-  return program;
+  auto program = ObjectManagerRef().CreateProgram(id);
+  assert(program != nullptr && "Failed to create program");
+
+  RecordProgramOnCreated(program->id);
+  return program->id;
 }
 
 void ContextGLApp::deleteProgram(uint32_t id, GLuint &program)
 {
-  program = ObjectManagerRef().FindProgram(id);
-  ObjectManagerRef().DeleteProgram(id);
+  auto program_ptr = ObjectManagerRef().FindProgram(id);
+  if (program_ptr != nullptr)
+  {
+    program = program_ptr->id;
+    ObjectManagerRef().DeleteProgram(id);
 
-  /**
-   * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
-   * context using the deleted program.
-   */
-  resetProgram(program);
-  RecordProgramOnDeleted(program);
+    /**
+     * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
+     * context using the deleted program.
+     */
+    resetProgram(program);
+    RecordProgramOnDeleted(program);
+  }
 }
 
 void ContextGLApp::useProgram(uint32_t id, GLuint &program)
 {
-  program = ObjectManagerRef().FindProgram(id);
-  glUseProgram(program);
-  onProgramChanged(program);
+  auto program_ptr = ObjectManagerRef().FindProgram(id);
+  if (program_ptr != nullptr)
+  {
+    program = program_ptr->id;
+    glUseProgram(program);
+    onProgramChanged(program);
+  }
 }
 
 void ContextGLApp::bindFramebuffer(GLenum target, optional<uint32_t> id, GLuint &framebuffer)
@@ -448,10 +458,10 @@ std::optional<GLint> ContextGLApp::getAttribLoc(commandbuffers::SetVertexAttribC
   }
   else
   {
-    GLuint program = ObjectManagerRef().FindProgram(req->program);
-    if (program != 0) [[likely]]
+    auto program = ObjectManagerRef().FindProgram(req->program);
+    if (program != nullptr) [[likely]]
     {
-      loc = glGetAttribLocation(program, req->locationQueryName.c_str());
+      loc = glGetAttribLocation(program->id, req->locationQueryName.c_str());
       if (loc == -1)
         loc = nullopt; // If the location is not found, return nullopt
     }
@@ -468,10 +478,10 @@ optional<GLint> ContextGLApp::getUniformLoc(commandbuffers::SetUniformCommandBuf
   }
   else
   {
-    GLuint program = ObjectManagerRef().FindProgram(req->program);
-    if (program != 0) [[likely]]
+    auto program = ObjectManagerRef().FindProgram(req->program);
+    if (program != nullptr) [[likely]]
     {
-      loc = glGetUniformLocation(program, req->locationQueryName.c_str());
+      loc = glGetUniformLocation(program->id, req->locationQueryName.c_str());
     }
   }
   return loc;

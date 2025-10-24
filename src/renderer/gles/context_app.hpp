@@ -9,6 +9,7 @@
 
 #include "./context_storage.hpp"
 #include "./framebuffer.hpp"
+#include "./program.hpp"
 #include "./gpu_command_encoder_impl.hpp"
 
 class ContextGLHost;
@@ -67,7 +68,9 @@ public: // GLES Implementations
   // Program functions
   GLuint createProgram(uint32_t id);
   void deleteProgram(uint32_t id, GLuint &program);
+  void deleteProgram(uint32_t id);
   void useProgram(uint32_t id, GLuint &program);
+  void useProgram(uint32_t id);
 
   // Framebuffer functions
   void bindFramebuffer(GLenum target, std::optional<uint32_t> id, GLuint &framebuffer);
