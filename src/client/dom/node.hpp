@@ -58,7 +58,7 @@ namespace endor
      * @returns `true` if the node is the specific type, otherwise `false`.
      */
       template <typename T>
-      requires std::is_base_of_v<Node, T> || std::is_same_v<T, Node>
+        requires std::is_base_of_v<Node, T> || std::is_same_v<T, Node>
       static inline bool Is(std::shared_ptr<Node> node)
       {
         assert(node != nullptr && "The node is null.");
@@ -73,7 +73,7 @@ namespace endor
      * @returns The node as the specific type, or nullptr if the node is not the specific type.
      */
       template <typename T>
-      requires std::is_base_of_v<Node, T>
+        requires std::is_base_of_v<Node, T>
       static inline std::shared_ptr<T> As(std::shared_ptr<Node> node)
       {
         assert(node != nullptr && "The node is null.");
@@ -88,7 +88,7 @@ namespace endor
      * @returns The node reference as the specific type.
      */
       template <typename T>
-      requires std::is_base_of_v<Node, T>
+        requires std::is_base_of_v<Node, T>
       static inline T &AsChecked(std::shared_ptr<Node> node)
       {
         auto ptr = As<T>(node);
@@ -219,7 +219,7 @@ namespace endor
      * Check if the current node has a specific type of parent node.
      */
       template <typename T>
-      requires std::is_base_of_v<Node, T>
+        requires std::is_base_of_v<Node, T>
       inline bool hasTypedParentNode() const
       {
         auto _parentNode = getParentNode();
@@ -232,9 +232,9 @@ namespace endor
      * @returns The parent node as the specific node type, or nullptr if the parent node is not the specific node type.
      */
       template <typename T>
-      requires std::is_base_of_v<Node, T>
-        std::shared_ptr<T> getParentNodeAs()
-      const
+        requires std::is_base_of_v<Node, T>
+      std::shared_ptr<T> getParentNodeAs()
+        const
       {
         auto _parentNode = getParentNode();
         return _parentNode == nullptr
@@ -262,8 +262,8 @@ namespace endor
      * @returns The owner document reference as the specific document type.
      */
       template <typename DocumentType>
-      requires std::is_base_of_v<Document, DocumentType>
-        std::shared_ptr<DocumentType> getOwnerDocumentReferenceAs(bool force = true)
+        requires std::is_base_of_v<Document, DocumentType>
+      std::shared_ptr<DocumentType> getOwnerDocumentReferenceAs(bool force = true)
       {
         auto ref = std::dynamic_pointer_cast<DocumentType>(getOwnerDocumentReference());
         if (force && ref == nullptr)

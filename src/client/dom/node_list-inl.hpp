@@ -8,9 +8,9 @@ namespace endor
   namespace dom
   {
     template <typename NodeType>
-    requires std::is_base_of_v<Node, NodeType> || std::is_same_v<Node, NodeType>
-      std::shared_ptr<Node> NodeList<NodeType>::item(unsigned int index)
-    const
+      requires std::is_base_of_v<Node, NodeType> || std::is_same_v<Node, NodeType>
+    std::shared_ptr<Node> NodeList<NodeType>::item(unsigned int index)
+      const
     {
       if (index > this->size())
         return nullptr;

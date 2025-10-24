@@ -15,20 +15,20 @@ namespace endor
   {
     template <typename T>
     concept is_property_value = std::is_same_v<T, crates::layout2::styles::BoxSizing> ||
-      std::is_same_v<T, crates::layout2::styles::Display> ||
-      std::is_same_v<T, crates::layout2::styles::Dimension> ||
-      std::is_same_v<T, crates::layout2::styles::LengthPercentageAuto> ||
-      std::is_same_v<T, crates::layout2::styles::LengthPercentage> ||
-      std::is_same_v<T, crates::layout2::styles::Overflow> ||
-      std::is_same_v<T, crates::layout2::styles::Position> ||
-      std::is_same_v<T, crates::layout2::styles::AlignItems> ||
-      std::is_same_v<T, crates::layout2::styles::AlignSelf> ||
-      std::is_same_v<T, crates::layout2::styles::AlignContent> ||
-      std::is_same_v<T, crates::layout2::styles::JustifyItems> ||
-      std::is_same_v<T, crates::layout2::styles::JustifySelf> ||
-      std::is_same_v<T, crates::layout2::styles::JustifyContent> ||
-      std::is_same_v<T, crates::layout2::styles::FlexDirection> ||
-      std::is_same_v<T, crates::layout2::styles::FlexWrap>;
+                                std::is_same_v<T, crates::layout2::styles::Display> ||
+                                std::is_same_v<T, crates::layout2::styles::Dimension> ||
+                                std::is_same_v<T, crates::layout2::styles::LengthPercentageAuto> ||
+                                std::is_same_v<T, crates::layout2::styles::LengthPercentage> ||
+                                std::is_same_v<T, crates::layout2::styles::Overflow> ||
+                                std::is_same_v<T, crates::layout2::styles::Position> ||
+                                std::is_same_v<T, crates::layout2::styles::AlignItems> ||
+                                std::is_same_v<T, crates::layout2::styles::AlignSelf> ||
+                                std::is_same_v<T, crates::layout2::styles::AlignContent> ||
+                                std::is_same_v<T, crates::layout2::styles::JustifyItems> ||
+                                std::is_same_v<T, crates::layout2::styles::JustifySelf> ||
+                                std::is_same_v<T, crates::layout2::styles::JustifyContent> ||
+                                std::is_same_v<T, crates::layout2::styles::FlexDirection> ||
+                                std::is_same_v<T, crates::layout2::styles::FlexWrap>;
 
     enum class CSSPropertyPriority
     {
@@ -189,11 +189,11 @@ namespace endor
      * @returns The property value as a specific type such as `Dimension`.
      */
       template <typename T>
-      requires is_property_value<T> ||
-        std::is_same_v<T, float> ||
-        std::is_integral_v<T>
-          T getPropertyValueAs(const std::string &propertyName)
-      const
+        requires is_property_value<T> ||
+                 std::is_same_v<T, float> ||
+                 std::is_integral_v<T>
+      T getPropertyValueAs(const std::string &propertyName)
+        const
       {
         using namespace crates::layout2::styles;
 

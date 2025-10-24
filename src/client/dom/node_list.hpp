@@ -47,7 +47,7 @@ namespace endor
    * @tparam NodeType The specific node type, such as `Element`, `Text`, `Node`, etc.
    */
     template <typename NodeType = Node>
-    requires std::is_base_of_v<Node, NodeType> || std::is_same_v<Node, NodeType>
+      requires std::is_base_of_v<Node, NodeType> || std::is_same_v<Node, NodeType>
     class NodeList : public std::vector<std::shared_ptr<NodeType>>,
                      public NodeListApi
     {

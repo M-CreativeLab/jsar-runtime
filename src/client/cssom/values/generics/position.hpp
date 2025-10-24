@@ -103,8 +103,8 @@ namespace endor
     };
 
     template <typename H, typename V>
-    requires transmute::common::derived_from<H, PositionComponent> &&
-      transmute::common::derived_from<V, PositionComponent>
+      requires transmute::common::derived_from<H, PositionComponent> &&
+               transmute::common::derived_from<V, PositionComponent>
     class GenericPosition
     {
     public:

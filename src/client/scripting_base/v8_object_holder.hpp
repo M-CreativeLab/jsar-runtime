@@ -57,7 +57,7 @@ namespace endor
      * @returns The JavaScript object wrap as the specified type.
      */
       template <typename T>
-      requires std::is_base_of_v<BaseObject, T>
+        requires std::is_base_of_v<BaseObject, T>
       inline T &getJSObjectAs()
       {
         assert(hasJSObject());

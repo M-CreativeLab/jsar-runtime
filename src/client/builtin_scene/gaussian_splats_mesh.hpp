@@ -127,12 +127,12 @@ namespace endor
         // This reorders the sorted indices, not the texture data
         std::sort(sortedSplats_.begin(), sortedSplats_.end(), [](const SplatInstanceData &a, const SplatInstanceData &b)
                   {
-                    return a.depth > b.depth; // Back to front });
+          return a.depth > b.depth; // Back to front });
 
-        needsSorting_ = false;
+          needsSorting_ = false;
 
-        // Mark the mesh as dirty so the GPU buffer gets updated with new sorting
-        setDirty(true);
+          // Mark the mesh as dirty so the GPU buffer gets updated with new sorting
+          setDirty(true);
       }
 
       /**
@@ -140,7 +140,7 @@ namespace endor
      */
       inline const std::vector<SplatInstanceData> &getSplatInstances() const
       {
-        return sortedSplats_;
+          return sortedSplats_;
       }
 
       /**
@@ -148,7 +148,7 @@ namespace endor
      */
       inline size_t getTotalSplatCount() const
       {
-        return sortedSplats_.size();
+          return sortedSplats_.size();
       }
 
       /**
@@ -156,7 +156,7 @@ namespace endor
      */
       inline bool needsSorting() const
       {
-        return needsSorting_;
+          return needsSorting_;
       }
 
       /**
@@ -164,7 +164,7 @@ namespace endor
      */
       inline void markNeedsSorting()
       {
-        needsSorting_ = true;
+          needsSorting_ = true;
       }
 
       /**
@@ -172,7 +172,7 @@ namespace endor
      */
       inline bool isGeometryInitialized() const
       {
-        return !isDirty();
+          return !isDirty();
       }
 
       /**
@@ -205,7 +205,7 @@ namespace endor
      */
       inline std::shared_ptr<client_graphics::WebGLTexture> getCompressedSplatsTexture() const
       {
-        return compressedSplatsTexture_;
+          return compressedSplatsTexture_;
       }
 
       /**
@@ -213,7 +213,7 @@ namespace endor
      */
       inline size_t getTotalCompressedSplats() const
       {
-        return compressedSplatData_.size();
+          return compressedSplatData_.size();
       }
 
       /**
@@ -221,7 +221,7 @@ namespace endor
      */
       inline const SplatNormalizationParams &getNormalizationParams() const
       {
-        return normalizationParams_;
+          return normalizationParams_;
       }
 
       /**
@@ -229,7 +229,7 @@ namespace endor
      */
       inline std::shared_ptr<client_graphics::WebGLBuffer> getSplatInstanceBuffer() const
       {
-        return splatInstanceBuffer_;
+          return splatInstanceBuffer_;
       }
 
       /**
@@ -256,104 +256,104 @@ namespace endor
       template <typename QueryFunc>
       void rebuildSortedSplats(QueryFunc getComponent)
       {
-        compressedSplatData_.clear();
-        sortedSplats_.clear();
+          compressedSplatData_.clear();
+          sortedSplats_.clear();
 
-        // Collect all splats from all entities and compute bounds for normalization
-        std::vector<GaussianSplat> allSplats;
+          // Collect all splats from all entities and compute bounds for normalization
+          std::vector<GaussianSplat> allSplats;
 
-        for (ecs::EntityId entityId : splatEntities_)
-        {
-          auto *model = getComponent(entityId);
-          if (model && model->isLoaded() && model->visible())
+          for (ecs::EntityId entityId : splatEntities_)
           {
-            const auto &splats = model->getSplats();
-            allSplats.insert(allSplats.end(), splats.begin(), splats.end());
-          }
-        }
-
-        if (allSplats.empty())
-        {
-          needsRebuild_ = false;
-          needsSorting_ = false;
-          needsTextureUpdate_ = true;
-          setDirty(true);
-          return;
-        }
-
-        // Compute scale bounds for log compression (no position bounds needed for half-floats)
-        float scaleMin[3] = {std::log2(std::max(0.001f, allSplats[0].scale[0])),
-                             std::log2(std::max(0.001f, allSplats[0].scale[1])),
-                             std::log2(std::max(0.001f, allSplats[0].scale[2]))};
-        float scaleMax[3] = {scaleMin[0], scaleMin[1], scaleMin[2]};
-
-        for (const auto &splat : allSplats)
-        {
-          // Update scale bounds (log2 space) - no position bounds needed for half-floats
-          for (int i = 0; i < 3; i++)
-          {
-            float logScale = std::log2(std::max(0.001f, splat.scale[i]));
-            scaleMin[i] = std::min(scaleMin[i], logScale);
-            scaleMax[i] = std::max(scaleMax[i], logScale);
-          }
-        }
-
-        // Store normalization parameters (only scale bounds needed)
-        for (int i = 0; i < 3; i++)
-        {
-          normalizationParams_.scaleMin[i] = scaleMin[i];
-          normalizationParams_.scaleMax[i] = scaleMax[i];
-        }
-
-        // Now convert all splats to compressed format
-        uint32_t compressedIndex = 0;
-        for (ecs::EntityId entityId : splatEntities_)
-        {
-          auto *model = getComponent(entityId);
-          if (model && model->isLoaded() && model->visible())
-          {
-            const auto &splats = model->getSplats();
-            for (const auto &splat : splats)
+            auto *model = getComponent(entityId);
+            if (model && model->isLoaded() && model->visible())
             {
-              // Convert splat data to compressed format (1 texel per splat)
-              CompressedSplat compressed = compressed_splat_utils::convertSplat(
-                splat.position[0], splat.position[1], splat.position[2], // position
-                splat.scale[0],
-                splat.scale[1],
-                splat.scale[2], // scale
-                splat.rotation[0],
-                splat.rotation[1],
-                splat.rotation[2],
-                splat.rotation[3], // quaternion
-                splat.color[0],
-                splat.color[1],
-                splat.color[2],
-                splat.opacity,       // color + opacity
-                normalizationParams_ // normalization parameters
-              );
-
-              compressedSplatData_.push_back(compressed);
-
-              // Add to sorted instances (only index and sorting data)
-              SplatInstanceData instance;
-              instance.index = compressedIndex;
-              instance.sourceEntity = entityId;
-              sortedSplats_.push_back(instance);
-
-              compressedIndex++;
+              const auto &splats = model->getSplats();
+              allSplats.insert(allSplats.end(), splats.begin(), splats.end());
             }
           }
-        }
 
-        needsRebuild_ = false;
-        needsSorting_ = true;       // After rebuilding, we need to sort the splats
-        needsTextureUpdate_ = true; // After rebuilding, we need to update the textures
+          if (allSplats.empty())
+          {
+            needsRebuild_ = false;
+            needsSorting_ = false;
+            needsTextureUpdate_ = true;
+            setDirty(true);
+            return;
+          }
 
-        // Mark the mesh as dirty so the GPU buffer gets updated
-        setDirty(true);
+          // Compute scale bounds for log compression (no position bounds needed for half-floats)
+          float scaleMin[3] = {std::log2(std::max(0.001f, allSplats[0].scale[0])),
+                               std::log2(std::max(0.001f, allSplats[0].scale[1])),
+                               std::log2(std::max(0.001f, allSplats[0].scale[2]))};
+          float scaleMax[3] = {scaleMin[0], scaleMin[1], scaleMin[2]};
 
-        // Debug output
-        DEBUG("GaussianSplatsMesh", "Rebuilt compressed splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
+          for (const auto &splat : allSplats)
+          {
+            // Update scale bounds (log2 space) - no position bounds needed for half-floats
+            for (int i = 0; i < 3; i++)
+            {
+              float logScale = std::log2(std::max(0.001f, splat.scale[i]));
+              scaleMin[i] = std::min(scaleMin[i], logScale);
+              scaleMax[i] = std::max(scaleMax[i], logScale);
+            }
+          }
+
+          // Store normalization parameters (only scale bounds needed)
+          for (int i = 0; i < 3; i++)
+          {
+            normalizationParams_.scaleMin[i] = scaleMin[i];
+            normalizationParams_.scaleMax[i] = scaleMax[i];
+          }
+
+          // Now convert all splats to compressed format
+          uint32_t compressedIndex = 0;
+          for (ecs::EntityId entityId : splatEntities_)
+          {
+            auto *model = getComponent(entityId);
+            if (model && model->isLoaded() && model->visible())
+            {
+              const auto &splats = model->getSplats();
+              for (const auto &splat : splats)
+              {
+                // Convert splat data to compressed format (1 texel per splat)
+                CompressedSplat compressed = compressed_splat_utils::convertSplat(
+                  splat.position[0], splat.position[1], splat.position[2], // position
+                  splat.scale[0],
+                  splat.scale[1],
+                  splat.scale[2], // scale
+                  splat.rotation[0],
+                  splat.rotation[1],
+                  splat.rotation[2],
+                  splat.rotation[3], // quaternion
+                  splat.color[0],
+                  splat.color[1],
+                  splat.color[2],
+                  splat.opacity,       // color + opacity
+                  normalizationParams_ // normalization parameters
+                );
+
+                compressedSplatData_.push_back(compressed);
+
+                // Add to sorted instances (only index and sorting data)
+                SplatInstanceData instance;
+                instance.index = compressedIndex;
+                instance.sourceEntity = entityId;
+                sortedSplats_.push_back(instance);
+
+                compressedIndex++;
+              }
+            }
+          }
+
+          needsRebuild_ = false;
+          needsSorting_ = true;       // After rebuilding, we need to sort the splats
+          needsTextureUpdate_ = true; // After rebuilding, we need to update the textures
+
+          // Mark the mesh as dirty so the GPU buffer gets updated
+          setDirty(true);
+
+          // Debug output
+          DEBUG("GaussianSplatsMesh", "Rebuilt compressed splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
       }
 
     private:
@@ -387,6 +387,6 @@ namespace endor
 
       // Empty indices to prevent normal draw call
       static const Indices<uint32_t> emptyIndices_;
-    };
-  }
-} // namespace endor
+      };
+    }
+  } // namespace endor

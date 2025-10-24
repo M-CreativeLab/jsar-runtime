@@ -56,10 +56,11 @@ namespace endor
      * @returns If the mesh's handle is the given type.
      */
       template <typename MeshType>
-      requires std::is_same<InstancedMeshBase, MeshType>::value ||
-        std::is_same<Mesh, MeshType>::value ||
-        std::is_base_of<Mesh, MeshType>::value bool
-        is() const
+        requires std::is_same<InstancedMeshBase, MeshType>::value ||
+                 std::is_same<Mesh, MeshType>::value ||
+                 std::is_base_of<Mesh, MeshType>::value
+      bool
+      is() const
       {
         return std::dynamic_pointer_cast<MeshType>(handle_) != nullptr;
       }
@@ -77,10 +78,11 @@ namespace endor
      * @returns The handle of the mesh as the given type.
      */
       template <typename MeshType = Mesh>
-      requires std::is_same<InstancedMeshBase, MeshType>::value ||
-        std::is_same<Mesh, MeshType>::value ||
-        std::is_base_of<Mesh, MeshType>::value inline std::shared_ptr<MeshType>
-        getHandleAs() const
+        requires std::is_same<InstancedMeshBase, MeshType>::value ||
+                 std::is_same<Mesh, MeshType>::value ||
+                 std::is_base_of<Mesh, MeshType>::value
+      inline std::shared_ptr<MeshType>
+      getHandleAs() const
       {
         if constexpr (std::is_same<MeshType, Mesh>::value)
           return handle_;
@@ -95,11 +97,11 @@ namespace endor
      * @returns The handle of the mesh as the given type.
      */
       template <typename MeshType = Mesh>
-      requires std::is_same<InstancedMeshBase, MeshType>::value ||
-        std::is_same<Mesh, MeshType>::value ||
-        std::is_base_of<Mesh, MeshType>::value
-          MeshType &
-          getHandleCheckedAsRef() const
+        requires std::is_same<InstancedMeshBase, MeshType>::value ||
+                 std::is_same<Mesh, MeshType>::value ||
+                 std::is_base_of<Mesh, MeshType>::value
+      MeshType &
+      getHandleCheckedAsRef() const
       {
         auto mesh = getHandleAs<MeshType>();
         assert(mesh != nullptr && "The mesh handle is not valid.");
@@ -277,7 +279,8 @@ namespace endor
      * @returns The created instanced mesh.
      */
       template <typename MeshType, typename... Args>
-      requires std::is_base_of<Mesh, MeshType>::value static inline std::shared_ptr<InstancedMesh<MeshType>> CreateInstancedMesh(const std::string &name, Args &&...args)
+        requires std::is_base_of<Mesh, MeshType>::value
+      static inline std::shared_ptr<InstancedMesh<MeshType>> CreateInstancedMesh(const std::string &name, Args &&...args)
       {
         return CreateAndBuild<InstancedMesh<MeshType>>(name, std::forward<Args>(args)...);
       }

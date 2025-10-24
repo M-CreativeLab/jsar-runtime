@@ -52,7 +52,7 @@ namespace endor
       }
 
       template <typename D>
-      requires std::is_base_of_v<DOMStringMapSource, D>
+        requires std::is_base_of_v<DOMStringMapSource, D>
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<D> source)
       {

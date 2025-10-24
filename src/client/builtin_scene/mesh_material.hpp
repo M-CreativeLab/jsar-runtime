@@ -31,7 +31,8 @@ namespace endor
      * @returns The material handle.
      */
       template <typename MaterialType = Material>
-      requires std::is_base_of<Material, MaterialType>::value inline std::shared_ptr<MaterialType> material() const
+        requires std::is_base_of<Material, MaterialType>::value
+      inline std::shared_ptr<MaterialType> material() const
       {
         if (material_ == nullptr)
           return nullptr;

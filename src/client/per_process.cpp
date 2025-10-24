@@ -596,226 +596,226 @@ namespace endor
   {
     return requestFrame(TrFrameRequestType::AnimationFrame, [callback](frame_request::TrFrameRequestMessage &message)
                         {
-                          auto animationFrameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(message);
-                          if (animationFrameRequest == nullptr)
-                            return;
-                          callback(*animationFrameRequest);
-                          delete animationFrameRequest; // End });
+      auto animationFrameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(message);
+      if (animationFrameRequest == nullptr)
+        return;
+      callback(*animationFrameRequest);
+      delete animationFrameRequest; // End });
   }
 
   FrameRequestId TrClientContextPerProcess::requestFrame(TrFrameRequestType type, TrFrameRequestFn fn)
   {
-    unique_lock<shared_mutex> lock(frameRequestMutex);
-    FrameRequestId resId;
-    while (true)
-    {
-      FrameRequestId id = static_cast<FrameRequestId>(s_IdGenerator->get());
-      if (frameRequestCallbacksMap.find(id) != frameRequestCallbacksMap.end())
-        continue;
+      unique_lock<shared_mutex> lock(frameRequestMutex);
+      FrameRequestId resId;
+      while (true)
+      {
+        FrameRequestId id = static_cast<FrameRequestId>(s_IdGenerator->get());
+        if (frameRequestCallbacksMap.find(id) != frameRequestCallbacksMap.end())
+          continue;
 
-      TrFrameRequestCallback callback(type, fn);
-      frameRequestCallbacksMap.insert(pair<FrameRequestId, TrFrameRequestCallback>(id, callback));
-      resId = id;
-      break;
-    }
-    return resId;
+        TrFrameRequestCallback callback(type, fn);
+        frameRequestCallbacksMap.insert(pair<FrameRequestId, TrFrameRequestCallback>(id, callback));
+        resId = id;
+        break;
+      }
+      return resId;
   }
 
   void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
   {
-    unique_lock<shared_mutex> lock(frameRequestMutex);
-    frameRequestCallbacksMap.erase(id);
+      unique_lock<shared_mutex> lock(frameRequestMutex);
+      frameRequestCallbacksMap.erase(id);
   }
 
   bool TrClientContextPerProcess::sendEvent(shared_ptr<TrNativeEvent> event)
   {
-    assert(eventChanSender != nullptr &&
-           "EventChanSender is not initialized.");
-    return eventChanSender->dispatchEvent(event);
+      assert(eventChanSender != nullptr &&
+             "EventChanSender is not initialized.");
+      return eventChanSender->dispatchEvent(event);
   }
 
   TrNativeEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
   {
-    assert(eventChanReceiver != nullptr &&
-           "EventChanReceiver is not initialized.");
-    return eventChanReceiver->recvEvent(timeout);
+      assert(eventChanReceiver != nullptr &&
+             "EventChanReceiver is not initialized.");
+      return eventChanReceiver->recvEvent(timeout);
   }
 
   shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer(media_comm::MediaContentType contentType)
   {
-    auto player = make_shared<media_client::MediaPlayer>(contentType);
-    mediaPlayers.push_back(player);
-    return player;
+      auto player = make_shared<media_client::MediaPlayer>(contentType);
+      mediaPlayers.push_back(player);
+      return player;
   }
 
   shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlayer()
   {
-    auto player = make_shared<media_client::AudioPlayer>();
-    mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
-    return player;
+      auto player = make_shared<media_client::AudioPlayer>();
+      mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
+      return player;
   }
 
   TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::createHostWebGLContext()
   {
-    if (!commandBufferChanClient ||
-        !commandBufferChanSender ||
-        !commandBufferChanReceiver)
-    {
-      return nullptr;
-    }
+      if (!commandBufferChanClient ||
+          !commandBufferChanSender ||
+          !commandBufferChanReceiver)
+      {
+        return nullptr;
+      }
 
-    client_graphics::ContextAttributes contextAttrs;
-    contextAttrs.xrCompatible = true;
-    auto newContext = client_graphics::WebGL2Context::Make(contextAttrs);
-    assert(newContext != nullptr && newContext->isXRCompatible());
+      client_graphics::ContextAttributes contextAttrs;
+      contextAttrs.xrCompatible = true;
+      auto newContext = client_graphics::WebGL2Context::Make(contextAttrs);
+      assert(newContext != nullptr && newContext->isXRCompatible());
 
-    // Only valid context id is allowed.
-    if (newContext->id >= commandbuffers::MinimumContextId)
-    {
-      hostWebGLContexts.push_back(newContext);
-      return newContext;
-    }
-    else
-    {
-      return nullptr;
-    }
+      // Only valid context id is allowed.
+      if (newContext->id >= commandbuffers::MinimumContextId)
+      {
+        hostWebGLContexts.push_back(newContext);
+        return newContext;
+      }
+      else
+      {
+        return nullptr;
+      }
   }
 
   TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::getHostWebGLContext(uint32_t contextId)
   {
-    for (auto &context : hostWebGLContexts)
-    {
-      if (context->id == contextId)
-        return context;
-    }
-    return nullptr;
+      for (auto &context : hostWebGLContexts)
+      {
+        if (context->id == contextId)
+          return context;
+      }
+      return nullptr;
   }
 
   bool TrClientContextPerProcess::removeHostWebGLContext(uint32_t contextId)
   {
-    for (auto it = hostWebGLContexts.begin(); it != hostWebGLContexts.end(); it++)
-    {
-      if ((*it)->id == contextId)
+      for (auto it = hostWebGLContexts.begin(); it != hostWebGLContexts.end(); it++)
       {
-        hostWebGLContexts.erase(it);
-        return true;
+        if ((*it)->id == contextId)
+        {
+          hostWebGLContexts.erase(it);
+          return true;
+        }
       }
-    }
-    return false;
+      return false;
   }
 
   bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush)
   {
-    assert(commandBufferChanSender != nullptr &&
-           "CommandBufferChanSender is not initialized.");
-    return commandBufferChanSender->sendCommandBufferRequest(commandBuffer, followsFlush);
+      assert(commandBufferChanSender != nullptr &&
+             "CommandBufferChanSender is not initialized.");
+      return commandBufferChanSender->sendCommandBufferRequest(commandBuffer, followsFlush);
   }
 
   TrCommandBufferResponse *TrClientContextPerProcess::selectCommandbufferResponse(client_graphics::WebGLContext *context,
                                                                                   int requestId)
   {
-    // First, check if there are any pending async command buffer responses.
-    if (!pendingCommandbufferResponses.empty())
-    {
-      // Process all pending async command buffer responses.
-      for (auto it = pendingCommandbufferResponses.begin();
-           it != pendingCommandbufferResponses.end();)
+      // First, check if there are any pending async command buffer responses.
+      if (!pendingCommandbufferResponses.empty())
       {
-        TrCommandBufferResponse *resp = *it;
-        if (resp->contextId == context->id &&
-            resp->requestId == requestId)
+        // Process all pending async command buffer responses.
+        for (auto it = pendingCommandbufferResponses.begin();
+             it != pendingCommandbufferResponses.end();)
         {
-          // Found the response, remove it from the pending list.
-          it = pendingCommandbufferResponses.erase(it);
-          return resp;
-        }
-        else
-        {
-          ++it; // Move to the next response.
+          TrCommandBufferResponse *resp = *it;
+          if (resp->contextId == context->id &&
+              resp->requestId == requestId)
+          {
+            // Found the response, remove it from the pending list.
+            it = pendingCommandbufferResponses.erase(it);
+            return resp;
+          }
+          else
+          {
+            ++it; // Move to the next response.
+          }
         }
       }
-    }
-    return nullptr;
+      return nullptr;
   }
 
   TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(client_graphics::WebGLContext *context,
                                                                                 int requestId,
                                                                                 int timeout)
   {
-    unique_lock<mutex> lock(mutexForCommandbufferResponses);
-    auto before = chrono::steady_clock::now();
+      unique_lock<mutex> lock(mutexForCommandbufferResponses);
+      auto before = chrono::steady_clock::now();
 
-    // First, check if there are any pending async command buffer responses.
-    TrCommandBufferResponse *resp = selectCommandbufferResponse(context, requestId);
+      // First, check if there are any pending async command buffer responses.
+      TrCommandBufferResponse *resp = selectCommandbufferResponse(context, requestId);
 
-    // If no pending response found, wait for the command buffer response updates.
-    if (resp == nullptr)
-    {
-      auto check = [this, context, requestId, &resp]()
+      // If no pending response found, wait for the command buffer response updates.
+      if (resp == nullptr)
       {
-        resp = selectCommandbufferResponse(context, requestId);
-        return resp != nullptr;
-      };
-      commandbufferResponseCv.wait_for(lock, chrono::milliseconds(timeout), check);
+        auto check = [this, context, requestId, &resp]()
+        {
+          resp = selectCommandbufferResponse(context, requestId);
+          return resp != nullptr;
+        };
+        commandbufferResponseCv.wait_for(lock, chrono::milliseconds(timeout), check);
 
-      if (resp == nullptr) [[unlikely]]
-      {
-        cerr << "Timeout waiting for command buffer response() "
-             << "for contextId=" << context->id << ", requestId=" << requestId << endl;
-        assert(false && "Timeout waiting for command buffer response.");
-        return nullptr;
+        if (resp == nullptr) [[unlikely]]
+        {
+          cerr << "Timeout waiting for command buffer response() "
+               << "for contextId=" << context->id << ", requestId=" << requestId << endl;
+          assert(false && "Timeout waiting for command buffer response.");
+          return nullptr;
+        }
       }
-    }
 
-    auto after = chrono::steady_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
-    cerr << "Received command buffer response(" << commandTypeToStr(resp->type) << ") "
-         << "in " << duration << "ms which blocks the main thread." << endl;
-    return resp;
+      auto after = chrono::steady_clock::now();
+      auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
+      cerr << "Received command buffer response(" << commandTypeToStr(resp->type) << ") "
+           << "in " << duration << "ms which blocks the main thread." << endl;
+      return resp;
   }
 
   void TrClientContextPerProcess::recvCommandBufferResponseAsync(client_graphics::WebGLContext *context,
                                                                  int requestId,
                                                                  AsyncCommandBufferResponseFunction func)
   {
-    unique_lock<shared_mutex> lock(mutexForAsyncCommandbufferResponseCallbacks);
-    asyncCommandbufferResponseCallbacks.push_back(
-      AsyncCommandBufferResponseCallback{context, requestId, func});
+      unique_lock<shared_mutex> lock(mutexForAsyncCommandbufferResponseCallbacks);
+      asyncCommandbufferResponseCallbacks.push_back(
+        AsyncCommandBufferResponseCallback{context, requestId, func});
   }
 
   void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage)
   {
-    auto messageType = eventMessage.getType();
-    if (messageType == TrMediaCommandType::OnMediaEvent)
-    {
-      auto mediaEvent = TrMediaCommandBase::CreateFromMessage<TrOnMediaEvent>(eventMessage);
-      auto clientId = mediaEvent.clientId;
-      for (auto &mediaPlayer : mediaPlayers)
+      auto messageType = eventMessage.getType();
+      if (messageType == TrMediaCommandType::OnMediaEvent)
       {
-        if (mediaPlayer->id == clientId)
+        auto mediaEvent = TrMediaCommandBase::CreateFromMessage<TrOnMediaEvent>(eventMessage);
+        auto clientId = mediaEvent.clientId;
+        for (auto &mediaPlayer : mediaPlayers)
         {
-          mediaPlayer->dispatchEvent(mediaEvent.eventType);
-          break;
+          if (mediaPlayer->id == clientId)
+          {
+            mediaPlayer->dispatchEvent(mediaEvent.eventType);
+            break;
+          }
         }
       }
-    }
-    else if (messageType == TrMediaCommandType::OnMediaMetadata)
-    {
-      auto metadata = TrMediaCommandBase::CreateFromMessage<TrOnMediaMetadata>(eventMessage);
-      auto clientId = metadata.clientId;
-      for (auto &mediaPlayer : mediaPlayers)
+      else if (messageType == TrMediaCommandType::OnMediaMetadata)
       {
-        if (mediaPlayer->id == clientId)
+        auto metadata = TrMediaCommandBase::CreateFromMessage<TrOnMediaMetadata>(eventMessage);
+        auto clientId = metadata.clientId;
+        for (auto &mediaPlayer : mediaPlayers)
         {
-          mediaPlayer->duration = metadata.duration;
-          // TODO: other metadata?
-          break;
+          if (mediaPlayer->id == clientId)
+          {
+            mediaPlayer->duration = metadata.duration;
+            // TODO: other metadata?
+            break;
+          }
         }
       }
-    }
-    else
-    {
-      fprintf(stderr, "ClientContext(%d) received an unknown media event message\n", id);
-    }
+      else
+      {
+        fprintf(stderr, "ClientContext(%d) received an unknown media event message\n", id);
+      }
   }
-}
+  }

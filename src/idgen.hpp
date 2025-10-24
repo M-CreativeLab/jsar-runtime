@@ -57,7 +57,7 @@ public:
  * @tparam IdType The type of the id, it must be an integer type, and the default value is `uint32_t`.
  */
 template <typename IdType = uint32_t>
-requires std::is_integral_v<IdType>
+  requires std::is_integral_v<IdType>
 class TrIdGeneratorBase final
 {
 public:
