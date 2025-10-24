@@ -259,7 +259,7 @@ namespace jsar::example
       buttonVertices_.push_back(0.5f + 0.5f * sin(theta)); // texCoord v
     }
 
-    //create vao and vbo for button
+    // Create VAO and VBO for button
     glGenBuffers(1, &buttonVertexVBO_);
     glGenVertexArrays(1, &buttonVAO_);
     glBindVertexArray(buttonVAO_);
