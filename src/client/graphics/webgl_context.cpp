@@ -154,6 +154,9 @@ namespace endor
       if (program == nullptr || !program->isValid()) [[unlikely]]
         return;
 
+      // Link this program on the client-side first.
+      program->link();
+
       auto req = LinkProgramCommandBufferRequest(program->id);
       if (!sendCommandBufferRequest(req, true))
         throw LinkProgramException(*program, "Failed to send the command buffer.");
@@ -168,8 +171,8 @@ namespace endor
         }
 
         /**
-       * Update the program's active attributes and uniforms.
-       */
+         * Update the program's active attributes and uniforms.
+         */
         {
           int index = 0;
           for (auto &activeInfo : resp.activeAttribs)
@@ -180,20 +183,20 @@ namespace endor
         }
 
         /**
-       * Update the program's attribute locations.
-       */
+         * Update the program's attribute locations.
+         */
         for (auto &attribLocation : resp.attribLocations)
           program->setAttribLocation(attribLocation.name, attribLocation.location);
 
         /**
-       * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
-       *
-       * When uniforms declared as an array, the valid name might be like the followings:
-       *
-       * - foo
-       * - foo[0]
-       * - foo[1]
-       */
+         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
+         *
+         * When uniforms declared as an array, the valid name might be like the followings:
+         *
+         * - foo
+         * - foo[0]
+         * - foo[1]
+         */
         for (auto &uniformLocation : resp.uniformLocations)
         {
           auto name = uniformLocation.name;
@@ -201,23 +204,23 @@ namespace endor
           auto size = uniformLocation.size;
 
           /**
-         * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
-         *
-         * 1. check if the name ends with "[0]"
-         * 2. grab the name without "[0]"
-         * 3. set the uniform location for the name without "[0]"
-         * 4. set the uniform location for the name with "[0]" and the index
-         * 5. repeat 4 for the rest of the indices
-         *
-         * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
-         */
+           * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
+           *
+           * 1. check if the name ends with "[0]"
+           * 2. grab the name without "[0]"
+           * 3. set the uniform location for the name without "[0]"
+           * 4. set the uniform location for the name with "[0]" and the index
+           * 5. repeat 4 for the rest of the indices
+           *
+           * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+           */
           string arraySuffix = "[0]";
           int endedAt = name.length() - arraySuffix.length();
           bool endsWithArray = name.size() > arraySuffix.size() && name.rfind(arraySuffix) != string::npos;
 
           /**
-         * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
-         */
+           * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
+           */
           if (size == 1 && !endsWithArray)
           {
             program->setUniformLocation(name, location);
@@ -240,8 +243,8 @@ namespace endor
         if (isWebGL2_ == true)
         {
           /**
-         * Save the uniform block indices to the program object
-         */
+           * Save the uniform block indices to the program object
+           */
           for (auto &uniformBlock : resp.uniformBlocks)
             program->setUniformBlockIndex(uniformBlock.name, uniformBlock.index);
         }
@@ -284,9 +287,9 @@ namespace endor
     int WebGLContext::getProgramParameter(shared_ptr<WebGLProgram> program, int pname)
     {
       /**
-     * The following parameters are carried when linkProgram() is responded, thus we could return them from the client-side
-     * `WebGLProgram` object directly.
-     */
+       * The following parameters are carried when linkProgram() is responded, thus we could return them from the client-side
+       * `WebGLProgram` object directly.
+       */
       if (pname == WEBGL_LINK_STATUS)
         return static_cast<int>(program->getLinkStatus(false));
       if (pname == WEBGL_VALIDATE_STATUS)
@@ -297,8 +300,8 @@ namespace endor
         return static_cast<int>(program->countActiveUniforms());
 
       /**
-     * Send a command buffer request and wait for the response if not hit the above conditions.
-     */
+       * Send a command buffer request and wait for the response if not hit the above conditions.
+       */
       auto req = GetProgramParamCommandBufferRequest(program->id, pname);
       sendCommandBufferRequest(req, true);
 
@@ -365,32 +368,28 @@ namespace endor
 
     void WebGLContext::attachShader(shared_ptr<WebGLProgram> program, shared_ptr<WebGLShader> shader)
     {
+      assert(program != nullptr && "Program is not null");
+      assert(shader != nullptr && "Shader is not null");
+
+      program->attachShader(shader);
       auto req = AttachShaderCommandBufferRequest(program->id, shader->id);
       sendCommandBufferRequest(req);
     }
 
     void WebGLContext::detachShader(shared_ptr<WebGLProgram> program, shared_ptr<WebGLShader> shader)
     {
+      assert(program != nullptr && "Program is not null");
+      assert(shader != nullptr && "Shader is not null");
+
+      program->detachShader(shader);
       auto req = DetachShaderCommandBufferRequest(program->id, shader->id);
       sendCommandBufferRequest(req);
     }
 
     string WebGLContext::getShaderSource(shared_ptr<WebGLShader> shader)
     {
-      auto req = GetShaderSourceCommandBufferRequest(shader->id);
-      sendCommandBufferRequest(req, true);
-
-      auto resp = recvResponse<GetShaderSourceCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_SOURCE_RES, req);
-      if (resp != nullptr) [[likely]]
-      {
-        string source(resp->source);
-        delete resp;
-        return source;
-      }
-      else
-      {
-        throw runtime_error("Failed to get shader source: timeout.");
-      }
+      assert(shader != nullptr && "Shader is not null");
+      return shader->source;
     }
 
     int WebGLContext::getShaderParameter(shared_ptr<WebGLShader> shader, int pname)
