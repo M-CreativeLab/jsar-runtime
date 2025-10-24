@@ -21,7 +21,7 @@ namespace endor
    */
     class MediaPlayer : public events_comm::TrEventTarget<media_comm::TrMediaEventType>
     {
-      friend class ::TrClientContextPerProcess;
+      friend class endor::TrClientContextPerProcess;
 
     public:
       /**

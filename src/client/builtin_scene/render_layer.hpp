@@ -49,16 +49,16 @@ namespace endor
       int index_;
     };
   }
-
-  namespace std
-  {
-    template <>
-    struct hash<builtin_scene::RenderLayer>
-    {
-      inline size_t operator()(const builtin_scene::RenderLayer &layer) const noexcept
-      {
-        return hash<int>()(layer.index());
-      }
-    };
-  }
 } // namespace endor
+
+namespace std
+{
+  template <>
+  struct hash<endor::builtin_scene::RenderLayer>
+  {
+    inline size_t operator()(const endor::builtin_scene::RenderLayer &layer) const noexcept
+    {
+      return hash<int>()(layer.index());
+    }
+  };
+}

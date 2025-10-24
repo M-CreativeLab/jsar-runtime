@@ -1,6 +1,9 @@
 #include "client_context.hpp"
 #include "common/xr/types.hpp"
 
+using namespace std;
+using namespace endor;
+
 namespace bindings
 {
   thread_local Napi::FunctionReference *ClientContext::constructor;

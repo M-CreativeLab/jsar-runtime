@@ -2,7 +2,8 @@
 #include <client/builtin_scene/meshes/loaders/ply_loader.hpp>
 #include <cstring>
 
-using namespace builtin_scene::model_loaders;
+using namespace endor;
+using namespace endor::builtin_scene::model_loaders;
 
 TEST_CASE("PLY Loader", "[ply_loader]")
 {

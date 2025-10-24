@@ -127,8 +127,7 @@ namespace endor
         // This reorders the sorted indices, not the texture data
         std::sort(sortedSplats_.begin(), sortedSplats_.end(), [](const SplatInstanceData &a, const SplatInstanceData &b)
                   {
-                    return a.depth > b.depth; // Back to front
-                  });
+                    return a.depth > b.depth; // Back to front });
 
         needsSorting_ = false;
 

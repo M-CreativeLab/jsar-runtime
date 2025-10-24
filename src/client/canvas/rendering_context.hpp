@@ -54,6 +54,6 @@ namespace endor
       TrClientContextPerProcess *clientContext = nullptr;
     };
   }
+} // namespace endor
 
 #include "./rendering_context2d.hpp"
-} // namespace endor

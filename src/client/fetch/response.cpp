@@ -1,7 +1,7 @@
 #include <client/fetch/response.hpp>
 
 using namespace std;
-using namespace client_fileapi;
+using namespace endor::client_fileapi;
 
 namespace endor
 {

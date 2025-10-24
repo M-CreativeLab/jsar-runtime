@@ -120,7 +120,7 @@ namespace crates::layout2
    * @tparam defaultValue The default value of the CSS keyword.
    */
   template <typename T, T defaultValue>
-    requires std::is_enum_v<T>
+  requires std::is_enum_v<T>
   class CSSKeyword
   {
     friend class LayoutStyle;

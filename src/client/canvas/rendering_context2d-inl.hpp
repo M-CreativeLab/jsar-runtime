@@ -1,13 +1,15 @@
+#pragma once
+
 #include <skia/include/core/SkFontMetrics.h>
 #include <skia/include/core/SkColorSpace.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 
 #include <crates/bindings.hpp>
 #include <common/font/parser.hpp>
+#include <client/per_process.hpp>
 
 #include "./rendering_context2d.hpp"
 #include "./path2d.hpp"
-#include "../per_process.hpp"
 
 namespace endor
 {

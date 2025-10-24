@@ -1,7 +1,8 @@
 #include "../catch2/catch_amalgamated.hpp"
 #include <client/builtin_scene/render_queue.hpp>
 
-using namespace builtin_scene;
+using namespace endor;
+using namespace endor::builtin_scene;
 
 TEST_CASE("RenderQueue Tests", "[render-queue]")
 {

@@ -8,7 +8,7 @@
 
 namespace dombinding
 {
-  class BrowsingContext : public RuntimeContextBase<BrowsingContext, dom::BrowsingContext>
+  class BrowsingContext : public RuntimeContextBase<BrowsingContext, endor::dom::BrowsingContext>
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);
@@ -20,7 +20,7 @@ namespace dombinding
     Napi::Value Start(const Napi::CallbackInfo &info);
 
   private:
-    TrClientContextPerProcess *client_context_;
+    endor::TrClientContextPerProcess *client_context_;
     static thread_local Napi::FunctionReference *constructor;
   };
 }

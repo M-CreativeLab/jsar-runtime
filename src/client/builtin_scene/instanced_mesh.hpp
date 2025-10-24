@@ -651,9 +651,8 @@ namespace endor
    * An instanced mesh which is a collection of sub-meshes that can be rendered together.
    */
     template <typename MeshType>
-      requires std::is_base_of<Mesh, MeshType>::value
-    class InstancedMesh final : public InstancedMeshBase,
-                                public MeshType
+    requires std::is_base_of<Mesh, MeshType>::value class InstancedMesh final : public InstancedMeshBase,
+                                                                                public MeshType
 
     {
     public:

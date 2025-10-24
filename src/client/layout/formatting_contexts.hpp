@@ -149,7 +149,7 @@ namespace endor
    * @tparam D The display type: such as DisplayInside::kFlex, DisplayInside::kGrid, etc.
    */
     template <DisplayInside D = DisplayInside::kFlow>
-      requires is_taffy_supported<D>
+    requires is_taffy_supported<D>
     class BlockFormattingContext : public TaffyBasedFormattingContext
     {
     public:

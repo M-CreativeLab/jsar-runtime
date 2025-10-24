@@ -11,7 +11,7 @@ function(tr_generate_shader_header OUTPUT SOURCE_DIR)
     set(header_content "${header_content}\n")
 
     # Start the namespace
-    set(header_content "${header_content}\nnamespace builtin_scene::shaders {\n")
+    set(header_content "${header_content}\nnamespace endor::builtin_scene::shaders {\n")
 
     # Write the shader strings
     foreach(shader_file IN LISTS shader_files)

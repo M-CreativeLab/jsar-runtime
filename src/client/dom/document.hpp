@@ -61,7 +61,7 @@ namespace endor
      * @returns The casted document.
      */
       template <typename T>
-        requires std::is_base_of_v<Document, T>
+      requires std::is_base_of_v<Document, T>
       static std::shared_ptr<T> As(std::shared_ptr<Document> document);
       /**
      * Create a new document.

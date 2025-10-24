@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <memory>
+#include <optional>
 #include <functional>
 #include <node/v8.h>
 #include <node/uv.h>
@@ -11,8 +12,8 @@ namespace endor
   namespace scripting_base
   {
     /**
-   * A utility class to facilitate thread-safe calls to JavaScript functions from other threads.
-   */
+     * A utility class to facilitate thread-safe calls to JavaScript functions from other threads.
+     */
     class ThreadSafeFunction
     {
       using CustomCallback = std::function<void(v8::Isolate *,
@@ -27,19 +28,19 @@ namespace endor
 
     public:
       /**
-     * Make a function call without thread safety guarantees, that does not use libuv async handle, instead calling
-     * the JavaScript function directly from the current stack.
-     * 
-     * @param custom_callback Optional custom callback to be invoked instead of the original JavaScript function.
-     */
+       * Make a function call without thread safety guarantees, that does not use libuv async handle, instead calling
+       * the JavaScript function directly from the current stack.
+       * 
+       * @param custom_callback Optional custom callback to be invoked instead of the original JavaScript function.
+       */
       void unsafeCall(CustomCallback custom_callback = nullptr);
       /**
-     * Make a non-blocking call to the JavaScript function.
-     * 
-     * @param custom_callback Optional custom callback to be invoked instead of the original JavaScript function.
-     * @note The custom callback if provided will be used to customize the arguments passed to the JavaScript function,
-     *       and caller is responsible to manage the lifetime of the `ThreadSafeFunction` instance.
-     */
+       * Make a non-blocking call to the JavaScript function.
+       * 
+       * @param custom_callback Optional custom callback to be invoked instead of the original JavaScript function.
+       * @note The custom callback if provided will be used to customize the arguments passed to the JavaScript function,
+       *       and caller is responsible to manage the lifetime of the `ThreadSafeFunction` instance.
+       */
       void nonBlockingCall(CustomCallback custom_callback = nullptr);
 
     private:

@@ -30,7 +30,7 @@ namespace bindings
 
   private:
     atomic<bool> connected = false;
-    TrClientContextPerProcess *clientContext = nullptr;
+    endor::TrClientContextPerProcess *clientContext = nullptr;
     Napi::ThreadSafeFunction onframeTsfn;
     uv_loop_t *eventloop;
     uv_timer_t tickHandle;

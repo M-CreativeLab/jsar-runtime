@@ -9,7 +9,7 @@ namespace endor
   namespace client_layout
   {
     template <DisplayInside Inner>
-      requires is_taffy_supported<Inner>
+    requires is_taffy_supported<Inner>
     BlockFormattingContext<Inner>::BlockFormattingContext(std::shared_ptr<LayoutView> view)
         : TaffyBasedFormattingContext(DisplayType::Block(Inner), view)
     {

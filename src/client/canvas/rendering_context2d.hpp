@@ -181,6 +181,6 @@ namespace endor
       float lineDashOffset = 0.0f;
     };
   }
+} // namespace endor
 
 #include "./rendering_context2d-inl.hpp"
-} // namespace endor

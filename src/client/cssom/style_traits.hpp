@@ -64,7 +64,7 @@ namespace endor
     public:
       // Parse a string to a single value of type T which is derived from Parse.
       template <typename T>
-        requires transmute::common::derived_from<T, Parse>
+      requires transmute::common::derived_from<T, Parse>
       static T ParseSingleValue(const std::string &input)
       {
         T value;
@@ -75,7 +75,7 @@ namespace endor
 
       // Parse a string(such as "1s,2s") to an array of type T which is derived from Parse.
       template <typename T>
-        requires transmute::common::derived_from<T, Parse>
+      requires transmute::common::derived_from<T, Parse>
       static SpecifiedValuesArray<T> ParseValuesArray(const std::string &input)
       {
         SpecifiedValuesArray<T> values;

@@ -6,7 +6,8 @@
 #include <vector>
 #include <string>
 
-using namespace canvas;
+using namespace endor;
+using namespace endor::canvas;
 
 TEST_CASE("SVG Image Codec basic functionality", "[svg-codec]")
 {

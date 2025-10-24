@@ -71,18 +71,19 @@ namespace endor
   class TrClientContextPerProcess;
 
   /**
- * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
- * necessary components and settings for initializing and running a Node.js-based script execution environment.
-
- * This class is responsible for:
- * - Managing the lifecycle of the script environment
- * - Initializing Node.js runtime
- * - Handling script arguments
- * - Providing access to the Node.js platform and initialization results
-
- * Each `ScriptEnvironment` instance corresponds to a separate script execution context, allowing for isolated and
- * controlled script execution within the application.
- */
+   * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
+   * necessary components and settings for initializing and running a Node.js-based script execution environment.
+   *
+   * This class is responsible for:
+   *
+   * - Managing the lifecycle of the script environment
+   * - Initializing Node.js runtime
+   * - Handling script arguments
+   * - Providing access to the Node.js platform and initialization results
+   *
+   * Each `ScriptEnvironment` instance corresponds to a separate script execution context, allowing for isolated and
+   * controlled script execution within the application.
+   */
   class ScriptEnvironment final
   {
   public:
@@ -176,11 +177,11 @@ namespace endor
   };
 
   /**
- * The client context is a singleton class in an application process.
- *
- * Every client process has a unique client context, which is responsible for managing the client-side resources, such as
- * the media players, command buffers, frame requests, and event channels.
- */
+   * The client context is a singleton class in an application process.
+   *
+   * Every client process has a unique client context, which is responsible for managing the client-side resources, such as
+   * the media players, command buffers, frame requests, and event channels.
+   */
   class TrClientContextPerProcess final : public TrEventTarget<TrClientContextEventType>
   {
   private:
@@ -189,10 +190,10 @@ namespace endor
 
   public:
     /**
-   * Create the client context instance, and throws an exception if the instance already exists.
-   *
-   * @returns The new instance of the client context.
-   */
+     * Create the client context instance, and throws an exception if the instance already exists.
+     *
+     * @returns The new instance of the client context.
+     */
     static TrClientContextPerProcess *Create();
     static TrClientContextPerProcess *Get();
     static const TrClientEnvironmentPerProcess &GetEnvironmentRef()
@@ -206,21 +207,21 @@ namespace endor
 
   public:
     /**
-   * This function should be called at hive initialization to initialize the context-free client context.
-   */
+     * This function should be called at hive initialization to initialize the context-free client context.
+     */
     void preload();
     /**
-   * Bootstrap the client context at specialized application process, such as connecting sockets, channels, etc.
-   */
+     * Bootstrap the client context at specialized application process, such as connecting sockets, channels, etc.
+     */
     void bootstrap();
     /**
-   * Prints the client context information.
-   */
+     * Prints the client context information.
+     */
     void print();
 
     /**
-   * Get the current performance time in milliseconds.
-   */
+     * Get the current performance time in milliseconds.
+     */
     inline double performanceNow()
     {
       return static_cast<double>(uv_hrtime() - startedAt) / 1e6;
@@ -228,12 +229,12 @@ namespace endor
 
   public: // SNR(Script Not Responsible) methods
     /**
-   * Update the Script Alive Time to mark the script is responsible.
-   */
+     * Update the Script Alive Time to mark the script is responsible.
+     */
     void updateScriptTime();
     /**
-   * Check if the script is not responding.
-   */
+     * Check if the script is not responding.
+     */
     inline bool isScriptNotResponding(int timeoutDuration = 2000);
 
   public: // frame request methods
@@ -243,22 +244,22 @@ namespace endor
 
   public: // event methods
     /**
-   * Send a native event to the host process.
-   *
-   * @param event The native event to send.
-   * @returns true if the event is sent successfully.
-   */
+     * Send a native event to the host process.
+     *
+     * @param event The native event to send.
+     * @returns true if the event is sent successfully.
+     */
     bool sendEvent(std::shared_ptr<TrNativeEvent> event);
     /**
-   * Receive a native event message from the host process.
-   *
-   * @param timeout The timeout to wait for the next message.
-   * @returns The new instance of the event message, or nullptr if no message received.
-   */
+     * Receive a native event message from the host process.
+     *
+     * @param timeout The timeout to wait for the next message.
+     * @returns The new instance of the event message, or nullptr if no message received.
+     */
     TrNativeEventMessage *recvEventMessage(int timeout);
     /**
-   * Report a document event to the host process.
-   */
+     * Report a document event to the host process.
+     */
     inline bool reportDocumentEvent(TrDocumentEventType documentEventType)
     {
       TrDocumentEvent detail(id, documentEventType);
@@ -266,12 +267,12 @@ namespace endor
       return sendEvent(event);
     }
     /**
-   * Send an RPC request to the host process and waits for the response.
-   *
-   * @param method The method name to call.
-   * @param args The arguments to pass to the method.
-   * @returns true if the RPC call is successful and the response is received.
-   */
+     * Send an RPC request to the host process and waits for the response.
+     *
+     * @param method The method name to call.
+     * @param args The arguments to pass to the method.
+     * @returns true if the RPC call is successful and the response is received.
+     */
     inline bool makeRpcCall(string method, vector<string> args)
     {
       TrRpcRequest req(id, method, args);
@@ -285,16 +286,16 @@ namespace endor
 
   public: // media methods
     /**
-   * Create a new media player, it returns a shared pointer to the created player.
-   */
+     * Create a new media player, it returns a shared pointer to the created player.
+     */
     shared_ptr<media_client::MediaPlayer> createMediaPlayer(media_comm::MediaContentType contentType = media_comm::MediaContentType::Audio);
     /**
-   * Create a new audio player, it returns a shared pointer to the created player.
-   */
+     * Create a new audio player, it returns a shared pointer to the created player.
+     */
     shared_ptr<media_client::AudioPlayer> createAudioPlayer();
     /**
-   * Send a media command to the media channel.
-   */
+     * Send a media command to the media channel.
+     */
     bool sendMediaRequest(TrMediaCommandBase &mediaCommand)
     {
       assert(mediaChanSender != nullptr);
@@ -303,61 +304,61 @@ namespace endor
 
   public: // commandbuffer methods
     /**
-   * Create a new host `WebGL2Context` instance for the client.
-   *
-   * The host `WebGL2Context` is a special XR-compatible context that is used to render content with the host graphics engine, such as Unity,
-   * Unreal Engine, etc.
-   *
-   * @returns The created host `WebGL2Context` instance.
-   */
+     * Create a new host `WebGL2Context` instance for the client.
+     *
+     * The host `WebGL2Context` is a special XR-compatible context that is used to render content with the host graphics engine, such as Unity,
+     * Unreal Engine, etc.
+     *
+     * @returns The created host `WebGL2Context` instance.
+     */
     WebGLContextReference createHostWebGLContext();
     /**
-   * Get the host `WebGL2Context` instance by the context id.
-   *
-   * @param contextId The context id to get.
-   * @returns The host `WebGL2Context` instance, or nullptr if not found.
-   */
+     * Get the host `WebGL2Context` instance by the context id.
+     *
+     * @param contextId The context id to get.
+     * @returns The host `WebGL2Context` instance, or nullptr if not found.
+     */
     WebGLContextReference getHostWebGLContext(uint32_t contextId);
     /**
-   * Remove the host `WebGL2Context` instance by the context id.
-   *
-   * @param contextId The context id to remove.
-   * @returns true if the host `WebGL2Context` instance is removed successfully.
-   */
+     * Remove the host `WebGL2Context` instance by the context id.
+     *
+     * @param contextId The context id to remove.
+     * @returns true if the host `WebGL2Context` instance is removed successfully.
+     */
     bool removeHostWebGLContext(uint32_t contextId);
     /**
-   * Send a command buffer request to the command buffer channel.
-   *
-   * @param commandBuffer The command buffer to send.
-   * @param followsFlush If the command buffer follows a flush command, a flush command will cause the renderer to flush 
-   *                     the buffer queue.
-   * @returns true if the command buffer request is sent successfully.
-   */
+     * Send a command buffer request to the command buffer channel.
+     *
+     * @param commandBuffer The command buffer to send.
+     * @param followsFlush If the command buffer follows a flush command, a flush command will cause the renderer to flush 
+     *                     the buffer queue.
+     * @returns true if the command buffer request is sent successfully.
+     */
     bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
     /**
-   * Select a `TrCommandBufferResponse` from the pending list and returns it, note that selected response will be 
-   * removed from the pending list.
-   */
+     * Select a `TrCommandBufferResponse` from the pending list and returns it, note that selected response will be 
+     * removed from the pending list.
+     */
     [[nodiscard]] TrCommandBufferResponse *selectCommandbufferResponse(client_graphics::WebGLContext *, int requestId);
     /**
-   * Receive a command buffer response from the command buffer channel with a timeout.
-   *
-   * NOTE(yorkie): this method will be blocking util there is no pending async command buffer response, this is to
-   * ensure receiving a command buffer response should be sequentially, and the async command buffer response
-   * callbacks should be processed before receiving a new command buffer response.
-   *
-   * @param timeout The time in milliseconds to wait for the response.
-   * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
-   */
+     * Receive a command buffer response from the command buffer channel with a timeout.
+     *
+     * NOTE(yorkie): this method will be blocking util there is no pending async command buffer response, this is to
+     * ensure receiving a command buffer response should be sequentially, and the async command buffer response
+     * callbacks should be processed before receiving a new command buffer response.
+     *
+     * @param timeout The time in milliseconds to wait for the response.
+     * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
+     */
     [[nodiscard]] TrCommandBufferResponse *recvCommandBufferResponse(client_graphics::WebGLContext *,
                                                                      int requestId,
                                                                      int timeout);
     /**
-   * Asynchronously receive a command buffer response from the command buffer channel, and calls the callback with the 
-   * response object.
-   * 
-   * @param callback The callback to call when the response is received.
-   */
+     * Asynchronously receive a command buffer response from the command buffer channel, and calls the callback with the 
+     * response object.
+     * 
+     * @param callback The callback to call when the response is received.
+     */
     void recvCommandBufferResponseAsync(client_graphics::WebGLContext *,
                                         int requestId,
                                         AsyncCommandBufferResponseFunction);
@@ -378,42 +379,42 @@ namespace endor
     }
 
     /**
-   * Get the framebuffer's width, or zero if the XR is not enabled.
-   *
-   * @returns the framebuffer's width
-   */
+     * Get the framebuffer's width, or zero if the XR is not enabled.
+     *
+     * @returns the framebuffer's width
+     */
     int getFramebufferWidth()
     {
       return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width;
     }
     /**
-   * Get the framebuffer's height, or zero if the XR is not enabled.
-   *
-   * @returns the framebuffer's height
-   */
+     * Get the framebuffer's height, or zero if the XR is not enabled.
+     *
+     * @returns the framebuffer's height
+     */
     int getFramebufferHeight()
     {
       return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height;
     }
     /**
-   * Check if the framebuffer is double-wide, or false if the XR is not enabled.
-   *
-   * Double-wide is used at desktop example app, which doesn't depend on any other OpenGL extension like OVR_multiview, but at the production device, the framebuffer
-   * is commonly not double-wide.
-   *
-   * @returns true if the framebuffer is double width
-   */
+     * Check if the framebuffer is double-wide, or false if the XR is not enabled.
+     *
+     * Double-wide is used at desktop example app, which doesn't depend on any other OpenGL extension like OVR_multiview, but at the production device, the framebuffer
+     * is commonly not double-wide.
+     *
+     * @returns true if the framebuffer is double width
+     */
     bool isFramebufferDoubleWide()
     {
       return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide;
     }
 
     /**
-   * Send an XR command to the XR channel.
-   *
-   * @param xrCommand The XR command to send.
-   * @returns true if the command is sent successfully.
-   */
+     * Send an XR command to the XR channel.
+     *
+     * @param xrCommand The XR command to send.
+     * @returns true if the command is sent successfully.
+     */
     template <typename CommandType>
     bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
     {
@@ -449,8 +450,8 @@ namespace endor
       return applicationCacheDirectory + "/scripts";
     }
     /**
-   * @returns the scripting thread's event loop.
-   */
+     * @returns the scripting thread's event loop.
+     */
     inline uv_loop_t *getScriptingEventLoop()
     {
       return scriptingEventLoop;
@@ -511,16 +512,16 @@ namespace endor
     string url;
     const TrClientEnvironmentPerProcess env;
     /**
-   * The directory where the application can store files that are persistent.
-   */
+     * The directory where the application can store files that are persistent.
+     */
     string applicationCacheDirectory;
     /**
-   * The https proxy server to use for network requests if proxy is enabled.
-   */
+     * The https proxy server to use for network requests if proxy is enabled.
+     */
     string httpsProxyServer;
     /**
-   * Enable v8 profiling.
-   */
+     * Enable v8 profiling.
+     */
     bool enableV8Profiling = false;
     uint32_t webglVersion = 2; // webgl2 by default
     uint32_t eventChanPort;
@@ -530,20 +531,20 @@ namespace endor
     xr::TrDeviceInit xrDeviceInit;
     uint64_t startedAt;
     /**
-   * The host `WebGL2Context` instances list for the client.
-   */
+     * The host `WebGL2Context` instances list for the client.
+     */
     WebGLContextsList hostWebGLContexts;
     /**
-   * The built-in scene for the DOM rendering.
-   */
+     * The built-in scene for the DOM rendering.
+     */
     std::shared_ptr<builtin_scene::Scene> builtinScene;
     /**
-   * The main `BrowsingContext` instance for the client process.
-   */
+     * The main `BrowsingContext` instance for the client process.
+     */
     std::shared_ptr<::endor::dom::BrowsingContext> browsingContext;
     /**
-   * The `Window` instance for the client process.
-   */
+     * The `Window` instance for the client process.
+     */
     std::shared_ptr<::endor::browser::Window> window;
 
   private: // event fields

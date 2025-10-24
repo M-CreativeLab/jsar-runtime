@@ -231,6 +231,6 @@ namespace endor
       void commit();
     };
   } // namespace canvas
+} // namespace endor
 
 #include "./canvas-inl.hpp"
-} // namespace endor

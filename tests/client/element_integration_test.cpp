@@ -5,7 +5,8 @@
 #include <client/dom/events/pointer_event.hpp>
 #include <memory>
 
-using namespace dom;
+using namespace endor;
+using namespace endor::dom;
 
 TEST_CASE("Element integration test - onclick to click event migration", "[Element][Integration]")
 {

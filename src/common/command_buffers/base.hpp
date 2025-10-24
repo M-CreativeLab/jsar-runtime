@@ -208,7 +208,7 @@ namespace commandbuffers
    * @tparam Type The type of the command buffer, which should be a request command buffer type.
    */
   template <typename Derived, CommandBufferType Type>
-    requires is_commandbuffer_request<Type>
+  requires is_commandbuffer_request<Type>
   class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
   {
   public:

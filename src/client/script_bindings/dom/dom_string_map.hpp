@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/scripting_base/v8_object_holder.hpp>
 
@@ -9,8 +10,8 @@ namespace endor
   namespace script_bindings::dom_bindings
   {
     /**
-   * An abstract interface representing a source of key-value string pairs for DOMStringMap.
-   */
+     * An abstract interface representing a source of key-value string pairs for DOMStringMap.
+     */
     class DOMStringMapSource : public scripting_base::JSObjectHolder
     {
     public:
@@ -50,11 +51,8 @@ namespace endor
                                                                            nullptr));
       }
 
-      /**
-     * Create a new instance of `DOMStringMap` wrapping the provided data source.
-     */
       template <typename D>
-        requires std::is_base_of_v<DOMStringMapSource, D>
+      requires std::is_base_of_v<DOMStringMapSource, D>
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<D> source)
       {

@@ -1,6 +1,15 @@
 #include <array>
-#include <stduuid/uuid.h>
 #include <client/fileapi/blob_url_registry.hpp>
+
+// FIXME(Yorkie): forcily define cpp_lib_span to fix build error for android r25
+#if defined(__ANDROID__)
+#include <cstddef>
+// Check if the compiler supports <span>
+#if __has_include(<span>) && !defined(__cpp_lib_span)
+#define __cpp_lib_span 202002L
+#endif
+#endif
+#include <stduuid/uuid.h>
 
 using namespace std;
 

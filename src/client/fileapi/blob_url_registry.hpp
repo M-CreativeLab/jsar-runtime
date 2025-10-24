@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <memory>
+#include <unordered_map>
 #include <client/scripting_base/v8_object_holder.hpp>
 #include <client/fileapi/blob.hpp>
 

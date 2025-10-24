@@ -151,7 +151,7 @@ namespace endor
         string layerInfo = " ";
         if (object.isScrollContainer())
           layerInfo += "(scrollable)";
-        layerInfo += " → layer(" + to_string(layer) + ")";
+        layerInfo += " → layer(" + std::to_string(layer) + ")";
 
         // Format: "   objectName (scrollable?) → layer(n)"
         cout << prefixSpaces << object.debugName() << layerInfo << endl;

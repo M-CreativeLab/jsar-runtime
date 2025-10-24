@@ -3,11 +3,11 @@
 #include <string>
 #include <memory>
 
-// Forward declarations
-class TrClientContextPerProcess;
-
 namespace endor
 {
+  // Forward declarations
+  class TrClientContextPerProcess;
+
   namespace client_inspector
   {
     class ContentCdpHandler;

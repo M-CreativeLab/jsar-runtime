@@ -2,6 +2,7 @@
 #include "./worker_context.hpp"
 
 using namespace std;
+using namespace endor;
 
 namespace dombinding
 {

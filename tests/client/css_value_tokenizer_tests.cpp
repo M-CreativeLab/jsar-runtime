@@ -3,7 +3,8 @@
 
 #include <client/cssom/parsers/css_value_tokenizer.hpp>
 
-using namespace client_cssom::css_value_tokenizer;
+using namespace endor;
+using namespace endor::client_cssom::css_value_tokenizer;
 
 TEST_CASE("CSSValueTokenizer negative number support", "[css-tokenizer]")
 {

@@ -1306,8 +1306,8 @@ namespace endor
     };
 
     template <typename ContextType, typename ObjectType>
-      requires transmute::common::derived_from<ContextType, WebGLContext> &&
-               transmute::common::derived_from<ObjectType, WebGLObject>
+    requires transmute::common::derived_from<ContextType, WebGLContext> &&
+      transmute::common::derived_from<ObjectType, WebGLObject>
     class WebGLObjectScope
     {
     public:

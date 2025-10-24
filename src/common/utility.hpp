@@ -247,7 +247,7 @@ namespace transmute::common
   // We have to define the `derived_from` concept manually.
   template <class Derived, class Base>
   concept derived_from = std::is_base_of_v<Base, Derived> &&
-                         std::is_convertible_v<const volatile Derived *, const volatile Base *>;
+    std::is_convertible_v<const volatile Derived *, const volatile Base *>;
 #else
   template <class Derived, class Base>
   concept derived_from = std::derived_from<Derived, Base>;

@@ -3,8 +3,9 @@
 #include <client/cssom/values/computed/text.hpp>
 #include <client/cssom/values/specified/text.hpp>
 
-using namespace client_cssom;
-using namespace client_cssom::values;
+using namespace endor;
+using namespace endor::client_cssom;
+using namespace endor::client_cssom::values;
 
 TEST_CASE("CSS VerticalAlign Tests", "[css-vertical-align]")
 {
