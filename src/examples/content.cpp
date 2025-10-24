@@ -130,9 +130,9 @@ namespace jsar::example
     // Convert screen space delta to world space delta
     // Note: Y is inverted because screen Y goes down, world Y goes up
     glm::vec3 worldDelta = glm::vec3(
-        mouseDelta.x * worldUnitsPerPixel,
-        -mouseDelta.y * worldUnitsPerPixel,
-        0.0f);
+      mouseDelta.x * worldUnitsPerPixel,
+      -mouseDelta.y * worldUnitsPerPixel,
+      0.0f);
 
     // Apply camera rotation to the delta (so drag follows screen orientation)
     // For now, we only apply Y-axis rotation since the camera typically doesn't roll
