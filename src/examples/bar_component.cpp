@@ -521,7 +521,7 @@ namespace jsar::example
       glm::vec3 color;
     };
     vector<ButtonInstanceData> instanceData;
-    instanceData.reserve(instances_.size() + 1); // Reserve at least 1
+    instanceData.reserve(instances_.size());
 
     for (const auto &inst : instances_)
     {
