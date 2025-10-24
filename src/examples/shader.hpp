@@ -16,7 +16,7 @@ public:
 
   Shader() = default;
 
-  // accept vertex code fragment code geometry code constructor
+  // Constructor that accepts vertex shader code and fragment shader code
   Shader(const char *vShaderCode, const char *fShaderCode)
   {
     unsigned int vertex, fragment;
