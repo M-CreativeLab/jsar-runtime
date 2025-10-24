@@ -119,6 +119,29 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   s
 }
 
+/// Visitor to collect all variable references in the shader
+struct ReferenceCollector {
+  referenced_names: std::collections::HashSet<String>,
+}
+
+impl ReferenceCollector {
+  fn new() -> Self {
+    Self {
+      referenced_names: std::collections::HashSet::new(),
+    }
+  }
+}
+
+impl Visitor for ReferenceCollector {
+  fn visit_expr(&mut self, expr: &ast::Expr) -> Visit {
+    // Check if this expression is a variable reference
+    if let ast::ExprData::Variable(identifier) = &expr.content {
+      self.referenced_names.insert(identifier.content.0.to_string());
+    }
+    Visit::Children
+  }
+}
+
 /// Represents metadata about a vertex attribute in GLSL
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GLSLAttribute {
@@ -134,6 +157,7 @@ pub struct GLSLAttribute {
 pub struct GLSLAttributeParser {
   attributes: Vec<GLSLAttribute>,
   next_location: i32,
+  referenced_names: std::collections::HashSet<String>,
 }
 
 impl GLSLAttributeParser {
@@ -142,6 +166,7 @@ impl GLSLAttributeParser {
     Self {
       attributes: Vec::new(),
       next_location: 0,
+      referenced_names: std::collections::HashSet::new(),
     }
   }
 
@@ -162,9 +187,18 @@ impl GLSLAttributeParser {
       })
       .map_err(|e| format!("Failed to parse GLSL source: {:?}", e))?;
 
-    // Visit the AST to find attributes
+    // First pass: collect all variable references
+    let mut ref_collector = ReferenceCollector::new();
+    tu.visit(&mut ref_collector);
+    self.referenced_names = ref_collector.referenced_names;
+
+    // Second pass: visit the AST to find attributes
     use glsl_lang::visitor::Host;
     tu.visit(self);
+
+    // Filter out unreferenced attributes (inactive attributes)
+    self.attributes.retain(|attr| self.referenced_names.contains(&attr.name));
+
     Ok(())
   }
 
@@ -448,8 +482,13 @@ in vec2 uv;
 
 uniform mat4 modelViewMatrix;
 
+out vec3 vNormal;
+out vec2 vUv;
+
 void main() {
   gl_Position = modelViewMatrix * vec4(position, 1.0);
+  vNormal = normal;
+  vUv = uv;
 }
 "#;
     let mut parser = GLSLAttributeParser::new();
@@ -484,8 +523,13 @@ layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoord;
 
+out vec3 vNormal;
+out vec2 vTexCoord;
+
 void main() {
   gl_Position = vec4(aPos, 1.0);
+  vNormal = aNormal;
+  vTexCoord = aTexCoord;
 }
 "#;
     let mut parser = GLSLAttributeParser::new();
@@ -516,8 +560,13 @@ attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 texCoord;
 
+varying vec3 vNormal;
+varying vec2 vTexCoord;
+
 void main() {
   gl_Position = vec4(position, 1.0);
+  vNormal = normal;
+  vTexCoord = texCoord;
 }
 "#;
     let mut parser = GLSLAttributeParser::new();
@@ -544,8 +593,13 @@ in vec3 position;
 in vec3 normal;
 in vec2 uv;
 
+out vec3 vNormal;
+out vec2 vUv;
+
 void main() {
   gl_Position = vec4(position, 1.0);
+  vNormal = normal;
+  vUv = uv;
 }
 "#;
     let mut parser = GLSLAttributeParser::new();
@@ -564,8 +618,11 @@ void main() {
 in vec3 position;
 in vec3 normal;
 
+out vec3 vNormal;
+
 void main() {
   gl_Position = vec4(position, 1.0);
+  vNormal = normal;
 }
 "#;
     let result = parse_glsl_attributes(source_str);
@@ -575,5 +632,33 @@ void main() {
     assert_eq!(attributes.len(), 2);
     assert_eq!(attributes[0].name, "position");
     assert_eq!(attributes[1].name, "normal");
+  }
+
+  #[test]
+  fn test_parse_glsl_attributes_filters_inactive() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+in vec3 normal;
+in vec2 unused_attr;
+
+out vec3 vNormal;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+  vNormal = normal;
+}
+"#;
+    let mut parser = GLSLAttributeParser::new();
+    parser.parse(source_str).expect("Failed to parse GLSL");
+    
+    let attributes = parser.get_attributes();
+    // Only position and normal should be returned, unused_attr should be filtered out
+    assert_eq!(attributes.len(), 2);
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[1].name, "normal");
+    
+    // unused_attr should not be found
+    assert_eq!(parser.get_attrib_location("unused_attr"), None);
   }
 }

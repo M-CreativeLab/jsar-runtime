@@ -11,8 +11,19 @@ The GLSL attribute parser uses the [glsl-lang](https://github.com/alixinne/glsl-
 - ✅ Supports GLSL 100 ES (`attribute` keyword) and GLSL 300 ES (`in` keyword)
 - ✅ Handles explicit `layout(location = N)` qualifiers
 - ✅ Auto-assigns locations based on declaration order when not explicitly specified
+- ✅ **Filters out inactive attributes** - only returns attributes that are actually referenced in the shader
 - ✅ Compatible with WebGL 1.0 and WebGL 2.0 shaders
 - ✅ Full FFI interface for C++ integration
+
+## Important: Active Attribute Filtering
+
+The parser implements WebGL's "active attribute" behavior: **only attributes that are actually referenced in the shader code are returned**. This matches the behavior of WebGL's `getActiveAttrib()` function.
+
+An attribute is considered "active" if it is:
+- Declared as an `attribute` (GLSL 100 ES) or `in` (GLSL 300 ES) variable
+- Referenced somewhere in the shader code (e.g., used in calculations, assigned to outputs, etc.)
+
+Attributes that are declared but never used will be automatically filtered out, as they would be optimized away by the shader compiler.
 
 ## Rust API
 
@@ -117,15 +128,20 @@ std::string vertexShader = R"(
   uniform mat4 modelViewMatrix;
   uniform mat4 projectionMatrix;
   
+  out vec3 vNormal;
+  out vec2 vUv;
+  
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vNormal = normal;
+    vUv = uv;
   }
 )";
 
 // Parse all attributes
 auto attributes = crates::webgl::GLSLAttributeParser::ParseAttributes(vertexShader);
 
-std::cout << "Found " << attributes.size() << " attributes:" << std::endl;
+std::cout << "Found " << attributes.size() << " active attributes:" << std::endl;
 for (const auto& attr : attributes) {
   std::cout << "  - " << attr.name 
             << " (" << attr.type_name << ")" 
@@ -192,6 +208,48 @@ void setupWebGLProgram(client_graphics::WebGLProgram* program,
 }
 ```
 
+#### Example 4: Inactive Attribute Filtering
+
+```cpp
+#include <crates/bindings.webgl.hpp>
+
+std::string vertexShader = R"(
+  #version 300 es
+  in vec3 position;
+  in vec3 normal;
+  in vec2 unused_texcoord;  // This attribute is declared but never used
+  
+  uniform mat4 mvpMatrix;
+  out vec3 vNormal;
+  
+  void main() {
+    gl_Position = mvpMatrix * vec4(position, 1.0);
+    vNormal = normal;
+    // Note: unused_texcoord is not referenced anywhere
+  }
+)";
+
+// Parse attributes - only active (referenced) attributes are returned
+auto attributes = crates::webgl::GLSLAttributeParser::ParseAttributes(vertexShader);
+
+// Only 2 attributes will be returned: position and normal
+// unused_texcoord is filtered out because it's never referenced
+std::cout << "Active attributes: " << attributes.size() << std::endl;  // Prints: 2
+
+for (const auto& attr : attributes) {
+  std::cout << "  - " << attr.name << std::endl;
+}
+// Output:
+//   - position
+//   - normal
+
+// Trying to get location of inactive attribute returns nullopt
+auto loc = crates::webgl::GLSLAttributeParser::GetAttribLocation(vertexShader, "unused_texcoord");
+if (!loc.has_value()) {
+  std::cout << "unused_texcoord is not an active attribute" << std::endl;
+}
+```
+
 ### Rust Examples
 
 #### Example 1: Direct Parser Usage
@@ -204,8 +262,11 @@ let shader_source = r#"
   in vec3 position;
   in vec3 normal;
   
+  out vec3 vNormal;
+  
   void main() {
     gl_Position = vec4(position, 1.0);
+    vNormal = normal;
   }
 "#;
 
