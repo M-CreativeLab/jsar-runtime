@@ -1,4 +1,5 @@
 #include "./content.hpp"
+#include "./xr_renderer.hpp"
 #include "./bar_component.hpp"
 
 namespace jsar::example
@@ -93,22 +94,58 @@ namespace jsar::example
 
   void Content::updateDrag(const glm::vec2 &mousePosition)
   {
-    if (!isDragging_ || !contentRuntime_)
+    if (!isDragging_ || !contentRuntime_ || !windowCtx_)
       return;
 
-    // Calculate the mouse movement delta
+    // Calculate the mouse movement delta in screen space (pixels)
     glm::vec2 mouseDelta = mousePosition - dragStartMousePos_;
 
-    // Convert screen space movement to world space movement
-    // For now, we'll use a simple scale factor - this could be improved
-    // by using proper screen-to-world coordinate transformation
-    float scale = 0.001f; // Adjust this value to control drag sensitivity
+    // Get viewport dimensions
+    auto viewport = windowCtx_->drawingViewport();
+    float viewportHeight = static_cast<float>(viewport.height());
 
-    glm::vec3 worldDelta = glm::vec3(mouseDelta.x * scale, -mouseDelta.y * scale, 0.0f);
+    // Get camera parameters from XR renderer
+    auto xrRenderer = windowCtx_->xrRenderer;
+    if (!xrRenderer)
+      return;
+
+    // Get content position in world space
+    glm::vec3 contentPosition = glm::vec3(dragStartContentMatrix_[3]);
+
+    // Get camera position in world space
+    glm::vec3 cameraPosition = xrRenderer->viewerPosition();
+
+    // Calculate distance from camera to content
+    float distance = glm::length(contentPosition - cameraPosition);
+
+    // Use the camera's FOV (60 degrees by default in xr_renderer.hpp)
+    float fov = 60.0f; // This matches the default in XRStereoscopicRenderer
+    float fovInRadians = glm::radians(fov);
+    float tanHalfFov = tan(fovInRadians / 2.0f);
+
+    // Calculate the scale factor based on perspective projection
+    // This ensures 1 pixel of mouse movement = 1 unit of world movement at the content's depth
+    float worldUnitsPerPixel = (2.0f * tanHalfFov * distance) / viewportHeight;
+
+    // Convert screen space delta to world space delta
+    // Note: Y is inverted because screen Y goes down, world Y goes up
+    glm::vec3 worldDelta = glm::vec3(
+        mouseDelta.x * worldUnitsPerPixel,
+        -mouseDelta.y * worldUnitsPerPixel,
+        0.0f);
+
+    // Apply camera rotation to the delta (so drag follows screen orientation)
+    // For now, we only apply Y-axis rotation since the camera typically doesn't roll
+    glm::mat4 viewerMatrix = xrRenderer->getViewerBaseMatrix();
+    glm::mat3 viewerRotation = glm::mat3(viewerMatrix);
+    // Only use the XZ plane rotation (ignore pitch)
+    glm::vec3 right = glm::normalize(glm::vec3(viewerRotation[0].x, 0.0f, viewerRotation[0].z));
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 rotatedDelta = right * worldDelta.x + up * worldDelta.y;
 
     // Create a new matrix with the updated position
     glm::mat4 newMatrix = dragStartContentMatrix_;
-    newMatrix[3] += glm::vec4(worldDelta, 0.0f); // Update translation component
+    newMatrix[3] += glm::vec4(rotatedDelta, 0.0f); // Update translation component
 
     // Update the content runtime's base matrix
     contentRuntime_->updateLocalBaseMatrix(newMatrix);
