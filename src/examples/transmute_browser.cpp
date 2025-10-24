@@ -513,10 +513,6 @@ namespace jsar::example
 
     // Register this content with the bar component
     contentsBarComponent_->addContent(content.get());
-    // Ensure close button removes content and components
-    contentsBarComponent_->setOnCloseCallback([this](Content *c)
-                                              {
-      if (c) closeContent(c->getId()); });
 
     // Position content spatially - compute matrix based on viewer base matrix
     // 1. Get the current viewer base matrix
