@@ -617,6 +617,6 @@ namespace jsar::example
   glm::vec3 BarComponent::calculateButtonWorldPos(const glm::vec3 &contentPosition) const
   {
     // Button is positioned at top-right corner of the bar
-    return contentPosition + glm::vec3(-BAR_WIDTH / 2 - CLOSE_BUTTON_RADIUS - CLOSE_BUTTON_OFFSET, 0.0f, 0.0f);
+    return contentPosition + glm::vec3(BAR_WIDTH / 2 + CLOSE_BUTTON_RADIUS + CLOSE_BUTTON_OFFSET, 0.0f, 0.0f);
   }
 }
