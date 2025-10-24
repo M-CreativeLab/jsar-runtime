@@ -50,7 +50,7 @@ private:
 
 public:
   TrClientMode mode;
-  TrClientContextPerProcess *clientContext = nullptr;
+  endor::TrClientContextPerProcess *clientContext = nullptr;
 
 private:
   int hivePort = -1;

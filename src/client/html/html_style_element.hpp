@@ -5,42 +5,45 @@
 #include <client/cssom/stylesheet.hpp>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLStyleElement final : public HTMLElement
+  namespace dom
   {
-    using HTMLElement::HTMLElement;
-
-  public:
-    HTMLStyleElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("STYLE", ownerDocument)
+    class HTMLStyleElement final : public HTMLElement
     {
-    }
+      using HTMLElement::HTMLElement;
 
-  public:
-    bool isHTMLStyleElement() const override
-    {
-      return true;
-    }
+    public:
+      HTMLStyleElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLElement("STYLE", ownerDocument)
+      {
+      }
 
-    void createdCallback(bool from_scripting) override;
-    void connectedCallback() override;
+    public:
+      bool isHTMLStyleElement() const override
+      {
+        return true;
+      }
 
-  private:
-    bool isRenderable() const override final
-    {
-      return false;
-    }
+      void createdCallback(bool from_scripting) override;
+      void connectedCallback() override;
 
-  public:
-    bool blocking = true;
-    bool disabled = false;
-    inline const client_cssom::StyleSheet &sheet() const
-    {
-      return *sheet_;
-    }
+    private:
+      bool isRenderable() const override final
+      {
+        return false;
+      }
 
-  private:
-    std::shared_ptr<client_cssom::StyleSheet> sheet_;
-  };
-}
+    public:
+      bool blocking = true;
+      bool disabled = false;
+      inline const client_cssom::StyleSheet &sheet() const
+      {
+        return *sheet_;
+      }
+
+    private:
+      std::shared_ptr<client_cssom::StyleSheet> sheet_;
+    };
+  }
+} // namespace endor

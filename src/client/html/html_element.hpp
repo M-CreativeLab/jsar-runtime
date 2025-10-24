@@ -13,104 +13,107 @@
 #include <client/cssom/box_offset.hpp>
 #include <client/dom/element.hpp>
 
-namespace dom
+namespace endor
 {
-  /**
+  namespace dom
+  {
+    /**
    * The directionality of the element to render content or text.
    */
-  enum class HTMLElementDirection
-  {
-    LTR,
-    RTL,
-    Auto
-  };
-
-  class HTMLElement : public Element,
-                      virtual public client_cssom::BoxOffset
-  {
-    using Element::Element;
-
-  public:
-    HTMLElement(const HTMLElement &);
-    HTMLElement &operator=(const HTMLElement &) = delete;
-
-    void blur();
-    void focus();
-    void click();
-    std::optional<std::string> getDataset(const std::string &key);
-    void setDataset(const std::string &key, const std::string &value);
-    void removeDataset(const std::string &key);
-
-    void setInnerText(const std::string &);
-    void setHidden(bool);
-
-  public:
-    inline float offsetWidth() const override
+    enum class HTMLElementDirection
     {
-      return offset_width_;
-    }
-    inline float &offsetWidth() override
+      LTR,
+      RTL,
+      Auto
+    };
+
+    class HTMLElement : public Element,
+                        virtual public client_cssom::BoxOffset
     {
-      return offset_width_;
-    }
-    inline float offsetHeight() const override
-    {
-      return offset_height_;
-    }
-    inline float &offsetHeight() override
-    {
-      return offset_height_;
-    }
+      using Element::Element;
 
-    // Fetch resource with the given URL asynchronously.
-    void fetchArrayBufferLikeResource(const std::string &url,
-                                      std::function<void(const void *data, size_t length)> callback);
+    public:
+      HTMLElement(const HTMLElement &);
+      HTMLElement &operator=(const HTMLElement &) = delete;
 
-  public:
-    void createdCallback(bool from_scripting) override;
-    void attributeChangedCallback(const std::string &name,
-                                  const std::string &oldValue,
-                                  const std::string &newValue) override;
-    void connectedCallback() override;
-    void disconnectedCallback() override;
+      void blur();
+      void focus();
+      void click();
+      std::optional<std::string> getDataset(const std::string &key);
+      void setDataset(const std::string &key, const std::string &value);
+      void removeDataset(const std::string &key);
 
-  protected:
-    void markAsDirty() override;
+      void setInnerText(const std::string &);
+      void setHidden(bool);
 
-  private:
-    bool isHTMLElement() const override final
-    {
-      return true;
-    }
-    void invalidateStyleCache();
+    public:
+      inline float offsetWidth() const override
+      {
+        return offset_width_;
+      }
+      inline float &offsetWidth() override
+      {
+        return offset_width_;
+      }
+      inline float offsetHeight() const override
+      {
+        return offset_height_;
+      }
+      inline float &offsetHeight() override
+      {
+        return offset_height_;
+      }
 
-  public:
-    HTMLElementDirection dir = HTMLElementDirection::LTR;
-    bool draggable = false;
-    bool hidden = false;
-    std::string innerText;
-    std::string lang;
-    std::string nonce;
-    std::string outerText;
-    std::string title;
-    std::string translate;
-    // The style attribute.
-    const client_cssom::CSSStyleDeclaration &style() const
-    {
-      return *style_;
-    }
-    // The style attribute reference.
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> styleRef()
-    {
-      return style_;
-    }
+      // Fetch resource with the given URL asynchronously.
+      void fetchArrayBufferLikeResource(const std::string &url,
+                                        std::function<void(const void *data, size_t length)> callback);
 
-  private:
-    float offset_width_ = 0.0f;
-    float offset_height_ = 0.0f;
+    public:
+      void createdCallback(bool from_scripting) override;
+      void attributeChangedCallback(const std::string &name,
+                                    const std::string &oldValue,
+                                    const std::string &newValue) override;
+      void connectedCallback() override;
+      void disconnectedCallback() override;
 
-  private:
-    std::unordered_map<std::string, std::string> dataset_;
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
-  };
-}
+    protected:
+      void markAsDirty() override;
+
+    private:
+      bool isHTMLElement() const override final
+      {
+        return true;
+      }
+      void invalidateStyleCache();
+
+    public:
+      HTMLElementDirection dir = HTMLElementDirection::LTR;
+      bool draggable = false;
+      bool hidden = false;
+      std::string innerText;
+      std::string lang;
+      std::string nonce;
+      std::string outerText;
+      std::string title;
+      std::string translate;
+      // The style attribute.
+      const client_cssom::CSSStyleDeclaration &style() const
+      {
+        return *style_;
+      }
+      // The style attribute reference.
+      std::shared_ptr<client_cssom::CSSStyleDeclaration> styleRef()
+      {
+        return style_;
+      }
+
+    private:
+      float offset_width_ = 0.0f;
+      float offset_height_ = 0.0f;
+
+    private:
+      std::unordered_map<std::string, std::string> dataset_;
+      std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
+    };
+  }
+} // namespace endor

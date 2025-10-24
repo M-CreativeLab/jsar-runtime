@@ -4,87 +4,90 @@
 #include <memory>
 #include <crates/bindings.hpp>
 
-namespace client_cssom
+namespace endor
 {
-  // Forward declarations
-  class CSSStyleSheet;
-
-  // Typedefs
-  using CSSRuleIndex = size_t;
-
-  enum class CSSRuleType
+  namespace client_cssom
   {
-    kUnknownRule = 0x00,
-    kStyleRule,
-    kImportRule = 0x03,
-    kMediaRule,
-    kFontFaceRule,
-    kPageRule,
-    kKeyframesRule,
-    kNamespaceRule = 0x0a,
-    kCounterStyleRule,
-    kSupportsRule,
-    kFontFeatureValuesRule = 0x0e,
-  };
+    // Forward declarations
+    class CSSStyleSheet;
 
-  class CSSRule
-  {
-  public:
-    CSSRule() = default;
-    virtual ~CSSRule() = default;
+    // Typedefs
+    using CSSRuleIndex = size_t;
 
-  public:
-    std::string cssText;
-    inline std::shared_ptr<CSSRule> parentRule() const
+    enum class CSSRuleType
     {
-      return parentRule_.lock();
-    }
-    inline std::shared_ptr<CSSStyleSheet> parentStyleSheet() const
-    {
-      return parentStyleSheet_.lock();
-    }
+      kUnknownRule = 0x00,
+      kStyleRule,
+      kImportRule = 0x03,
+      kMediaRule,
+      kFontFaceRule,
+      kPageRule,
+      kKeyframesRule,
+      kNamespaceRule = 0x0a,
+      kCounterStyleRule,
+      kSupportsRule,
+      kFontFeatureValuesRule = 0x0e,
+    };
 
-  private:
-    std::weak_ptr<CSSRule> parentRule_;
-    std::weak_ptr<CSSStyleSheet> parentStyleSheet_;
-  };
+    class CSSRule
+    {
+    public:
+      CSSRule() = default;
+      virtual ~CSSRule() = default;
 
-  class CSSRuleList : std::vector<std::shared_ptr<CSSRule>>
-  {
-    friend class CSSStyleSheet;
+    public:
+      std::string cssText;
+      inline std::shared_ptr<CSSRule> parentRule() const
+      {
+        return parentRule_.lock();
+      }
+      inline std::shared_ptr<CSSStyleSheet> parentStyleSheet() const
+      {
+        return parentStyleSheet_.lock();
+      }
 
-  public:
-    CSSRuleList() = default;
+    private:
+      std::weak_ptr<CSSRule> parentRule_;
+      std::weak_ptr<CSSStyleSheet> parentStyleSheet_;
+    };
 
-  public:
-    size_t length() const
+    class CSSRuleList : std::vector<std::shared_ptr<CSSRule>>
     {
-      return size();
-    }
+      friend class CSSStyleSheet;
 
-  public:
-    CSSRule &item(CSSRuleIndex index) const
-    {
-      return *at(index);
-    }
-    auto begin()
-    {
-      return std::vector<std::shared_ptr<CSSRule>>::begin();
-    }
-    auto end()
-    {
-      return std::vector<std::shared_ptr<CSSRule>>::end();
-    }
-    auto begin() const
-    {
-      return std::vector<std::shared_ptr<CSSRule>>::begin();
-    }
-    auto end() const
-    {
-      return std::vector<std::shared_ptr<CSSRule>>::end();
-    }
+    public:
+      CSSRuleList() = default;
 
-  private:
-    CSSRuleIndex insert(crates::css2::stylesheets::CssRule &inner);
-  };
-}
+    public:
+      size_t length() const
+      {
+        return size();
+      }
+
+    public:
+      CSSRule &item(CSSRuleIndex index) const
+      {
+        return *at(index);
+      }
+      auto begin()
+      {
+        return std::vector<std::shared_ptr<CSSRule>>::begin();
+      }
+      auto end()
+      {
+        return std::vector<std::shared_ptr<CSSRule>>::end();
+      }
+      auto begin() const
+      {
+        return std::vector<std::shared_ptr<CSSRule>>::begin();
+      }
+      auto end() const
+      {
+        return std::vector<std::shared_ptr<CSSRule>>::end();
+      }
+
+    private:
+      CSSRuleIndex insert(crates::css2::stylesheets::CssRule &inner);
+    };
+  }
+} // namespace endor

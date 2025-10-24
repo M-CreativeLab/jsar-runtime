@@ -5,36 +5,38 @@
 #include <client/html/html_element.hpp>
 #include "./css_selector_parser.hpp"
 
-namespace client_cssom::selectors
+namespace endor
 {
-  class MatchingContext
+  namespace client_cssom::selectors
   {
-  public:
-    MatchingContext() = default;
-  };
+    class MatchingContext
+    {
+    public:
+      MatchingContext() = default;
+    };
 
-  /**
+    /**
    * Check if the element matches the specified selectors.
    *
    * @param selectors The CSS selector list.
    * @param element The element to check.
    * @returns Whether the element matches the selectors.
    */
-  bool matchesSelectorList(const SelectorList &selectors,
-                           const std::shared_ptr<dom::HTMLElement> element);
+    bool matchesSelectorList(const SelectorList &selectors,
+                             const std::shared_ptr<dom::HTMLElement> element);
 
-  /**
+    /**
    * Check if the element matches the specified selector.
    *
    * @param selector The CSS selector.
    * @param element The element to check.
    * @returns Whether the element matches the selector.
    */
-  bool matchesSelector(const Selector &selector,
-                       const std::shared_ptr<dom::HTMLElement> element,
-                       MatchingContext &context);
+    bool matchesSelector(const Selector &selector,
+                         const std::shared_ptr<dom::HTMLElement> element,
+                         MatchingContext &context);
 
-  /**
+    /**
    * Check if the element matches the specified selector component.
    *
    * @param selector The CSS selector.
@@ -42,12 +44,12 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selector component.
    */
-  bool matchesSelectorComponent(const Selector &selector,
-                                std::vector<Component>::const_iterator &it,
-                                const std::shared_ptr<dom::HTMLElement> element,
-                                MatchingContext &context);
+    bool matchesSelectorComponent(const Selector &selector,
+                                  std::vector<Component>::const_iterator &it,
+                                  const std::shared_ptr<dom::HTMLElement> element,
+                                  MatchingContext &context);
 
-  /**
+    /**
    * Check if the element matches the specified selector component.
    * NOTE: The component should not be a combinator.
    *
@@ -55,11 +57,11 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the component.
    */
-  bool matchesSelectorComponentNonCombinator(const Component &component,
-                                             const std::shared_ptr<dom::HTMLElement> element,
-                                             MatchingContext &context);
+    bool matchesSelectorComponentNonCombinator(const Component &component,
+                                               const std::shared_ptr<dom::HTMLElement> element,
+                                               MatchingContext &context);
 
-  /**
+    /**
    * Match selector starting from the end (right-to-left matching).
    *
    * @param selector The CSS selector.
@@ -67,7 +69,8 @@ namespace client_cssom::selectors
    * @param context The matching context.
    * @returns Whether the element matches the selector.
    */
-  bool matchesSelectorFromEnd(const Selector &selector,
-                              const std::shared_ptr<dom::HTMLElement> element,
-                              MatchingContext &context);
-}
+    bool matchesSelectorFromEnd(const Selector &selector,
+                                const std::shared_ptr<dom::HTMLElement> element,
+                                MatchingContext &context);
+  }
+} // namespace endor

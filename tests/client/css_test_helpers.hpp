@@ -3,7 +3,8 @@
 #include <client/html/html_element.hpp>
 #include <client/cssom/style_traits.hpp>
 
-using namespace client_cssom::values;
+using namespace endor;
+using namespace endor::client_cssom::values;
 
 namespace tests
 {

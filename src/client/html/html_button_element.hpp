@@ -3,30 +3,33 @@
 #include <string>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLButtonElement final : public HTMLElement
+  namespace dom
   {
-  public:
-    using HTMLElement::HTMLElement;
-
-  public:
-    HTMLButtonElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("BUTTON", ownerDocument)
+    class HTMLButtonElement final : public HTMLElement
     {
-    }
+    public:
+      using HTMLElement::HTMLElement;
 
-  public:
-    bool disabled = false;
-    std::string type = "button"; // submit, reset, button
-    std::string form;            // form id
-    std::string name;
-    std::string value;
+    public:
+      HTMLButtonElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLElement("BUTTON", ownerDocument)
+      {
+      }
 
-  private:
-    void createdCallback(bool from_scripting) override;
-    void attributeChangedCallback(const std::string &name,
-                                  const std::string &oldValue,
-                                  const std::string &newValue) override;
-  };
-}
+    public:
+      bool disabled = false;
+      std::string type = "button"; // submit, reset, button
+      std::string form;            // form id
+      std::string name;
+      std::string value;
+
+    private:
+      void createdCallback(bool from_scripting) override;
+      void attributeChangedCallback(const std::string &name,
+                                    const std::string &oldValue,
+                                    const std::string &newValue) override;
+    };
+  }
+} // namespace endor

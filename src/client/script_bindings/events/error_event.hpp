@@ -6,33 +6,36 @@
 #include <client/dom/events/error_event.hpp>
 #include <client/script_bindings/event.hpp>
 
-namespace script_bindings::event_bindings
+namespace endor
 {
-  class ErrorEvent;
-  using ErrorEventBase = scripting_base::ObjectWrap<ErrorEvent, dom::events::ErrorEvent, Event>;
-
-  class ErrorEvent : public ErrorEventBase
+  namespace script_bindings::event_bindings
   {
-    using ErrorEventBase::ObjectWrap;
+    class ErrorEvent;
+    using ErrorEventBase = scripting_base::ObjectWrap<ErrorEvent, dom::events::ErrorEvent, Event>;
 
-  public:
-    static std::string Name()
+    class ErrorEvent : public ErrorEventBase
     {
-      return "ErrorEvent";
-    }
-    static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      using ErrorEventBase::ObjectWrap;
 
-  public:
-    ErrorEvent(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    public:
+      static std::string Name()
+      {
+        return "ErrorEvent";
+      }
+      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-  private:
-    void MessageGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
-    void FilenameGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
-    void LinenoGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
-    void ColnoGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
-    void ErrorGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+    public:
+      ErrorEvent(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
-  private:
-    v8::Global<v8::Value> error_handle_;
-  };
-}
+    private:
+      void MessageGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void FilenameGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LinenoGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ColnoGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ErrorGetter(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+    private:
+      v8::Global<v8::Value> error_handle_;
+    };
+  }
+} // namespace endor

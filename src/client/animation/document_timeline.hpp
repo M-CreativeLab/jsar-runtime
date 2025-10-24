@@ -2,35 +2,38 @@
 
 #include "./animation_timeline.hpp"
 
-namespace dom
+namespace endor
 {
-  class DocumentTimeline : public AnimationTimeline
+  namespace dom
   {
-    friend class RenderHTMLDocument;
-
-  public:
-    struct DocumentTimelineInit
+    class DocumentTimeline : public AnimationTimeline
     {
-      long originTime = 0;
+      friend class RenderHTMLDocument;
+
+    public:
+      struct DocumentTimelineInit
+      {
+        long originTime = 0;
+      };
+
+      DocumentTimeline();
+      DocumentTimeline(const DocumentTimelineInit init);
+
+      bool isDocumentTimeline() const override
+      {
+        return true;
+      }
+
+      void scheduleNextService() override;
+
+    private:
+      void updateCurrentTime()
+      {
+        AnimationTimeline::updateCurrentTime();
+      }
+
+    private:
+      long origin_time_ = 0;
     };
-
-    DocumentTimeline();
-    DocumentTimeline(const DocumentTimelineInit init);
-
-    bool isDocumentTimeline() const override
-    {
-      return true;
-    }
-
-    void scheduleNextService() override;
-
-  private:
-    void updateCurrentTime()
-    {
-      AnimationTimeline::updateCurrentTime();
-    }
-
-  private:
-    long origin_time_ = 0;
-  };
-}
+  }
+} // namespace endor

@@ -10,9 +10,10 @@
 #include "./css_test_helpers.hpp"
 
 using namespace std;
-using namespace client_cssom;
-using namespace client_cssom::css_transform_parser;
-using namespace client_cssom::values;
+using namespace endor;
+using namespace endor::client_cssom;
+using namespace endor::client_cssom::css_transform_parser;
+using namespace endor::client_cssom::values;
 
 TEST_CASE("CSSTransformParser basic functionality", "[css-transform-parser]")
 {

@@ -6,21 +6,24 @@
 #include <client/canvas/canvas.hpp>
 #include <client/canvas/rendering_context2d.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace canvas_bindings
+  namespace script_bindings
   {
-    class OffscreenCanvasRenderingContext2D : public CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D,
-                                                                                  canvas::OffscreenCanvas>
+    namespace canvas_bindings
     {
-      using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
-
-    public:
-      static std::string Name()
+      class OffscreenCanvasRenderingContext2D : public CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D,
+                                                                                    canvas::OffscreenCanvas>
       {
-        return "OffscreenCanvasRenderingContext2D";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-    };
+        using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
+
+      public:
+        static std::string Name()
+        {
+          return "OffscreenCanvasRenderingContext2D";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      };
+    }
   }
-}
+} // namespace endor

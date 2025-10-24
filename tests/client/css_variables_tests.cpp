@@ -11,7 +11,8 @@
 
 #include "./css_test_helpers.hpp"
 
-using namespace client_cssom;
+using namespace endor;
+using namespace endor::client_cssom;
 
 TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
 {

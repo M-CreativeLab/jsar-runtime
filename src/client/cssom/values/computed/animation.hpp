@@ -2,7 +2,10 @@
 
 #include <client/cssom/values/generics/animation.hpp>
 
-namespace client_cssom::values::computed
+namespace endor
 {
-  using TransitionProperty = generics::GenericTransitionProperty;
-}
+  namespace client_cssom::values::computed
+  {
+    using TransitionProperty = generics::GenericTransitionProperty;
+  }
+} // namespace endor

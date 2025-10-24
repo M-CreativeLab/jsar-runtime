@@ -5,35 +5,38 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/graphics/webgl_active_info.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    class WebGLActiveInfo;
-    using WebGLActiveInfoBase = scripting_base::ObjectWrap<WebGLActiveInfo, client_graphics::WebGLActiveInfo>;
-
-    class WebGLActiveInfo : public WebGLActiveInfoBase
+    namespace webgl_bindings
     {
-      using WebGLActiveInfoBase::ObjectWrap;
+      class WebGLActiveInfo;
+      using WebGLActiveInfoBase = scripting_base::ObjectWrap<WebGLActiveInfo, client_graphics::WebGLActiveInfo>;
 
-    public:
-      static std::string Name()
+      class WebGLActiveInfo : public WebGLActiveInfoBase
       {
-        return "WebGLActiveInfo";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               const client_graphics::WebGLActiveInfo &activeInfo);
+        using WebGLActiveInfoBase::ObjectWrap;
 
-    public:
-      WebGLActiveInfo(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      public:
+        static std::string Name()
+        {
+          return "WebGLActiveInfo";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                                 const client_graphics::WebGLActiveInfo &activeInfo);
 
-    private:
-      // Property getters
-      void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void SizeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-    };
+      public:
+        WebGLActiveInfo(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
-  } // namespace webgl
-} // namespace script_bindings
+      private:
+        // Property getters
+        void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void SizeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      };
+
+    } // namespace webgl
+  }   // namespace script_bindings
+} // namespace endor

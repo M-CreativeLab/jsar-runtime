@@ -3,12 +3,15 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    void HTMLBodyElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace html_bindings
     {
+      void HTMLBodyElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+      }
     }
   }
-}
+} // namespace endor

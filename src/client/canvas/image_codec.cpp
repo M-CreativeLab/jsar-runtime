@@ -16,390 +16,393 @@
 
 #include "./image_codec.hpp"
 
-namespace canvas
+namespace endor
 {
-  using namespace std;
-
-  EncodedImageFormat::EncodedImageFormat(SkEncodedImageFormat sk_format)
+  namespace canvas
   {
-    switch (sk_format)
+    using namespace std;
+
+    EncodedImageFormat::EncodedImageFormat(SkEncodedImageFormat sk_format)
     {
-    case SkEncodedImageFormat::kBMP:
-      format_ = kBMP;
-      break;
-    case SkEncodedImageFormat::kGIF:
-      format_ = kGIF;
-      break;
-    case SkEncodedImageFormat::kICO:
-      format_ = kICO;
-      break;
-    case SkEncodedImageFormat::kJPEG:
-      format_ = kJPEG;
-      break;
-    case SkEncodedImageFormat::kPNG:
-      format_ = kPNG;
-      break;
-    case SkEncodedImageFormat::kWBMP:
-      format_ = kWBMP;
-      break;
-    case SkEncodedImageFormat::kWEBP:
-      format_ = kWEBP;
-      break;
-    case SkEncodedImageFormat::kPKM:
-      format_ = kPKM;
-      break;
-    case SkEncodedImageFormat::kKTX:
-      format_ = kKTX;
-      break;
-    case SkEncodedImageFormat::kASTC:
-      format_ = kASTC;
-      break;
-    case SkEncodedImageFormat::kDNG:
-      format_ = kDNG;
-      break;
-    case SkEncodedImageFormat::kHEIF:
-      format_ = kHEIF;
-      break;
-    case SkEncodedImageFormat::kAVIF:
-      format_ = kAVIF;
-      break;
-    case SkEncodedImageFormat::kJPEGXL:
-      format_ = kJPEGXL;
-      break;
-    default:
-      format_ = kUnknown;
-    }
-  }
-
-  std::ostream &operator<<(std::ostream &os, const EncodedImageFormat &format)
-  {
-    switch (format.format_)
-    {
-    case EncodedImageFormat::kBMP:
-      os << "BMP";
-      break;
-    case EncodedImageFormat::kGIF:
-      os << "GIF";
-      break;
-    case EncodedImageFormat::kICO:
-      os << "ICO";
-      break;
-    case EncodedImageFormat::kJPEG:
-      os << "JPEG";
-      break;
-    case EncodedImageFormat::kPNG:
-      os << "PNG";
-      break;
-    case EncodedImageFormat::kWBMP:
-      os << "WBMP";
-      break;
-    case EncodedImageFormat::kWEBP:
-      os << "WEBP";
-      break;
-    case EncodedImageFormat::kPKM:
-      os << "PKM";
-      break;
-    case EncodedImageFormat::kKTX:
-      os << "KTX";
-      break;
-    case EncodedImageFormat::kASTC:
-      os << "ASTC";
-      break;
-    case EncodedImageFormat::kDNG:
-      os << "DNG";
-      break;
-    case EncodedImageFormat::kHEIF:
-      os << "HEIF";
-      break;
-    case EncodedImageFormat::kAVIF:
-      os << "AVIF";
-      break;
-    case EncodedImageFormat::kJPEGXL:
-      os << "JPEGXL";
-      break;
-    case EncodedImageFormat::kSVG:
-      os << "SVG";
-      break;
-    default:
-      os << "Unknown";
-    }
-    return os;
-  }
-
-  namespace SvgDecoder
-  {
-    // Helper function to check if data contains SVG content
-    static bool IsSVG(const vector<char> &data)
-    {
-      if (data.empty())
-        return false;
-
-      // Look for SVG signature in the first few hundred bytes
-      size_t search_length = min(data.size(), size_t(512));
-      string start_data(data.begin(), data.begin() + search_length);
-
-      // Convert to lowercase for case-insensitive search
-      transform(start_data.begin(), start_data.end(), start_data.begin(), ::tolower);
-
-      // Check if it's a pure SVG file
-      // Look for <svg tag near the beginning (after optional XML declaration and whitespace)
-      size_t svg_pos = start_data.find("<svg");
-      if (svg_pos != string::npos)
+      switch (sk_format)
       {
-        // Ensure it's not embedded in HTML by checking for HTML tags before SVG
-        size_t html_pos = start_data.find("<html");
-        size_t body_pos = start_data.find("<body");
-        size_t doctype_pos = start_data.find("<!doctype");
-
-        // If we find HTML structure before SVG, it's not a pure SVG file
-        if ((html_pos != string::npos && html_pos < svg_pos) ||
-            (body_pos != string::npos && body_pos < svg_pos) ||
-            (doctype_pos != string::npos && doctype_pos < svg_pos))
-        {
-          return false;
-        }
-        return true;
-      }
-
-      // Also check for XML declaration with SVG reference
-      if (start_data.find("<?xml") != string::npos && start_data.find("svg") != string::npos)
-      {
-        return true;
-      }
-
-      return false;
-    }
-
-    // Helper function to decode SVG data to SkBitmap
-    static bool Decode(const vector<char> &svg_data,
-                       SkBitmap &decoded_bitmap,
-                       std::optional<int> target_width,
-                       std::optional<int> target_height)
-    {
-      try
-      {
-        // Convert vector<char> to null-terminated string
-        string svg_string(svg_data.begin(), svg_data.end());
-
-        // Parse SVG
-        NSVGimage *image = nsvgParse(const_cast<char *>(svg_string.c_str()), "px", 96.0f);
-        if (!image)
-        {
-          cerr << "Failed to parse SVG data" << endl;
-          return false;
-        }
-
-        // Calculate dimensions - use target dimensions if provided, otherwise use original
-        int width, height;
-
-        // Use value primitives to simplify the checking
-        int target_width_value = target_width.value_or(-1);
-        int target_height_value = target_height.value_or(-1);
-
-        if (target_width_value > 0 && target_height_value > 0)
-        {
-          // Both dimensions specified
-          width = target_width_value;
-          height = target_height_value;
-        }
-        else if (target_width_value > 0)
-        {
-          // Only width specified, maintain aspect ratio
-          width = target_width_value;
-          height = static_cast<int>((target_width_value * image->height) / image->width);
-        }
-        else if (target_height_value > 0)
-        {
-          // Only height specified, maintain aspect ratio
-          height = target_height_value;
-          width = static_cast<int>((target_height_value * image->width) / image->height);
-        }
-        else
-        {
-          // No target dimensions, use original
-          width = static_cast<int>(image->width);
-          height = static_cast<int>(image->height);
-        }
-
-        if (width <= 0 || height <= 0)
-        {
-          cerr << "Invalid SVG dimensions: " << width << "x" << height << endl;
-          nsvgDelete(image);
-          return false;
-        }
-
-        // Apply size constraints similar to other image formats
-        int max_size = max(width, height);
-        if (max_size > transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE)
-        {
-          float scale = static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / max_size;
-          width = static_cast<int>(width * scale);
-          height = static_cast<int>(height * scale);
-        }
-
-        // Create rasterizer
-        NSVGrasterizer *rast = nsvgCreateRasterizer();
-        if (!rast)
-        {
-          cerr << "Failed to create SVG rasterizer" << endl;
-          nsvgDelete(image);
-          return false;
-        }
-
-        // Allocate bitmap
-        SkImageInfo info = SkImageInfo::Make(width,
-                                             height,
-                                             kN32_SkColorType,
-                                             kPremul_SkAlphaType);
-        decoded_bitmap.allocPixels(info);
-
-        // Clear the bitmap to transparent
-        decoded_bitmap.eraseColor(SK_ColorTRANSPARENT);
-
-        // Calculate scale factor
-        float scale = min(static_cast<float>(width) / image->width,
-                          static_cast<float>(height) / image->height);
-
-        // Rasterize SVG to bitmap
-        nsvgRasterize(rast,
-                      image,
-                      0,
-                      0,
-                      scale,
-                      static_cast<unsigned char *>(decoded_bitmap.getPixels()),
-                      width,
-                      height,
-                      decoded_bitmap.rowBytes());
-
-        // Cleanup
-        nsvgDeleteRasterizer(rast);
-        nsvgDelete(image);
-        return true;
-      }
-      catch (const exception &e)
-      {
-        cerr << "SVG decoding error: " << e.what() << endl;
-        return false;
+      case SkEncodedImageFormat::kBMP:
+        format_ = kBMP;
+        break;
+      case SkEncodedImageFormat::kGIF:
+        format_ = kGIF;
+        break;
+      case SkEncodedImageFormat::kICO:
+        format_ = kICO;
+        break;
+      case SkEncodedImageFormat::kJPEG:
+        format_ = kJPEG;
+        break;
+      case SkEncodedImageFormat::kPNG:
+        format_ = kPNG;
+        break;
+      case SkEncodedImageFormat::kWBMP:
+        format_ = kWBMP;
+        break;
+      case SkEncodedImageFormat::kWEBP:
+        format_ = kWEBP;
+        break;
+      case SkEncodedImageFormat::kPKM:
+        format_ = kPKM;
+        break;
+      case SkEncodedImageFormat::kKTX:
+        format_ = kKTX;
+        break;
+      case SkEncodedImageFormat::kASTC:
+        format_ = kASTC;
+        break;
+      case SkEncodedImageFormat::kDNG:
+        format_ = kDNG;
+        break;
+      case SkEncodedImageFormat::kHEIF:
+        format_ = kHEIF;
+        break;
+      case SkEncodedImageFormat::kAVIF:
+        format_ = kAVIF;
+        break;
+      case SkEncodedImageFormat::kJPEGXL:
+        format_ = kJPEGXL;
+        break;
+      default:
+        format_ = kUnknown;
       }
     }
-  }
 
-  bool ImageCodec::Decode(const vector<char> &image_data,
-                          EncodedImageFormat *image_format,
-                          SkBitmap &decoded_bitmap,
-                          const string &src_hint,
-                          std::optional<int> target_width,
-                          std::optional<int> target_height)
-  {
-    // Check if this is SVG data first
-    if (SvgDecoder::IsSVG(image_data))
+    std::ostream &operator<<(std::ostream &os, const EncodedImageFormat &format)
     {
-      if (image_format != nullptr)
-        *image_format = EncodedImageFormat::SVG();
-      return SvgDecoder::Decode(image_data, decoded_bitmap, target_width, target_height);
+      switch (format.format_)
+      {
+      case EncodedImageFormat::kBMP:
+        os << "BMP";
+        break;
+      case EncodedImageFormat::kGIF:
+        os << "GIF";
+        break;
+      case EncodedImageFormat::kICO:
+        os << "ICO";
+        break;
+      case EncodedImageFormat::kJPEG:
+        os << "JPEG";
+        break;
+      case EncodedImageFormat::kPNG:
+        os << "PNG";
+        break;
+      case EncodedImageFormat::kWBMP:
+        os << "WBMP";
+        break;
+      case EncodedImageFormat::kWEBP:
+        os << "WEBP";
+        break;
+      case EncodedImageFormat::kPKM:
+        os << "PKM";
+        break;
+      case EncodedImageFormat::kKTX:
+        os << "KTX";
+        break;
+      case EncodedImageFormat::kASTC:
+        os << "ASTC";
+        break;
+      case EncodedImageFormat::kDNG:
+        os << "DNG";
+        break;
+      case EncodedImageFormat::kHEIF:
+        os << "HEIF";
+        break;
+      case EncodedImageFormat::kAVIF:
+        os << "AVIF";
+        break;
+      case EncodedImageFormat::kJPEGXL:
+        os << "JPEGXL";
+        break;
+      case EncodedImageFormat::kSVG:
+        os << "SVG";
+        break;
+      default:
+        os << "Unknown";
+      }
+      return os;
     }
 
-    static constexpr const SkCodecs::Decoder decoders[] = {
-      SkBmpDecoder::Decoder(),
-      SkPngDecoder::Decoder(),
-      SkJpegDecoder::Decoder(),
-      SkWebpDecoder::Decoder(),
-      SkGifDecoder::Decoder()};
-
-    bool is_image_data_decoded = false;
-    sk_sp<SkData> imageData = SkData::MakeWithoutCopy(image_data.data(), image_data.size());
-    unique_ptr<SkCodec> codec = SkCodec::MakeFromData(imageData, decoders);
-    if (codec)
+    namespace SvgDecoder
     {
-      try
+      // Helper function to check if data contains SVG content
+      static bool IsSVG(const vector<char> &data)
       {
-        SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
-        int max_size = max(info.width(), info.height());
-        if (max_size > transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE)
+        if (data.empty())
+          return false;
+
+        // Look for SVG signature in the first few hundred bytes
+        size_t search_length = min(data.size(), size_t(512));
+        string start_data(data.begin(), data.begin() + search_length);
+
+        // Convert to lowercase for case-insensitive search
+        transform(start_data.begin(), start_data.end(), start_data.begin(), ::tolower);
+
+        // Check if it's a pure SVG file
+        // Look for <svg tag near the beginning (after optional XML declaration and whitespace)
+        size_t svg_pos = start_data.find("<svg");
+        if (svg_pos != string::npos)
         {
-          // We need to constrain the image size to avoid the huge memory usage, for example, if there are 20 images,
-          // each image is 4096x4096, the total size will be 20 * 4096 * 4096 * 4 = 20 * 64MB ~ 1.28GB, which is too
-          // much for a single application.
-          //
-          // In Web standard, no guarantee that the image size is less than a certain size, in JSAR, we do downsample
-          // the oversized image to fit the maximum allowed size to avoid the huge memory usage for the
-          // back-compatibility.
-          //
-          // TODO(yorkie): support tweaking or disabling for different platforms?
-          int original_width = info.width();
-          int original_height = info.height();
-          float scale = min(static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_width,
-                            static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_height);
-          int scaled_width = static_cast<int>(original_width * scale);
-          int scaled_height = static_cast<int>(original_height * scale);
-          SkImageInfo scaled_info = info.makeWH(scaled_width, scaled_height);
+          // Ensure it's not embedded in HTML by checking for HTML tags before SVG
+          size_t html_pos = start_data.find("<html");
+          size_t body_pos = start_data.find("<body");
+          size_t doctype_pos = start_data.find("<!doctype");
 
-          // Allocate the scaled bitmap with the scaled image info.
-          SkBitmap scaled_bitmap;
-          scaled_bitmap.allocPixels(scaled_info);
-
-          // Call `getPixels()` first to check if the current codec supports scaling.
-          auto r = codec->getPixels(scaled_info, scaled_bitmap.getPixels(), scaled_bitmap.rowBytes());
-          if (r == SkCodec::kSuccess)
+          // If we find HTML structure before SVG, it's not a pure SVG file
+          if ((html_pos != string::npos && html_pos < svg_pos) ||
+              (body_pos != string::npos && body_pos < svg_pos) ||
+              (doctype_pos != string::npos && doctype_pos < svg_pos))
           {
-            // Returns the scaled bitmap if the scaling is successful.
-            decoded_bitmap = scaled_bitmap;
+            return false;
           }
-          else if (r == SkCodec::kInvalidScale)
+          return true;
+        }
+
+        // Also check for XML declaration with SVG reference
+        if (start_data.find("<?xml") != string::npos && start_data.find("svg") != string::npos)
+        {
+          return true;
+        }
+
+        return false;
+      }
+
+      // Helper function to decode SVG data to SkBitmap
+      static bool Decode(const vector<char> &svg_data,
+                         SkBitmap &decoded_bitmap,
+                         std::optional<int> target_width,
+                         std::optional<int> target_height)
+      {
+        try
+        {
+          // Convert vector<char> to null-terminated string
+          string svg_string(svg_data.begin(), svg_data.end());
+
+          // Parse SVG
+          NSVGimage *image = nsvgParse(const_cast<char *>(svg_string.c_str()), "px", 96.0f);
+          if (!image)
           {
-            // `InvalidScale` means the codec does not support scaling, so we need to do the scaling after decoding
-            // the original pixels.
-            SkBitmap original_bitmap;
-            original_bitmap.allocPixels(info);
-            const SkPixmap &original_pixmap = original_bitmap.pixmap();
+            cerr << "Failed to parse SVG data" << endl;
+            return false;
+          }
 
-            // Decoding the original image pixels.
-            r = codec->getPixels(original_pixmap);
-            if (r != SkCodec::kSuccess)
-              throw runtime_error("Could not decode the original image data.");
+          // Calculate dimensions - use target dimensions if provided, otherwise use original
+          int width, height;
 
-            // Use linear filtering to scale the original pixmap to the scaled bitmap.
-            if (original_pixmap.scalePixels(scaled_bitmap.pixmap(),
-                                            SkSamplingOptions(SkFilterMode::kLinear)))
+          // Use value primitives to simplify the checking
+          int target_width_value = target_width.value_or(-1);
+          int target_height_value = target_height.value_or(-1);
+
+          if (target_width_value > 0 && target_height_value > 0)
+          {
+            // Both dimensions specified
+            width = target_width_value;
+            height = target_height_value;
+          }
+          else if (target_width_value > 0)
+          {
+            // Only width specified, maintain aspect ratio
+            width = target_width_value;
+            height = static_cast<int>((target_width_value * image->height) / image->width);
+          }
+          else if (target_height_value > 0)
+          {
+            // Only height specified, maintain aspect ratio
+            height = target_height_value;
+            width = static_cast<int>((target_height_value * image->width) / image->height);
+          }
+          else
+          {
+            // No target dimensions, use original
+            width = static_cast<int>(image->width);
+            height = static_cast<int>(image->height);
+          }
+
+          if (width <= 0 || height <= 0)
+          {
+            cerr << "Invalid SVG dimensions: " << width << "x" << height << endl;
+            nsvgDelete(image);
+            return false;
+          }
+
+          // Apply size constraints similar to other image formats
+          int max_size = max(width, height);
+          if (max_size > transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE)
+          {
+            float scale = static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / max_size;
+            width = static_cast<int>(width * scale);
+            height = static_cast<int>(height * scale);
+          }
+
+          // Create rasterizer
+          NSVGrasterizer *rast = nsvgCreateRasterizer();
+          if (!rast)
+          {
+            cerr << "Failed to create SVG rasterizer" << endl;
+            nsvgDelete(image);
+            return false;
+          }
+
+          // Allocate bitmap
+          SkImageInfo info = SkImageInfo::Make(width,
+                                               height,
+                                               kN32_SkColorType,
+                                               kPremul_SkAlphaType);
+          decoded_bitmap.allocPixels(info);
+
+          // Clear the bitmap to transparent
+          decoded_bitmap.eraseColor(SK_ColorTRANSPARENT);
+
+          // Calculate scale factor
+          float scale = min(static_cast<float>(width) / image->width,
+                            static_cast<float>(height) / image->height);
+
+          // Rasterize SVG to bitmap
+          nsvgRasterize(rast,
+                        image,
+                        0,
+                        0,
+                        scale,
+                        static_cast<unsigned char *>(decoded_bitmap.getPixels()),
+                        width,
+                        height,
+                        decoded_bitmap.rowBytes());
+
+          // Cleanup
+          nsvgDeleteRasterizer(rast);
+          nsvgDelete(image);
+          return true;
+        }
+        catch (const exception &e)
+        {
+          cerr << "SVG decoding error: " << e.what() << endl;
+          return false;
+        }
+      }
+    }
+
+    bool ImageCodec::Decode(const vector<char> &image_data,
+                            EncodedImageFormat *image_format,
+                            SkBitmap &decoded_bitmap,
+                            const string &src_hint,
+                            std::optional<int> target_width,
+                            std::optional<int> target_height)
+    {
+      // Check if this is SVG data first
+      if (SvgDecoder::IsSVG(image_data))
+      {
+        if (image_format != nullptr)
+          *image_format = EncodedImageFormat::SVG();
+        return SvgDecoder::Decode(image_data, decoded_bitmap, target_width, target_height);
+      }
+
+      static constexpr const SkCodecs::Decoder decoders[] = {
+        SkBmpDecoder::Decoder(),
+        SkPngDecoder::Decoder(),
+        SkJpegDecoder::Decoder(),
+        SkWebpDecoder::Decoder(),
+        SkGifDecoder::Decoder()};
+
+      bool is_image_data_decoded = false;
+      sk_sp<SkData> imageData = SkData::MakeWithoutCopy(image_data.data(), image_data.size());
+      unique_ptr<SkCodec> codec = SkCodec::MakeFromData(imageData, decoders);
+      if (codec)
+      {
+        try
+        {
+          SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
+          int max_size = max(info.width(), info.height());
+          if (max_size > transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE)
+          {
+            // We need to constrain the image size to avoid the huge memory usage, for example, if there are 20 images,
+            // each image is 4096x4096, the total size will be 20 * 4096 * 4096 * 4 = 20 * 64MB ~ 1.28GB, which is too
+            // much for a single application.
+            //
+            // In Web standard, no guarantee that the image size is less than a certain size, in JSAR, we do downsample
+            // the oversized image to fit the maximum allowed size to avoid the huge memory usage for the
+            // back-compatibility.
+            //
+            // TODO(yorkie): support tweaking or disabling for different platforms?
+            int original_width = info.width();
+            int original_height = info.height();
+            float scale = min(static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_width,
+                              static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_height);
+            int scaled_width = static_cast<int>(original_width * scale);
+            int scaled_height = static_cast<int>(original_height * scale);
+            SkImageInfo scaled_info = info.makeWH(scaled_width, scaled_height);
+
+            // Allocate the scaled bitmap with the scaled image info.
+            SkBitmap scaled_bitmap;
+            scaled_bitmap.allocPixels(scaled_info);
+
+            // Call `getPixels()` first to check if the current codec supports scaling.
+            auto r = codec->getPixels(scaled_info, scaled_bitmap.getPixels(), scaled_bitmap.rowBytes());
+            if (r == SkCodec::kSuccess)
             {
+              // Returns the scaled bitmap if the scaling is successful.
               decoded_bitmap = scaled_bitmap;
             }
-            else
+            else if (r == SkCodec::kInvalidScale)
             {
-              // FIXME(yorkie): should use `original_bitmap` as the fallback?
-              throw runtime_error("Could not scale a valid bitmap.");
+              // `InvalidScale` means the codec does not support scaling, so we need to do the scaling after decoding
+              // the original pixels.
+              SkBitmap original_bitmap;
+              original_bitmap.allocPixels(info);
+              const SkPixmap &original_pixmap = original_bitmap.pixmap();
+
+              // Decoding the original image pixels.
+              r = codec->getPixels(original_pixmap);
+              if (r != SkCodec::kSuccess)
+                throw runtime_error("Could not decode the original image data.");
+
+              // Use linear filtering to scale the original pixmap to the scaled bitmap.
+              if (original_pixmap.scalePixels(scaled_bitmap.pixmap(),
+                                              SkSamplingOptions(SkFilterMode::kLinear)))
+              {
+                decoded_bitmap = scaled_bitmap;
+              }
+              else
+              {
+                // FIXME(yorkie): should use `original_bitmap` as the fallback?
+                throw runtime_error("Could not scale a valid bitmap.");
+              }
             }
           }
-        }
-        else
-        {
-          // No need to scale if the image size is within the maximum allowed size.
-          decoded_bitmap.allocPixels(info);
-          auto r = codec->getPixels(info, decoded_bitmap.getPixels(), decoded_bitmap.rowBytes());
-          if (r != SkCodec::kSuccess)
-            throw runtime_error(SkCodec::ResultToString(r));
-        }
+          else
+          {
+            // No need to scale if the image size is within the maximum allowed size.
+            decoded_bitmap.allocPixels(info);
+            auto r = codec->getPixels(info, decoded_bitmap.getPixels(), decoded_bitmap.rowBytes());
+            if (r != SkCodec::kSuccess)
+              throw runtime_error(SkCodec::ResultToString(r));
+          }
 
-        if (image_format != nullptr)
-          *image_format = EncodedImageFormat(codec->getEncodedFormat());
-        is_image_data_decoded = true;
+          if (image_format != nullptr)
+            *image_format = EncodedImageFormat(codec->getEncodedFormat());
+          is_image_data_decoded = true;
+        }
+        catch (const exception &e)
+        {
+          cerr << "Failed to decode the image: " << e.what() << endl
+               << "    size: " << image_data.size() << endl
+               << "    data: " << (image_data.data() != nullptr ? "valid" : "(empty)") << endl;
+          is_image_data_decoded = false;
+        }
       }
-      catch (const exception &e)
+      else
       {
-        cerr << "Failed to decode the image: " << e.what() << endl
+        cerr << "Failed to create the image codec, url: " << src_hint << endl
              << "    size: " << image_data.size() << endl
              << "    data: " << (image_data.data() != nullptr ? "valid" : "(empty)") << endl;
         is_image_data_decoded = false;
       }
-    }
-    else
-    {
-      cerr << "Failed to create the image codec, url: " << src_hint << endl
-           << "    size: " << image_data.size() << endl
-           << "    data: " << (image_data.data() != nullptr ? "valid" : "(empty)") << endl;
-      is_image_data_decoded = false;
-    }
 
-    return is_image_data_decoded;
+      return is_image_data_decoded;
+    }
   }
-}
+} // namespace endor

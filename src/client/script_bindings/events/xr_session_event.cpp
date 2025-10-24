@@ -1,35 +1,38 @@
 #include <client/script_bindings/webxr/xr_session.hpp>
 #include "./xr_session_event.hpp"
 
-namespace script_bindings::event_bindings
+namespace endor
 {
-  using namespace std;
-  using namespace v8;
-
-  // static
-  void XRSessionEvent::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings::event_bindings
   {
-    HandleScope scope(isolate);
-    Local<ObjectTemplate> instanceTemplate = tpl->PrototypeTemplate();
+    using namespace std;
+    using namespace v8;
 
-    // Add XRSessionEvent-specific properties
-    InstanceReadonlyAccessor(isolate, instanceTemplate, "session", &XRSessionEvent::SessionGetter);
-  }
-
-  void XRSessionEvent::SessionGetter(const PropertyCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto session = handle()->session();
-    if (session)
+    // static
+    void XRSessionEvent::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<Object> sessionObj = webxr_bindings::XRSession::GetOrNewInstance(isolate, session);
-      info.GetReturnValue().Set(sessionObj);
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> instanceTemplate = tpl->PrototypeTemplate();
+
+      // Add XRSessionEvent-specific properties
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "session", &XRSessionEvent::SessionGetter);
     }
-    else
+
+    void XRSessionEvent::SessionGetter(const PropertyCallbackInfo<Value> &info)
     {
-      info.GetReturnValue().SetNull();
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto session = handle()->session();
+      if (session)
+      {
+        Local<Object> sessionObj = webxr_bindings::XRSession::GetOrNewInstance(isolate, session);
+        info.GetReturnValue().Set(sessionObj);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
     }
   }
-}
+} // namespace endor

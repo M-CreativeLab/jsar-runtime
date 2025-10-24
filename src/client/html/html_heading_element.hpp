@@ -3,8 +3,10 @@
 #include <string>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
+  namespace dom
+  {
 #define HEADING_LEVEL_MAP(XX) \
   XX(H1, "h1")                \
   XX(H2, "h2")                \
@@ -13,97 +15,98 @@ namespace dom
   XX(H5, "h5")                \
   XX(H6, "h6")
 
-  enum class HeadingLevel
-  {
+    enum class HeadingLevel
+    {
 #define XX(LEVEL, _) LEVEL,
-    HEADING_LEVEL_MAP(XX)
+      HEADING_LEVEL_MAP(XX)
 #undef XX
-  };
+    };
 
-  inline std::string to_string(HeadingLevel level)
-  {
+    inline std::string to_string(HeadingLevel level)
+    {
 #define XX(LEVEL, _)        \
   case HeadingLevel::LEVEL: \
     return #LEVEL;
 
-    switch (level)
-    {
-      HEADING_LEVEL_MAP(XX)
-    }
+      switch (level)
+      {
+        HEADING_LEVEL_MAP(XX)
+      }
 #undef XX
-  }
+    }
 
-  inline HeadingLevel from_string(const std::string &input)
-  {
-    std::string lower_input = input;
-    std::transform(lower_input.begin(), lower_input.end(), lower_input.begin(), ::tolower);
+    inline HeadingLevel from_string(const std::string &input)
+    {
+      std::string lower_input = input;
+      std::transform(lower_input.begin(), lower_input.end(), lower_input.begin(), ::tolower);
 
 #define XX(LEVEL, TAG_NAME)     \
   if (lower_input == #TAG_NAME) \
     return HeadingLevel::LEVEL;
 
-    HEADING_LEVEL_MAP(XX)
+      HEADING_LEVEL_MAP(XX)
 #undef XX
 
-    std::cerr << "Invalid heading level string: " << input << std::endl;
-    return HeadingLevel::H3; // Default to H3 if invalid
-  }
-
-  class HTMLHeadingElement : public HTMLElement
-  {
-  public:
-    using HTMLElement::HTMLElement;
-
-  public:
-    HTMLHeadingElement(HeadingLevel level, std::shared_ptr<Document> ownerDocument)
-        : HTMLElement(to_string(level), ownerDocument)
-        , level_(level)
-    {
-    }
-    HTMLHeadingElement(std::string tagName, std::shared_ptr<Document> ownerDocument)
-        : HTMLHeadingElement(from_string(tagName), ownerDocument)
-    {
+      std::cerr << "Invalid heading level string: " << input << std::endl;
+      return HeadingLevel::H3; // Default to H3 if invalid
     }
 
-  public:
-    void createdCallback(bool from_scripting) override
+    class HTMLHeadingElement : public HTMLElement
     {
-      defaultStyle_.setProperty("display", "block");
-      defaultStyle_.setProperty("height", "auto");
-      defaultStyle_.setProperty("width", "auto");
-      defaultStyle_.setProperty("margin", "10px 0");
-      defaultStyle_.setProperty("padding", "10px");
-      defaultStyle_.setProperty("font-weight", "bold");
+    public:
+      using HTMLElement::HTMLElement;
 
-      switch (level_)
+    public:
+      HTMLHeadingElement(HeadingLevel level, std::shared_ptr<Document> ownerDocument)
+          : HTMLElement(to_string(level), ownerDocument)
+          , level_(level)
       {
-      case HeadingLevel::H2:
-        defaultStyle_.setProperty("font-size", "1.5em");
-        break;
-      case HeadingLevel::H3:
-        defaultStyle_.setProperty("font-size", "1.17em");
-        break;
-      case HeadingLevel::H4:
-        defaultStyle_.setProperty("font-size", "1em");
-        break;
-      case HeadingLevel::H5:
-        defaultStyle_.setProperty("font-size", "0.83em");
-        break;
-      case HeadingLevel::H6:
-        defaultStyle_.setProperty("font-size", "0.67em");
-        break;
-      case HeadingLevel::H1:
-        defaultStyle_.setProperty("font-size", "2em");
-      default:
-        break;
+      }
+      HTMLHeadingElement(std::string tagName, std::shared_ptr<Document> ownerDocument)
+          : HTMLHeadingElement(from_string(tagName), ownerDocument)
+      {
       }
 
-      HTMLElement::createdCallback(from_scripting);
-    }
+    public:
+      void createdCallback(bool from_scripting) override
+      {
+        defaultStyle_.setProperty("display", "block");
+        defaultStyle_.setProperty("height", "auto");
+        defaultStyle_.setProperty("width", "auto");
+        defaultStyle_.setProperty("margin", "10px 0");
+        defaultStyle_.setProperty("padding", "10px");
+        defaultStyle_.setProperty("font-weight", "bold");
 
-  private:
-    HeadingLevel level_;
-  };
+        switch (level_)
+        {
+        case HeadingLevel::H2:
+          defaultStyle_.setProperty("font-size", "1.5em");
+          break;
+        case HeadingLevel::H3:
+          defaultStyle_.setProperty("font-size", "1.17em");
+          break;
+        case HeadingLevel::H4:
+          defaultStyle_.setProperty("font-size", "1em");
+          break;
+        case HeadingLevel::H5:
+          defaultStyle_.setProperty("font-size", "0.83em");
+          break;
+        case HeadingLevel::H6:
+          defaultStyle_.setProperty("font-size", "0.67em");
+          break;
+        case HeadingLevel::H1:
+          defaultStyle_.setProperty("font-size", "2em");
+        default:
+          break;
+        }
+
+        HTMLElement::createdCallback(from_scripting);
+      }
+
+    private:
+      HeadingLevel level_;
+    };
 
 #undef HEADING_LEVEL_MAP
-}
+  }
+} // namespace endor

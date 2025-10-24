@@ -5,24 +5,27 @@
 #include <client/html/html_section_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLSectionElement;
-    using HTMLSectionElementBase = scripting_base::ObjectWrap<HTMLSectionElement,
-                                                              dom::HTMLSectionElement,
-                                                              HTMLElement>;
-
-    class HTMLSectionElement : public HTMLSectionElementBase
+    namespace html_bindings
     {
-      using HTMLSectionElementBase::ObjectWrap;
+      class HTMLSectionElement;
+      using HTMLSectionElementBase = scripting_base::ObjectWrap<HTMLSectionElement,
+                                                                dom::HTMLSectionElement,
+                                                                HTMLElement>;
 
-    public:
-      static std::string Name()
+      class HTMLSectionElement : public HTMLSectionElementBase
       {
-        return "HTMLElement";
-      }
-    };
+        using HTMLSectionElementBase::ObjectWrap;
+
+      public:
+        static std::string Name()
+        {
+          return "HTMLElement";
+        }
+      };
+    }
   }
-}
+} // namespace endor

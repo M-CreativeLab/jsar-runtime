@@ -1,5 +1,8 @@
 #include "animation_frame_listener.hpp"
 
+using namespace std;
+using namespace endor;
+
 namespace bindings
 {
   thread_local Napi::FunctionReference *AnimationFrameListener::constructor;

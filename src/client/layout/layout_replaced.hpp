@@ -2,22 +2,25 @@
 
 #include "./layout_box.hpp"
 
-namespace client_layout
+namespace endor
 {
-  class LayoutReplaced : public LayoutBox
+  namespace client_layout
   {
-    using LayoutBox::LayoutBox;
-
-  public:
-    const char *name() const override
+    class LayoutReplaced : public LayoutBox
     {
-      return "LayoutReplaced";
-    }
-    bool isLayoutReplaced() const override final
-    {
-      return true;
-    }
+      using LayoutBox::LayoutBox;
 
-    void formattingContextDidSet(FormattingContext &) override final;
-  };
-}
+    public:
+      const char *name() const override
+      {
+        return "LayoutReplaced";
+      }
+      bool isLayoutReplaced() const override final
+      {
+        return true;
+      }
+
+      void formattingContextDidSet(FormattingContext &) override final;
+    };
+  }
+} // namespace endor

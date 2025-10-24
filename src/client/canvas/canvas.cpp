@@ -2,21 +2,24 @@
 
 using namespace std;
 
-namespace canvas
+namespace endor
 {
-  std::string Canvas::toDataURL(const std::string &type, double encoderOptions)
+  namespace canvas
   {
-    return "data:";
-  }
+    std::string Canvas::toDataURL(const std::string &type, double encoderOptions)
+    {
+      return "data:";
+    }
 
-  OffscreenCanvas::OffscreenCanvas(uint32_t width, uint32_t height)
-  {
-    widthToSet = width;
-    heightToSet = height;
-    resize();
-  }
+    OffscreenCanvas::OffscreenCanvas(uint32_t width, uint32_t height)
+    {
+      widthToSet = width;
+      heightToSet = height;
+      resize();
+    }
 
-  void OffscreenCanvas::commit()
-  {
+    void OffscreenCanvas::commit()
+    {
+    }
   }
-}
+} // namespace endor

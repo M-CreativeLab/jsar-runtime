@@ -1,16 +1,19 @@
 #include <client/dom/document.hpp>
 #include "./html_template_element.hpp"
 
-namespace dom
+namespace endor
 {
-  void HTMLTemplateElement::createdCallback(bool from_scripting)
+  namespace dom
   {
-    HTMLElement::createdCallback(from_scripting);
+    void HTMLTemplateElement::createdCallback(bool from_scripting)
+    {
+      HTMLElement::createdCallback(from_scripting);
 
-    content_ = getOwnerDocumentChecked().createDocumentFragment();
-    shadowRootMode_ = ShadowRootMode::Open;
-    shadowRootDelegatesFocus_ = false;
-    shadowRootClonable_ = false;
-    shadowRootSerializable_ = false;
+      content_ = getOwnerDocumentChecked().createDocumentFragment();
+      shadowRootMode_ = ShadowRootMode::Open;
+      shadowRootDelegatesFocus_ = false;
+      shadowRootClonable_ = false;
+      shadowRootSerializable_ = false;
+    }
   }
-}
+} // namespace endor

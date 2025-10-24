@@ -4,50 +4,53 @@
 #include "./canvas.hpp"
 #include "./rendering_context2d.hpp"
 
-namespace canvas
+namespace endor
 {
-  template <typename T>
-  std::shared_ptr<RenderingContextBase<T>> CanvasBase<T>::getContext(RenderingContextType type)
+  namespace canvas
   {
-    if (renderingContext2d == nullptr)
+    template <typename T>
+    std::shared_ptr<RenderingContextBase<T>> CanvasBase<T>::getContext(RenderingContextType type)
     {
-      resetSkSurface(); // Reset the SkSurface when a request to get new rendering context.
-      switch (type)
+      if (renderingContext2d == nullptr)
       {
-      case RenderingContextType::RenderingContext2D:
-        renderingContext2d = std::make_shared<CanvasRenderingContext2D<T>>(getPtr());
-        break;
-      default:
-        break;
+        resetSkSurface(); // Reset the SkSurface when a request to get new rendering context.
+        switch (type)
+        {
+        case RenderingContextType::RenderingContext2D:
+          renderingContext2d = std::make_shared<CanvasRenderingContext2D<T>>(getPtr());
+          break;
+        default:
+          break;
+        }
       }
+      return renderingContext2d;
     }
-    return renderingContext2d;
-  }
 
-  template <typename T>
-  void CanvasBase<T>::resetSkSurface()
-  {
-    // If the width or height is zero, we cannot create a valid Skia surface.
-    if (widthToSet == 0 || heightToSet == 0)
+    template <typename T>
+    void CanvasBase<T>::resetSkSurface()
     {
-      bitmap_->reset();
-      skSurface.reset();
-    }
-    else
-    {
-      auto imageInfo = SkImageInfo::MakeN32Premul(widthToSet, heightToSet);
-      if (skSurface != nullptr)
+      // If the width or height is zero, we cannot create a valid Skia surface.
+      if (widthToSet == 0 || heightToSet == 0)
+      {
+        bitmap_->reset();
         skSurface.reset();
+      }
+      else
+      {
+        auto imageInfo = SkImageInfo::MakeN32Premul(widthToSet, heightToSet);
+        if (skSurface != nullptr)
+          skSurface.reset();
 
-      bitmap_->allocPixels(imageInfo);
-      skSurface = SkSurfaces::WrapPixels(bitmap_->info(),
-                                         bitmap_->getPixels(),
-                                         bitmap_->rowBytes());
-      assert(skSurface != nullptr && "Failed to create Skia surface for the canvas.");
+        bitmap_->allocPixels(imageInfo);
+        skSurface = SkSurfaces::WrapPixels(bitmap_->info(),
+                                           bitmap_->getPixels(),
+                                           bitmap_->rowBytes());
+        assert(skSurface != nullptr && "Failed to create Skia surface for the canvas.");
+      }
+
+      // Reset the rendering context if created.
+      if (renderingContext2d != nullptr)
+        renderingContext2d->reset(skSurface);
     }
-
-    // Reset the rendering context if created.
-    if (renderingContext2d != nullptr)
-      renderingContext2d->reset(skSurface);
   }
-}
+} // namespace endor

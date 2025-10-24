@@ -3,19 +3,22 @@
 #include "../dom_event.hpp"
 #include "../dom_event_target.hpp"
 
-namespace dom::events
+namespace endor
 {
-  class UIEvent : public dom::Event
+  namespace dom::events
   {
-    using dom::Event::Event;
-
-  public:
-    bool isUIEvent() const override final
+    class UIEvent : public dom::Event
     {
-      return true;
-    }
+      using dom::Event::Event;
 
-  protected:
-    long detail_ = 0;
-  };
-}
+    public:
+      bool isUIEvent() const override final
+      {
+        return true;
+      }
+
+    protected:
+      long detail_ = 0;
+    };
+  }
+} // namespace endor

@@ -5,28 +5,31 @@
 #include <client/html/html_template_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLTemplateElement;
-    using HTMLTemplateElementBase = scripting_base::ObjectWrap<HTMLTemplateElement,
-                                                               dom::HTMLTemplateElement,
-                                                               HTMLElement>;
-
-    class HTMLTemplateElement : public HTMLTemplateElementBase
+    namespace html_bindings
     {
-      using HTMLTemplateElementBase::ObjectWrap;
+      class HTMLTemplateElement;
+      using HTMLTemplateElementBase = scripting_base::ObjectWrap<HTMLTemplateElement,
+                                                                 dom::HTMLTemplateElement,
+                                                                 HTMLElement>;
 
-    public:
-      static std::string Name()
+      class HTMLTemplateElement : public HTMLTemplateElementBase
       {
-        return "HTMLTemplateElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using HTMLTemplateElementBase::ObjectWrap;
 
-    private:
-      void ContentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-    };
+      public:
+        static std::string Name()
+        {
+          return "HTMLTemplateElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      private:
+        void ContentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      };
+    }
   }
-}
+} // namespace endor

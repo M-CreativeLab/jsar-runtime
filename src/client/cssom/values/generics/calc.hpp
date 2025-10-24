@@ -2,49 +2,52 @@
 
 #include <variant>
 
-namespace client_cssom::values::generics
+namespace endor
 {
-  template <typename L>
-  class GenericCalcNode
+  namespace client_cssom::values::generics
   {
-  private:
-    enum Tag
+    template <typename L>
+    class GenericCalcNode
     {
-      kLeaf,
-      kNegate,
-      kInvert,
-      kSum,
-      kProduct,
-      kMinMax,
-      kClamp,
-      kRound,
-      kModRem,
-      kHypot,
-      kAbs,
-      kSign,
-      kAnchor,
-      kAnchorSize
-    };
+    private:
+      enum Tag
+      {
+        kLeaf,
+        kNegate,
+        kInvert,
+        kSum,
+        kProduct,
+        kMinMax,
+        kClamp,
+        kRound,
+        kModRem,
+        kHypot,
+        kAbs,
+        kSign,
+        kAnchor,
+        kAnchorSize
+      };
 
-    struct LeafVariant
-    {
-      L leaf;
-    };
-    struct NegateVariant
-    {
-      std::unique_ptr<GenericCalcNode<L>> node;
-    };
-    struct InvertVariant
-    {
-      std::unique_ptr<GenericCalcNode<L>> node;
-    };
+      struct LeafVariant
+      {
+        L leaf;
+      };
+      struct NegateVariant
+      {
+        std::unique_ptr<GenericCalcNode<L>> node;
+      };
+      struct InvertVariant
+      {
+        std::unique_ptr<GenericCalcNode<L>> node;
+      };
 
-    using NodeVariant = std::variant<LeafVariant,
-                                     NegateVariant,
-                                     InvertVariant>;
+      using NodeVariant = std::variant<LeafVariant,
+                                       NegateVariant,
+                                       InvertVariant>;
 
-  private:
-    Tag tag_;
-    NodeVariant node_;
-  };
-}
+    private:
+      Tag tag_;
+      NodeVariant node_;
+    };
+  }
+} // namespace endor

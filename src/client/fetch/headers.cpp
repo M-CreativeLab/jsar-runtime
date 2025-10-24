@@ -1,46 +1,49 @@
 #include <client/fetch/headers.hpp>
 
-namespace client_fetch
+namespace endor
 {
-  Headers::Headers()
+  namespace client_fetch
   {
-  }
-
-  void Headers::append(const std::string &name, const std::string &value)
-  {
-    auto it = find(name);
-    if (it != end())
+    Headers::Headers()
     {
-      it->second += ", " + value;
     }
-    else
+
+    void Headers::append(const std::string &name, const std::string &value)
     {
-      insert({name, value});
+      auto it = find(name);
+      if (it != end())
+      {
+        it->second += ", " + value;
+      }
+      else
+      {
+        insert({name, value});
+      }
     }
-  }
 
-  void Headers::remove(const std::string &name)
-  {
-    erase(name);
-  }
-
-  std::string Headers::get(const std::string &name) const
-  {
-    auto it = find(name);
-    if (it != end())
+    void Headers::remove(const std::string &name)
     {
-      return it->second;
+      erase(name);
     }
-    return "";
-  }
 
-  bool Headers::has(const std::string &name) const
-  {
-    return find(name) != end();
-  }
+    std::string Headers::get(const std::string &name) const
+    {
+      auto it = find(name);
+      if (it != end())
+      {
+        return it->second;
+      }
+      return "";
+    }
 
-  void Headers::set(const std::string &name, const std::string &value)
-  {
-    (*this)[name] = value;
+    bool Headers::has(const std::string &name) const
+    {
+      return find(name) != end();
+    }
+
+    void Headers::set(const std::string &name, const std::string &value)
+    {
+      (*this)[name] = value;
+    }
   }
-}
+} // namespace endor

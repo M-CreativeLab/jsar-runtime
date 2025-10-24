@@ -8,64 +8,67 @@
 #include "./common.hpp"
 #include "./webxr_viewport.hpp"
 
-namespace client_xr
+namespace endor
 {
-  class XRLayer : public scripting_base::JSObjectHolder
+  namespace client_xr
   {
-  public:
-    XRLayer(std::shared_ptr<XRSession> session);
-    virtual ~XRLayer() = default;
-
-  public:
-    std::shared_ptr<XRSession> session() const
+    class XRLayer : public scripting_base::JSObjectHolder
     {
-      return session_;
-    }
+    public:
+      XRLayer(std::shared_ptr<XRSession> session);
+      virtual ~XRLayer() = default;
 
-  protected:
-    std::shared_ptr<XRSession> session_;
-  };
+    public:
+      std::shared_ptr<XRSession> session() const
+      {
+        return session_;
+      }
 
-  class XRWebGLLayer : public XRLayer,
-                       public xr::WebGLLayer
-  {
-  public:
-    /**
+    protected:
+      std::shared_ptr<XRSession> session_;
+    };
+
+    class XRWebGLLayer : public XRLayer,
+                         public xr::WebGLLayer
+    {
+    public:
+      /**
      * It creates a new `XRWebGLLayer` object.
      *
      * @param session The XR session.
      * @param glContext The WebGL context to use.
      * @returns The created `XRWebGLLayer` object.
      */
-    static std::shared_ptr<XRWebGLLayer> Make(std::shared_ptr<XRSession> session,
-                                              std::shared_ptr<client_graphics::WebGLContext> glContext)
+      static std::shared_ptr<XRWebGLLayer> Make(std::shared_ptr<XRSession> session,
+                                                std::shared_ptr<client_graphics::WebGLContext> glContext)
+      {
+        return std::make_shared<XRWebGLLayer>(session, glContext);
+      }
+
+    public:
+      XRWebGLLayer(std::shared_ptr<XRSession> session, std::shared_ptr<client_graphics::WebGLContext> glContext);
+      XRWebGLLayer(xr::WebGLLayer &layerData);
+
+    public:
+      inline std::shared_ptr<client_graphics::WebGLContext> glContext()
+      {
+        return glContext_;
+      }
+      XRViewport &getViewport(std::shared_ptr<XRView> view);
+
+    private:
+      std::shared_ptr<client_graphics::WebGLContext> glContext_;
+    };
+
+    class XRCompositionLayer : public XRLayer
     {
-      return std::make_shared<XRWebGLLayer>(session, glContext);
-    }
+    public:
+      XRCompositionLayer(std::shared_ptr<XRSession> session);
 
-  public:
-    XRWebGLLayer(std::shared_ptr<XRSession> session, std::shared_ptr<client_graphics::WebGLContext> glContext);
-    XRWebGLLayer(xr::WebGLLayer &layerData);
-
-  public:
-    inline std::shared_ptr<client_graphics::WebGLContext> glContext()
-    {
-      return glContext_;
-    }
-    XRViewport &getViewport(std::shared_ptr<XRView> view);
-
-  private:
-    std::shared_ptr<client_graphics::WebGLContext> glContext_;
-  };
-
-  class XRCompositionLayer : public XRLayer
-  {
-  public:
-    XRCompositionLayer(std::shared_ptr<XRSession> session);
-
-  public:
-    bool blendTextureSourceAlpha = false;
-    int mipLevels = 1;
-    bool needsRedraw = false;
-  };
-}
+    public:
+      bool blendTextureSourceAlpha = false;
+      int mipLevels = 1;
+      bool needsRedraw = false;
+    };
+  }
+} // namespace endor

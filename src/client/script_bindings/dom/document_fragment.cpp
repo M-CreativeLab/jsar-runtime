@@ -8,234 +8,237 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::dom_bindings
+namespace endor
 {
-  void DocumentFragment::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings::dom_bindings
   {
-    HandleScope scope(isolate);
-    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
-
-    // Add properties
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "childElementCount", &DocumentFragment::ChildElementCountGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "children", &DocumentFragment::ChildrenGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "firstElementChild", &DocumentFragment::FirstElementChildGetter);
-    InstanceReadonlyPropertyAccessor(isolate, prototype, "lastElementChild", &DocumentFragment::LastElementChildGetter);
-
-    // Add methods
-    InstanceMethod(isolate, prototype, "append", &DocumentFragment::Append);
-    InstanceMethod(isolate, prototype, "prepend", &DocumentFragment::Prepend);
-    InstanceMethod(isolate, prototype, "getElementById", &DocumentFragment::GetElementById);
-    InstanceMethod(isolate, prototype, "getElementsByTagName", &DocumentFragment::GetElementsByTagName);
-    InstanceMethod(isolate, prototype, "getElementsByClassName", &DocumentFragment::GetElementsByClassName);
-    InstanceMethod(isolate, prototype, "querySelector", &DocumentFragment::QuerySelector);
-    InstanceMethod(isolate, prototype, "querySelectorAll", &DocumentFragment::QuerySelectorAll);
-  }
-
-  DocumentFragment::DocumentFragment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : DocumentFragmentBase(isolate, args)
-  {
-  }
-
-  // Method implementations
-  void DocumentFragment::Append(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    vector<shared_ptr<dom::Node>> nodes;
-    for (int i = 0; i < info.Length(); ++i)
+    void DocumentFragment::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      if (Node::IsInstanceOf(isolate, info[i]))
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
+
+      // Add properties
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "childElementCount", &DocumentFragment::ChildElementCountGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "children", &DocumentFragment::ChildrenGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "firstElementChild", &DocumentFragment::FirstElementChildGetter);
+      InstanceReadonlyPropertyAccessor(isolate, prototype, "lastElementChild", &DocumentFragment::LastElementChildGetter);
+
+      // Add methods
+      InstanceMethod(isolate, prototype, "append", &DocumentFragment::Append);
+      InstanceMethod(isolate, prototype, "prepend", &DocumentFragment::Prepend);
+      InstanceMethod(isolate, prototype, "getElementById", &DocumentFragment::GetElementById);
+      InstanceMethod(isolate, prototype, "getElementsByTagName", &DocumentFragment::GetElementsByTagName);
+      InstanceMethod(isolate, prototype, "getElementsByClassName", &DocumentFragment::GetElementsByClassName);
+      InstanceMethod(isolate, prototype, "querySelector", &DocumentFragment::QuerySelector);
+      InstanceMethod(isolate, prototype, "querySelectorAll", &DocumentFragment::QuerySelectorAll);
+    }
+
+    DocumentFragment::DocumentFragment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : DocumentFragmentBase(isolate, args)
+    {
+    }
+
+    // Method implementations
+    void DocumentFragment::Append(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      vector<shared_ptr<dom::Node>> nodes;
+      for (int i = 0; i < info.Length(); ++i)
       {
-        auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
-        if (nodeBinding != nullptr && nodeBinding->hasData())
+        if (Node::IsInstanceOf(isolate, info[i]))
         {
-          nodes.push_back(nodeBinding->handle());
+          auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
+          if (nodeBinding != nullptr && nodeBinding->hasData())
+          {
+            nodes.push_back(nodeBinding->handle());
+          }
+        }
+        else if (info[i]->IsString())
+        {
+          String::Utf8Value utf8Value(isolate, info[i]);
+          auto textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
+          nodes.push_back(textNode);
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(
+            String::NewFromUtf8(isolate, "All arguments must be Node or string").ToLocalChecked()));
+          return;
         }
       }
-      else if (info[i]->IsString())
+
+      handle()->append(nodes);
+      info.GetReturnValue().SetUndefined();
+    }
+
+    void DocumentFragment::Prepend(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      vector<shared_ptr<dom::Node>> nodes;
+      for (int i = 0; i < info.Length(); ++i)
       {
-        String::Utf8Value utf8Value(isolate, info[i]);
-        auto textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
-        nodes.push_back(textNode);
+        if (Node::IsInstanceOf(isolate, info[i]))
+        {
+          auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
+          if (nodeBinding != nullptr && nodeBinding->hasData())
+          {
+            nodes.push_back(nodeBinding->handle());
+          }
+        }
+        else if (info[i]->IsString())
+        {
+          String::Utf8Value utf8Value(isolate, info[i]);
+          auto textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
+          nodes.push_back(textNode);
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(
+            String::NewFromUtf8(isolate, "All arguments must be Node or string").ToLocalChecked()));
+          return;
+        }
+      }
+
+      handle()->prepend(nodes);
+      info.GetReturnValue().SetUndefined();
+    }
+
+    void DocumentFragment::QuerySelector(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1 || !info[0]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Expected a CSS selector string as the first argument").ToLocalChecked()));
+        return;
+      }
+
+      String::Utf8Value selector(isolate, info[0]);
+      auto result = handle()->querySelector(string(*selector));
+      if (result)
+      {
+        auto nodeBinding = Element::GetOrNewInstance(isolate, result);
+        info.GetReturnValue().Set(nodeBinding);
       }
       else
       {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void DocumentFragment::QuerySelectorAll(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
+      {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "All arguments must be Node or string").ToLocalChecked()));
+          MakeMethodError(isolate, "querySelector", "1 argument required, but only 0 present.")));
+        return;
+      }
+
+      String::Utf8Value selectors(isolate, info[0]);
+      try
+      {
+        auto elements = make_unique<::endor::dom::NodeList<::endor::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
+        Local<Value> nodeList = NodeList::NewInstance(isolate, move(elements));
+        info.GetReturnValue().Set(nodeList);
+        return;
+      }
+      catch (const exception &e)
+      {
+        string message = "'" + string(*selectors) + "' is not a valid selector.";
+        isolate->ThrowException(Exception::Error(
+          MakeMethodError(isolate, "querySelectorAll", message.c_str())));
         return;
       }
     }
 
-    handle()->append(nodes);
-    info.GetReturnValue().SetUndefined();
-  }
-
-  void DocumentFragment::Prepend(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    vector<shared_ptr<dom::Node>> nodes;
-    for (int i = 0; i < info.Length(); ++i)
+    void DocumentFragment::GetElementById(const FunctionCallbackInfo<Value> &info)
     {
-      if (Node::IsInstanceOf(isolate, info[i]))
-      {
-        auto nodeBinding = Node::Unwrap(isolate, info[i].As<Object>());
-        if (nodeBinding != nullptr && nodeBinding->hasData())
-        {
-          nodes.push_back(nodeBinding->handle());
-        }
-      }
-      else if (info[i]->IsString())
-      {
-        String::Utf8Value utf8Value(isolate, info[i]);
-        auto textNode = handle()->getOwnerDocumentChecked().createTextNode(string(*utf8Value));
-        nodes.push_back(textNode);
-      }
-      else
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "All arguments must be Node or string").ToLocalChecked()));
-        return;
-      }
-    }
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
 
-    handle()->prepend(nodes);
-    info.GetReturnValue().SetUndefined();
-  }
-
-  void DocumentFragment::QuerySelector(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1 || !info[0]->IsString())
-    {
-      isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Expected a CSS selector string as the first argument").ToLocalChecked()));
-      return;
-    }
-
-    String::Utf8Value selector(isolate, info[0]);
-    auto result = handle()->querySelector(string(*selector));
-    if (result)
-    {
-      auto nodeBinding = Element::GetOrNewInstance(isolate, result);
-      info.GetReturnValue().Set(nodeBinding);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
-
-  void DocumentFragment::QuerySelectorAll(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    if (info.Length() < 1)
-    {
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "querySelector", "1 argument required, but only 0 present.")));
-      return;
-    }
-
-    String::Utf8Value selectors(isolate, info[0]);
-    try
-    {
-      auto elements = make_unique<::dom::NodeList<::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
-      Local<Value> nodeList = NodeList::NewInstance(isolate, move(elements));
-      info.GetReturnValue().Set(nodeList);
-      return;
-    }
-    catch (const exception &e)
-    {
-      string message = "'" + string(*selectors) + "' is not a valid selector.";
       isolate->ThrowException(Exception::Error(
-        MakeMethodError(isolate, "querySelectorAll", message.c_str())));
-      return;
+        MakeMethodError(isolate, "getElementById", "Not implemented")));
     }
-  }
 
-  void DocumentFragment::GetElementById(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "getElementById", "Not implemented")));
-  }
-
-  void DocumentFragment::GetElementsByTagName(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "getElementsByTagName", "Not implemented")));
-  }
-
-  void DocumentFragment::GetElementsByClassName(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    isolate->ThrowException(Exception::Error(
-      MakeMethodError(isolate, "getElementsByClassName", "Not implemented")));
-  }
-
-  // Property getters
-  void DocumentFragment::ChildElementCountGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto count = handle()->childElementCount();
-    info.GetReturnValue().Set(Integer::New(isolate, count));
-  }
-
-  void DocumentFragment::ChildrenGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto children = make_unique<dom::NodeList<dom::Element>>(handle()->children());
-    info.GetReturnValue().Set(NodeList::NewInstance(isolate, move(children)));
-  }
-
-  void DocumentFragment::FirstElementChildGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto element = handle()->firstElementChild();
-    if (element)
+    void DocumentFragment::GetElementsByTagName(const FunctionCallbackInfo<Value> &info)
     {
-      auto elementBinding = Element::GetOrNewInstance(isolate, element);
-      info.GetReturnValue().Set(elementBinding);
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getElementsByTagName", "Not implemented")));
     }
-    else
+
+    void DocumentFragment::GetElementsByClassName(const FunctionCallbackInfo<Value> &info)
     {
-      info.GetReturnValue().SetNull();
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getElementsByClassName", "Not implemented")));
+    }
+
+    // Property getters
+    void DocumentFragment::ChildElementCountGetter(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto count = handle()->childElementCount();
+      info.GetReturnValue().Set(Integer::New(isolate, count));
+    }
+
+    void DocumentFragment::ChildrenGetter(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto children = make_unique<dom::NodeList<dom::Element>>(handle()->children());
+      info.GetReturnValue().Set(NodeList::NewInstance(isolate, move(children)));
+    }
+
+    void DocumentFragment::FirstElementChildGetter(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto element = handle()->firstElementChild();
+      if (element)
+      {
+        auto elementBinding = Element::GetOrNewInstance(isolate, element);
+        info.GetReturnValue().Set(elementBinding);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
+
+    void DocumentFragment::LastElementChildGetter(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto element = handle()->lastElementChild();
+      if (element)
+      {
+        auto elementBinding = Element::GetOrNewInstance(isolate, element);
+        info.GetReturnValue().Set(elementBinding);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
     }
   }
-
-  void DocumentFragment::LastElementChildGetter(const FunctionCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    HandleScope scope(isolate);
-
-    auto element = handle()->lastElementChild();
-    if (element)
-    {
-      auto elementBinding = Element::GetOrNewInstance(isolate, element);
-      info.GetReturnValue().Set(elementBinding);
-    }
-    else
-    {
-      info.GetReturnValue().SetNull();
-    }
-  }
-}
+} // namespace endor

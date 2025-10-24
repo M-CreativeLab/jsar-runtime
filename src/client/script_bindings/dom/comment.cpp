@@ -4,31 +4,34 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::dom_bindings
+namespace endor
 {
-  void Comment::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+  namespace script_bindings::dom_bindings
   {
-    // Comment inherits all functionality from CharacterData
-    // No additional properties or methods specific to Comment
-  }
-
-  Local<Object> Comment::NewInstance(Isolate *isolate, shared_ptr<dom::Comment> nativeComment)
-  {
-    EscapableHandleScope scope(isolate);
-    if (nativeComment == nullptr)
+    void Comment::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      return scope.Escape(Local<Object>());
+      // Comment inherits all functionality from CharacterData
+      // No additional properties or methods specific to Comment
     }
-    else
-    {
-      return scope.Escape(CommentBase::NewInstance(isolate, nativeComment).As<Object>());
-    }
-  }
 
-  Comment::Comment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : CommentBase(isolate, args)
-  {
-    // Comment constructor - creates a new comment node
-    // TODO: Handle constructor arguments (initial data)
+    Local<Object> Comment::NewInstance(Isolate *isolate, shared_ptr<dom::Comment> nativeComment)
+    {
+      EscapableHandleScope scope(isolate);
+      if (nativeComment == nullptr)
+      {
+        return scope.Escape(Local<Object>());
+      }
+      else
+      {
+        return scope.Escape(CommentBase::NewInstance(isolate, nativeComment).As<Object>());
+      }
+    }
+
+    Comment::Comment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : CommentBase(isolate, args)
+    {
+      // Comment constructor - creates a new comment node
+      // TODO: Handle constructor arguments (initial data)
+    }
   }
-}
+} // namespace endor

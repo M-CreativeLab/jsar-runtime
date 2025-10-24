@@ -6,80 +6,83 @@
 #include <client/cssom/values/computed/position.hpp>
 #include <client/cssom/values/specified/length.hpp>
 
-namespace client_cssom::values::specified
+namespace endor
 {
-  class PositionType : public generics::PositionType,
-                       public Parse,
-                       public ToCss,
-                       public ToComputedValue<generics::PositionType>
+  namespace client_cssom::values::specified
   {
-    friend class Parse;
-
-  private:
-    bool parse(const std::string &input) override
+    class PositionType : public generics::PositionType,
+                         public Parse,
+                         public ToCss,
+                         public ToComputedValue<generics::PositionType>
     {
-      if (input == "static")
-        tag_ = kStatic;
-      else if (input == "relative")
-        tag_ = kRelative;
-      else if (input == "absolute")
-        tag_ = kAbsolute;
-      else if (input == "fixed")
-        tag_ = kFixed;
-      else if (input == "sticky")
-        tag_ = kSticky;
-      return true;
-    }
+      friend class Parse;
 
-  public:
-    std::string toCss() const override
-    {
-      switch (tag_)
+    private:
+      bool parse(const std::string &input) override
       {
-      case kStatic:
-        return "static";
-      case kRelative:
-        return "relative";
-      case kAbsolute:
-        return "absolute";
-      case kFixed:
-        return "fixed";
-      case kSticky:
-        return "sticky";
+        if (input == "static")
+          tag_ = kStatic;
+        else if (input == "relative")
+          tag_ = kRelative;
+        else if (input == "absolute")
+          tag_ = kAbsolute;
+        else if (input == "fixed")
+          tag_ = kFixed;
+        else if (input == "sticky")
+          tag_ = kSticky;
+        return true;
       }
-      return "";
-    }
-    generics::PositionType toComputedValue(computed::Context &) const override
-    {
-      return *this;
-    }
-  };
 
-  class InsetSize : public generics::GenericMargin<InsetSize, specified::LengthPercentage>,
-                    public Parse,
-                    public ToComputedValue<computed::InsetSize>
-  {
-    friend class Parse;
-    using generics::GenericMargin<InsetSize, specified::LengthPercentage>::GenericMargin;
+    public:
+      std::string toCss() const override
+      {
+        switch (tag_)
+        {
+        case kStatic:
+          return "static";
+        case kRelative:
+          return "relative";
+        case kAbsolute:
+          return "absolute";
+        case kFixed:
+          return "fixed";
+        case kSticky:
+          return "sticky";
+        }
+        return "";
+      }
+      generics::PositionType toComputedValue(computed::Context &) const override
+      {
+        return *this;
+      }
+    };
 
-  private:
-    bool parse(const std::string &input) override
+    class InsetSize : public generics::GenericMargin<InsetSize, specified::LengthPercentage>,
+                      public Parse,
+                      public ToComputedValue<computed::InsetSize>
     {
-      if (input == "auto")
-        setAuto();
-      else if (LengthPercentage::IsLengthOrPercentage(input))
-        setLengthPercentage(Parse::ParseSingleValue<specified::LengthPercentage>(input));
-      return true;
-    }
+      friend class Parse;
+      using generics::GenericMargin<InsetSize, specified::LengthPercentage>::GenericMargin;
 
-  public:
-    computed::InsetSize toComputedValue(computed::Context &context) const override
-    {
-      if (isAuto())
-        return computed::InsetSize::Auto();
-      else if (isLengthPercentage())
-        return computed::InsetSize::LengthPercentage(lengthPercent().toComputedValue(context));
-      assert(false && "Invalid tag.");
-    }
-  };
-}
+    private:
+      bool parse(const std::string &input) override
+      {
+        if (input == "auto")
+          setAuto();
+        else if (LengthPercentage::IsLengthOrPercentage(input))
+          setLengthPercentage(Parse::ParseSingleValue<specified::LengthPercentage>(input));
+        return true;
+      }
+
+    public:
+      computed::InsetSize toComputedValue(computed::Context &context) const override
+      {
+        if (isAuto())
+          return computed::InsetSize::Auto();
+        else if (isLengthPercentage())
+          return computed::InsetSize::LengthPercentage(lengthPercent().toComputedValue(context));
+        assert(false && "Invalid tag.");
+      }
+    };
+  }
+} // namespace endor

@@ -1,9 +1,12 @@
 #include "./worker.hpp"
 
-namespace client_workers
+namespace endor
 {
-  Worker::Worker(const string &url)
-      : dom::DOMEventTarget()
+  namespace client_workers
   {
+    Worker::Worker(const string &url)
+        : dom::DOMEventTarget()
+    {
+    }
   }
-}
+} // namespace endor

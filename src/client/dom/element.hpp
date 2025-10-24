@@ -53,29 +53,31 @@
   XX("footer", HTMLSectionElement)    \
   XX("video", HTMLVideoElement)
 
-namespace dom
+namespace endor
 {
-  struct CheckVisibilityOptions
+  namespace dom
   {
-    bool checkOpacity = false;
-    bool checkVisibilityCSS = false;
-    bool contentVisibilityAuto = false;
-    bool opacityProperty = false;
-    bool visibilityProperty = false;
-  };
+    struct CheckVisibilityOptions
+    {
+      bool checkOpacity = false;
+      bool checkVisibilityCSS = false;
+      bool contentVisibilityAuto = false;
+      bool opacityProperty = false;
+      bool visibilityProperty = false;
+    };
 
-  class Attr;
-  class Document;
-  class Element : public Node,
-                  public Animatable,
-                  virtual public client_cssom::BoxBounding
-  {
-    friend class DocumentEventDispatcher;
-    friend class RenderHTMLDocument;
-    friend class client_layout::LayoutObject;
+    class Attr;
+    class Document;
+    class Element : public Node,
+                    public Animatable,
+                    virtual public client_cssom::BoxBounding
+    {
+      friend class DocumentEventDispatcher;
+      friend class RenderHTMLDocument;
+      friend class client_layout::LayoutObject;
 
-  public:
-    /**
+    public:
+      /**
      * Create a new `Element` object from a `pugi::xml_node`, which is used to create and initialize an element from the
      *  XML parser.
      *
@@ -83,9 +85,9 @@ namespace dom
      * @param ownerDocument The owner document of the element.
      * @returns The created `Element` object.
      */
-    static std::shared_ptr<Element> CreateElement(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+      static std::shared_ptr<Element> CreateElement(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
 
-    /**
+      /**
      * Create a new `Element` object from a tag name, which is used to create an element from scripts such as:
      * `document.createElement('div')`.
      *
@@ -95,297 +97,298 @@ namespace dom
      * @param fromScripting Whether the element is created from scripting or not.
      * @returns The created `Element` object.
      */
-    static std::shared_ptr<Element> CreateElement(std::string namespaceURI,
-                                                  std::string tagName,
-                                                  std::shared_ptr<Document> ownerDocument,
-                                                  bool fromScripting);
+      static std::shared_ptr<Element> CreateElement(std::string namespaceURI,
+                                                    std::string tagName,
+                                                    std::shared_ptr<Document> ownerDocument,
+                                                    bool fromScripting);
 
-    /**
+      /**
      * Clone the given element and return a new element with the same properties.
      *
      * @param srcElement The element to clone.
      * @returns The cloned element in `std::shared_ptr<Node>`.
      */
-    static std::shared_ptr<Node> CloneElement(std::shared_ptr<Node> srcElement);
+      static std::shared_ptr<Node> CloneElement(std::shared_ptr<Node> srcElement);
 
-  public:
-    Element(std::string tagName, std::optional<std::shared_ptr<Document>> ownerDocument);
-    Element(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    Element(const Element &other);
-    ~Element() = default;
+    public:
+      Element(std::string tagName, std::optional<std::shared_ptr<Document>> ownerDocument);
+      Element(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+      Element(const Element &other);
+      ~Element() = default;
 
-  public:
-    std::vector<geometry::DOMRect> getLayoutRects() const override;
-    std::shared_ptr<Element> getAnimationTarget() override;
+    public:
+      std::vector<geometry::DOMRect> getLayoutRects() const override;
+      std::shared_ptr<Element> getAnimationTarget() override;
 
-    void before(std::vector<std::shared_ptr<Node>> nodes);
-    void before(std::string text);
-    inline void before(std::shared_ptr<Node> node)
-    {
-      before(std::vector<std::shared_ptr<Node>>{node});
-    }
-    void after(std::vector<std::shared_ptr<Node>> nodes);
-    void after(std::string text);
-    inline void after(std::shared_ptr<Node> node)
-    {
-      after(std::vector<std::shared_ptr<Node>>{node});
-    }
-    std::string getAttribute(const std::string &name, const std::string &defaultValue = "") const;
-    std::vector<std::string> getAttributeNames() const;
-    std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
-    Attr &getAttributeNodeChecked(const std::string &name) const;
-    bool hasAttribute(const std::string &name) const;
-    bool hasAttributes() const;
-    /**
+      void before(std::vector<std::shared_ptr<Node>> nodes);
+      void before(std::string text);
+      inline void before(std::shared_ptr<Node> node)
+      {
+        before(std::vector<std::shared_ptr<Node>>{node});
+      }
+      void after(std::vector<std::shared_ptr<Node>> nodes);
+      void after(std::string text);
+      inline void after(std::shared_ptr<Node> node)
+      {
+        after(std::vector<std::shared_ptr<Node>>{node});
+      }
+      std::string getAttribute(const std::string &name, const std::string &defaultValue = "") const;
+      std::vector<std::string> getAttributeNames() const;
+      std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
+      Attr &getAttributeNodeChecked(const std::string &name) const;
+      bool hasAttribute(const std::string &name) const;
+      bool hasAttributes() const;
+      /**
      * Sets the attribute value of the element.
      *
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      * @param notify Whether to notify the attribute change.
      */
-    void setAttribute(const std::string &name, const std::string &value, bool notify = true);
-    void setAttributeNode(std::shared_ptr<Attr> attr);
-    void remove();
-    void removeAttribute(const std::string &name);
-    /**
+      void setAttribute(const std::string &name, const std::string &value, bool notify = true);
+      void setAttributeNode(std::shared_ptr<Attr> attr);
+      void remove();
+      void removeAttribute(const std::string &name);
+      /**
      * The method returns a `DOMRect` object providing information about the size of an element and its position
      * relative to the viewport.
      *
      * @returns The `DOMRect` object which is the smallest rectangle which contains the entire element, including
      *          its padding and border-width.
      */
-    [[nodiscard]] geometry::DOMRect getBoundingClientRect() const;
-    /**
+      [[nodiscard]] geometry::DOMRect getBoundingClientRect() const;
+      /**
      * The `getClientRects()` method returns a collection of `DOMRect` objects that indicate the bounding rectangles
      * for each CSS border box in a client.
      *
      * @returns a collection of `DOMRect` objects, one for each CSS border box associated with the element.
      */
-    [[nodiscard]] std::vector<geometry::DOMRect> getClientRects() const;
-    /**
+      [[nodiscard]] std::vector<geometry::DOMRect> getClientRects() const;
+      /**
      * It checks whether the element is visible.
      *
      * @param options The options to check the visibility.
      * @returns `true` if the element is visible, otherwise `false`.
      */
-    [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
+      [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
 
-    enum ScrollBehavior
-    {
-      kScrollBehaviorAuto,
-      kScrollBehaviorSmooth,
-      kScrollBehaviorInstant
-    };
-    struct ScrollOptions
-    {
-      float top = 0;
-      float left = 0;
-      ScrollBehavior behavior = kScrollBehaviorAuto;
-    };
+      enum ScrollBehavior
+      {
+        kScrollBehaviorAuto,
+        kScrollBehaviorSmooth,
+        kScrollBehaviorInstant
+      };
+      struct ScrollOptions
+      {
+        float top = 0;
+        float left = 0;
+        ScrollBehavior behavior = kScrollBehaviorAuto;
+      };
 
-    // Scrolls the element to the given position.
-    inline void scroll(const ScrollOptions &opts)
-    {
-      scrollTo(opts);
-    }
-    // Scrolls an element to the given position.
-    void scrollTo(const ScrollOptions &);
-    // Scrolls an element by the given amount.
-    void scrollBy(const ScrollOptions &);
+      // Scrolls the element to the given position.
+      inline void scroll(const ScrollOptions &opts)
+      {
+        scrollTo(opts);
+      }
+      // Scrolls an element to the given position.
+      void scrollTo(const ScrollOptions &);
+      // Scrolls an element by the given amount.
+      void scrollBy(const ScrollOptions &);
 
-    ElementAnimations &elementAnimationsRef()
-    {
-      return *element_animations_;
-    }
-    bool hasAnimations() const
-    {
-      return element_animations_ != nullptr && !element_animations_->isEmpty();
-    }
+      ElementAnimations &elementAnimationsRef()
+      {
+        return *element_animations_;
+      }
+      bool hasAnimations() const
+      {
+        return element_animations_ != nullptr && !element_animations_->isEmpty();
+      }
 
-    inline bool hasAdoptedStyle() const
-    {
-      return adopted_style_ != nullptr;
-    }
-    inline client_cssom::ComputedStyle &adoptedStyleRef() const
-    {
-      assert(adopted_style_ != nullptr && "The adopted style should not be null.");
-      return *adopted_style_;
-    }
-    const client_cssom::CSSStyleDeclaration &defaultStyle() const
-    {
-      return defaultStyle_;
-    }
+      inline bool hasAdoptedStyle() const
+      {
+        return adopted_style_ != nullptr;
+      }
+      inline client_cssom::ComputedStyle &adoptedStyleRef() const
+      {
+        assert(adopted_style_ != nullptr && "The adopted style should not be null.");
+        return *adopted_style_;
+      }
+      const client_cssom::CSSStyleDeclaration &defaultStyle() const
+      {
+        return defaultStyle_;
+      }
 
-    std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const
-    {
-      return principalBox_;
-    }
-    std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox()
-    {
-      return principalBox_;
-    }
+      std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const
+      {
+        return principalBox_;
+      }
+      std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox()
+      {
+        return principalBox_;
+      }
 
-  public:
-    bool isElement() const override final
-    {
-      return true;
-    }
+    public:
+      bool isElement() const override final
+      {
+        return true;
+      }
 
-    bool isHovered() const
-    {
-      return is_hovered_;
-    }
-    bool isFocused() const
-    {
-      return is_focused_;
-    }
+      bool isHovered() const
+      {
+        return is_hovered_;
+      }
+      bool isFocused() const
+      {
+        return is_focused_;
+      }
 
-    // Overrides the `Node::computeRenderQueue()` method to return the render queue of the element.
-    builtin_scene::RenderQueue computeRenderQueue() const override;
+      // Overrides the `Node::computeRenderQueue()` method to return the render queue of the element.
+      builtin_scene::RenderQueue computeRenderQueue() const override;
 
-    /**
+      /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
      *
      * @param expectedTagName The expected tag name.
      * @returns True if the element's tag name is the same as the given tag name ignoring case.
      */
-    bool is(const std::string expectedTagName);
-    void setId(const std::string &id);
-    std::string getInnerHTML();
-    void setInnerHTML(const std::string &markup);
-    std::string getOuterHTML();
-    void setOuterHTML(const std::string &markup);
+      bool is(const std::string expectedTagName);
+      void setId(const std::string &id);
+      std::string getInnerHTML();
+      void setInnerHTML(const std::string &markup);
+      std::string getOuterHTML();
+      void setOuterHTML(const std::string &markup);
 
-    // Generalized event handler methods
-    void setEventHandler(const std::string &type, const std::string &handlerCode);
-    bool hasEventHandler(const std::string &type) const;
-    std::string getEventHandlerCode(const std::string &type) const;
-    void executeEventHandler(const std::string &type, dom::Event *event);
+      // Generalized event handler methods
+      void setEventHandler(const std::string &type, const std::string &handlerCode);
+      bool hasEventHandler(const std::string &type) const;
+      std::string getEventHandlerCode(const std::string &type) const;
+      void executeEventHandler(const std::string &type, dom::Event *event);
 
-  protected: // Node lifecycle callbacks
-    void connectedCallback() override;
-    void disconnectedCallback() override;
+    protected: // Node lifecycle callbacks
+      void connectedCallback() override;
+      void disconnectedCallback() override;
 
-  protected: // Element lifecycle callbacks
-    /**
+    protected: // Element lifecycle callbacks
+      /**
      * When the element is created each time.
      */
-    virtual void createdCallback(bool from_scripting);
-    /**
+      virtual void createdCallback(bool from_scripting);
+      /**
      * When the element is moved to a new document each time.
      */
-    virtual void adoptedCallback();
-    /**
+      virtual void adoptedCallback();
+      /**
      * When the element's attribute is changed.
      *
      * @param name The name of the attribute.
      * @param oldValue The old value of the attribute.
      * @param newValue The new value of the attribute.
      */
-    virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue);
-    /**
+      virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue);
+      /**
      * When the element's `classList` is changed.
      *
      * @param newClassList The new class list of the element.
      */
-    virtual void classListChangedCallback(const DOMTokenList &newClassList);
-    /**
+      virtual void classListChangedCallback(const DOMTokenList &newClassList);
+      /**
      * When the element action state is changed, such as `:hover`, `:active`, `:focus`, etc.
      */
-    virtual void actionStateChangedCallback();
-    /**
+      virtual void actionStateChangedCallback();
+      /**
      * When the element's adopted style is updated.
      */
-    virtual void styleAdoptedCallback();
-    /**
+      virtual void styleAdoptedCallback();
+      /**
      * When the element's layout size is changed, this is called when the layout box size(width, height) is changed.
      */
-    virtual void layoutSizeChangedCallback(const client_layout::Fragment &);
+      virtual void layoutSizeChangedCallback(const client_layout::Fragment &);
 
-  protected:
-    // Initialize the CSS boxes of the element.
-    void initCSSBoxes();
-    // Set the CSS boxes of the element from the current display style.
-    void reinitCSSBoxes();
-    // Clear all the CSS boxes of the element.
-    void resetCSSBoxes(bool skipCheck = false);
+    protected:
+      // Initialize the CSS boxes of the element.
+      void initCSSBoxes();
+      // Set the CSS boxes of the element from the current display style.
+      void reinitCSSBoxes();
+      // Clear all the CSS boxes of the element.
+      void resetCSSBoxes(bool skipCheck = false);
 
-    // Adopt the specified style to the element, it will copy the style properties to the element's adopted style, and
-    // update the layout node's style.
-    bool adoptStyle(const client_cssom::ComputedStyle &);
+      // Adopt the specified style to the element, it will copy the style properties to the element's adopted style, and
+      // update the layout node's style.
+      bool adoptStyle(const client_cssom::ComputedStyle &);
 
-    /**
+      /**
      * A utility method to use the scene weak reference safely.
      *
      * @param callback The callback function to use the scene.
      */
-    void useSceneWithCallback(const std::function<void(builtin_scene::Scene &)> &callback);
+      void useSceneWithCallback(const std::function<void(builtin_scene::Scene &)> &callback);
 
-    // Dispatch the event to the element, it will do bubbles and capture phase dispatching.
-    void dispatchEventInternal(std::shared_ptr<dom::Event>);
-    void simulateMouseDown(const glm::vec3 &hitPointInWorld);
-    void simulateMouseUp(const glm::vec3 &hitPointInWorld);
-    void simulateMouseMove(const glm::vec3 &hitPointInWorld);
-    void simulateMouseOut(const glm::vec3 &hitPointInWorld);
-    void simulateMouseOver(const glm::vec3 &hitPointInWorld);
-    void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
-    void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
-    void simulateClick(const glm::vec3 &hitPointInWorld);
-    bool simulateScrollWithOffset(float offsetX, float offsetY);
+      // Dispatch the event to the element, it will do bubbles and capture phase dispatching.
+      void dispatchEventInternal(std::shared_ptr<dom::Event>);
+      void simulateMouseDown(const glm::vec3 &hitPointInWorld);
+      void simulateMouseUp(const glm::vec3 &hitPointInWorld);
+      void simulateMouseMove(const glm::vec3 &hitPointInWorld);
+      void simulateMouseOut(const glm::vec3 &hitPointInWorld);
+      void simulateMouseOver(const glm::vec3 &hitPointInWorld);
+      void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
+      void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
+      void simulateClick(const glm::vec3 &hitPointInWorld);
+      bool simulateScrollWithOffset(float offsetX, float offsetY);
 
-  private:
-    bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
-    bool setActionState(bool &state, bool value);
-    bool shouldThrottleScrollEvent() const;
+    private:
+      bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
+      bool setActionState(bool &state, bool value);
+      bool shouldThrottleScrollEvent() const;
 
-  public:
-    std::string id;
-    std::string namespaceURI;
-    std::string tagName;
-    std::string localName;
-    std::string prefix;
+    public:
+      std::string id;
+      std::string namespaceURI;
+      std::string tagName;
+      std::string localName;
+      std::string prefix;
 
-    inline const std::string &className() const
-    {
-      return classList_.value();
-    }
-    inline void setClassName(const std::string &className)
-    {
-      setAttribute("class", className);
-    }
-    inline const DOMTokenList &classList() const
-    {
-      return classList_;
-    }
-    inline DOMTokenList &classList()
-    {
-      return classList_;
-    }
+      inline const std::string &className() const
+      {
+        return classList_.value();
+      }
+      inline void setClassName(const std::string &className)
+      {
+        setAttribute("class", className);
+      }
+      inline const DOMTokenList &classList() const
+      {
+        return classList_;
+      }
+      inline DOMTokenList &classList()
+      {
+        return classList_;
+      }
 
-    std::shared_ptr<Element> firstElementChild() const;
-    std::shared_ptr<Element> lastElementChild() const;
+      std::shared_ptr<Element> firstElementChild() const;
+      std::shared_ptr<Element> lastElementChild() const;
 
-  protected:
-    DOMTokenList classList_;
-    std::unordered_map<std::string, std::shared_ptr<Attr>> attributeNodes_;
-    client_cssom::CSSStyleDeclaration defaultStyle_;
+    protected:
+      DOMTokenList classList_;
+      std::unordered_map<std::string, std::shared_ptr<Attr>> attributeNodes_;
+      client_cssom::CSSStyleDeclaration defaultStyle_;
 
-  private:
-    std::unique_ptr<client_cssom::ComputedStyle> adopted_style_;
-    std::weak_ptr<builtin_scene::Scene> scene_;
-    std::shared_ptr<ElementAnimations> element_animations_;
-    std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
-    std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
-    std::string currentDisplayStr_ = "block";
-    bool is_hovered_ = false;
-    bool is_focused_ = false;
-    bool is_active_ = false;
+    private:
+      std::unique_ptr<client_cssom::ComputedStyle> adopted_style_;
+      std::weak_ptr<builtin_scene::Scene> scene_;
+      std::shared_ptr<ElementAnimations> element_animations_;
+      std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
+      std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
+      std::string currentDisplayStr_ = "block";
+      bool is_hovered_ = false;
+      bool is_focused_ = false;
+      bool is_active_ = false;
 
-    // Event handlers - generalized storage
-    std::unordered_map<std::string, std::string> event_handler_codes_;
+      // Event handlers - generalized storage
+      std::unordered_map<std::string, std::string> event_handler_codes_;
 
-    // Scroll performance optimization
-    std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
-    static constexpr std::chrono::milliseconds scroll_throttle_duration_{1000 / 45}; // ~45fps throttling
-  };
-}
+      // Scroll performance optimization
+      std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
+      static constexpr std::chrono::milliseconds scroll_throttle_duration_{1000 / 45}; // ~45fps throttling
+    };
+  }
+} // namespace endor

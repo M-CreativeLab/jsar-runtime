@@ -5,27 +5,30 @@
 #include <client/cssom/values/computed/length_percentage.hpp>
 #include <client/cssom/values/computed/length.hpp>
 
-namespace client_cssom::values::computed
+namespace endor
 {
-  using Display = specified::Display;
-  using BoxSizing = specified::BoxSizing;
-  using Overflow = specified::Overflow;
-
-  class Padding : public generics::Rect<LengthPercentage>
+  namespace client_cssom::values::computed
   {
-  public:
-    Padding(generics::Rect<LengthPercentage> rect)
-        : generics::Rect<LengthPercentage>(rect)
-    {
-    }
-  };
+    using Display = specified::Display;
+    using BoxSizing = specified::BoxSizing;
+    using Overflow = specified::Overflow;
 
-  class Margin : public generics::Rect<MarginSize>
-  {
-  public:
-    Margin(generics::Rect<MarginSize> rect)
-        : generics::Rect<MarginSize>(rect)
+    class Padding : public generics::Rect<LengthPercentage>
     {
-    }
-  };
-}
+    public:
+      Padding(generics::Rect<LengthPercentage> rect)
+          : generics::Rect<LengthPercentage>(rect)
+      {
+      }
+    };
+
+    class Margin : public generics::Rect<MarginSize>
+    {
+    public:
+      Margin(generics::Rect<MarginSize> rect)
+          : generics::Rect<MarginSize>(rect)
+      {
+      }
+    };
+  }
+} // namespace endor

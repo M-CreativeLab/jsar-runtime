@@ -3,21 +3,24 @@
 #include <string>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLHeadElement final : public HTMLElement
+  namespace dom
   {
-  public:
-    using HTMLElement::HTMLElement;
-    HTMLHeadElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("HEAD", ownerDocument)
+    class HTMLHeadElement final : public HTMLElement
     {
-    }
+    public:
+      using HTMLElement::HTMLElement;
+      HTMLHeadElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLElement("HEAD", ownerDocument)
+      {
+      }
 
-  public:
-    bool isHTMLHeadElement() const override
-    {
-      return true;
-    }
-  };
-}
+    public:
+      bool isHTMLHeadElement() const override
+      {
+        return true;
+      }
+    };
+  }
+} // namespace endor

@@ -3,8 +3,9 @@
 #include <client/cssom/values/computed/text.hpp>
 #include <crates/bindings.hpp>
 
-using namespace client_cssom;
-using namespace client_cssom::values::computed;
+using namespace endor;
+using namespace endor::client_cssom;
+using namespace endor::client_cssom::values::computed;
 
 TEST_CASE("Layout Text Align Tests", "[layout-text-align]")
 {

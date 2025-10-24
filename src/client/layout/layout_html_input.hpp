@@ -2,24 +2,27 @@
 
 #include "./layout_replaced.hpp"
 
-namespace client_layout
+namespace endor
 {
-  class LayoutHTMLInput final : public LayoutReplaced
+  namespace client_layout
   {
-    using LayoutReplaced::LayoutReplaced;
-
-  public:
-    const char *name() const override
+    class LayoutHTMLInput final : public LayoutReplaced
     {
-      return "LayoutHTMLInput";
-    }
-    bool isInput() const override final
-    {
-      return true;
-    }
+      using LayoutReplaced::LayoutReplaced;
 
-  private:
-    void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
-    void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
-  };
-}
+    public:
+      const char *name() const override
+      {
+        return "LayoutHTMLInput";
+      }
+      bool isInput() const override final
+      {
+        return true;
+      }
+
+    private:
+      void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
+      void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+    };
+  }
+} // namespace endor

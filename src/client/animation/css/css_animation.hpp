@@ -2,21 +2,24 @@
 
 #include <client/animation/animation.hpp>
 
-namespace dom
+namespace endor
 {
-  class Element;
-  class CSSAnimation : public Animation
+  namespace dom
   {
-  public:
-    bool isCSSAnimation() const override
+    class Element;
+    class CSSAnimation : public Animation
     {
-      return true;
-    }
+    public:
+      bool isCSSAnimation() const override
+      {
+        return true;
+      }
 
-    void clearOwningElement() override;
-    std::shared_ptr<Element> owningElement() const override;
+      void clearOwningElement() override;
+      std::shared_ptr<Element> owningElement() const override;
 
-  private:
-    std::weak_ptr<Element> owning_element_;
-  };
-}
+    private:
+      std::weak_ptr<Element> owning_element_;
+    };
+  }
+} // namespace endor

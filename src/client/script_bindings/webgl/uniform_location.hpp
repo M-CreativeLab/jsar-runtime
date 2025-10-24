@@ -6,40 +6,43 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/webgl/object.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    class WebGLUniformLocation;
-    using WebGLUniformLocationBase = scripting_base::ObjectWrap<WebGLUniformLocation,
-                                                                client_graphics::WebGLUniformLocation,
-                                                                WebGLObject>;
-
-    class WebGLUniformLocation : public WebGLUniformLocationBase
+    namespace webgl_bindings
     {
-      using WebGLUniformLocationBase::ObjectWrap;
+      class WebGLUniformLocation;
+      using WebGLUniformLocationBase = scripting_base::ObjectWrap<WebGLUniformLocation,
+                                                                  client_graphics::WebGLUniformLocation,
+                                                                  WebGLObject>;
 
-    public:
-      static std::string Name()
+      class WebGLUniformLocation : public WebGLUniformLocationBase
       {
-        return "WebGLUniformLocation";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               const client_graphics::WebGLUniformLocation &loc);
+        using WebGLUniformLocationBase::ObjectWrap;
 
-    public:
-      WebGLUniformLocation(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      public:
+        static std::string Name()
+        {
+          return "WebGLUniformLocation";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                                 const client_graphics::WebGLUniformLocation &loc);
 
-    public:
-      const client_graphics::WebGLUniformLocation &handleRef() const
-      {
-        return *handle();
-      }
+      public:
+        WebGLUniformLocation(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
-    private:
-      void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
-    };
+      public:
+        const client_graphics::WebGLUniformLocation &handleRef() const
+        {
+          return *handle();
+        }
 
-  } // namespace webgl
-} // namespace script_bindings
+      private:
+        void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &args);
+      };
+
+    } // namespace webgl
+  }   // namespace script_bindings
+} // namespace endor

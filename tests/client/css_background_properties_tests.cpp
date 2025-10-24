@@ -3,7 +3,8 @@
 
 #include <client/cssom/values/specified/background.hpp>
 
-using namespace client_cssom::values;
+using namespace endor;
+using namespace endor::client_cssom::values;
 
 TEST_CASE("BackgroundClip parsing and conversion", "[css-background-clip]")
 {

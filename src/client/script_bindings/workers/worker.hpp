@@ -4,50 +4,53 @@
 #include <client/script_bindings/event_target.hpp>
 #include <client/workers/worker.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace workers_bindings
+  namespace script_bindings
   {
-    class Worker;
-    using WorkerBase = scripting_base::ObjectWrap<Worker, client_workers::Worker, EventTarget>;
-
-    class Worker : public WorkerBase
+    namespace workers_bindings
     {
-      friend class scripting_base::ObjectWrap<Worker, client_workers::Worker, EventTarget>;
-      using WorkerBase::ObjectWrap;
+      class Worker;
+      using WorkerBase = scripting_base::ObjectWrap<Worker, client_workers::Worker, EventTarget>;
 
-    public:
-      static std::string Name()
+      class Worker : public WorkerBase
       {
-        return "Worker";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        friend class scripting_base::ObjectWrap<Worker, client_workers::Worker, EventTarget>;
+        using WorkerBase::ObjectWrap;
 
-    public:
-      Worker(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      public:
+        static std::string Name()
+        {
+          return "Worker";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    protected:
-      void onCreated() override;
+      public:
+        Worker(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
-    private:
-      void PostMessage(const v8::FunctionCallbackInfo<v8::Value> &args);
-      void Terminate(const v8::FunctionCallbackInfo<v8::Value> &args);
+      protected:
+        void onCreated() override;
 
-      // Event handlers
-      static void OnMessage(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void OnMessageError(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void OnError(const v8::FunctionCallbackInfo<v8::Value> &args);
+      private:
+        void PostMessage(const v8::FunctionCallbackInfo<v8::Value> &args);
+        void Terminate(const v8::FunctionCallbackInfo<v8::Value> &args);
 
-      // Helpers
-      static bool ValidateAndUnwrap(const v8::FunctionCallbackInfo<v8::Value> &args, Worker **, std::string &);
-      static std::shared_ptr<dom::events::MessageEvent> CreateMessageEvent(v8::Isolate *isolate,
-                                                                           v8::Local<v8::Object> value);
+        // Event handlers
+        static void OnMessage(const v8::FunctionCallbackInfo<v8::Value> &args);
+        static void OnMessageError(const v8::FunctionCallbackInfo<v8::Value> &args);
+        static void OnError(const v8::FunctionCallbackInfo<v8::Value> &args);
 
-    private:
-      v8::Global<v8::Object> worker_impl_handle_;
+        // Helpers
+        static bool ValidateAndUnwrap(const v8::FunctionCallbackInfo<v8::Value> &args, Worker **, std::string &);
+        static std::shared_ptr<dom::events::MessageEvent> CreateMessageEvent(v8::Isolate *isolate,
+                                                                             v8::Local<v8::Object> value);
 
-    private:
-      static v8::Persistent<v8::Function> WorkerImplConstructor;
-    };
+      private:
+        v8::Global<v8::Object> worker_impl_handle_;
+
+      private:
+        static v8::Persistent<v8::Function> WorkerImplConstructor;
+      };
+    }
   }
-}
+} // namespace endor

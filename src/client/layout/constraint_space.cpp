@@ -1,6 +1,9 @@
 #include "./constraint_space.hpp"
 
-namespace client_layout
+namespace endor
 {
-  // TODO
-}
+  namespace client_layout
+  {
+    // TODO
+  }
+} // namespace endor

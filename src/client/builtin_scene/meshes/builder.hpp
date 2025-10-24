@@ -2,18 +2,21 @@
 
 #include <memory>
 
-namespace builtin_scene::meshes
+namespace endor
 {
-  class MeshBuilder
+  namespace builtin_scene::meshes
   {
-  public:
-    MeshBuilder() = default;
-    virtual ~MeshBuilder() = default;
+    class MeshBuilder
+    {
+    public:
+      MeshBuilder() = default;
+      virtual ~MeshBuilder() = default;
 
-  public:
-    /**
+    public:
+      /**
      * The implemetor should build the mesh's vertices and indices in this method.
      */
-    virtual void build() = 0;
-  };
-}
+      virtual void build() = 0;
+    };
+  }
+} // namespace endor

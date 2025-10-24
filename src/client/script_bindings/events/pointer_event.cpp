@@ -1,28 +1,31 @@
 #include "./pointer_event.hpp"
 
-namespace script_bindings::event_bindings
+namespace endor
 {
-  using namespace std;
-  using namespace v8;
-
-  // static
-  void PointerEvent::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+  namespace script_bindings::event_bindings
   {
-    HandleScope scope(isolate);
+    using namespace std;
+    using namespace v8;
 
-    // Set up the instance template
-    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+    // static
+    void PointerEvent::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+    {
+      HandleScope scope(isolate);
 
-    // Add property accessors
-    // (No additional properties for PointerEvent beyond MouseEvent for now)
+      // Set up the instance template
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+
+      // Add property accessors
+      // (No additional properties for PointerEvent beyond MouseEvent for now)
+    }
+
+    v8::Local<v8::Object> PointerEvent::NewInstance(v8::Isolate *isolate,
+                                                    std::shared_ptr<::endor::dom::events::PointerEvent> nativeEvent)
+    {
+      EscapableHandleScope scope(isolate);
+      return nativeEvent == nullptr
+               ? scope.Escape(Local<Object>())
+               : scope.Escape(PointerEventBase::NewInstance(isolate, nativeEvent).As<Object>());
+    }
   }
-
-  v8::Local<v8::Object> PointerEvent::NewInstance(v8::Isolate *isolate,
-                                                  std::shared_ptr<::dom::events::PointerEvent> nativeEvent)
-  {
-    EscapableHandleScope scope(isolate);
-    return nativeEvent == nullptr
-             ? scope.Escape(Local<Object>())
-             : scope.Escape(PointerEventBase::NewInstance(isolate, nativeEvent).As<Object>());
-  }
-}
+} // namespace endor

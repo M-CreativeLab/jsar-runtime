@@ -5,145 +5,147 @@
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-  using namespace std::placeholders;
-  using namespace builtin_scene;
-  using namespace client_layout;
-
-  RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
-      : ecs::System()
-      , DocumentEventDispatcher(document)
-      , document_(document)
+  namespace dom
   {
-    assert(document_ != nullptr);
-  }
+    using namespace std;
+    using namespace std::placeholders;
+    using namespace builtin_scene;
+    using namespace client_layout;
 
-  RenderHTMLDocument::~RenderHTMLDocument() = default;
-
-  void RenderHTMLDocument::onExecute()
-  {
-    assert(document_ != nullptr);
-
-    auto dirty_root = document_->getDirtyRootTextOrElement();
-    auto scene = document_->scene;
-    if (TR_UNLIKELY(scene == nullptr))
-      return;
-
-    const auto &client_env = TrClientContextPerProcess::GetEnvironmentRef();
-    auto layout_view = document_->layoutView();
-
-    // 1. Compute the running animations.
-    document_->timelineRef().serviceAnimations(kTimingUpdateForAnimationFrame);
-
-    // 2. Recalculate the styles and layout from the current dirty root.
-    if (dirty_root != nullptr)
+    RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
+        : ecs::System()
+        , DocumentEventDispatcher(document)
+        , document_(document)
     {
-      // 2.1 Compute each element's styles.
-      auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
+      assert(document_ != nullptr);
+    }
+
+    RenderHTMLDocument::~RenderHTMLDocument() = default;
+
+    void RenderHTMLDocument::onExecute()
+    {
+      assert(document_ != nullptr);
+
+      auto dirty_root = document_->getDirtyRootTextOrElement();
+      auto scene = document_->scene;
+      if (TR_UNLIKELY(scene == nullptr))
+        return;
+
+      const auto &client_env = TrClientContextPerProcess::GetEnvironmentRef();
+      auto layout_view = document_->layoutView();
+
+      // 1. Compute the running animations.
+      document_->timelineRef().serviceAnimations(kTimingUpdateForAnimationFrame);
+
+      // 2. Recalculate the styles and layout from the current dirty root.
+      if (dirty_root != nullptr)
       {
-        if (element->isHTMLHeadElement() ||
-            element->isHTMLScriptElement() ||
-            element->isHTMLStyleElement())
+        // 2.1 Compute each element's styles.
+        auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
         {
-          // Skip these kinds of element to traverse its children for style adoption.
-          return false;
-        }
-        else
+          if (element->isHTMLHeadElement() ||
+              element->isHTMLScriptElement() ||
+              element->isHTMLStyleElement())
+          {
+            // Skip these kinds of element to traverse its children for style adoption.
+            return false;
+          }
+          else
+          {
+            element->adoptStyle(document_->defaultView()->getComputedStyle(element));
+            return true;
+          }
+        };
+        auto adoptStyleForText = [this](shared_ptr<Text> textNode)
         {
-          element->adoptStyle(document_->defaultView()->getComputedStyle(element));
-          return true;
-        }
-      };
-      auto adoptStyleForText = [this](shared_ptr<Text> textNode)
+          textNode->adoptStyle(document_->defaultView()->getComputedStyle(textNode));
+        };
+        traverseElementOrTextNode(dirty_root, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
+
+        // 2.2 Compute the layout from the root element.
+        // TODO(yorkie): compute the layout from the root?
+        layout_view->computeLayout(targetSpace());
+        layout_view->debugPrint("After layout",
+                                LayoutView::DebugOptions::Default()
+                                  .withFormattingContext(client_env.debugLayoutFormattingContext)
+                                  .withDisabled(client_env.debugLayoutTree == false));
+      }
+
+      // 3. Visit the layout view to render CSS boxes.
+      if (dirty_root != nullptr || isScrolling())
       {
-        textNode->adoptStyle(document_->defaultView()->getComputedStyle(textNode));
-      };
-      traverseElementOrTextNode(dirty_root, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
+        // TODO(yorkie): visit the tree from the root?
+        LayoutViewVisitor::visit(*layout_view);
+      }
 
-      // 2.2 Compute the layout from the root element.
-      // TODO(yorkie): compute the layout from the root?
-      layout_view->computeLayout(targetSpace());
-      layout_view->debugPrint("After layout",
-                              LayoutView::DebugOptions::Default()
-                                .withFormattingContext(client_env.debugLayoutFormattingContext)
-                                .withDisabled(client_env.debugLayoutTree == false));
+      // 4. Do hit test and dispatch the related events.
+      DocumentEventDispatcher::hitTestAndDispatchEvents();
     }
 
-    // 3. Visit the layout view to render CSS boxes.
-    if (dirty_root != nullptr || isScrolling())
+    bool RenderHTMLDocument::onVisitObject(LayoutObject &object, int depth)
     {
-      // TODO(yorkie): visit the tree from the root?
-      LayoutViewVisitor::visit(*layout_view);
+      if (object.isNone()) // Skip the object for "display: none".
+        return false;
+
+      object.maybeAdjustSize();
+      return true;
     }
 
-    // 4. Do hit test and dispatch the related events.
-    DocumentEventDispatcher::hitTestAndDispatchEvents();
-  }
-
-  bool RenderHTMLDocument::onVisitObject(LayoutObject &object, int depth)
-  {
-    if (object.isNone()) // Skip the object for "display: none".
-      return false;
-
-    object.maybeAdjustSize();
-    return true;
-  }
-
-  void RenderHTMLDocument::onVisitBox(const LayoutBoxModelObject &box, int depth)
-  {
-    if (TR_LIKELY(box.hasEntity()))
+    void RenderHTMLDocument::onVisitBox(const LayoutBoxModelObject &box, int depth)
     {
-      LayoutObject::FragmentDifference diff;
-      auto &fragment = box.computeOrGetFragment(diff);
-      if (diff.isChanged())
-        renderEntity(box.entity(), fragment);
-    }
-  }
-
-  void RenderHTMLDocument::onVisitText(const LayoutText &text, int depth)
-  {
-    if (TR_LIKELY(text.hasEntity()))
-    {
-      LayoutObject::FragmentDifference diff;
-      auto &fragment = text.computeOrGetFragment(diff);
-      if (diff.isChanged())
-        renderEntity(text.entity(), fragment);
-    }
-  }
-
-  void RenderHTMLDocument::renderEntity(const ecs::EntityId &entity,
-                                        const Fragment &fragment)
-  {
-    auto scene = document_->scene;
-    assert(scene != nullptr && "The scene is not set when rendering the entity.");
-
-    shared_ptr<WebContent> webContent = document_->scene->getComponent<WebContent>(entity);
-    if (webContent != nullptr)
-      webContent->setFragment(fragment);
-
-    auto boundingBox = scene->getComponent<BoundingBox>(entity);
-    if (boundingBox != nullptr)
-      boundingBox->updateSize(fragment.size());
-
-    // Update transform
-    auto transform = scene->getComponent<Transform>(entity);
-    if (transform != nullptr)
-    {
-      transform->setScale({client_cssom::pixelToMeter(boundingBox->width()),
-                           client_cssom::pixelToMeter(boundingBox->height()),
-                           0.001f});
-
-      float left = fragment.left(); // Get the left position.
-      float top = fragment.top();   // Get the top position.
-      if (!scene->hasComponent<hierarchy::Root>(entity))
+      if (TR_LIKELY(box.hasEntity()))
       {
-        auto parentComponent = scene->getComponent<hierarchy::Parent>(entity);
-        auto rootBoundingBox = document_->visualBoundingBox();
-        if (TR_LIKELY(rootBoundingBox.has_value()))
+        LayoutObject::FragmentDifference diff;
+        auto &fragment = box.computeOrGetFragment(diff);
+        if (diff.isChanged())
+          renderEntity(box.entity(), fragment);
+      }
+    }
+
+    void RenderHTMLDocument::onVisitText(const LayoutText &text, int depth)
+    {
+      if (TR_LIKELY(text.hasEntity()))
+      {
+        LayoutObject::FragmentDifference diff;
+        auto &fragment = text.computeOrGetFragment(diff);
+        if (diff.isChanged())
+          renderEntity(text.entity(), fragment);
+      }
+    }
+
+    void RenderHTMLDocument::renderEntity(const ecs::EntityId &entity,
+                                          const Fragment &fragment)
+    {
+      auto scene = document_->scene;
+      assert(scene != nullptr && "The scene is not set when rendering the entity.");
+
+      shared_ptr<WebContent> webContent = document_->scene->getComponent<WebContent>(entity);
+      if (webContent != nullptr)
+        webContent->setFragment(fragment);
+
+      auto boundingBox = scene->getComponent<BoundingBox>(entity);
+      if (boundingBox != nullptr)
+        boundingBox->updateSize(fragment.size());
+
+      // Update transform
+      auto transform = scene->getComponent<Transform>(entity);
+      if (transform != nullptr)
+      {
+        transform->setScale({client_cssom::pixelToMeter(boundingBox->width()),
+                             client_cssom::pixelToMeter(boundingBox->height()),
+                             0.001f});
+
+        float left = fragment.left(); // Get the left position.
+        float top = fragment.top();   // Get the top position.
+        if (!scene->hasComponent<hierarchy::Root>(entity))
         {
-          /**
+          auto parentComponent = scene->getComponent<hierarchy::Parent>(entity);
+          auto rootBoundingBox = document_->visualBoundingBox();
+          if (TR_LIKELY(rootBoundingBox.has_value()))
+          {
+            /**
            * Transform the xyz() in LTW(Left-Top) space to the left-handed world space.
            *
            * First, calculate the distance from the root bounding box to the current bounding box:
@@ -170,57 +172,58 @@ namespace dom
            * Note that there is a transformation are required to convert the layout space, namely right(+x) and up(-y), to the
            * world space, namely right(+x) and up(+y).
            */
-          auto origin = (*rootBoundingBox - *boundingBox) / 2.0f * glm::vec3(-1.0f, 1.0f, 1.0f);
-          auto offset = origin + fragment.xyz() * glm::vec3(1.0f, -1.0f, 1.0f);
-          left = offset.x;
-          top = offset.y;
+            auto origin = (*rootBoundingBox - *boundingBox) / 2.0f * glm::vec3(-1.0f, 1.0f, 1.0f);
+            auto offset = origin + fragment.xyz() * glm::vec3(1.0f, -1.0f, 1.0f);
+            left = offset.x;
+            top = offset.y;
+          }
         }
+        transform->setTranslation({client_cssom::pixelToMeter(left),
+                                   client_cssom::pixelToMeter(top),
+                                   client_cssom::pixelToMeter(fragment.z())});
       }
-      transform->setTranslation({client_cssom::pixelToMeter(left),
-                                 client_cssom::pixelToMeter(top),
-                                 client_cssom::pixelToMeter(fragment.z())});
+
+      // Update custom material?
+      // TODO(yorkie): support custom material.
     }
 
-    // Update custom material?
-    // TODO(yorkie): support custom material.
-  }
-
-  void RenderHTMLDocument::traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
-                                                     function<bool(shared_ptr<HTMLElement>)> elementCallback,
-                                                     function<void(shared_ptr<Text>)> textNodeCallback,
-                                                     TreverseOrder order)
-  {
-    if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
-      return;
-
-    if (elementOrTextNode->isText())
+    void RenderHTMLDocument::traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
+                                                       function<bool(shared_ptr<HTMLElement>)> elementCallback,
+                                                       function<void(shared_ptr<Text>)> textNodeCallback,
+                                                       TreverseOrder order)
     {
-      auto textNode = static_pointer_cast<Text>(elementOrTextNode);
-      if (textNode != nullptr)
-        textNodeCallback(textNode);
-      return;
-    }
-
-    if (elementOrTextNode->isHTMLElement())
-    {
-      auto element = static_pointer_cast<HTMLElement>(elementOrTextNode);
-      if (element == nullptr)
+      if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
         return;
 
-      bool shouldContinue = true;
-      if (order == TreverseOrder::PreOrder)
+      if (elementOrTextNode->isText())
       {
-        if (!elementCallback(element)) // If the element callback returns false, stop traversing in pre-order.
-          shouldContinue = false;
+        auto textNode = static_pointer_cast<Text>(elementOrTextNode);
+        if (textNode != nullptr)
+          textNodeCallback(textNode);
+        return;
       }
 
-      if (shouldContinue)
+      if (elementOrTextNode->isHTMLElement())
       {
-        for (auto childNode : element->childNodes)
-          traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
-        if (order == TreverseOrder::PostOrder)
-          elementCallback(element);
+        auto element = static_pointer_cast<HTMLElement>(elementOrTextNode);
+        if (element == nullptr)
+          return;
+
+        bool shouldContinue = true;
+        if (order == TreverseOrder::PreOrder)
+        {
+          if (!elementCallback(element)) // If the element callback returns false, stop traversing in pre-order.
+            shouldContinue = false;
+        }
+
+        if (shouldContinue)
+        {
+          for (auto childNode : element->childNodes)
+            traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
+          if (order == TreverseOrder::PostOrder)
+            elementCallback(element);
+        }
       }
     }
   }
-}
+} // namespace endor

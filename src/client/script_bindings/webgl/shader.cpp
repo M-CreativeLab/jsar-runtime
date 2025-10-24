@@ -1,42 +1,45 @@
 #include "shader.hpp"
 #include <client/graphics/webgl_shader.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    using namespace std;
-    using namespace v8;
-
-    void WebGLShader::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace webgl_bindings
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "WebGLShader").ToLocalChecked());
+      using namespace std;
+      using namespace v8;
 
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
+      void WebGLShader::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+        tpl->SetClassName(String::NewFromUtf8(isolate, "WebGLShader").ToLocalChecked());
 
-      // WebGLShader has no methods or properties - it's an opaque handle
-    }
+        Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+        instanceTemplate->SetInternalFieldCount(1);
 
-    Local<Object> WebGLShader::NewInstance(Isolate *isolate, shared_ptr<client_graphics::WebGLShader> nativeShader)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeShader != nullptr
-               ? scope.Escape(WebGLShaderBase::NewInstance(isolate, nativeShader).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
+        // WebGLShader has no methods or properties - it's an opaque handle
+      }
 
-    WebGLShader::WebGLShader(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGLShaderBase(isolate, args)
-    {
-    }
+      Local<Object> WebGLShader::NewInstance(Isolate *isolate, shared_ptr<client_graphics::WebGLShader> nativeShader)
+      {
+        EscapableHandleScope scope(isolate);
+        return nativeShader != nullptr
+                 ? scope.Escape(WebGLShaderBase::NewInstance(isolate, nativeShader).As<Object>())
+                 : scope.Escape(Local<Object>());
+      }
 
-    Local<Object> WebGLShaderPrecisionFormat::NewInstance(
-      Isolate *isolate,
-      const client_graphics::WebGLShaderPrecisionFormat &precisionFormat)
-    {
-      return WebGLShaderPrecisionFormatBase::NewInstance(
-        isolate, make_shared<client_graphics::WebGLShaderPrecisionFormat>(precisionFormat));
+      WebGLShader::WebGLShader(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+          : WebGLShaderBase(isolate, args)
+      {
+      }
+
+      Local<Object> WebGLShaderPrecisionFormat::NewInstance(
+        Isolate *isolate,
+        const client_graphics::WebGLShaderPrecisionFormat &precisionFormat)
+      {
+        return WebGLShaderPrecisionFormatBase::NewInstance(
+          isolate, make_shared<client_graphics::WebGLShaderPrecisionFormat>(precisionFormat));
+      }
     }
   }
-}
+} // namespace endor

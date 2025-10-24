@@ -3,17 +3,20 @@
 #include <string>
 #include "./html_media_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLAudioElement : public HTMLMediaElement
+  namespace dom
   {
-  public:
-    using HTMLMediaElement::HTMLMediaElement;
-
-  public:
-    HTMLAudioElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLMediaElement("AUDIO", media_comm::MediaContentType::Audio, ownerDocument)
+    class HTMLAudioElement : public HTMLMediaElement
     {
-    }
-  };
-}
+    public:
+      using HTMLMediaElement::HTMLMediaElement;
+
+    public:
+      HTMLAudioElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLMediaElement("AUDIO", media_comm::MediaContentType::Audio, ownerDocument)
+      {
+      }
+    };
+  }
+} // namespace endor

@@ -4,8 +4,9 @@
 #include <client/cssom/parsers/css_value_tokenizer.hpp>
 #include <client/cssom/parsers/css_image_parser.hpp>
 
-using namespace client_cssom::css_value_tokenizer;
-using namespace client_cssom::css_parser;
+using namespace endor;
+using namespace endor::client_cssom::css_value_tokenizer;
+using namespace endor::client_cssom::css_parser;
 
 TEST_CASE("CSSValueTokenizer basic functionality", "[css-tokenizer]")
 {

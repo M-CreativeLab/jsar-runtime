@@ -7,42 +7,45 @@
 #include <common/scoped_thread.hpp>
 #include <client/inspector/content_cdp_handler.hpp>
 
-namespace client_inspector
+namespace endor
 {
-  class ContentInspector
+  namespace client_inspector
   {
-  public:
-    ContentInspector(uint32_t contentId);
-    ~ContentInspector();
-
-    bool initialize(int inspectorChanPort);
-    void start();
-    void stop();
-
-    // Get the ContentCdpHandler instance
-    ContentCdpHandler *getContentCdpHandler() const
+    class ContentInspector
     {
-      return contentCdpHandler_.get();
-    }
+    public:
+      ContentInspector(uint32_t contentId);
+      ~ContentInspector();
 
-    // Send inspector response
-    bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
+      bool initialize(int inspectorChanPort);
+      void start();
+      void stop();
 
-    // Handle incoming inspector command
-    void handleInspectorCommand(inspector_comm::TrInspectorCommandMessage &message);
+      // Get the ContentCdpHandler instance
+      ContentCdpHandler *getContentCdpHandler() const
+      {
+        return contentCdpHandler_.get();
+      }
 
-  private:
-    uint32_t contentId_ = 0;
+      // Send inspector response
+      bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
 
-    // IPC channels for inspector communication
-    ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient_ = nullptr;
-    std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender_ = nullptr;
-    std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver_ = nullptr;
+      // Handle incoming inspector command
+      void handleInspectorCommand(inspector_comm::TrInspectorCommandMessage &message);
 
-    // Worker thread for handling inspector commands
-    std::unique_ptr<WorkerThread> inspectorCommandWorker_ = nullptr;
+    private:
+      uint32_t contentId_ = 0;
 
-    // CDP handler for processing inspector commands
-    std::unique_ptr<ContentCdpHandler> contentCdpHandler_ = nullptr;
-  };
-}
+      // IPC channels for inspector communication
+      ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient_ = nullptr;
+      std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender_ = nullptr;
+      std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver_ = nullptr;
+
+      // Worker thread for handling inspector commands
+      std::unique_ptr<WorkerThread> inspectorCommandWorker_ = nullptr;
+
+      // CDP handler for processing inspector commands
+      std::unique_ptr<ContentCdpHandler> contentCdpHandler_ = nullptr;
+    };
+  }
+} // namespace endor

@@ -3,6 +3,9 @@
 using namespace std;
 using namespace v8;
 
-namespace scripting_base::iteration_protocol
+namespace endor
 {
-}
+  namespace scripting_base::iteration_protocol
+  {
+  }
+} // namespace endor

@@ -5,34 +5,37 @@
 #include "../css_rule.hpp"
 #include "../css_style_declaration.hpp"
 
-namespace client_cssom::rules
+namespace endor
 {
-  class CSSKeyframesRule : public CSSRule
+  namespace client_cssom::rules
   {
-    using CSSRule::CSSRule;
-
-  public:
-    std::string name;
-    const CSSRuleList &cssRules() const
+    class CSSKeyframesRule : public CSSRule
     {
-      return *cssRules_;
-    }
-    size_t length() const
-    {
-      return cssRules_->length();
-    }
+      using CSSRule::CSSRule;
 
-  public:
-    void appendRule(std::string rule);
-    /**
+    public:
+      std::string name;
+      const CSSRuleList &cssRules() const
+      {
+        return *cssRules_;
+      }
+      size_t length() const
+      {
+        return cssRules_->length();
+      }
+
+    public:
+      void appendRule(std::string rule);
+      /**
      * It deletes the `CSSKeyFrameRule` that matches the specified keyframe selector.
      *
      * @param selector The keyframe selector to delete, which must be: "from" or "to" or a percentage.
      */
-    void deleteRule(std::string selector);
-    const CSSKeyframeRule &findRule(std::string selector) const;
+      void deleteRule(std::string selector);
+      const CSSKeyframeRule &findRule(std::string selector) const;
 
-  private:
-    std::unique_ptr<CSSRuleList> cssRules_;
-  };
-}
+    private:
+      std::unique_ptr<CSSRuleList> cssRules_;
+    };
+  }
+} // namespace endor

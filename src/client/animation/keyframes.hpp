@@ -3,26 +3,29 @@
 #include <vector>
 #include "./keyframe.hpp"
 
-namespace dom
+namespace endor
 {
-  class Keyframes : std::vector<Keyframe>
+  namespace dom
   {
-  public:
-    static Keyframes Empty()
+    class Keyframes : std::vector<Keyframe>
     {
-      return Keyframes();
-    }
+    public:
+      static Keyframes Empty()
+      {
+        return Keyframes();
+      }
 
-  public:
-    Keyframes()
-        : std::vector<Keyframe>()
-    {
-    }
+    public:
+      Keyframes()
+          : std::vector<Keyframe>()
+      {
+      }
 
-  public:
-    void empty()
-    {
-      std::vector<Keyframe>::clear();
-    }
-  };
-}
+    public:
+      void empty()
+      {
+        std::vector<Keyframe>::clear();
+      }
+    };
+  }
+} // namespace endor
