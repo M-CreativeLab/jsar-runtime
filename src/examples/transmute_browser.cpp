@@ -435,7 +435,10 @@ namespace jsar::example
 
     // Create contents bar component
     contentsBarComponent_ = make_shared<BarComponent>();
-
+    // Ensure close button removes content and components
+    contentsBarComponent_->setOnCloseCallback([this](Content *c)
+                                              {
+      if (c) closeContent(c->getId()); });
     // Setup screen renderer and GUI
     setupScreenRenderer();
 
@@ -510,6 +513,10 @@ namespace jsar::example
 
     // Register this content with the bar component
     contentsBarComponent_->addContent(content.get());
+    // Ensure close button removes content and components
+    contentsBarComponent_->setOnCloseCallback([this](Content *c)
+                                              {
+      if (c) closeContent(c->getId()); });
 
     // Position content spatially - compute matrix based on viewer base matrix
     // 1. Get the current viewer base matrix
@@ -934,6 +941,13 @@ namespace jsar::example
       isKeySpacePressed = false;
       if (embedder_)
         embedder_->constellation->resetContents();
+    }
+
+    for (auto it = contents_.begin(); it != contents_.end(); /* no increment */)
+    {
+      auto current = it++; // Advance iterator BEFORE processing
+      // Now 'current' is safe to use even if the element is erased
+      current->second->processInput();
     }
   }
 

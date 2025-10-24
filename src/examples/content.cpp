@@ -17,6 +17,7 @@ namespace jsar::example
   {
     // Note: Bar component is now shared across all content instances
     // This method is kept for compatibility but bar creation is handled externally
+    windowCtx_ = windowCtx;
   }
 
   Content::~Content()
@@ -146,5 +147,13 @@ namespace jsar::example
 
     Content *hitContent = barComponent_->checkRayIntersection(rayOrigin, rayDirection);
     return hitContent == this;
+  }
+
+  void Content::processInput()
+  {
+    if (barComponent_)
+    {
+      barComponent_->processInput(this);
+    }
   }
 }

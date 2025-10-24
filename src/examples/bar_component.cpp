@@ -9,6 +9,7 @@
 #include <skia/include/core/SkPixmap.h>
 
 #include "./bar_component.hpp"
+#include "./xr_renderer.hpp"
 #include "./content.hpp"
 
 namespace jsar::example
@@ -59,6 +60,7 @@ namespace jsar::example
     initGLProgram();
     createGeometry();
     createBarTexture();
+    createButtonGeometry();
 
     if (glGetError() != GL_NO_ERROR)
       cout << "OpenGL error on BarComponent init" << endl;
@@ -69,8 +71,13 @@ namespace jsar::example
     glDeleteVertexArrays(1, &vao_);
     glDeleteBuffers(1, &vertexVBO_);
     glDeleteBuffers(1, &instanceVBO_);
-    glDeleteProgram(program_);
     glDeleteTextures(1, &barTexture_);
+
+    glDeleteVertexArrays(1, &buttonVAO_);
+    glDeleteBuffers(1, &buttonVertexVBO_);
+    glDeleteBuffers(1, &buttonInstanceVBO_);
+
+    glDeleteProgram(barShader_.ID);
   }
 
   void BarComponent::addContent(Content *content)
@@ -135,56 +142,8 @@ namespace jsar::example
 
   void BarComponent::initGLProgram()
   {
-    // Create and compile shaders
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &barVertSource_, NULL);
-    glCompileShader(vertexShader);
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &barFragSource_, NULL);
-    glCompileShader(fragmentShader);
-
-    // Check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-      glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-      cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-           << infoLog << endl;
-    }
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-      glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-      cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-           << infoLog << endl;
-    }
-
-    // Create shader program
-    program_ = glCreateProgram();
-    glAttachShader(program_, vertexShader);
-    glAttachShader(program_, fragmentShader);
-    glLinkProgram(program_);
-
-    // Check for linking errors
-    glGetProgramiv(program_, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-      glGetProgramInfoLog(program_, 512, NULL, infoLog);
-      cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-           << infoLog << endl;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    // Get uniform locations
-    viewMatrixLoc_ = glGetUniformLocation(program_, "view");
-    projectionMatrixLoc_ = glGetUniformLocation(program_, "projection");
-    textureLoc_ = glGetUniformLocation(program_, "barTexture");
+    barShader_ = Shader(barVertSource_, barFragSource_);
+    auto program = barShader_.ID;
   }
 
   void BarComponent::createGeometry()
@@ -270,6 +229,89 @@ namespace jsar::example
     glBindVertexArray(0);
   }
 
+  void BarComponent::createButtonGeometry()
+  {
+    // Generate circle vertices for close button (center + perimeter)
+    // Each vertex has: position (x, y, z) + texCoord (u, v) = 5 floats
+    buttonVertices_.clear();
+
+    // Center vertex
+    buttonVertices_.push_back(0.0f); // Center x
+    buttonVertices_.push_back(0.0f); // Center y
+    buttonVertices_.push_back(0.0f); // Center z
+    buttonVertices_.push_back(0.5f); // Center texCoord u (center of texture)
+    buttonVertices_.push_back(0.5f); // Center texCoord v (center of texture)
+
+    // Perimeter vertices
+    const float radius = CLOSE_BUTTON_RADIUS;
+    for (int i = 0; i <= 360; i += 10)
+    {
+      float theta = glm::radians((float)i);
+      float x = radius * cos(theta);
+      float y = radius * sin(theta);
+
+      buttonVertices_.push_back(x);    // Position x
+      buttonVertices_.push_back(y);    // Position y
+      buttonVertices_.push_back(0.0f); // Position z
+
+      // Texture coordinates mapped from circle to [0,1] range
+      buttonVertices_.push_back(0.5f + 0.5f * cos(theta)); // texCoord u
+      buttonVertices_.push_back(0.5f + 0.5f * sin(theta)); // texCoord v
+    }
+
+    //create vao and vbo for button
+    glGenBuffers(1, &buttonVertexVBO_);
+    glGenVertexArrays(1, &buttonVAO_);
+    glBindVertexArray(buttonVAO_);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buttonVertexVBO_);
+    glBufferData(GL_ARRAY_BUFFER, buttonVertices_.size() * sizeof(float), buttonVertices_.data(), GL_STATIC_DRAW);
+
+    // Position attribute (3 floats per vertex, stride = 5 floats)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // Texture coordinate attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Instance buffer (will be updated dynamically)
+    glGenBuffers(1, &buttonInstanceVBO_);
+    glBindBuffer(GL_ARRAY_BUFFER, buttonInstanceVBO_);
+
+    struct InstanceData
+    {
+      glm::mat4 transform;
+      glm::vec3 color;
+    };
+
+    size_t vec4Size = sizeof(glm::vec4);
+    size_t instanceSize = sizeof(InstanceData);
+
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)offsetof(InstanceData, transform));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + vec4Size));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + 2 * vec4Size));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + 3 * vec4Size));
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(4);
+    glEnableVertexAttribArray(5);
+
+    // Instance color
+    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, instanceSize, (void *)offsetof(InstanceData, color));
+    glEnableVertexAttribArray(6);
+
+    // Set instance divisors
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+    glVertexAttribDivisor(5, 1);
+    glVertexAttribDivisor(6, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+  }
+
   void BarComponent::createBarTexture()
   {
     // Create Skia surface for rendering the bar texture with Apple design
@@ -347,18 +389,16 @@ namespace jsar::example
     if (instances_.empty())
       return;
 
-
-    glUseProgram(program_);
+    glUseProgram(barShader_.ID);
     glBindVertexArray(vao_);
 
     // Bind the Skia-generated bar texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, barTexture_);
-    glUniform1i(textureLoc_, 0);
-
+    barShader_.setInt("barTexture", 0);
     // Set uniforms
-    glUniformMatrix4fv(viewMatrixLoc_, 1, GL_FALSE, &viewMatrix[0][0]);
-    glUniformMatrix4fv(projectionMatrixLoc_, 1, GL_FALSE, &projectionMatrix[0][0]);
+    barShader_.setMat4("view", viewMatrix);
+    barShader_.setMat4("projection", projectionMatrix);
 
     {
       glEnable(GL_DEPTH_TEST);
@@ -368,6 +408,15 @@ namespace jsar::example
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances_.size());
+
+      // Render button
+      // Each button vertex has 5 floats (position + texCoord)
+      GLsizei vertexCount = static_cast<GLsizei>(buttonVertices_.size() / 5);
+      GLsizei instanceCount = static_cast<GLsizei>(instances_.size());
+
+      glBindVertexArray(buttonVAO_);
+      glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, vertexCount, instanceCount);
+      glBindVertexArray(0);
     }
 
     // Reset state
@@ -461,6 +510,100 @@ namespace jsar::example
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO_);
     glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(InstanceData), instanceData.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    updateButtonInstanceBuffer();
+  }
+
+  void BarComponent::updateButtonInstanceBuffer()
+  {
+    struct ButtonInstanceData
+    {
+      glm::mat4 transform;
+      glm::vec3 color;
+    };
+    vector<ButtonInstanceData> instanceData;
+    instanceData.reserve(instances_.size() + 1); // Reserve at least 1
+
+    for (const auto &inst : instances_)
+    {
+      ButtonInstanceData data;
+      glm::vec3 buttonPos = calculateButtonWorldPos(inst.transform[3]);
+      data.transform = glm::translate(glm::mat4(1.0f), buttonPos);
+
+      // Set color based on state
+      if (inst.buttonIsHovered)
+      {
+        data.color = glm::vec3(0.7f, 0.7f, 0.7f); // Gray when hovered
+      }
+      else
+      {
+        data.color = glm::vec3(1.0f, 1.0f, 1.0f); // White default
+      }
+
+      instanceData.push_back(data);
+    }
+
+    // Update instance buffer - always has data, even if dummy
+    glBindBuffer(GL_ARRAY_BUFFER, buttonInstanceVBO_);
+    glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(ButtonInstanceData), instanceData.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  }
+
+  void BarComponent::processInput(Content *content)
+  {
+    auto windowCtx = content->getWindowContext();
+    auto xrRenderer = windowCtx->xrRenderer;
+    assert(xrRenderer != nullptr);
+    bool mousePressed = (glfwGetMouseButton(windowCtx->window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+
+    // Extract ray origin and direction from the main controller target ray matrix
+    glm::mat4 controllerMatrix = xrRenderer->getMainControllerTargetRay();
+    glm::vec3 rayOrigin = glm::vec3(controllerMatrix[3]); // Translation column
+    glm::vec3 rayDir = -glm::vec3(controllerMatrix[2]);   // Negative Z axis (forward)
+
+    Content *contentToClose = nullptr; // Clear pending close from previous frame
+
+    // Check all instances
+    for (auto &inst : instances_)
+    {
+      glm::vec3 barPos = glm::vec3(inst.transform[3]);
+      glm::vec3 buttonPos = calculateButtonWorldPos(barPos);
+
+      // Check button first (higher priority)
+      float distToButton = rayDistanceToPoint(rayOrigin, rayDir, buttonPos);
+      if (distToButton <= CLOSE_BUTTON_RADIUS)
+      {
+        inst.buttonIsHovered = true;
+        // Check for click - delay callback execution to avoid iterator invalidation
+        if (mousePressed)
+        {
+          contentToClose = inst.content; // Mark for closing (defer callback)
+        }
+      }
+      else
+      {
+        inst.buttonIsHovered = false;
+      }
+    }
+    // Process close callback after all instance processing is complete
+    // This callback may modify instances_ via removeContent(), which is safe now
+    if (contentToClose != nullptr && onCloseCallback_)
+    {
+      onCloseCallback_(contentToClose);
+      contentToClose = nullptr;
+    }
+  }
+
+  float BarComponent::rayDistanceToPoint(const glm::vec3 &rayOrigin, const glm::vec3 &rayDir, const glm::vec3 &point) const
+  {
+    glm::vec3 toPoint = point - rayOrigin;
+    float t = glm::dot(toPoint, rayDir);
+
+    if (t < 0)
+      return std::numeric_limits<float>::max(); // Point is behind ray
+
+    glm::vec3 closestPoint = rayOrigin + t * rayDir;
+    return glm::distance(closestPoint, point);
   }
 
   glm::mat4 BarComponent::calculateBarTransform(const glm::vec3 &contentPosition) const
@@ -470,5 +613,11 @@ namespace jsar::example
 
     // Create transformation matrix
     return glm::translate(glm::mat4(1.0f), barPosition);
+  }
+
+  glm::vec3 BarComponent::calculateButtonWorldPos(const glm::vec3 &contentPosition) const
+  {
+    // Button is positioned at top-right corner of the bar
+    return contentPosition + glm::vec3(-BAR_WIDTH / 2 - CLOSE_BUTTON_RADIUS - CLOSE_BUTTON_OFFSET, 0.0f, 0.0f);
   }
 }
