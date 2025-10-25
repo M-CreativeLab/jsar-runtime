@@ -97,13 +97,15 @@ namespace crates::webgl
      * @param source The GLSL shader source code as a string.
      * @param attributes Output vector to receive attribute metadata.
      * @param uniforms Output vector to receive uniform metadata.
+     * @param include_builtin_attributes Whether to include gl_InstanceID/gl_VertexID as active attributes if used in shader.
      * @returns true if parsing succeeded, false otherwise.
      */
     static inline bool Parse(const std::string &source, 
                              std::vector<GLSLAttribute> &attributes,
-                             std::vector<GLSLUniform> &uniforms)
+                             std::vector<GLSLUniform> &uniforms,
+                             bool include_builtin_attributes = false)
     {
-      auto json_str = holocron::webgl::parseGLSLShader(source.c_str());
+      auto json_str = holocron::webgl::parseGLSLShader(source.c_str(), include_builtin_attributes);
       
       rapidjson::Document doc;
       doc.Parse(std::string(json_str).c_str());
@@ -164,11 +166,12 @@ namespace crates::webgl
      * @deprecated Use Parse() instead to get both attributes and uniforms in a single call.
      * 
      * @param source The GLSL vertex shader source code as a string.
+     * @param include_builtin_attributes Whether to include gl_InstanceID/gl_VertexID as active attributes if used in shader.
      * @returns A vector of GLSLAttribute structs containing attribute metadata.
      */
-    static inline std::vector<GLSLAttribute> ParseAttributes(const std::string &source)
+    static inline std::vector<GLSLAttribute> ParseAttributes(const std::string &source, bool include_builtin_attributes = false)
     {
-      auto json_str = holocron::webgl::parseGLSLAttributes(source.c_str());
+      auto json_str = holocron::webgl::parseGLSLAttributes(source.c_str(), include_builtin_attributes);
       std::vector<GLSLAttribute> attributes;
 
       rapidjson::Document doc;

@@ -122,12 +122,17 @@ fn patch_glsl_source_from_str(s: &str) -> String {
 /// Visitor to collect all variable references in the shader
 struct ReferenceCollector {
   referenced_names: std::collections::HashSet<String>,
+  /// Track if gl_InstanceID or gl_VertexID are used
+  uses_gl_instance_id: bool,
+  uses_gl_vertex_id: bool,
 }
 
 impl ReferenceCollector {
   fn new() -> Self {
     Self {
       referenced_names: std::collections::HashSet::new(),
+      uses_gl_instance_id: false,
+      uses_gl_vertex_id: false,
     }
   }
 }
@@ -137,7 +142,16 @@ impl Visitor for ReferenceCollector {
     match &expr.content {
       // Direct variable reference
       ast::ExprData::Variable(identifier) => {
-        self.referenced_names.insert(identifier.content.0.to_string());
+        let var_name = identifier.content.0.to_string();
+        
+        // Track built-in GL variables
+        if var_name == "gl_InstanceID" {
+          self.uses_gl_instance_id = true;
+        } else if var_name == "gl_VertexID" {
+          self.uses_gl_vertex_id = true;
+        }
+        
+        self.referenced_names.insert(var_name);
       }
       // Field access: uniform.field or uniform[0].field
       ast::ExprData::Dot(base_expr, field_ident) => {
@@ -293,6 +307,8 @@ pub struct GLSLShaderAnalyzer {
   referenced_names: std::collections::HashSet<String>,
   /// Map of struct names to their field definitions
   struct_definitions: std::collections::HashMap<String, Vec<StructField>>,
+  /// Whether to include gl_InstanceID/gl_VertexID as active attributes if used
+  include_builtin_attributes: bool,
 }
 
 impl GLSLShaderAnalyzer {
@@ -304,6 +320,19 @@ impl GLSLShaderAnalyzer {
       next_location: 0,
       referenced_names: std::collections::HashSet::new(),
       struct_definitions: std::collections::HashMap::new(),
+      include_builtin_attributes: false,
+    }
+  }
+
+  /// Create a new analyzer with configuration for built-in attributes
+  pub fn with_builtin_attributes(include_builtin: bool) -> Self {
+    Self {
+      attributes: Vec::new(),
+      uniforms: Vec::new(),
+      next_location: 0,
+      referenced_names: std::collections::HashSet::new(),
+      struct_definitions: std::collections::HashMap::new(),
+      include_builtin_attributes: include_builtin,
     }
   }
 
@@ -339,6 +368,28 @@ impl GLSLShaderAnalyzer {
     }
     for uniform in &mut self.uniforms {
       uniform.active = self.referenced_names.contains(&uniform.name);
+    }
+
+    // Add built-in attributes if requested and they're used in the shader
+    if self.include_builtin_attributes {
+      if ref_collector.uses_gl_instance_id {
+        self.attributes.push(GLSLAttribute {
+          name: "gl_InstanceID".to_string(),
+          gl_type: GLType::Int as u32,
+          size: 1,
+          location: -1, // Built-in attributes don't have explicit locations
+          active: true,
+        });
+      }
+      if ref_collector.uses_gl_vertex_id {
+        self.attributes.push(GLSLAttribute {
+          name: "gl_VertexID".to_string(),
+          gl_type: GLType::Int as u32,
+          size: 1,
+          location: -1, // Built-in attributes don't have explicit locations
+          active: true,
+        });
+      }
     }
 
     Ok(())
@@ -657,12 +708,16 @@ mod ffi {
     fn patch_glsl_source_from_str(input: &str) -> String;
 
     /// Parse GLSL shader source and extract both attributes and uniforms as JSON
+    /// @param source The GLSL shader source code
+    /// @param include_builtin_attributes Whether to include gl_InstanceID/gl_VertexID as active attributes if used
     #[cxx_name = "parseGLSLShader"]
-    fn parse_glsl_shader(source: &str) -> String;
+    fn parse_glsl_shader(source: &str, include_builtin_attributes: bool) -> String;
 
     /// Parse GLSL shader source and extract attributes as JSON (deprecated, use parseGLSLShader)
+    /// @param source The GLSL shader source code
+    /// @param include_builtin_attributes Whether to include gl_InstanceID/gl_VertexID as active attributes if used
     #[cxx_name = "parseGLSLAttributes"]
-    fn parse_glsl_attributes(source: &str) -> String;
+    fn parse_glsl_attributes(source: &str, include_builtin_attributes: bool) -> String;
 
     /// Parse GLSL shader source and extract uniforms as JSON (deprecated, use parseGLSLShader)
     #[cxx_name = "parseGLSLUniforms"]
@@ -671,9 +726,9 @@ mod ffi {
 }
 
 /// Parse GLSL source and return both attributes and uniforms as JSON string
-fn parse_glsl_shader(source: &str) -> String {
-  let mut analyzer = GLSLShaderAnalyzer::new();
-  
+fn parse_glsl_shader(source: &str, include_builtin_attributes: bool) -> String {
+  let mut analyzer = GLSLShaderAnalyzer::with_builtin_attributes(include_builtin_attributes);
+
   match analyzer.parse(source) {
     Ok(_) => {
       let variables = GLSLShaderVariables {
@@ -687,9 +742,9 @@ fn parse_glsl_shader(source: &str) -> String {
 }
 
 /// Parse GLSL source and return all attributes as JSON string
-fn parse_glsl_attributes(source: &str) -> String {
-  let mut analyzer = GLSLShaderAnalyzer::new();
-  
+fn parse_glsl_attributes(source: &str, include_builtin_attributes: bool) -> String {
+  let mut analyzer = GLSLShaderAnalyzer::with_builtin_attributes(include_builtin_attributes);
+
   match analyzer.parse(source) {
     Ok(_) => {
       let attributes = analyzer.get_attributes();
@@ -982,8 +1037,8 @@ void main() {
   vNormal = normal;
 }
 "#;
-    let result = parse_glsl_attributes(source_str);
-    
+    let result = parse_glsl_attributes(source_str, false);
+
     // Parse the JSON result
     let attributes: Vec<GLSLAttribute> = serde_json::from_str(&result).expect("Failed to parse JSON");
     assert_eq!(attributes.len(), 2);
@@ -1130,8 +1185,8 @@ void main() {
   vNormal = normal;
 }
 "#;
-    let result = parse_glsl_shader(source_str);
-    
+    let result = parse_glsl_shader(source_str, false);
+
     // Parse the JSON result
     let variables: GLSLShaderVariables = serde_json::from_str(&result).expect("Failed to parse JSON");
     
@@ -1261,5 +1316,78 @@ void main() {
     assert_eq!(uniforms[2].name, "light.material.diffuse");
     assert_eq!(uniforms[2].gl_type, GLType::FloatVec3 as u32);
     assert_eq!(uniforms[2].active, true); // Used!
+  }
+
+  #[test]
+  fn test_parse_glsl_with_builtin_attributes() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+in vec3 offset;
+
+uniform mat4 mvpMatrix;
+
+void main() {
+  // Use gl_InstanceID to index into transforms
+  vec3 instanceOffset = offset * float(gl_InstanceID);
+  vec4 worldPos = vec4(position + instanceOffset, 1.0);
+  gl_Position = mvpMatrix * worldPos;
+  
+  // Use gl_VertexID for something
+  float fade = float(gl_VertexID) * 0.01;
+}
+"#;
+    
+    // Test WITHOUT including builtin attributes
+    let mut analyzer_no_builtin = GLSLShaderAnalyzer::new();
+    analyzer_no_builtin.parse(source_str).expect("Failed to parse");
+    let attributes_no_builtin = analyzer_no_builtin.get_attributes();
+    
+    // Should only have position and offset (no gl_InstanceID or gl_VertexID)
+    assert_eq!(attributes_no_builtin.len(), 2);
+    assert_eq!(attributes_no_builtin[0].name, "position");
+    assert_eq!(attributes_no_builtin[1].name, "offset");
+    
+    // Test WITH including builtin attributes
+    let mut analyzer_with_builtin = GLSLShaderAnalyzer::with_builtin_attributes(true);
+    analyzer_with_builtin.parse(source_str).expect("Failed to parse");
+    let attributes_with_builtin = analyzer_with_builtin.get_attributes();
+    
+    // Should have position, offset, gl_InstanceID, and gl_VertexID
+    assert_eq!(attributes_with_builtin.len(), 4);
+    assert_eq!(attributes_with_builtin[0].name, "position");
+    assert_eq!(attributes_with_builtin[0].active, true);
+    assert_eq!(attributes_with_builtin[1].name, "offset");
+    assert_eq!(attributes_with_builtin[1].active, true);
+    assert_eq!(attributes_with_builtin[2].name, "gl_InstanceID");
+    assert_eq!(attributes_with_builtin[2].gl_type, GLType::Int as u32);
+    assert_eq!(attributes_with_builtin[2].active, true);
+    assert_eq!(attributes_with_builtin[2].location, -1); // Builtin has no explicit location
+    assert_eq!(attributes_with_builtin[3].name, "gl_VertexID");
+    assert_eq!(attributes_with_builtin[3].gl_type, GLType::Int as u32);
+    assert_eq!(attributes_with_builtin[3].active, true);
+    assert_eq!(attributes_with_builtin[3].location, -1); // Builtin has no explicit location
+  }
+
+  #[test]
+  fn test_parse_glsl_builtin_attributes_ffi() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+
+void main() {
+  gl_Position = vec4(position * float(gl_InstanceID), 1.0);
+}
+"#;
+    
+    // Test FFI with builtin attributes enabled
+    let result = parse_glsl_shader(source_str, true);
+    let variables: GLSLShaderVariables = serde_json::from_str(&result).expect("Failed to parse JSON");
+    
+    // Should have position and gl_InstanceID
+    assert_eq!(variables.attributes.len(), 2);
+    assert_eq!(variables.attributes[0].name, "position");
+    assert_eq!(variables.attributes[1].name, "gl_InstanceID");
+    assert_eq!(variables.attributes[1].active, true);
   }
 }

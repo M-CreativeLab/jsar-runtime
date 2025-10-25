@@ -12,19 +12,36 @@ The GLSL shader analyzer uses the [glsl-lang](https://github.com/alixinne/glsl-l
 - ✅ **Uniform parsing**: Extracts uniform variable declarations from shaders
 - ✅ Handles explicit `layout(location = N)` qualifiers for attributes
 - ✅ Auto-assigns attribute locations based on declaration order when not explicitly specified
-- ✅ **Filters out inactive variables** - only returns attributes and uniforms that are actually referenced in the shader
+- ✅ **Active/inactive marking** - marks variables with `active` field based on whether they're referenced in shader
+- ✅ **Built-in attribute support** - optionally includes `gl_InstanceID` and `gl_VertexID` as active attributes when used
+- ✅ **Structured uniform support** - flattens struct uniforms and arrays per WebGL spec
 - ✅ Compatible with WebGL 1.0 and WebGL 2.0 shaders
 - ✅ Full FFI interface for C++ integration with JSON-based data exchange
 
-## Important: Active Variable Filtering
+## Important: Active Variable Marking
 
-The analyzer implements WebGL's "active variable" behavior: **only variables that are actually referenced in the shader code are returned**. This matches the behavior of WebGL's `getActiveAttrib()` and `getActiveUniform()` functions.
+The analyzer implements WebGL's "active variable" behavior: **all declared variables are returned, but marked as active or inactive**. This matches the behavior of WebGL's `getActiveAttrib()` and `getActiveUniform()` functions.
 
-A variable (attribute or uniform) is considered "active" if it is:
+A variable (attribute or uniform) is marked `active = true` if it is:
 - Declared with the appropriate qualifier (`attribute`, `in`, or `uniform`)
 - Referenced somewhere in the shader code (e.g., used in calculations, assigned to outputs, etc.)
 
-Variables that are declared but never used will be automatically filtered out, as they would be optimized away by the shader compiler.
+Variables that are declared but never used will have `active = false`, as they would typically be optimized away by the shader compiler.
+
+## Built-in Attributes (gl_InstanceID, gl_VertexID)
+
+When shaders use OpenGL/GLES built-in variables like `gl_InstanceID` or `gl_VertexID`, you can optionally have the analyzer include them in the attributes list by setting the `include_builtin_attributes` parameter to `true`:
+
+```cpp
+// C++ example with built-in attributes
+std::vector<GLSLAttribute> attributes;
+std::vector<GLSLUniform> uniforms;
+GLSLShaderAnalyzer::Parse(shaderSource, attributes, uniforms, true); // true = include built-ins
+
+// Built-in attributes will have location = -1 and type = GL_INT
+```
+
+This is useful when you need to track all attributes that affect shader execution, including implicit built-in ones.
 
 ## Rust API
 
