@@ -134,11 +134,75 @@ impl ReferenceCollector {
 
 impl Visitor for ReferenceCollector {
   fn visit_expr(&mut self, expr: &ast::Expr) -> Visit {
-    // Check if this expression is a variable reference
-    if let ast::ExprData::Variable(identifier) = &expr.content {
-      self.referenced_names.insert(identifier.content.0.to_string());
+    match &expr.content {
+      // Direct variable reference
+      ast::ExprData::Variable(identifier) => {
+        self.referenced_names.insert(identifier.content.0.to_string());
+      }
+      // Field access: uniform.field or uniform[0].field
+      ast::ExprData::Dot(base_expr, field_ident) => {
+        // Build the full path for struct member access
+        let full_path = self.build_member_path(base_expr, &field_ident.content.0);
+        self.referenced_names.insert(full_path);
+      }
+      // Array access: uniform[0]
+      ast::ExprData::Bracket(base_expr, index_expr) => {
+        // Try to extract the index if it's a constant
+        let index_str = if let ast::ExprData::IntConst(val) = &index_expr.content {
+          format!("[{}]", val)
+        } else {
+          // For non-constant indices, we can't determine exact element
+          // Mark the base as referenced
+          "[0]".to_string() // Default to [0] for tracking
+        };
+        
+        if let ast::ExprData::Variable(ident) = &base_expr.content {
+          let full_name = format!("{}{}", ident.content.0, index_str);
+          self.referenced_names.insert(full_name);
+        }
+      }
+      _ => {}
     }
     Visit::Children
+  }
+}
+
+impl ReferenceCollector {
+  /// Build the full member path for nested field access
+  fn build_member_path(&self, expr: &ast::Expr, field: &str) -> String {
+    match &expr.content {
+      // Simple variable: var.field
+      ast::ExprData::Variable(ident) => {
+        format!("{}.{}", ident.content.0, field)
+      }
+      // Nested access: var[0].field
+      ast::ExprData::Bracket(base_expr, index_expr) => {
+        let base_path = self.get_base_path(base_expr);
+        let index_str = if let ast::ExprData::IntConst(val) = &index_expr.content {
+          format!("[{}]", val)
+        } else {
+          "[0]".to_string()
+        };
+        format!("{}{}.{}", base_path, index_str, field)
+      }
+      // Nested field: var.field1.field2
+      ast::ExprData::Dot(nested_base, nested_field) => {
+        let base_path = self.build_member_path(nested_base, &nested_field.content.0);
+        format!("{}.{}", base_path, field)
+      }
+      _ => field.to_string(),
+    }
+  }
+
+  /// Get the base path from an expression
+  fn get_base_path(&self, expr: &ast::Expr) -> String {
+    match &expr.content {
+      ast::ExprData::Variable(ident) => ident.content.0.to_string(),
+      ast::ExprData::Dot(base, field) => {
+        self.build_member_path(base, &field.content.0)
+      }
+      _ => String::new(),
+    }
   }
 }
 
@@ -212,12 +276,23 @@ pub struct GLSLShaderVariables {
   pub uniforms: Vec<GLSLUniform>,
 }
 
+/// Struct field definition
+#[derive(Debug, Clone)]
+struct StructField {
+  name: String,
+  gl_type: GLType,
+  is_struct: bool,
+  struct_name: Option<String>,
+}
+
 /// Analyzer for extracting shader variables (attributes, uniforms) from GLSL source code
 pub struct GLSLShaderAnalyzer {
   attributes: Vec<GLSLAttribute>,
   uniforms: Vec<GLSLUniform>,
   next_location: i32,
   referenced_names: std::collections::HashSet<String>,
+  /// Map of struct names to their field definitions
+  struct_definitions: std::collections::HashMap<String, Vec<StructField>>,
 }
 
 impl GLSLShaderAnalyzer {
@@ -228,6 +303,7 @@ impl GLSLShaderAnalyzer {
       uniforms: Vec::new(),
       next_location: 0,
       referenced_names: std::collections::HashSet::new(),
+      struct_definitions: std::collections::HashMap::new(),
     }
   }
 
@@ -386,9 +462,124 @@ impl GLSLShaderAnalyzer {
     }
     false
   }
+
+  /// Expand a struct uniform into its individual members
+  /// Returns a list of (name, gl_type, size) tuples
+  fn expand_struct_uniform(
+    &self,
+    base_name: &str,
+    struct_name: &str,
+    array_size: i32,
+  ) -> Vec<(String, u32, i32)> {
+    let mut expanded = Vec::new();
+    
+    if let Some(fields) = self.struct_definitions.get(struct_name) {
+      if array_size > 1 {
+        // Array of structs: expand as uniformName[i].field
+        for i in 0..array_size {
+          for field in fields {
+            let member_name = format!("{}[{}].{}", base_name, i, field.name);
+            if field.is_struct {
+              if let Some(ref nested_struct) = field.struct_name {
+                // Recursively expand nested structs
+                let nested = self.expand_struct_uniform(&member_name, nested_struct, 1);
+                expanded.extend(nested);
+              }
+            } else {
+              expanded.push((member_name, field.gl_type as u32, 1));
+            }
+          }
+        }
+      } else {
+        // Single struct: expand as uniformName.field
+        for field in fields {
+          let member_name = format!("{}.{}", base_name, field.name);
+          if field.is_struct {
+            if let Some(ref nested_struct) = field.struct_name {
+              // Recursively expand nested structs
+              let nested = self.expand_struct_uniform(&member_name, nested_struct, 1);
+              expanded.extend(nested);
+            }
+          } else {
+            expanded.push((member_name, field.gl_type as u32, 1));
+          }
+        }
+      }
+    }
+    
+    expanded
+  }
+
+  /// Extract array size from array specifier if present
+  fn get_array_size(&self, array_specifier: &Option<ast::ArraySpecifier>) -> i32 {
+    if let Some(spec) = array_specifier {
+      if let Some(first_dim) = spec.content.dimensions.first() {
+        if let ast::ArraySpecifierDimensionData::ExplicitlySized(ref expr) = first_dim.content {
+          if let ast::ExprData::IntConst(val) = expr.content {
+            return val;
+          }
+        }
+      }
+    }
+    1  // Default to 1 if no array or can't determine size
+  }
+
+  /// Check if a type specifier is a struct type
+  fn is_struct_type(&self, ty: &ast::TypeSpecifierNonArray) -> Option<String> {
+    match &ty.content {
+      ast::TypeSpecifierNonArrayData::TypeName(type_name) => {
+        Some(type_name.content.0.to_string())
+      }
+      _ => None,
+    }
+  }
 }
 
 impl Visitor for GLSLShaderAnalyzer {
+  /// Visit struct specifier to collect struct definitions
+  fn visit_struct_specifier(&mut self, spec: &ast::StructSpecifier) -> Visit {
+    if let Some(ref name) = spec.name {
+      let struct_name = name.content.0.to_string();
+      let mut fields = Vec::new();
+      
+      // Collect all fields from the struct
+      for field_decl in &spec.fields {
+        // field_decl.content is StructFieldSpecifier
+        // .ty is FullySpecifiedType
+        // .ty.ty is DIRECTLY TypeSpecifierNonArray (not TypeSpecifier!)
+        // This is different from SingleDeclaration where ty.ty.ty is needed
+        let type_spec_non_array = &field_decl.content.ty.ty;
+        let field_name_base = &field_decl.content.identifiers;
+        
+        for field in field_name_base {
+          let field_name = field.content.ident.content.0.to_string();
+          
+          // Check if field is itself a struct
+          if let Some(nested_struct_name) = self.is_struct_type(type_spec_non_array) {
+            fields.push(StructField {
+              name: field_name,
+              gl_type: GLType::Unknown,
+              is_struct: true,
+              struct_name: Some(nested_struct_name),
+            });
+          } else {
+            let gl_type = self.type_to_gl_type(type_spec_non_array);
+            fields.push(StructField {
+              name: field_name,
+              gl_type,
+              is_struct: false,
+              struct_name: None,
+            });
+          }
+        }
+      }
+      
+      self.struct_definitions.insert(struct_name, fields);
+    }
+    
+    Visit::Children
+  }
+
   fn visit_single_declaration(&mut self, declaration: &ast::SingleDeclaration) -> Visit {
     // Check if this declaration has qualifiers
     if let Some(ref qualifier) = declaration.ty.qualifier {
@@ -407,25 +598,49 @@ impl Visitor for GLSLShaderAnalyzer {
             loc
           });
 
+          // Get array size
+          let size = self.get_array_size(&declaration.array_specifier);
+
           self.attributes.push(GLSLAttribute {
             name: name.content.0.to_string(),
             gl_type,
-            size: 1, // TODO: Handle array types
+            size,
             location,
             active: false, // Will be set later after reference collection
           });
         }
       } else if is_uniform {
         if let Some(ref name) = declaration.name {
-          // Extract GL type from the type specifier
-          let gl_type = self.type_to_gl_type(&declaration.ty.ty.ty) as u32;
+          let uniform_name = name.content.0.to_string();
+          
+          // Check if this is a struct type
+          if let Some(struct_name) = self.is_struct_type(&declaration.ty.ty.ty) {
+            // Get array size if this is an array of structs
+            let array_size = self.get_array_size(&declaration.array_specifier);
+            
+            // Expand the struct into individual member uniforms
+            let expanded = self.expand_struct_uniform(&uniform_name, &struct_name, array_size);
+            
+            for (member_name, member_gl_type, member_size) in expanded {
+              self.uniforms.push(GLSLUniform {
+                name: member_name,
+                gl_type: member_gl_type,
+                size: member_size,
+                active: false, // Will be set later after reference collection
+              });
+            }
+          } else {
+            // Regular uniform (not a struct)
+            let gl_type = self.type_to_gl_type(&declaration.ty.ty.ty) as u32;
+            let size = self.get_array_size(&declaration.array_specifier);
 
-          self.uniforms.push(GLSLUniform {
-            name: name.content.0.to_string(),
-            gl_type,
-            size: 1, // TODO: Handle array types
-            active: false, // Will be set later after reference collection
-          });
+            self.uniforms.push(GLSLUniform {
+              name: uniform_name,
+              gl_type,
+              size,
+              active: false, // Will be set later after reference collection
+            });
+          }
         }
       }
     }
@@ -937,5 +1152,114 @@ void main() {
     assert_eq!(variables.uniforms[1].active, true);
     assert_eq!(variables.uniforms[2].name, "unusedColor");
     assert_eq!(variables.uniforms[2].active, false);
+  }
+
+  #[test]
+  fn test_parse_glsl_structured_uniforms() {
+    let source_str = r#"
+#version 300 es
+struct DirectionalLight {
+  vec3 direction;
+  vec3 color;
+  float intensity;
+};
+
+in vec3 position;
+uniform DirectionalLight directionalLights[2];
+uniform vec3 ambient;
+
+out vec4 fragColor;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+  vec3 lighting = ambient;
+  lighting += directionalLights[0].color * directionalLights[0].intensity;
+  lighting += directionalLights[1].direction * 0.5;
+  fragColor = vec4(lighting, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse");
+    
+    let uniforms = analyzer.get_uniforms();
+    
+    // Uniforms should be in declaration order: directionalLights[0].*, directionalLights[1].*, ambient
+    // Should have 7 total: 6 from the 2-element array of structs + 1 ambient
+    assert_eq!(uniforms.len(), 7);
+    
+    // Check expanded struct uniforms (directionalLights declared first)
+    assert_eq!(uniforms[0].name, "directionalLights[0].direction");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[0].active, false); // Not used in the shader
+    
+    assert_eq!(uniforms[1].name, "directionalLights[0].color");
+    assert_eq!(uniforms[1].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[1].active, true); // Used in shader
+    
+    assert_eq!(uniforms[2].name, "directionalLights[0].intensity");
+    assert_eq!(uniforms[2].gl_type, GLType::Float as u32);
+    assert_eq!(uniforms[2].active, true); // Used in shader
+    
+    assert_eq!(uniforms[3].name, "directionalLights[1].direction");
+    assert_eq!(uniforms[3].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[3].active, true); // Used in shader
+    
+    assert_eq!(uniforms[4].name, "directionalLights[1].color");
+    assert_eq!(uniforms[4].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[4].active, false); // Not used in the shader
+    
+    assert_eq!(uniforms[5].name, "directionalLights[1].intensity");
+    assert_eq!(uniforms[5].gl_type, GLType::Float as u32);
+    assert_eq!(uniforms[5].active, false); // Not used in the shader
+    
+    // Check ambient uniform (declared after directionalLights)
+    assert_eq!(uniforms[6].name, "ambient");
+    assert_eq!(uniforms[6].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[6].active, true);
+  }
+
+  #[test]
+  fn test_parse_glsl_nested_struct_uniforms() {
+    let source_str = r#"
+#version 300 es
+struct Material {
+  vec3 ambient;
+  vec3 diffuse;
+};
+
+struct Light {
+  vec3 position;
+  Material material;
+};
+
+in vec3 vertPosition;
+uniform Light light;
+
+out vec4 fragColor;
+
+void main() {
+  gl_Position = vec4(vertPosition, 1.0);
+  fragColor = vec4(light.material.diffuse, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse");
+    
+    let uniforms = analyzer.get_uniforms();
+    
+    // Should have: light.position, light.material.ambient, light.material.diffuse
+    assert_eq!(uniforms.len(), 3);
+    
+    assert_eq!(uniforms[0].name, "light.position");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[0].active, false); // Not used
+    
+    assert_eq!(uniforms[1].name, "light.material.ambient");
+    assert_eq!(uniforms[1].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[1].active, false); // Not used
+    
+    assert_eq!(uniforms[2].name, "light.material.diffuse");
+    assert_eq!(uniforms[2].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(uniforms[2].active, true); // Used!
   }
 }
