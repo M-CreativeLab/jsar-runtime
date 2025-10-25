@@ -142,15 +142,51 @@ impl Visitor for ReferenceCollector {
   }
 }
 
+/// GL type constants matching WebGL spec
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[repr(u32)]
+pub enum GLType {
+  Float = 0x1406,
+  FloatVec2 = 0x8B50,
+  FloatVec3 = 0x8B51,
+  FloatVec4 = 0x8B52,
+  Int = 0x1404,
+  IntVec2 = 0x8B53,
+  IntVec3 = 0x8B54,
+  IntVec4 = 0x8B55,
+  UnsignedInt = 0x1405,
+  Bool = 0x8B56,
+  BoolVec2 = 0x8B57,
+  BoolVec3 = 0x8B58,
+  BoolVec4 = 0x8B59,
+  FloatMat2 = 0x8B5A,
+  FloatMat3 = 0x8B5B,
+  FloatMat4 = 0x8B5C,
+  FloatMat2x3 = 0x8B65,
+  FloatMat2x4 = 0x8B66,
+  FloatMat3x2 = 0x8B67,
+  FloatMat3x4 = 0x8B68,
+  FloatMat4x2 = 0x8B69,
+  FloatMat4x3 = 0x8B6A,
+  Sampler2D = 0x8B5E,
+  SamplerCube = 0x8B60,
+  Unknown = 0,
+}
+
 /// Represents metadata about a vertex attribute in GLSL
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GLSLAttribute {
   /// The name of the attribute (e.g., "position", "normal")
   pub name: String,
-  /// The GLSL type of the attribute (e.g., "vec3", "vec4", "mat4")
-  pub type_name: String,
+  /// The GL type constant (e.g., GL_FLOAT_VEC3, GL_FLOAT_VEC4)
+  #[serde(rename = "type")]
+  pub gl_type: u32,
+  /// The size of the attribute (number of elements, usually 1 for single values)
+  pub size: i32,
   /// The assigned location of the attribute (0-based index)
   pub location: i32,
+  /// Whether the attribute is active (referenced in the shader)
+  pub active: bool,
 }
 
 /// Represents metadata about a uniform variable in GLSL
@@ -158,8 +194,13 @@ pub struct GLSLAttribute {
 pub struct GLSLUniform {
   /// The name of the uniform (e.g., "modelViewMatrix", "lightColor")
   pub name: String,
-  /// The GLSL type of the uniform (e.g., "mat4", "vec3", "sampler2D")
-  pub type_name: String,
+  /// The GL type constant (e.g., GL_FLOAT_MAT4, GL_FLOAT_VEC3, GL_SAMPLER_2D)
+  #[serde(rename = "type")]
+  pub gl_type: u32,
+  /// The size of the uniform (number of elements, 1 for non-arrays)
+  pub size: i32,
+  /// Whether the uniform is active (referenced in the shader)
+  pub active: bool,
 }
 
 /// Analyzer for extracting shader variables (attributes, uniforms) from GLSL source code
@@ -207,9 +248,13 @@ impl GLSLShaderAnalyzer {
     use glsl_lang::visitor::Host;
     tu.visit(self);
 
-    // Filter out unreferenced attributes and uniforms (inactive variables)
-    self.attributes.retain(|attr| self.referenced_names.contains(&attr.name));
-    self.uniforms.retain(|uniform| self.referenced_names.contains(&uniform.name));
+    // Mark inactive variables instead of filtering them out
+    for attr in &mut self.attributes {
+      attr.active = self.referenced_names.contains(&attr.name);
+    }
+    for uniform in &mut self.uniforms {
+      uniform.active = self.referenced_names.contains(&uniform.name);
+    }
 
     Ok(())
   }
@@ -233,49 +278,50 @@ impl GLSLShaderAnalyzer {
       .map(|attr| attr.location)
   }
 
-  /// Extract type name from TypeSpecifierNonArray
-  fn type_to_string(&self, ty: &ast::TypeSpecifierNonArray) -> String {
+  /// Extract GL type from TypeSpecifierNonArray
+  fn type_to_gl_type(&self, ty: &ast::TypeSpecifierNonArray) -> GLType {
     match &ty.content {
-      ast::TypeSpecifierNonArrayData::Float => "float".to_string(),
-      ast::TypeSpecifierNonArrayData::Double => "double".to_string(),
-      ast::TypeSpecifierNonArrayData::Int => "int".to_string(),
-      ast::TypeSpecifierNonArrayData::UInt => "uint".to_string(),
-      ast::TypeSpecifierNonArrayData::Bool => "bool".to_string(),
-      ast::TypeSpecifierNonArrayData::Vec2 => "vec2".to_string(),
-      ast::TypeSpecifierNonArrayData::Vec3 => "vec3".to_string(),
-      ast::TypeSpecifierNonArrayData::Vec4 => "vec4".to_string(),
-      ast::TypeSpecifierNonArrayData::DVec2 => "dvec2".to_string(),
-      ast::TypeSpecifierNonArrayData::DVec3 => "dvec3".to_string(),
-      ast::TypeSpecifierNonArrayData::DVec4 => "dvec4".to_string(),
-      ast::TypeSpecifierNonArrayData::BVec2 => "bvec2".to_string(),
-      ast::TypeSpecifierNonArrayData::BVec3 => "bvec3".to_string(),
-      ast::TypeSpecifierNonArrayData::BVec4 => "bvec4".to_string(),
-      ast::TypeSpecifierNonArrayData::IVec2 => "ivec2".to_string(),
-      ast::TypeSpecifierNonArrayData::IVec3 => "ivec3".to_string(),
-      ast::TypeSpecifierNonArrayData::IVec4 => "ivec4".to_string(),
-      ast::TypeSpecifierNonArrayData::UVec2 => "uvec2".to_string(),
-      ast::TypeSpecifierNonArrayData::UVec3 => "uvec3".to_string(),
-      ast::TypeSpecifierNonArrayData::UVec4 => "uvec4".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat2 => "mat2".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat3 => "mat3".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat4 => "mat4".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat23 => "mat2x3".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat24 => "mat2x4".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat32 => "mat3x2".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat34 => "mat3x4".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat42 => "mat4x2".to_string(),
-      ast::TypeSpecifierNonArrayData::Mat43 => "mat4x3".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat2 => "dmat2".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat3 => "dmat3".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat4 => "dmat4".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat23 => "dmat2x3".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat24 => "dmat2x4".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat32 => "dmat3x2".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat34 => "dmat3x4".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat42 => "dmat4x2".to_string(),
-      ast::TypeSpecifierNonArrayData::DMat43 => "dmat4x3".to_string(),
-      ast::TypeSpecifierNonArrayData::TypeName(tn) => tn.content.0.to_string(),
-      _ => "unknown".to_string(),
+      ast::TypeSpecifierNonArrayData::Float => GLType::Float,
+      ast::TypeSpecifierNonArrayData::Double => GLType::Float, // Map double to float
+      ast::TypeSpecifierNonArrayData::Int => GLType::Int,
+      ast::TypeSpecifierNonArrayData::UInt => GLType::UnsignedInt,
+      ast::TypeSpecifierNonArrayData::Bool => GLType::Bool,
+      ast::TypeSpecifierNonArrayData::Vec2 => GLType::FloatVec2,
+      ast::TypeSpecifierNonArrayData::Vec3 => GLType::FloatVec3,
+      ast::TypeSpecifierNonArrayData::Vec4 => GLType::FloatVec4,
+      ast::TypeSpecifierNonArrayData::DVec2 => GLType::FloatVec2,
+      ast::TypeSpecifierNonArrayData::DVec3 => GLType::FloatVec3,
+      ast::TypeSpecifierNonArrayData::DVec4 => GLType::FloatVec4,
+      ast::TypeSpecifierNonArrayData::BVec2 => GLType::BoolVec2,
+      ast::TypeSpecifierNonArrayData::BVec3 => GLType::BoolVec3,
+      ast::TypeSpecifierNonArrayData::BVec4 => GLType::BoolVec4,
+      ast::TypeSpecifierNonArrayData::IVec2 => GLType::IntVec2,
+      ast::TypeSpecifierNonArrayData::IVec3 => GLType::IntVec3,
+      ast::TypeSpecifierNonArrayData::IVec4 => GLType::IntVec4,
+      ast::TypeSpecifierNonArrayData::UVec2 => GLType::IntVec2, // Map uint to int
+      ast::TypeSpecifierNonArrayData::UVec3 => GLType::IntVec3,
+      ast::TypeSpecifierNonArrayData::UVec4 => GLType::IntVec4,
+      ast::TypeSpecifierNonArrayData::Mat2 => GLType::FloatMat2,
+      ast::TypeSpecifierNonArrayData::Mat3 => GLType::FloatMat3,
+      ast::TypeSpecifierNonArrayData::Mat4 => GLType::FloatMat4,
+      ast::TypeSpecifierNonArrayData::Mat23 => GLType::FloatMat2x3,
+      ast::TypeSpecifierNonArrayData::Mat24 => GLType::FloatMat2x4,
+      ast::TypeSpecifierNonArrayData::Mat32 => GLType::FloatMat3x2,
+      ast::TypeSpecifierNonArrayData::Mat34 => GLType::FloatMat3x4,
+      ast::TypeSpecifierNonArrayData::Mat42 => GLType::FloatMat4x2,
+      ast::TypeSpecifierNonArrayData::Mat43 => GLType::FloatMat4x3,
+      ast::TypeSpecifierNonArrayData::DMat2 => GLType::FloatMat2,
+      ast::TypeSpecifierNonArrayData::DMat3 => GLType::FloatMat3,
+      ast::TypeSpecifierNonArrayData::DMat4 => GLType::FloatMat4,
+      ast::TypeSpecifierNonArrayData::DMat23 => GLType::FloatMat2x3,
+      ast::TypeSpecifierNonArrayData::DMat24 => GLType::FloatMat2x4,
+      ast::TypeSpecifierNonArrayData::DMat32 => GLType::FloatMat3x2,
+      ast::TypeSpecifierNonArrayData::DMat34 => GLType::FloatMat3x4,
+      ast::TypeSpecifierNonArrayData::DMat42 => GLType::FloatMat4x2,
+      ast::TypeSpecifierNonArrayData::DMat43 => GLType::FloatMat4x3,
+      ast::TypeSpecifierNonArrayData::Sampler2D => GLType::Sampler2D,
+      ast::TypeSpecifierNonArrayData::SamplerCube => GLType::SamplerCube,
+      _ => GLType::Unknown,
     }
   }
 
@@ -343,8 +389,8 @@ impl Visitor for GLSLShaderAnalyzer {
 
       if is_attribute {
         if let Some(ref name) = declaration.name {
-          // Extract type name from the type specifier
-          let type_name = self.type_to_string(&declaration.ty.ty.ty);
+          // Extract GL type from the type specifier
+          let gl_type = self.type_to_gl_type(&declaration.ty.ty.ty) as u32;
 
           let location = layout_location.unwrap_or_else(|| {
             let loc = self.next_location;
@@ -354,18 +400,22 @@ impl Visitor for GLSLShaderAnalyzer {
 
           self.attributes.push(GLSLAttribute {
             name: name.content.0.to_string(),
-            type_name,
+            gl_type,
+            size: 1, // TODO: Handle array types
             location,
+            active: false, // Will be set later after reference collection
           });
         }
       } else if is_uniform {
         if let Some(ref name) = declaration.name {
-          // Extract type name from the type specifier
-          let type_name = self.type_to_string(&declaration.ty.ty.ty);
+          // Extract GL type from the type specifier
+          let gl_type = self.type_to_gl_type(&declaration.ty.ty.ty) as u32;
 
           self.uniforms.push(GLSLUniform {
             name: name.content.0.to_string(),
-            type_name,
+            gl_type,
+            size: 1, // TODO: Handle array types
+            active: false, // Will be set later after reference collection
           });
         }
       }
@@ -556,18 +606,24 @@ void main() {
 
     // Check first attribute
     assert_eq!(attributes[0].name, "position");
-    assert_eq!(attributes[0].type_name, "vec3");
+    assert_eq!(attributes[0].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(attributes[0].size, 1);
     assert_eq!(attributes[0].location, 0);
+    assert_eq!(attributes[0].active, true);
 
     // Check second attribute
     assert_eq!(attributes[1].name, "normal");
-    assert_eq!(attributes[1].type_name, "vec3");
+    assert_eq!(attributes[1].gl_type, GLType::FloatVec3 as u32);
+    assert_eq!(attributes[1].size, 1);
     assert_eq!(attributes[1].location, 1);
+    assert_eq!(attributes[1].active, true);
 
     // Check third attribute
     assert_eq!(attributes[2].name, "uv");
-    assert_eq!(attributes[2].type_name, "vec2");
+    assert_eq!(attributes[2].gl_type, GLType::FloatVec2 as u32);
+    assert_eq!(attributes[2].size, 1);
     assert_eq!(attributes[2].location, 2);
+    assert_eq!(attributes[2].active, true);
   }
 
   #[test]
@@ -596,15 +652,15 @@ void main() {
     assert_eq!(attributes.len(), 3);
 
     assert_eq!(attributes[0].name, "aPos");
-    assert_eq!(attributes[0].type_name, "vec3");
+    assert_eq!(attributes[0].gl_type, GLType::FloatVec3 as u32);
     assert_eq!(attributes[0].location, 0);
 
     assert_eq!(attributes[1].name, "aNormal");
-    assert_eq!(attributes[1].type_name, "vec3");
+    assert_eq!(attributes[1].gl_type, GLType::FloatVec3 as u32);
     assert_eq!(attributes[1].location, 1);
 
     assert_eq!(attributes[2].name, "aTexCoord");
-    assert_eq!(attributes[2].type_name, "vec2");
+    assert_eq!(attributes[2].gl_type, GLType::FloatVec2 as u32);
     assert_eq!(attributes[2].location, 2);
   }
 
@@ -633,13 +689,13 @@ void main() {
     assert_eq!(attributes.len(), 3);
 
     assert_eq!(attributes[0].name, "position");
-    assert_eq!(attributes[0].type_name, "vec3");
+    assert_eq!(attributes[0].gl_type, GLType::FloatVec3 as u32);
 
     assert_eq!(attributes[1].name, "normal");
-    assert_eq!(attributes[1].type_name, "vec3");
+    assert_eq!(attributes[1].gl_type, GLType::FloatVec3 as u32);
 
     assert_eq!(attributes[2].name, "texCoord");
-    assert_eq!(attributes[2].type_name, "vec2");
+    assert_eq!(attributes[2].gl_type, GLType::FloatVec2 as u32);
   }
 
   #[test]
@@ -692,7 +748,7 @@ void main() {
   }
 
   #[test]
-  fn test_parse_glsl_attributes_filters_inactive() {
+  fn test_parse_glsl_attributes_marks_inactive() {
     let source_str = r#"
 #version 300 es
 in vec3 position;
@@ -710,13 +766,14 @@ void main() {
     parser.parse(source_str).expect("Failed to parse GLSL");
     
     let attributes = parser.get_attributes();
-    // Only position and normal should be returned, unused_attr should be filtered out
-    assert_eq!(attributes.len(), 2);
+    // All attributes should be returned, but unused_attr should be marked inactive
+    assert_eq!(attributes.len(), 3);
     assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[0].active, true);
     assert_eq!(attributes[1].name, "normal");
-    
-    // unused_attr should not be found
-    assert_eq!(parser.get_attrib_location("unused_attr"), None);
+    assert_eq!(attributes[1].active, true);
+    assert_eq!(attributes[2].name, "unused_attr");
+    assert_eq!(attributes[2].active, false); // This one is inactive
   }
 
   #[test]
@@ -745,17 +802,17 @@ void main() {
     assert_eq!(uniforms.len(), 3);
 
     assert_eq!(uniforms[0].name, "modelViewMatrix");
-    assert_eq!(uniforms[0].type_name, "mat4");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatMat4 as u32);
 
     assert_eq!(uniforms[1].name, "projectionMatrix");
-    assert_eq!(uniforms[1].type_name, "mat4");
+    assert_eq!(uniforms[1].gl_type, GLType::FloatMat4 as u32);
 
     assert_eq!(uniforms[2].name, "lightPosition");
-    assert_eq!(uniforms[2].type_name, "vec3");
+    assert_eq!(uniforms[2].gl_type, GLType::FloatVec3 as u32);
   }
 
   #[test]
-  fn test_parse_glsl_uniforms_filters_inactive() {
+  fn test_parse_glsl_uniforms_marks_inactive() {
     let source_str = r#"
 #version 300 es
 precision highp float;
@@ -773,10 +830,15 @@ void main() {
     analyzer.parse(source_str).expect("Failed to parse GLSL");
 
     let uniforms = analyzer.get_uniforms();
-    // Only mvpMatrix should be returned, unusedColor and unusedScale are not referenced
-    assert_eq!(uniforms.len(), 1);
+    // All uniforms should be returned, but only mvpMatrix should be active
+    assert_eq!(uniforms.len(), 3);
     assert_eq!(uniforms[0].name, "mvpMatrix");
-    assert_eq!(uniforms[0].type_name, "mat4");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatMat4 as u32);
+    assert_eq!(uniforms[0].active, true);
+    assert_eq!(uniforms[1].name, "unusedColor");
+    assert_eq!(uniforms[1].active, false);
+    assert_eq!(uniforms[2].name, "unusedScale");
+    assert_eq!(uniforms[2].active, false);
   }
 
   #[test]
@@ -800,8 +862,8 @@ void main() {
     let uniforms: Vec<GLSLUniform> = serde_json::from_str(&result).expect("Failed to parse JSON");
     assert_eq!(uniforms.len(), 2);
     assert_eq!(uniforms[0].name, "transform");
-    assert_eq!(uniforms[0].type_name, "mat4");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatMat4 as u32);
     assert_eq!(uniforms[1].name, "color");
-    assert_eq!(uniforms[1].type_name, "vec4");
+    assert_eq!(uniforms[1].gl_type, GLType::FloatVec4 as u32);
   }
 }

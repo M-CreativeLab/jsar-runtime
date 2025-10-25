@@ -35,8 +35,10 @@ namespace crates::webgl
   struct GLSLAttribute
   {
     std::string name;      ///< Attribute name (e.g., "position", "normal")
-    std::string type_name; ///< Attribute type (e.g., "vec3", "vec4")
+    uint32_t type;         ///< GL type constant (e.g., 0x8B51 for GL_FLOAT_VEC3)
+    int32_t size;          ///< Size (number of elements, 1 for non-arrays)
     int32_t location;      ///< Attribute location (0-based index)
+    bool active;           ///< Whether the attribute is active (referenced in shader)
   };
 
   /**
@@ -45,7 +47,9 @@ namespace crates::webgl
   struct GLSLUniform
   {
     std::string name;      ///< Uniform name (e.g., "modelViewMatrix", "lightColor")
-    std::string type_name; ///< Uniform type (e.g., "mat4", "vec3", "sampler2D")
+    uint32_t type;         ///< GL type constant (e.g., 0x8B5C for GL_FLOAT_MAT4)
+    int32_t size;          ///< Size (number of elements, 1 for non-arrays)
+    bool active;           ///< Whether the uniform is active (referenced in shader)
   };
 
   /**
@@ -58,7 +62,7 @@ namespace crates::webgl
    * - Supports both GLSL 100 ES (attribute) and GLSL 300 ES (in) qualifiers
    * - Handles explicit layout(location = N) qualifiers
    * - Auto-assigns locations based on declaration order when not explicitly specified
-   * - Filters out inactive (unreferenced) attributes and uniforms
+   * - Marks inactive (unreferenced) attributes and uniforms with active=false
    * - Compatible with WebGL 1.0 and WebGL 2.0 shaders
    * 
    * Example usage:
@@ -110,12 +114,15 @@ namespace crates::webgl
       for (rapidjson::SizeType i = 0; i < doc.Size(); i++)
       {
         const auto &attr = doc[i];
-        if (attr.IsObject() && attr.HasMember("name") && attr.HasMember("type_name") && attr.HasMember("location"))
+        if (attr.IsObject() && attr.HasMember("name") && attr.HasMember("type") && 
+            attr.HasMember("size") && attr.HasMember("location") && attr.HasMember("active"))
         {
           attributes.push_back(GLSLAttribute{
             attr["name"].GetString(),
-            attr["type_name"].GetString(),
-            attr["location"].GetInt()});
+            attr["type"].GetUint(),
+            attr["size"].GetInt(),
+            attr["location"].GetInt(),
+            attr["active"].GetBool()});
         }
       }
 
@@ -145,11 +152,14 @@ namespace crates::webgl
       for (rapidjson::SizeType i = 0; i < doc.Size(); i++)
       {
         const auto &uniform = doc[i];
-        if (uniform.IsObject() && uniform.HasMember("name") && uniform.HasMember("type_name"))
+        if (uniform.IsObject() && uniform.HasMember("name") && uniform.HasMember("type") && 
+            uniform.HasMember("size") && uniform.HasMember("active"))
         {
           uniforms.push_back(GLSLUniform{
             uniform["name"].GetString(),
-            uniform["type_name"].GetString()});
+            uniform["type"].GetUint(),
+            uniform["size"].GetInt(),
+            uniform["active"].GetBool()});
         }
       }
 
