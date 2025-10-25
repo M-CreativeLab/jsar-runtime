@@ -203,6 +203,15 @@ pub struct GLSLUniform {
   pub active: bool,
 }
 
+/// Combined result of shader parsing containing both attributes and uniforms
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GLSLShaderVariables {
+  /// List of vertex attributes
+  pub attributes: Vec<GLSLAttribute>,
+  /// List of uniform variables
+  pub uniforms: Vec<GLSLUniform>,
+}
+
 /// Analyzer for extracting shader variables (attributes, uniforms) from GLSL source code
 pub struct GLSLShaderAnalyzer {
   attributes: Vec<GLSLAttribute>,
@@ -432,13 +441,33 @@ mod ffi {
     #[cxx_name = "patchGLSLSourceFromStr"]
     fn patch_glsl_source_from_str(input: &str) -> String;
 
-    /// Parse GLSL shader source and extract attributes as JSON
+    /// Parse GLSL shader source and extract both attributes and uniforms as JSON
+    #[cxx_name = "parseGLSLShader"]
+    fn parse_glsl_shader(source: &str) -> String;
+
+    /// Parse GLSL shader source and extract attributes as JSON (deprecated, use parseGLSLShader)
     #[cxx_name = "parseGLSLAttributes"]
     fn parse_glsl_attributes(source: &str) -> String;
 
-    /// Parse GLSL shader source and extract uniforms as JSON
+    /// Parse GLSL shader source and extract uniforms as JSON (deprecated, use parseGLSLShader)
     #[cxx_name = "parseGLSLUniforms"]
     fn parse_glsl_uniforms(source: &str) -> String;
+  }
+}
+
+/// Parse GLSL source and return both attributes and uniforms as JSON string
+fn parse_glsl_shader(source: &str) -> String {
+  let mut analyzer = GLSLShaderAnalyzer::new();
+  
+  match analyzer.parse(source) {
+    Ok(_) => {
+      let variables = GLSLShaderVariables {
+        attributes: analyzer.get_attributes().to_vec(),
+        uniforms: analyzer.get_uniforms().to_vec(),
+      };
+      serde_json::to_string(&variables).unwrap_or_else(|_| r#"{"attributes":[],"uniforms":[]}"#.to_string())
+    }
+    Err(_) => r#"{"attributes":[],"uniforms":[]}"#.to_string(),
   }
 }
 
@@ -865,5 +894,48 @@ void main() {
     assert_eq!(uniforms[0].gl_type, GLType::FloatMat4 as u32);
     assert_eq!(uniforms[1].name, "color");
     assert_eq!(uniforms[1].gl_type, GLType::FloatVec4 as u32);
+  }
+
+  #[test]
+  fn test_parse_glsl_shader_combined() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+in vec3 normal;
+in vec2 unused_attr;
+
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform vec3 unusedColor;
+
+out vec3 vNormal;
+
+void main() {
+  gl_Position = modelMatrix * viewMatrix * vec4(position, 1.0);
+  vNormal = normal;
+}
+"#;
+    let result = parse_glsl_shader(source_str);
+    
+    // Parse the JSON result
+    let variables: GLSLShaderVariables = serde_json::from_str(&result).expect("Failed to parse JSON");
+    
+    // Check attributes
+    assert_eq!(variables.attributes.len(), 3);
+    assert_eq!(variables.attributes[0].name, "position");
+    assert_eq!(variables.attributes[0].active, true);
+    assert_eq!(variables.attributes[1].name, "normal");
+    assert_eq!(variables.attributes[1].active, true);
+    assert_eq!(variables.attributes[2].name, "unused_attr");
+    assert_eq!(variables.attributes[2].active, false);
+    
+    // Check uniforms
+    assert_eq!(variables.uniforms.len(), 3);
+    assert_eq!(variables.uniforms[0].name, "modelMatrix");
+    assert_eq!(variables.uniforms[0].active, true);
+    assert_eq!(variables.uniforms[1].name, "viewMatrix");
+    assert_eq!(variables.uniforms[1].active, true);
+    assert_eq!(variables.uniforms[2].name, "unusedColor");
+    assert_eq!(variables.uniforms[2].active, false);
   }
 }

@@ -77,22 +77,91 @@ namespace crates::webgl
    *     }
    *   )";
    *   
-   *   auto attributes = GLSLShaderAnalyzer::ParseAttributes(vertexShader);
-   *   for (const auto& attr : attributes) {
-   *     std::cout << attr.name << " at location " << attr.location << std::endl;
-   *   }
+   *   // Recommended: Parse both attributes and uniforms in a single call
+   *   std::vector<GLSLAttribute> attributes;
+   *   std::vector<GLSLUniform> uniforms;
+   *   GLSLShaderAnalyzer::Parse(vertexShader, attributes, uniforms);
    *   
+   *   // Or parse individually (deprecated, less efficient)
+   *   auto attributes = GLSLShaderAnalyzer::ParseAttributes(vertexShader);
    *   auto uniforms = GLSLShaderAnalyzer::ParseUniforms(vertexShader);
-   *   for (const auto& uniform : uniforms) {
-   *     std::cout << uniform.name << " (" << uniform.type_name << ")" << std::endl;
-   *   }
    * @endcode
    */
   class GLSLShaderAnalyzer
   {
   public:
     /**
+     * Parse GLSL shader source and extract both attributes and uniforms in a single pass.
+     * This is more efficient than calling ParseAttributes() and ParseUniforms() separately.
+     * 
+     * @param source The GLSL shader source code as a string.
+     * @param attributes Output vector to receive attribute metadata.
+     * @param uniforms Output vector to receive uniform metadata.
+     * @returns true if parsing succeeded, false otherwise.
+     */
+    static inline bool Parse(const std::string &source, 
+                             std::vector<GLSLAttribute> &attributes,
+                             std::vector<GLSLUniform> &uniforms)
+    {
+      auto json_str = holocron::webgl::parseGLSLShader(source.c_str());
+      
+      rapidjson::Document doc;
+      doc.Parse(std::string(json_str).c_str());
+
+      if (!doc.IsObject() || !doc.HasMember("attributes") || !doc.HasMember("uniforms"))
+      {
+        return false;
+      }
+
+      // Parse attributes
+      const auto &attrs = doc["attributes"];
+      if (attrs.IsArray())
+      {
+        attributes.clear();
+        attributes.reserve(attrs.Size());
+        for (rapidjson::SizeType i = 0; i < attrs.Size(); i++)
+        {
+          const auto &attr = attrs[i];
+          if (attr.IsObject() && attr.HasMember("name") && attr.HasMember("type") && 
+              attr.HasMember("size") && attr.HasMember("location") && attr.HasMember("active"))
+          {
+            attributes.push_back(GLSLAttribute{
+              attr["name"].GetString(),
+              attr["type"].GetUint(),
+              attr["size"].GetInt(),
+              attr["location"].GetInt(),
+              attr["active"].GetBool()});
+          }
+        }
+      }
+
+      // Parse uniforms
+      const auto &unifs = doc["uniforms"];
+      if (unifs.IsArray())
+      {
+        uniforms.clear();
+        uniforms.reserve(unifs.Size());
+        for (rapidjson::SizeType i = 0; i < unifs.Size(); i++)
+        {
+          const auto &uniform = unifs[i];
+          if (uniform.IsObject() && uniform.HasMember("name") && uniform.HasMember("type") && 
+              uniform.HasMember("size") && uniform.HasMember("active"))
+          {
+            uniforms.push_back(GLSLUniform{
+              uniform["name"].GetString(),
+              uniform["type"].GetUint(),
+              uniform["size"].GetInt(),
+              uniform["active"].GetBool()});
+          }
+        }
+      }
+
+      return true;
+    }
+
+    /**
      * Parse GLSL vertex shader source and extract all attribute declarations.
+     * @deprecated Use Parse() instead to get both attributes and uniforms in a single call.
      * 
      * @param source The GLSL vertex shader source code as a string.
      * @returns A vector of GLSLAttribute structs containing attribute metadata.
@@ -131,6 +200,7 @@ namespace crates::webgl
 
     /**
      * Parse GLSL shader source and extract all uniform declarations.
+     * @deprecated Use Parse() instead to get both attributes and uniforms in a single call.
      * 
      * @param source The GLSL shader source code as a string.
      * @returns A vector of GLSLUniform structs containing uniform metadata.
