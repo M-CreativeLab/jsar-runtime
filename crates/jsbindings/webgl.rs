@@ -153,24 +153,35 @@ pub struct GLSLAttribute {
   pub location: i32,
 }
 
-/// Parser for extracting vertex attributes from GLSL source code
-pub struct GLSLAttributeParser {
+/// Represents metadata about a uniform variable in GLSL
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GLSLUniform {
+  /// The name of the uniform (e.g., "modelViewMatrix", "lightColor")
+  pub name: String,
+  /// The GLSL type of the uniform (e.g., "mat4", "vec3", "sampler2D")
+  pub type_name: String,
+}
+
+/// Analyzer for extracting shader variables (attributes, uniforms) from GLSL source code
+pub struct GLSLShaderAnalyzer {
   attributes: Vec<GLSLAttribute>,
+  uniforms: Vec<GLSLUniform>,
   next_location: i32,
   referenced_names: std::collections::HashSet<String>,
 }
 
-impl GLSLAttributeParser {
-  /// Create a new parser
+impl GLSLShaderAnalyzer {
+  /// Create a new analyzer
   pub fn new() -> Self {
     Self {
       attributes: Vec::new(),
+      uniforms: Vec::new(),
       next_location: 0,
       referenced_names: std::collections::HashSet::new(),
     }
   }
 
-  /// Parse GLSL source and extract all attribute declarations
+  /// Parse GLSL source and extract all attribute and uniform declarations
   pub fn parse(&mut self, source: &str) -> Result<(), String> {
     use glsl_lang::{
       ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
@@ -192,12 +203,13 @@ impl GLSLAttributeParser {
     tu.visit(&mut ref_collector);
     self.referenced_names = ref_collector.referenced_names;
 
-    // Second pass: visit the AST to find attributes
+    // Second pass: visit the AST to find attributes and uniforms
     use glsl_lang::visitor::Host;
     tu.visit(self);
 
-    // Filter out unreferenced attributes (inactive attributes)
+    // Filter out unreferenced attributes and uniforms (inactive variables)
     self.attributes.retain(|attr| self.referenced_names.contains(&attr.name));
+    self.uniforms.retain(|uniform| self.referenced_names.contains(&uniform.name));
 
     Ok(())
   }
@@ -205,6 +217,11 @@ impl GLSLAttributeParser {
   /// Get the parsed attributes
   pub fn get_attributes(&self) -> &[GLSLAttribute] {
     &self.attributes
+  }
+
+  /// Get the parsed uniforms
+  pub fn get_uniforms(&self) -> &[GLSLUniform] {
+    &self.uniforms
   }
 
   /// Find attribute location by name
@@ -302,14 +319,27 @@ impl GLSLAttributeParser {
 
     (is_attribute, layout_location)
   }
+
+  /// Check if a declaration has a uniform qualifier
+  fn has_uniform_qualifier(&self, qualifiers: &[ast::TypeQualifierSpec]) -> bool {
+    for qualifier in qualifiers {
+      if let ast::TypeQualifierSpecData::Storage(storage) = &qualifier.content {
+        if let ast::StorageQualifierData::Uniform = &storage.content {
+          return true;
+        }
+      }
+    }
+    false
+  }
 }
 
-impl Visitor for GLSLAttributeParser {
+impl Visitor for GLSLShaderAnalyzer {
   fn visit_single_declaration(&mut self, declaration: &ast::SingleDeclaration) -> Visit {
-    // Check if this is an attribute declaration
+    // Check if this declaration has qualifiers
     if let Some(ref qualifier) = declaration.ty.qualifier {
       let (is_attribute, layout_location) =
         self.has_attribute_qualifier(&qualifier.content.qualifiers);
+      let is_uniform = self.has_uniform_qualifier(&qualifier.content.qualifiers);
 
       if is_attribute {
         if let Some(ref name) = declaration.name {
@@ -328,6 +358,16 @@ impl Visitor for GLSLAttributeParser {
             location,
           });
         }
+      } else if is_uniform {
+        if let Some(ref name) = declaration.name {
+          // Extract type name from the type specifier
+          let type_name = self.type_to_string(&declaration.ty.ty.ty);
+
+          self.uniforms.push(GLSLUniform {
+            name: name.content.0.to_string(),
+            type_name,
+          });
+        }
       }
     }
 
@@ -342,20 +382,37 @@ mod ffi {
     #[cxx_name = "patchGLSLSourceFromStr"]
     fn patch_glsl_source_from_str(input: &str) -> String;
 
-    /// Parse GLSL vertex shader source and extract attributes as JSON
+    /// Parse GLSL shader source and extract attributes as JSON
     #[cxx_name = "parseGLSLAttributes"]
     fn parse_glsl_attributes(source: &str) -> String;
+
+    /// Parse GLSL shader source and extract uniforms as JSON
+    #[cxx_name = "parseGLSLUniforms"]
+    fn parse_glsl_uniforms(source: &str) -> String;
   }
 }
 
 /// Parse GLSL source and return all attributes as JSON string
 fn parse_glsl_attributes(source: &str) -> String {
-  let mut parser = GLSLAttributeParser::new();
+  let mut analyzer = GLSLShaderAnalyzer::new();
   
-  match parser.parse(source) {
+  match analyzer.parse(source) {
     Ok(_) => {
-      let attributes = parser.get_attributes();
+      let attributes = analyzer.get_attributes();
       serde_json::to_string(attributes).unwrap_or_else(|_| "[]".to_string())
+    }
+    Err(_) => "[]".to_string(),
+  }
+}
+
+/// Parse GLSL source and return all uniforms as JSON string
+fn parse_glsl_uniforms(source: &str) -> String {
+  let mut analyzer = GLSLShaderAnalyzer::new();
+  
+  match analyzer.parse(source) {
+    Ok(_) => {
+      let uniforms = analyzer.get_uniforms();
+      serde_json::to_string(uniforms).unwrap_or_else(|_| "[]".to_string())
     }
     Err(_) => "[]".to_string(),
   }
@@ -491,7 +548,7 @@ void main() {
   vUv = uv;
 }
 "#;
-    let mut parser = GLSLAttributeParser::new();
+    let mut parser = GLSLShaderAnalyzer::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
 
     let attributes = parser.get_attributes();
@@ -532,7 +589,7 @@ void main() {
   vTexCoord = aTexCoord;
 }
 "#;
-    let mut parser = GLSLAttributeParser::new();
+    let mut parser = GLSLShaderAnalyzer::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
 
     let attributes = parser.get_attributes();
@@ -569,7 +626,7 @@ void main() {
   vTexCoord = texCoord;
 }
 "#;
-    let mut parser = GLSLAttributeParser::new();
+    let mut parser = GLSLShaderAnalyzer::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
 
     let attributes = parser.get_attributes();
@@ -602,7 +659,7 @@ void main() {
   vUv = uv;
 }
 "#;
-    let mut parser = GLSLAttributeParser::new();
+    let mut parser = GLSLShaderAnalyzer::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
 
     assert_eq!(parser.get_attrib_location("position"), Some(0));
@@ -649,7 +706,7 @@ void main() {
   vNormal = normal;
 }
 "#;
-    let mut parser = GLSLAttributeParser::new();
+    let mut parser = GLSLShaderAnalyzer::new();
     parser.parse(source_str).expect("Failed to parse GLSL");
     
     let attributes = parser.get_attributes();
@@ -660,5 +717,91 @@ void main() {
     
     // unused_attr should not be found
     assert_eq!(parser.get_attrib_location("unused_attr"), None);
+  }
+
+  #[test]
+  fn test_parse_glsl_uniforms_basic() {
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+in vec3 position;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec3 lightPosition;
+
+out vec3 vPosition;
+
+void main() {
+  vec4 worldPos = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * worldPos;
+  vPosition = lightPosition;
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse GLSL");
+
+    let uniforms = analyzer.get_uniforms();
+    assert_eq!(uniforms.len(), 3);
+
+    assert_eq!(uniforms[0].name, "modelViewMatrix");
+    assert_eq!(uniforms[0].type_name, "mat4");
+
+    assert_eq!(uniforms[1].name, "projectionMatrix");
+    assert_eq!(uniforms[1].type_name, "mat4");
+
+    assert_eq!(uniforms[2].name, "lightPosition");
+    assert_eq!(uniforms[2].type_name, "vec3");
+  }
+
+  #[test]
+  fn test_parse_glsl_uniforms_filters_inactive() {
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+in vec3 position;
+uniform mat4 mvpMatrix;
+uniform vec3 unusedColor;
+uniform float unusedScale;
+
+void main() {
+  gl_Position = mvpMatrix * vec4(position, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse GLSL");
+
+    let uniforms = analyzer.get_uniforms();
+    // Only mvpMatrix should be returned, unusedColor and unusedScale are not referenced
+    assert_eq!(uniforms.len(), 1);
+    assert_eq!(uniforms[0].name, "mvpMatrix");
+    assert_eq!(uniforms[0].type_name, "mat4");
+  }
+
+  #[test]
+  fn test_parse_glsl_uniforms_ffi() {
+    let source_str = r#"
+#version 300 es
+in vec3 position;
+uniform mat4 transform;
+uniform vec4 color;
+
+out vec4 vColor;
+
+void main() {
+  gl_Position = transform * vec4(position, 1.0);
+  vColor = color;
+}
+"#;
+    let result = parse_glsl_uniforms(source_str);
+    
+    // Parse the JSON result
+    let uniforms: Vec<GLSLUniform> = serde_json::from_str(&result).expect("Failed to parse JSON");
+    assert_eq!(uniforms.len(), 2);
+    assert_eq!(uniforms[0].name, "transform");
+    assert_eq!(uniforms[0].type_name, "mat4");
+    assert_eq!(uniforms[1].name, "color");
+    assert_eq!(uniforms[1].type_name, "vec4");
   }
 }

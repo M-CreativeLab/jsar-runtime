@@ -1,29 +1,30 @@
-# GLSL Attribute Parser
+# GLSL Shader Analyzer
 
-This document describes the GLSL attribute parser implementation in JSAR Runtime, which allows parsing vertex shader source code to extract attribute metadata.
+This document describes the GLSL shader analyzer implementation in JSAR Runtime, which allows parsing GLSL shader source code to extract variable metadata (attributes and uniforms).
 
 ## Overview
 
-The GLSL attribute parser uses the [glsl-lang](https://github.com/alixinne/glsl-lang) Rust crate to parse GLSL vertex shaders and extract information about vertex attributes (their names, types, and locations). This information is exposed to C++ via FFI for use in WebGL shader/program management.
+The GLSL shader analyzer uses the [glsl-lang](https://github.com/alixinne/glsl-lang) Rust crate to parse GLSL shaders and extract information about vertex attributes (their names, types, and locations) and uniforms (their names and types). This information is exposed to C++ via FFI for use in WebGL shader/program management.
 
 ## Features
 
-- ✅ Supports GLSL 100 ES (`attribute` keyword) and GLSL 300 ES (`in` keyword)
-- ✅ Handles explicit `layout(location = N)` qualifiers
-- ✅ Auto-assigns locations based on declaration order when not explicitly specified
-- ✅ **Filters out inactive attributes** - only returns attributes that are actually referenced in the shader
+- ✅ **Attribute parsing**: Supports GLSL 100 ES (`attribute` keyword) and GLSL 300 ES (`in` keyword)
+- ✅ **Uniform parsing**: Extracts uniform variable declarations from shaders
+- ✅ Handles explicit `layout(location = N)` qualifiers for attributes
+- ✅ Auto-assigns attribute locations based on declaration order when not explicitly specified
+- ✅ **Filters out inactive variables** - only returns attributes and uniforms that are actually referenced in the shader
 - ✅ Compatible with WebGL 1.0 and WebGL 2.0 shaders
-- ✅ Full FFI interface for C++ integration
+- ✅ Full FFI interface for C++ integration with JSON-based data exchange
 
-## Important: Active Attribute Filtering
+## Important: Active Variable Filtering
 
-The parser implements WebGL's "active attribute" behavior: **only attributes that are actually referenced in the shader code are returned**. This matches the behavior of WebGL's `getActiveAttrib()` function.
+The analyzer implements WebGL's "active variable" behavior: **only variables that are actually referenced in the shader code are returned**. This matches the behavior of WebGL's `getActiveAttrib()` and `getActiveUniform()` functions.
 
-An attribute is considered "active" if it is:
-- Declared as an `attribute` (GLSL 100 ES) or `in` (GLSL 300 ES) variable
+A variable (attribute or uniform) is considered "active" if it is:
+- Declared with the appropriate qualifier (`attribute`, `in`, or `uniform`)
 - Referenced somewhere in the shader code (e.g., used in calculations, assigned to outputs, etc.)
 
-Attributes that are declared but never used will be automatically filtered out, as they would be optimized away by the shader compiler.
+Variables that are declared but never used will be automatically filtered out, as they would be optimized away by the shader compiler.
 
 ## Rust API
 
@@ -37,8 +38,14 @@ pub struct GLSLAttribute {
   pub location: i32,     // Assigned location (0-based index)
 }
 
-/// Parser for extracting vertex attributes from GLSL source code
-pub struct GLSLAttributeParser {
+/// Represents metadata about a uniform variable in GLSL
+pub struct GLSLUniform {
+  pub name: String,      // Uniform name (e.g., "modelViewMatrix", "lightColor")
+  pub type_name: String, // GLSL type (e.g., "mat4", "vec3", "sampler2D")
+}
+
+/// Analyzer for extracting shader variables from GLSL source code
+pub struct GLSLShaderAnalyzer {
   // ...
 }
 ```
@@ -46,15 +53,18 @@ pub struct GLSLAttributeParser {
 ### Methods
 
 ```rust
-impl GLSLAttributeParser {
-  /// Create a new parser
+impl GLSLShaderAnalyzer {
+  /// Create a new analyzer
   pub fn new() -> Self;
   
-  /// Parse GLSL source and extract all attribute declarations
+  /// Parse GLSL source and extract all attribute and uniform declarations
   pub fn parse(&mut self, source: &str) -> Result<(), String>;
   
   /// Get the parsed attributes
   pub fn get_attributes(&self) -> &[GLSLAttribute];
+  
+  /// Get the parsed uniforms
+  pub fn get_uniforms(&self) -> &[GLSLUniform];
   
   /// Find attribute location by name
   pub fn get_attrib_location(&self, name: &str) -> Option<i32>;
@@ -64,8 +74,11 @@ impl GLSLAttributeParser {
 ### FFI Functions
 
 ```rust
-/// Parse GLSL source and return all attributes
-fn parse_glsl_attributes(source: &str) -> Result<GLSLAttributeList, String>;
+/// Parse GLSL source and return all attributes as JSON string
+fn parse_glsl_attributes(source: &str) -> String;
+
+/// Parse GLSL source and return all uniforms as JSON string
+fn parse_glsl_uniforms(source: &str) -> String;
 
 /// Get attribute location by name
 fn get_glsl_attrib_location(source: &str, name: &str) -> Result<i32, String>;
@@ -88,17 +101,25 @@ namespace crates::webgl {
     std::string type_name; // Attribute type
     int32_t location;      // Attribute location
   };
+  
+  struct GLSLUniform {
+    std::string name;      // Uniform name
+    std::string type_name; // Uniform type
+  };
 }
 ```
 
-### GLSLAttributeParser Class
+### GLSLShaderAnalyzer Class
 
 ```cpp
 namespace crates::webgl {
-  class GLSLAttributeParser {
+  class GLSLShaderAnalyzer {
   public:
-    /// Parse GLSL vertex shader source and extract all attribute declarations
+    /// Parse GLSL shader source and extract all attribute declarations
     static std::vector<GLSLAttribute> ParseAttributes(const std::string &source);
+    
+    /// Parse GLSL shader source and extract all uniform declarations
+    static std::vector<GLSLUniform> ParseUniforms(const std::string &source);
     
     /// Get the location of a specific attribute by name
     static std::optional<int32_t> GetAttribLocation(const std::string &source, 
@@ -139,7 +160,7 @@ std::string vertexShader = R"(
 )";
 
 // Parse all attributes
-auto attributes = crates::webgl::GLSLAttributeParser::ParseAttributes(vertexShader);
+auto attributes = crates::webgl::GLSLShaderAnalyzer::ParseAttributes(vertexShader);
 
 std::cout << "Found " << attributes.size() << " active attributes:" << std::endl;
 for (const auto& attr : attributes) {
@@ -172,7 +193,7 @@ std::string vertexShader = R"(
 )";
 
 // Get location of a specific attribute
-auto location = crates::webgl::GLSLAttributeParser::GetAttribLocation(vertexShader, "aPos");
+auto location = crates::webgl::GLSLShaderAnalyzer::GetAttribLocation(vertexShader, "aPos");
 
 if (location.has_value()) {
   std::cout << "aPos is at location " << location.value() << std::endl;
@@ -183,7 +204,49 @@ if (location.has_value()) {
 // Output: aPos is at location 0
 ```
 
-#### Example 3: Integration with WebGL Program
+#### Example 3: Parse Uniforms
+
+```cpp
+#include <crates/bindings.webgl.hpp>
+#include <iostream>
+
+std::string vertexShader = R"(
+  #version 300 es
+  in vec3 position;
+  in vec3 normal;
+  
+  uniform mat4 modelMatrix;
+  uniform mat4 viewMatrix;
+  uniform mat4 projectionMatrix;
+  uniform vec3 lightPosition;
+  
+  out vec3 vNormal;
+  
+  void main() {
+    mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
+    gl_Position = mvpMatrix * vec4(position, 1.0);
+    vNormal = normal;
+    vec3 light = lightPosition; // Use lightPosition
+  }
+)";
+
+// Parse all uniforms
+auto uniforms = crates::webgl::GLSLShaderAnalyzer::ParseUniforms(vertexShader);
+
+std::cout << "Found " << uniforms.size() << " active uniforms:" << std::endl;
+for (const auto& uniform : uniforms) {
+  std::cout << "  - " << uniform.name << " (" << uniform.type_name << ")" << std::endl;
+}
+
+// Output:
+// Found 4 active uniforms:
+//   - modelMatrix (mat4)
+//   - viewMatrix (mat4)
+//   - projectionMatrix (mat4)
+//   - lightPosition (vec3)
+```
+
+#### Example 4: Integration with WebGL Program
 
 ```cpp
 #include <crates/bindings.webgl.hpp>
@@ -193,7 +256,7 @@ void setupWebGLProgram(client_graphics::WebGLProgram* program,
                        const std::string& vertexShaderSource) {
   try {
     // Parse attributes from shader source
-    auto attributes = crates::webgl::GLSLAttributeParser::ParseAttributes(vertexShaderSource);
+    auto attributes = crates::webgl::GLSLShaderAnalyzer::ParseAttributes(vertexShaderSource);
     
     // Set attribute locations in the program
     for (const auto& attr : attributes) {
@@ -230,7 +293,7 @@ std::string vertexShader = R"(
 )";
 
 // Parse attributes - only active (referenced) attributes are returned
-auto attributes = crates::webgl::GLSLAttributeParser::ParseAttributes(vertexShader);
+auto attributes = crates::webgl::GLSLShaderAnalyzer::ParseAttributes(vertexShader);
 
 // Only 2 attributes will be returned: position and normal
 // unused_texcoord is filtered out because it's never referenced
@@ -244,7 +307,7 @@ for (const auto& attr : attributes) {
 //   - normal
 
 // Trying to get location of inactive attribute returns nullopt
-auto loc = crates::webgl::GLSLAttributeParser::GetAttribLocation(vertexShader, "unused_texcoord");
+auto loc = crates::webgl::GLSLShaderAnalyzer::GetAttribLocation(vertexShader, "unused_texcoord");
 if (!loc.has_value()) {
   std::cout << "unused_texcoord is not an active attribute" << std::endl;
 }
@@ -255,7 +318,7 @@ if (!loc.has_value()) {
 #### Example 1: Direct Parser Usage
 
 ```rust
-use crate::webgl::GLSLAttributeParser;
+use crate::webgl::GLSLShaderAnalyzer;
 
 let shader_source = r#"
   #version 300 es
@@ -270,7 +333,7 @@ let shader_source = r#"
   }
 "#;
 
-let mut parser = GLSLAttributeParser::new();
+let mut parser = GLSLShaderAnalyzer::new();
 parser.parse(shader_source).expect("Failed to parse shader");
 
 for attr in parser.get_attributes() {

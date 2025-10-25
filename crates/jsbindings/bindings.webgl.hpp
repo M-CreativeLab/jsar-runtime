@@ -40,15 +40,25 @@ namespace crates::webgl
   };
 
   /**
-   * GLSLAttributeParser parses vertex shader source code to extract attribute information.
+   * Represents a GLSL uniform variable.
+   */
+  struct GLSLUniform
+  {
+    std::string name;      ///< Uniform name (e.g., "modelViewMatrix", "lightColor")
+    std::string type_name; ///< Uniform type (e.g., "mat4", "vec3", "sampler2D")
+  };
+
+  /**
+   * GLSLShaderAnalyzer parses GLSL shader source code to extract variable information.
    * 
-   * This class provides a convenient C++ interface to parse GLSL vertex shaders and
-   * extract all attribute declarations, including their names, types, and assigned locations.
+   * This class provides a convenient C++ interface to parse GLSL shaders and
+   * extract all attribute and uniform declarations, including their names, types, and locations.
    * 
    * Features:
    * - Supports both GLSL 100 ES (attribute) and GLSL 300 ES (in) qualifiers
    * - Handles explicit layout(location = N) qualifiers
    * - Auto-assigns locations based on declaration order when not explicitly specified
+   * - Filters out inactive (unreferenced) attributes and uniforms
    * - Compatible with WebGL 1.0 and WebGL 2.0 shaders
    * 
    * Example usage:
@@ -57,24 +67,24 @@ namespace crates::webgl
    *     #version 300 es
    *     in vec3 position;
    *     in vec3 normal;
+   *     uniform mat4 mvpMatrix;
    *     void main() {
-   *       gl_Position = vec4(position, 1.0);
+   *       gl_Position = mvpMatrix * vec4(position, 1.0);
    *     }
    *   )";
    *   
-   *   auto attributes = GLSLAttributeParser::ParseAttributes(vertexShader);
+   *   auto attributes = GLSLShaderAnalyzer::ParseAttributes(vertexShader);
    *   for (const auto& attr : attributes) {
    *     std::cout << attr.name << " at location " << attr.location << std::endl;
    *   }
    *   
-   *   // Or get a specific attribute location
-   *   auto location = GLSLAttributeParser::GetAttribLocation(vertexShader, "position");
-   *   if (location.has_value()) {
-   *     std::cout << "position is at location " << location.value() << std::endl;
+   *   auto uniforms = GLSLShaderAnalyzer::ParseUniforms(vertexShader);
+   *   for (const auto& uniform : uniforms) {
+   *     std::cout << uniform.name << " (" << uniform.type_name << ")" << std::endl;
    *   }
    * @endcode
    */
-  class GLSLAttributeParser
+  class GLSLShaderAnalyzer
   {
   public:
     /**
@@ -110,6 +120,40 @@ namespace crates::webgl
       }
 
       return attributes;
+    }
+
+    /**
+     * Parse GLSL shader source and extract all uniform declarations.
+     * 
+     * @param source The GLSL shader source code as a string.
+     * @returns A vector of GLSLUniform structs containing uniform metadata.
+     */
+    static inline std::vector<GLSLUniform> ParseUniforms(const std::string &source)
+    {
+      auto json_str = holocron::webgl::parseGLSLUniforms(source.c_str());
+      std::vector<GLSLUniform> uniforms;
+
+      rapidjson::Document doc;
+      doc.Parse(std::string(json_str).c_str());
+
+      if (!doc.IsArray())
+      {
+        return uniforms;
+      }
+
+      uniforms.reserve(doc.Size());
+      for (rapidjson::SizeType i = 0; i < doc.Size(); i++)
+      {
+        const auto &uniform = doc[i];
+        if (uniform.IsObject() && uniform.HasMember("name") && uniform.HasMember("type_name"))
+        {
+          uniforms.push_back(GLSLUniform{
+            uniform["name"].GetString(),
+            uniform["type_name"].GetString()});
+        }
+      }
+
+      return uniforms;
     }
 
     /**
