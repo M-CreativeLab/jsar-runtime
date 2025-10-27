@@ -32,11 +32,12 @@ namespace endor
       if (!vertexShader_ || !fragmentShader_)
         throw runtime_error("Cannot link program without both vertex and fragment shaders.");
 
-      string shaderSource = vertexShader_->source;
       vector<crates::webgl::GLSLAttribute> attribsInfo;
       vector<crates::webgl::GLSLUniform> uniformsInfo;
 
-      if (!crates::webgl::GLSLShaderAnalyzer::Parse(shaderSource, attribsInfo, uniformsInfo, true))
+      cerr << "Vertex Shader Source:\n"
+           << vertexShader_->source << endl;
+      if (!crates::webgl::GLSLShaderAnalyzer::Parse(vertexShader_->source, attribsInfo, uniformsInfo, true))
       {
         throw runtime_error("Failed to parse vertex shader source for attribute info.");
       }
@@ -45,6 +46,8 @@ namespace endor
         vector<crates::webgl::GLSLAttribute> attribsInfo;
         vector<crates::webgl::GLSLUniform> fragment_uniformsInfo;
 
+        cerr << "Fragment Shader Source:\n"
+             << fragmentShader_->source << endl;
         if (!crates::webgl::GLSLShaderAnalyzer::Parse(fragmentShader_->source, attribsInfo, fragment_uniformsInfo, true))
         {
           throw runtime_error("Failed to parse fragment shader source for uniform info.");
@@ -114,11 +117,6 @@ namespace endor
 
       loc = 0;
       activeIndex = 0;
-
-      cerr << "Vertex Shader Source:\n"
-           << vertexShader_->source << endl;
-      cerr << "Fragment Shader Source:\n"
-           << fragmentShader_->source << endl;
 
       for (const auto &uniform : uniformsInfo)
       {
