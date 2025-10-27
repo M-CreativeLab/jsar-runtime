@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <iostream>
-#include <limits>
 #include <crates/bindings.hpp>
 #include <client/dom/document.hpp>
 #include <client/dom/browsing_context.hpp>
