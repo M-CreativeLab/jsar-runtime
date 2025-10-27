@@ -36,9 +36,30 @@ namespace endor
       vector<crates::webgl::GLSLAttribute> attribsInfo;
       vector<crates::webgl::GLSLUniform> uniformsInfo;
 
-      if (!crates::webgl::GLSLShaderAnalyzer::Parse(shaderSource, attribsInfo, uniformsInfo))
+      if (!crates::webgl::GLSLShaderAnalyzer::Parse(shaderSource, attribsInfo, uniformsInfo, true))
       {
         throw runtime_error("Failed to parse vertex shader source for attribute info.");
+      }
+
+      {
+        vector<crates::webgl::GLSLAttribute> attribsInfo;
+        vector<crates::webgl::GLSLUniform> fragment_uniformsInfo;
+
+        if (!crates::webgl::GLSLShaderAnalyzer::Parse(fragmentShader_->source, attribsInfo, fragment_uniformsInfo, true))
+        {
+          throw runtime_error("Failed to parse fragment shader source for uniform info.");
+        }
+
+        for (const auto &uniform : fragment_uniformsInfo)
+        {
+          // Avoid duplicates
+          auto it = std::find_if(uniformsInfo.begin(), uniformsInfo.end(), [&uniform](const crates::webgl::GLSLUniform &u)
+                                 { return u.name == uniform.name; });
+          if (it == uniformsInfo.end())
+          {
+            uniformsInfo.push_back(uniform);
+          }
+        }
       }
 
       int loc = 0;
@@ -94,15 +115,23 @@ namespace endor
       loc = 0;
       activeIndex = 0;
 
+      cerr << "Vertex Shader Source:\n"
+           << vertexShader_->source << endl;
+      cerr << "Fragment Shader Source:\n"
+           << fragmentShader_->source << endl;
+
       for (const auto &uniform : uniformsInfo)
       {
-        cerr << "Uniform: " << uniform.name << ", type: " << uniform.type << ", size: " << uniform.size << ", active: " << (uniform.active ? "true" : "false") << endl;
-
         uniformLocations_[uniform.name] = WebGLUniformLocation(id,
                                                                uniform.active ? loc : -1,
                                                                uniform.name);
-        if (uniform.active)
+        if (uniform.active || true)
         {
+          string name = uniform.name;
+          if (uniform.size > 1)
+            name += "[0]";
+          cerr << "Uniform[" << activeIndex << "]: (" << name << "), type: " << uniform.type << ", size: " << uniform.size << ", active: " << (uniform.active ? "true" : "false") << endl;
+
           activeUniforms_[activeIndex] = WebGLActiveInfo(uniform.name, uniform.size, uniform.type);
           activeIndex += 1;
         }
