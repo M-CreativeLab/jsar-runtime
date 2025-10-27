@@ -142,6 +142,17 @@ impl ReferenceCollector {
   
   /// Track a reference, expanding through variable aliases
   fn track_reference(&mut self, var_name: String) {
+    self.track_reference_internal(var_name, &mut std::collections::HashSet::new());
+  }
+  
+  /// Internal helper that tracks visited variables to prevent infinite recursion
+  fn track_reference_internal(&mut self, var_name: String, visited: &mut std::collections::HashSet<String>) {
+    // Prevent infinite recursion from circular aliases
+    if visited.contains(&var_name) {
+      return;
+    }
+    visited.insert(var_name.clone());
+    
     self.referenced_names.insert(var_name.clone());
     
     // Check if this is a field access on an aliased variable (e.g., local_foo.f1 -> foo[0].f1)
@@ -153,14 +164,14 @@ impl ReferenceCollector {
       if let Some(sources) = self.variable_aliases.get(base_var).cloned() {
         for source in sources {
           let expanded = format!("{}{}", source, field_path);
-          self.track_reference(expanded);
+          self.track_reference_internal(expanded, visited);
         }
       }
     } else {
       // Simple variable reference - check for aliases
       if let Some(sources) = self.variable_aliases.get(&var_name).cloned() {
         for source in sources {
-          self.track_reference(source);
+          self.track_reference_internal(source, visited);
         }
       }
     }
@@ -314,10 +325,10 @@ impl ReferenceCollector {
         self.collect_var_names(if_true, vars);
         self.collect_var_names(if_false, vars);
       }
-      ast::ExprData::Assignment(lhs, _, rhs) => {
-        self.collect_var_names(lhs, vars);
-        self.collect_var_names(rhs, vars);
-      }
+      // Note: Assignment is intentionally NOT handled here to avoid infinite recursion.
+      // Assignments are handled specially in visit_expr() to track variable aliases.
+      // If we recursively process assignments here, it creates a loop since visit_expr
+      // calls extract_all_var_names which calls this function.
       ast::ExprData::FunCall(_, args) => {
         for arg in args {
           self.collect_var_names(arg, vars);
@@ -1816,5 +1827,37 @@ void main() {
     let foo1_f2 = uniforms.iter().find(|u| u.name == "foo[1].f2");
     assert!(foo1_f2.is_some());
     assert_eq!(foo1_f2.unwrap().active, false, "foo[1].f2 should be inactive");
+  }
+
+  #[test]
+  fn test_parse_glsl_no_stack_overflow_on_reassignment() {
+    // This test verifies the fix for the stack overflow bug where
+    // reassignments like "transformedPos = normalMatrix * transformedPos"
+    // caused infinite recursion in collect_var_names
+    let source_str = r#"
+in vec3 position;
+uniform mat3 normalMatrix;
+
+void main() {
+    vec3 transformedPos = position;
+    transformedPos = normalMatrix * transformedPos;
+    gl_Position = vec4(transformedPos, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    // This should not cause a stack overflow
+    analyzer.parse(source_str).expect("Failed to parse shader with reassignment");
+    
+    // Verify that the uniform is correctly marked as active
+    let uniforms = analyzer.get_uniforms();
+    assert_eq!(uniforms.len(), 1);
+    assert_eq!(uniforms[0].name, "normalMatrix");
+    assert_eq!(uniforms[0].active, true, "normalMatrix should be active");
+    
+    // Verify that the attribute is correctly found
+    let attributes = analyzer.get_attributes();
+    assert_eq!(attributes.len(), 1);
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[0].active, true, "position should be active");
   }
 }
