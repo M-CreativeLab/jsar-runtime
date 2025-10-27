@@ -37,42 +37,42 @@ namespace endor
         return true;
       }
 
-    // Attribute is not set (default), an empty string, or a JavaScript MIME type indicates a "classic script".
-    inline bool isClassicScript()
-    {
-      return type.empty() ||
-             type == "text/javascript" ||
-             type == "application/javascript";
-    }
-    inline bool isModuleScript()
-    {
-      return type == "module";
-    }
-    inline bool isImportMap()
-    {
-      return type == "importmap";
-    }
-    inline void setAsync(bool value)
-    {
-      async = value;
-      if (async == true)
-        setAttribute("async", "async");
-      else
-        removeAttribute("async");
-    }
-    inline void setSrc(const string &value)
-    {
-      src = value;
-      setAttribute("src", value);
-    }
-    inline void setText(const string &value)
-    {
-      setTextContent(value);
-    }
-    inline string getText() const
-    {
-      return textContent();
-    }
+      // Attribute is not set (default), an empty string, or a JavaScript MIME type indicates a "classic script".
+      inline bool isClassicScript()
+      {
+        return type.empty() ||
+               type == "text/javascript" ||
+               type == "application/javascript";
+      }
+      inline bool isModuleScript()
+      {
+        return type == "module";
+      }
+      inline bool isImportMap()
+      {
+        return type == "importmap";
+      }
+      inline void setAsync(bool value)
+      {
+        async = value;
+        if (async == true)
+          setAttribute("async", "async");
+        else
+          removeAttribute("async");
+      }
+      inline void setSrc(const string &value)
+      {
+        src = value;
+        setAttribute("src", value);
+      }
+      inline void setText(const string &value)
+      {
+        setTextContent(value);
+      }
+      inline string getText() const
+      {
+        return textContent();
+      }
 
     protected:
       void createdCallback(bool from_scripting) override;
