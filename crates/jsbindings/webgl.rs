@@ -125,6 +125,9 @@ struct ReferenceCollector {
   /// Track if gl_InstanceID or gl_VertexID are used
   uses_gl_instance_id: bool,
   uses_gl_vertex_id: bool,
+  /// Track local variable assignments: local_var -> source_var
+  /// For example, when we see "local_foo = foo[0]", we store "local_foo" -> "foo[0]"
+  variable_aliases: std::collections::HashMap<String, Vec<String>>,
 }
 
 impl ReferenceCollector {
@@ -133,6 +136,33 @@ impl ReferenceCollector {
       referenced_names: std::collections::HashSet::new(),
       uses_gl_instance_id: false,
       uses_gl_vertex_id: false,
+      variable_aliases: std::collections::HashMap::new(),
+    }
+  }
+  
+  /// Track a reference, expanding through variable aliases
+  fn track_reference(&mut self, var_name: String) {
+    self.referenced_names.insert(var_name.clone());
+    
+    // Check if this is a field access on an aliased variable (e.g., local_foo.f1 -> foo[0].f1)
+    if let Some(dot_pos) = var_name.find('.') {
+      let base_var = &var_name[..dot_pos];
+      let field_path = &var_name[dot_pos..]; // includes the dot
+      
+      // If the base variable has aliases, track the expanded names
+      if let Some(sources) = self.variable_aliases.get(base_var).cloned() {
+        for source in sources {
+          let expanded = format!("{}{}", source, field_path);
+          self.track_reference(expanded);
+        }
+      }
+    } else {
+      // Simple variable reference - check for aliases
+      if let Some(sources) = self.variable_aliases.get(&var_name).cloned() {
+        for source in sources {
+          self.track_reference(source);
+        }
+      }
     }
   }
 }
@@ -151,13 +181,13 @@ impl Visitor for ReferenceCollector {
           self.uses_gl_vertex_id = true;
         }
         
-        self.referenced_names.insert(var_name);
+        self.track_reference(var_name);
       }
       // Field access: uniform.field or uniform[0].field
       ast::ExprData::Dot(base_expr, field_ident) => {
         // Build the full path for struct member access
         let full_path = self.build_member_path(base_expr, &field_ident.content.0);
-        self.referenced_names.insert(full_path);
+        self.track_reference(full_path);
       }
       // Array access: uniform[0]
       ast::ExprData::Bracket(base_expr, index_expr) => {
@@ -172,7 +202,20 @@ impl Visitor for ReferenceCollector {
         
         if let ast::ExprData::Variable(ident) = &base_expr.content {
           let full_name = format!("{}{}", ident.content.0, index_str);
-          self.referenced_names.insert(full_name);
+          self.track_reference(full_name);
+        }
+      }
+      // Assignment: track variable aliases (local_var = uniform_var)
+      ast::ExprData::Assignment(lhs, _, rhs) => {
+        // Extract the left-hand side variable name
+        let lhs_name = self.extract_var_name(lhs);
+        // Extract all variables referenced on the right-hand side
+        let rhs_vars = self.extract_all_var_names(rhs);
+        
+        if let Some(lhs_var) = lhs_name {
+          if !rhs_vars.is_empty() {
+            self.variable_aliases.insert(lhs_var, rhs_vars);
+          }
         }
       }
       _ => {}
@@ -216,6 +259,71 @@ impl ReferenceCollector {
         self.build_member_path(base, &field.content.0)
       }
       _ => String::new(),
+    }
+  }
+  
+  /// Extract the variable name from an expression (for LHS of assignments)
+  fn extract_var_name(&self, expr: &ast::Expr) -> Option<String> {
+    match &expr.content {
+      ast::ExprData::Variable(ident) => Some(ident.content.0.to_string()),
+      _ => None,
+    }
+  }
+  
+  /// Extract all variable names referenced in an expression (for RHS of assignments)
+  fn extract_all_var_names(&self, expr: &ast::Expr) -> Vec<String> {
+    let mut vars = Vec::new();
+    self.collect_var_names(expr, &mut vars);
+    vars
+  }
+  
+  /// Recursively collect all variable names from an expression
+  fn collect_var_names(&self, expr: &ast::Expr, vars: &mut Vec<String>) {
+    match &expr.content {
+      ast::ExprData::Variable(ident) => {
+        vars.push(ident.content.0.to_string());
+      }
+      ast::ExprData::Bracket(base_expr, index_expr) => {
+        // For array access like foo[0], build the full name
+        if let ast::ExprData::Variable(ident) = &base_expr.content {
+          let index_str = if let ast::ExprData::IntConst(val) = &index_expr.content {
+            format!("[{}]", val)
+          } else {
+            "[0]".to_string()
+          };
+          vars.push(format!("{}{}", ident.content.0, index_str));
+        } else {
+          self.collect_var_names(base_expr, vars);
+        }
+        self.collect_var_names(index_expr, vars);
+      }
+      ast::ExprData::Dot(base_expr, field) => {
+        // For field access like foo.bar, build the full path
+        let full_path = self.build_member_path(base_expr, &field.content.0);
+        vars.push(full_path);
+      }
+      ast::ExprData::Unary(_, operand) => {
+        self.collect_var_names(operand, vars);
+      }
+      ast::ExprData::Binary(_, lhs, rhs) => {
+        self.collect_var_names(lhs, vars);
+        self.collect_var_names(rhs, vars);
+      }
+      ast::ExprData::Ternary(cond, if_true, if_false) => {
+        self.collect_var_names(cond, vars);
+        self.collect_var_names(if_true, vars);
+        self.collect_var_names(if_false, vars);
+      }
+      ast::ExprData::Assignment(lhs, _, rhs) => {
+        self.collect_var_names(lhs, vars);
+        self.collect_var_names(rhs, vars);
+      }
+      ast::ExprData::FunCall(_, args) => {
+        for arg in args {
+          self.collect_var_names(arg, vars);
+        }
+      }
+      _ => {}
     }
   }
 }
@@ -516,24 +624,32 @@ impl GLSLShaderAnalyzer {
 
   /// Expand a struct uniform into its individual members
   /// Returns a list of (name, gl_type, size) tuples
+  /// 
+  /// # Arguments
+  /// * `base_name` - The base name of the uniform
+  /// * `struct_name` - The name of the struct type
+  /// * `array_size` - The size of the array
+  /// * `is_array_decl` - Whether this was declared as an array (even if size is 1)
   fn expand_struct_uniform(
     &self,
     base_name: &str,
     struct_name: &str,
     array_size: i32,
+    is_array_decl: bool,
   ) -> Vec<(String, u32, i32)> {
     let mut expanded = Vec::new();
     
     if let Some(fields) = self.struct_definitions.get(struct_name) {
-      if array_size > 1 {
+      if is_array_decl {
         // Array of structs: expand as uniformName[i].field
+        // Note: even for single-element arrays (declared as [1]), we use [0] notation
         for i in 0..array_size {
           for field in fields {
             let member_name = format!("{}[{}].{}", base_name, i, field.name);
             if field.is_struct {
               if let Some(ref nested_struct) = field.struct_name {
-                // Recursively expand nested structs
-                let nested = self.expand_struct_uniform(&member_name, nested_struct, 1);
+                // Recursively expand nested structs (nested structs are not arrays)
+                let nested = self.expand_struct_uniform(&member_name, nested_struct, 1, false);
                 expanded.extend(nested);
               }
             } else {
@@ -542,13 +658,13 @@ impl GLSLShaderAnalyzer {
           }
         }
       } else {
-        // Single struct: expand as uniformName.field
+        // Non-array struct: expand as uniformName.field
         for field in fields {
           let member_name = format!("{}.{}", base_name, field.name);
           if field.is_struct {
             if let Some(ref nested_struct) = field.struct_name {
               // Recursively expand nested structs
-              let nested = self.expand_struct_uniform(&member_name, nested_struct, 1);
+              let nested = self.expand_struct_uniform(&member_name, nested_struct, 1, false);
               expanded.extend(nested);
             }
           } else {
@@ -559,6 +675,11 @@ impl GLSLShaderAnalyzer {
     }
     
     expanded
+  }
+
+  /// Check if declaration has an array specifier (even if size is 1)
+  fn is_array(&self, array_specifier: &Option<ast::ArraySpecifier>) -> bool {
+    array_specifier.is_some()
   }
 
   /// Extract array size from array specifier if present
@@ -666,11 +787,12 @@ impl Visitor for GLSLShaderAnalyzer {
           
           // Check if this is a struct type
           if let Some(struct_name) = self.is_struct_type(&declaration.ty.ty.ty) {
-            // Get array size if this is an array of structs
+            // Get array size and check if it's declared as an array
+            let is_array_decl = self.is_array(&declaration.array_specifier);
             let array_size = self.get_array_size(&declaration.array_specifier);
             
             // Expand the struct into individual member uniforms
-            let expanded = self.expand_struct_uniform(&uniform_name, &struct_name, array_size);
+            let expanded = self.expand_struct_uniform(&uniform_name, &struct_name, array_size, is_array_decl);
             
             for (member_name, member_gl_type, member_size) in expanded {
               self.uniforms.push(GLSLUniform {
@@ -1604,5 +1726,95 @@ void main() {
     // After preprocessing, the array size should be 5
     assert_eq!(uniforms[0].size, 5, "Preprocessor should expand macro array size");
     assert_eq!(uniforms[0].active, true);
+  }
+
+  #[test]
+  fn test_single_element_array_uses_bracket_notation() {
+    // Test that single-element arrays still use [0] notation
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+struct HemisphereLight {
+  vec3 skyColor;
+  vec3 groundColor;
+};
+
+in vec3 position;
+uniform HemisphereLight hemisphereLights[1];
+
+void main() {
+  vec3 color = hemisphereLights[0].skyColor + hemisphereLights[0].groundColor;
+  gl_Position = vec4(position + color * 0.01, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse single-element array shader");
+    
+    let uniforms = analyzer.get_uniforms();
+    // Should expand to hemisphereLights[0].skyColor and hemisphereLights[0].groundColor
+    assert_eq!(uniforms.len(), 2);
+    
+    // Both should use [0] notation, not just "hemisphereLights.skyColor"
+    assert_eq!(uniforms[0].name, "hemisphereLights[0].skyColor");
+    assert_eq!(uniforms[0].active, true);
+    
+    assert_eq!(uniforms[1].name, "hemisphereLights[0].groundColor");
+    assert_eq!(uniforms[1].active, true);
+  }
+
+  #[test]
+  fn test_variable_expansion_tracking() {
+    // Test that when a local variable is assigned from a uniform,
+    // references to the local variable mark the uniform as active
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+struct Foo {
+  vec3 f1;
+  vec3 f2;
+};
+
+in vec3 position;
+uniform Foo foo[2];
+
+out vec3 vColor;
+
+void main() {
+  Foo local_foo;
+  local_foo = foo[0];  // Assignment: local_foo is an alias of foo[0]
+  
+  // Reference to local_foo.f1 should mark foo[0].f1 as active
+  vColor = local_foo.f1;
+  
+  gl_Position = vec4(position, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse variable expansion shader");
+    
+    let uniforms = analyzer.get_uniforms();
+    // Should have foo[0].f1, foo[0].f2, foo[1].f1, foo[1].f2
+    assert_eq!(uniforms.len(), 4);
+    
+    // foo[0].f1 should be active (referenced via local_foo.f1)
+    let foo0_f1 = uniforms.iter().find(|u| u.name == "foo[0].f1");
+    assert!(foo0_f1.is_some());
+    assert_eq!(foo0_f1.unwrap().active, true, "foo[0].f1 should be active through local_foo.f1");
+    
+    // foo[0].f2 should be inactive (not referenced)
+    let foo0_f2 = uniforms.iter().find(|u| u.name == "foo[0].f2");
+    assert!(foo0_f2.is_some());
+    assert_eq!(foo0_f2.unwrap().active, false, "foo[0].f2 should be inactive");
+    
+    // foo[1].* should all be inactive
+    let foo1_f1 = uniforms.iter().find(|u| u.name == "foo[1].f1");
+    assert!(foo1_f1.is_some());
+    assert_eq!(foo1_f1.unwrap().active, false, "foo[1].f1 should be inactive");
+    
+    let foo1_f2 = uniforms.iter().find(|u| u.name == "foo[1].f2");
+    assert!(foo1_f2.is_some());
+    assert_eq!(foo1_f2.unwrap().active, false, "foo[1].f2 should be inactive");
   }
 }
