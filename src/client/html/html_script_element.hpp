@@ -67,9 +67,8 @@ namespace endor
     }
     inline void setText(const string &value)
     {
-      cerr << "unimplemented: setting text content of <script> element" << endl;
+      setTextContent(value);
     }
-
     inline string getText() const
     {
       return textContent();
