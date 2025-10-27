@@ -1390,4 +1390,130 @@ void main() {
     assert_eq!(variables.attributes[1].name, "gl_InstanceID");
     assert_eq!(variables.attributes[1].active, true);
   }
+
+  #[test]
+  fn test_parse_glsl_with_preprocessor_defines() {
+    // Test that preprocessor directives are handled before analysis
+    let source_str = r#"
+#version 300 es
+#define USE_NORMAL 1
+#define USE_UV 1
+
+in vec3 position;
+#if USE_NORMAL
+in vec3 normal;
+#endif
+#if USE_UV
+in vec2 uv;
+#endif
+
+uniform mat4 mvp;
+
+void main() {
+  gl_Position = mvp * vec4(position, 1.0);
+#if USE_NORMAL
+  vec3 n = normal;
+#endif
+#if USE_UV
+  vec2 texCoord = uv;
+#endif
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse GLSL with preprocessor");
+    
+    let attributes = analyzer.get_attributes();
+    // Should include all three attributes (position, normal, uv) since preprocessor enables them
+    assert_eq!(attributes.len(), 3);
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[0].active, true);
+    assert_eq!(attributes[1].name, "normal");
+    assert_eq!(attributes[1].active, true);
+    assert_eq!(attributes[2].name, "uv");
+    assert_eq!(attributes[2].active, true);
+    
+    let uniforms = analyzer.get_uniforms();
+    assert_eq!(uniforms.len(), 1);
+    assert_eq!(uniforms[0].name, "mvp");
+    assert_eq!(uniforms[0].active, true);
+  }
+
+  #[test]
+  fn test_parse_glsl_array_sizes() {
+    // Test that array sizes are correctly extracted
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+in vec3 position;
+uniform vec4 colors[4];
+uniform mat4 transforms[3];
+uniform float values[10];
+
+void main() {
+  vec4 color = colors[0] + colors[1];
+  gl_Position = transforms[0] * vec4(position, 1.0);
+  float val = values[0];
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse GLSL with arrays");
+    
+    let uniforms = analyzer.get_uniforms();
+    assert_eq!(uniforms.len(), 3);
+    
+    // Check colors array
+    assert_eq!(uniforms[0].name, "colors");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatVec4 as u32);
+    assert_eq!(uniforms[0].size, 4);
+    assert_eq!(uniforms[0].active, true);
+    
+    // Check transforms array
+    assert_eq!(uniforms[1].name, "transforms");
+    assert_eq!(uniforms[1].gl_type, GLType::FloatMat4 as u32);
+    assert_eq!(uniforms[1].size, 3);
+    assert_eq!(uniforms[1].active, true);
+    
+    // Check values array
+    assert_eq!(uniforms[2].name, "values");
+    assert_eq!(uniforms[2].gl_type, GLType::Float as u32);
+    assert_eq!(uniforms[2].size, 10);
+    assert_eq!(uniforms[2].active, true);
+  }
+
+  #[test]
+  fn test_parse_glsl_with_macro_array_size() {
+    // Test array size defined by preprocessor macro
+    // Note: This tests whether the current implementation handles this case
+    let source_str = r#"
+#version 300 es
+precision highp float;
+
+#define NUM_LIGHTS 5
+
+in vec3 position;
+uniform vec3 lightPositions[NUM_LIGHTS];
+
+void main() {
+  vec3 lighting = vec3(0.0);
+  for (int i = 0; i < NUM_LIGHTS; i++) {
+    lighting += lightPositions[i];
+  }
+  gl_Position = vec4(position + lighting * 0.01, 1.0);
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    let result = analyzer.parse(source_str);
+    
+    // The preprocessor should expand NUM_LIGHTS to 5 before parsing
+    assert!(result.is_ok(), "Should successfully parse shader with macro-defined array size");
+    
+    let uniforms = analyzer.get_uniforms();
+    assert_eq!(uniforms.len(), 1);
+    assert_eq!(uniforms[0].name, "lightPositions");
+    assert_eq!(uniforms[0].gl_type, GLType::FloatVec3 as u32);
+    // After preprocessing, the array size should be 5
+    assert_eq!(uniforms[0].size, 5, "Preprocessor should expand macro array size");
+    assert_eq!(uniforms[0].active, true);
+  }
 }
