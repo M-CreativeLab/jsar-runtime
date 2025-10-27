@@ -1439,6 +1439,95 @@ void main() {
   }
 
   #[test]
+  fn test_parse_glsl_conditional_compilation() {
+    // Test that #ifdef and #if directives properly control attribute/uniform declarations
+    let source_str = r#"
+#version 300 es
+#define ENABLE_LIGHTING
+#define ENABLE_TEXTURES
+
+in vec3 position;
+
+// These should be included (defined and enabled)
+#ifdef ENABLE_LIGHTING
+in vec3 normal;
+uniform vec3 lightDir;
+#endif
+
+#ifdef ENABLE_TEXTURES
+in vec2 texCoord;
+uniform vec4 texColor;
+#endif
+
+// This should NOT be included (not defined)
+#ifdef ENABLE_SHADOWS
+in vec4 shadowCoord;
+uniform mat4 shadowMatrix;
+#endif
+
+// Conditional uniform inside #if with expression
+#if defined(ENABLE_LIGHTING) && defined(ENABLE_TEXTURES)
+uniform float shininess;
+#endif
+
+out vec4 fragColor;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+  fragColor = vec4(1.0);
+#ifdef ENABLE_LIGHTING
+  vec3 n = normal;
+  vec3 light = lightDir;
+  fragColor.rgb *= dot(n, light);
+#endif
+#ifdef ENABLE_TEXTURES
+  vec2 tc = texCoord;
+  fragColor *= texColor;
+#endif
+#if defined(ENABLE_LIGHTING) && defined(ENABLE_TEXTURES)
+  float s = shininess;
+  fragColor.a *= s;
+#endif
+}
+"#;
+    let mut analyzer = GLSLShaderAnalyzer::new();
+    analyzer.parse(source_str).expect("Failed to parse shader with conditional compilation");
+    
+    let attributes = analyzer.get_attributes();
+    // Should have: position, normal, texCoord (shadowCoord should NOT be included)
+    assert_eq!(attributes.len(), 3, "Should include only conditionally enabled attributes");
+    assert_eq!(attributes[0].name, "position");
+    assert_eq!(attributes[0].active, true);
+    assert_eq!(attributes[1].name, "normal");
+    assert_eq!(attributes[1].active, true);
+    assert_eq!(attributes[2].name, "texCoord");
+    assert_eq!(attributes[2].active, true);
+    
+    let uniforms = analyzer.get_uniforms();
+    // Should have: lightDir, diffuseMap, shininess (shadowMatrix should NOT be included)
+    assert_eq!(uniforms.len(), 3, "Should include only conditionally enabled uniforms");
+    
+    let light_dir = uniforms.iter().find(|u| u.name == "lightDir");
+    assert!(light_dir.is_some(), "lightDir should be included (ENABLE_LIGHTING defined)");
+    assert_eq!(light_dir.unwrap().active, true);
+    
+    let tex_color = uniforms.iter().find(|u| u.name == "texColor");
+    assert!(tex_color.is_some(), "texColor should be included (ENABLE_TEXTURES defined)");
+    assert_eq!(tex_color.unwrap().active, true);
+    
+    let shininess = uniforms.iter().find(|u| u.name == "shininess");
+    assert!(shininess.is_some(), "shininess should be included (both flags defined)");
+    assert_eq!(shininess.unwrap().active, true);
+    
+    // Verify that ENABLE_SHADOWS items are NOT included
+    let shadow_coord = attributes.iter().find(|a| a.name == "shadowCoord");
+    assert!(shadow_coord.is_none(), "shadowCoord should NOT be included (ENABLE_SHADOWS not defined)");
+    
+    let shadow_matrix = uniforms.iter().find(|u| u.name == "shadowMatrix");
+    assert!(shadow_matrix.is_none(), "shadowMatrix should NOT be included (ENABLE_SHADOWS not defined)");
+  }
+
+  #[test]
   fn test_parse_glsl_array_sizes() {
     // Test that array sizes are correctly extracted
     let source_str = r#"
