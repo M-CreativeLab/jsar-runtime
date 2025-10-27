@@ -512,16 +512,21 @@ private:
       return;
     }
 
+    vector<AttribLocation> activeAttribs;
     for (const auto &attrib : req->attribLocations)
     {
+      if (attrib.location <= -1)
+        continue;
+
       glBindAttribLocation(program->id, attrib.location, attrib.name.c_str());
       cout << "BindAttribLocation(program=" << program->id << ", location=" << attrib.location
            << ", name=" << attrib.name.c_str() << ")" << endl;
+      activeAttribs.push_back(attrib);
     }
 
     // Do program linking and update attribute locations
     program->link();
-    for (const auto &attrib : req->attribLocations)
+    for (const auto &attrib : activeAttribs)
       program->updateAttribLocation(attrib.location, attrib.name.c_str());
 
     // Mark context as dirty

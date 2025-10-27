@@ -179,9 +179,9 @@ namespace endor
           int index = 0;
           for (auto &activeInfo : resp.activeAttribs)
             program->setActiveAttrib(index++, activeInfo);
-          index = 0;
-          for (auto &activeInfo : resp.activeUniforms)
-            program->setActiveUniform(index++, activeInfo);
+          // index = 0;
+          // for (auto &activeInfo : resp.activeUniforms)
+          //   program->setActiveUniform(index++, activeInfo);
         }
 
         /**
@@ -193,48 +193,48 @@ namespace endor
          * - foo[0]
          * - foo[1]
          */
-        for (auto &uniformLocation : resp.uniformLocations)
-        {
-          auto name = uniformLocation.name;
-          auto location = uniformLocation.location;
-          auto size = uniformLocation.size;
+        // for (auto &uniformLocation : resp.uniformLocations)
+        // {
+        //   auto name = uniformLocation.name;
+        //   auto location = uniformLocation.location;
+        //   auto size = uniformLocation.size;
 
-          /**
-           * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
-           *
-           * 1. check if the name ends with "[0]"
-           * 2. grab the name without "[0]"
-           * 3. set the uniform location for the name without "[0]"
-           * 4. set the uniform location for the name with "[0]" and the index
-           * 5. repeat 4 for the rest of the indices
-           *
-           * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
-           */
-          string arraySuffix = "[0]";
-          int endedAt = name.length() - arraySuffix.length();
-          bool endsWithArray = name.size() > arraySuffix.size() && name.rfind(arraySuffix) != string::npos;
+        //   /**
+        //    * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
+        //    *
+        //    * 1. check if the name ends with "[0]"
+        //    * 2. grab the name without "[0]"
+        //    * 3. set the uniform location for the name without "[0]"
+        //    * 4. set the uniform location for the name with "[0]" and the index
+        //    * 5. repeat 4 for the rest of the indices
+        //    *
+        //    * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+        //    */
+        //   string arraySuffix = "[0]";
+        //   int endedAt = name.length() - arraySuffix.length();
+        //   bool endsWithArray = name.size() > arraySuffix.size() && name.rfind(arraySuffix) != string::npos;
 
-          /**
-           * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
-           */
-          if (size == 1 && !endsWithArray)
-          {
-            program->setUniformLocation(name, location);
-          }
-          else if (endsWithArray)
-          {
-            auto arrayName = name.substr(0, endedAt);
-            program->setUniformLocation(arrayName, location);
-            program->setUniformLocation(name, location);
-            for (int i = 1; i < size; i++)
-              program->setUniformLocation(arrayName + "[" + to_string(i) + "]", location + i);
-          }
-          else
-          {
-            // TODO: warning size is invalid?
-            continue;
-          }
-        }
+        //   /**
+        //    * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
+        //    */
+        //   if (size == 1 && !endsWithArray)
+        //   {
+        //     program->setUniformLocation(name, location);
+        //   }
+        //   else if (endsWithArray)
+        //   {
+        //     auto arrayName = name.substr(0, endedAt);
+        //     program->setUniformLocation(arrayName, location);
+        //     program->setUniformLocation(name, location);
+        //     for (int i = 1; i < size; i++)
+        //       program->setUniformLocation(arrayName + "[" + to_string(i) + "]", location + i);
+        //   }
+        //   else
+        //   {
+        //     // TODO: warning size is invalid?
+        //     continue;
+        //   }
+        // }
 
         if (isWebGL2_ == true)
         {
@@ -957,7 +957,11 @@ namespace endor
       if (program->hasActiveUniform(index))
         return program->getActiveUniform(index);
       else
+      {
+        cerr << "Warning: getActiveUniform: no active uniform at index " << index << " in program "
+             << program->id << endl;
         return nullopt;
+      }
     }
 
     optional<WebGLAttribLocation> WebGLContext::getAttribLocation(shared_ptr<WebGLProgram> program, const string &name)
@@ -973,17 +977,22 @@ namespace endor
     optional<WebGLUniformLocation> WebGLContext::getUniformLocation(shared_ptr<WebGLProgram> program,
                                                                     const string &name)
     {
-      if (program->isIncomplete())
-      {
-        return WebGLUniformLocation(program->id, name);
-      }
+      // if (program->isIncomplete())
+      // {
+      //   return WebGLUniformLocation(program->id, name);
+      // }
+      // else
+      // {
+      //   if (program->hasUniformLocation(name))
+      //     return program->getUniformLocation(name);
+      //   else
+      //     return nullopt;
+      // }
+
+      if (program->hasUniformLocation(name))
+        return program->getUniformLocation(name);
       else
-      {
-        if (program->hasUniformLocation(name))
-          return program->getUniformLocation(name);
-        else
-          return nullopt;
-      }
+        return nullopt;
     }
 
     void WebGLContext::uniform1f(WebGLUniformLocation location, float v0)
@@ -1140,10 +1149,10 @@ namespace endor
     void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, glm::mat3 m)
     {
       // clang-format off
-    vector<float> values = {
-      m[0][0], m[0][1], m[0][2],
-      m[1][0], m[1][1], m[1][2],
-      m[2][0], m[2][1], m[2][2]};
+      vector<float> values = {
+        m[0][0], m[0][1], m[0][2],
+        m[1][0], m[1][1], m[1][2],
+        m[2][0], m[2][1], m[2][2]};
       // clang-format on
       uniformMatrix3fv(location, transpose, values);
     }
@@ -1167,11 +1176,11 @@ namespace endor
     void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, glm::mat4 m)
     {
       // clang-format off
-    vector<float> values = {
-      m[0][0], m[0][1], m[0][2], m[0][3],
-      m[1][0], m[1][1], m[1][2], m[1][3],
-      m[2][0], m[2][1], m[2][2], m[2][3],
-      m[3][0], m[3][1], m[3][2], m[3][3]};
+      vector<float> values = {
+        m[0][0], m[0][1], m[0][2], m[0][3],
+        m[1][0], m[1][1], m[1][2], m[1][3],
+        m[2][0], m[2][1], m[2][2], m[2][3],
+        m[3][0], m[3][1], m[3][2], m[3][3]};
       // clang-format on
       uniformMatrix4fv(location, transpose, values);
     }

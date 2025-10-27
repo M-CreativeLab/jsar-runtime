@@ -4052,6 +4052,7 @@ namespace endor
 
         if (values.size() % 16 != 0)
         {
+          Warn(isolate, info[2]);
           isolate->ThrowException(Exception::TypeError(
             MakeMethodError(isolate, "uniformMatrix4fv", "Data length must be a multiple of 16")));
           return;

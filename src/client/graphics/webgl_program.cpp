@@ -14,7 +14,7 @@ namespace endor
       else if (shader->type == WebGLShaderType::kFragment)
         fragmentShader_ = shader;
       else
-        throw runtime_error("Unsupported shader type to attach to program.");
+        assert(false && "Shader type should be either vertex or fragment.");
     }
 
     void WebGLProgram::detachShader(std::shared_ptr<WebGLShader> shader)
@@ -24,7 +24,7 @@ namespace endor
       else if (shader->type == WebGLShaderType::kFragment)
         fragmentShader_ = nullptr;
       else
-        throw runtime_error("Unsupported shader type to detach from program.");
+        assert(false && "Shader type should be either vertex or fragment.");
     }
 
     void WebGLProgram::link()
@@ -33,32 +33,49 @@ namespace endor
         throw runtime_error("Cannot link program without both vertex and fragment shaders.");
 
       string shaderSource = vertexShader_->source;
-      auto attribsInfo = crates::webgl::GLSLAttributeParser::ParseAttributes(shaderSource);
+      vector<crates::webgl::GLSLAttribute> attribsInfo;
+      vector<crates::webgl::GLSLUniform> uniformsInfo;
+
+      if (!crates::webgl::GLSLShaderAnalyzer::Parse(shaderSource, attribsInfo, uniformsInfo))
+      {
+        throw runtime_error("Failed to parse vertex shader source for attribute info.");
+      }
 
       int loc = 0;
+      int activeIndex = 0;
+
       for (const auto &attrib : attribsInfo)
       {
-        attribLocations_[attrib.name] = WebGLAttribLocation(id, loc, attrib.name);
+        attribLocations_[attrib.name] = WebGLAttribLocation(id,
+                                                            attrib.active ? loc : -1,
+                                                            attrib.name);
+        if (attrib.active)
+        {
+          activeAttribs_[activeIndex] = WebGLActiveInfo(attrib.name, attrib.type, attrib.size);
+          activeIndex += 1;
+        }
 
         // mat4 takes up 4 attribute locations
         int slots = 1;
-        if (attrib.type_name == "mat2" ||
-            attrib.type_name == "mat2x3" ||
-            attrib.type_name == "mat2x4")
+        switch (attrib.type)
         {
+        case WEBGL_FLOAT_MAT2:
+        case WEBGL2_FLOAT_MAT2x3:
+        case WEBGL2_FLOAT_MAT2x4:
           slots = 2;
-        }
-        else if (attrib.type_name == "mat3" ||
-                 attrib.type_name == "mat3x2" ||
-                 attrib.type_name == "mat3x4")
-        {
+          break;
+        case WEBGL_FLOAT_MAT3:
+        case WEBGL2_FLOAT_MAT3x2:
+        case WEBGL2_FLOAT_MAT3x4:
           slots = 3;
-        }
-        else if (attrib.type_name == "mat4" ||
-                 attrib.type_name == "mat4x2" ||
-                 attrib.type_name == "mat4x3")
-        {
+          break;
+        case WEBGL_FLOAT_MAT4:
+        case WEBGL2_FLOAT_MAT4x2:
+        case WEBGL2_FLOAT_MAT4x3:
           slots = 4;
+          break;
+        default:
+          break;
         }
 
         if (slots > 1)
@@ -72,6 +89,36 @@ namespace endor
 
         // Advance location
         loc += slots;
+      }
+
+      loc = 0;
+      activeIndex = 0;
+
+      for (const auto &uniform : uniformsInfo)
+      {
+        cerr << "Uniform: " << uniform.name << ", type: " << uniform.type << ", size: " << uniform.size << ", active: " << (uniform.active ? "true" : "false") << endl;
+
+        uniformLocations_[uniform.name] = WebGLUniformLocation(id,
+                                                               uniform.active ? loc : -1,
+                                                               uniform.name);
+        if (uniform.active)
+        {
+          activeUniforms_[activeIndex] = WebGLActiveInfo(uniform.name, uniform.size, uniform.type);
+          activeIndex += 1;
+        }
+
+        // For array uniforms, add locations for each element
+        if (uniform.size > 1)
+        {
+          for (int i = 1; i < uniform.size; ++i)
+          {
+            string name = uniform.name + "[" + to_string(i) + "]";
+            uniformLocations_[name] = WebGLUniformLocation(id, loc + i, name);
+          }
+        }
+
+        // Advance location
+        loc += 1;
       }
     }
 

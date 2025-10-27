@@ -20,6 +20,12 @@ namespace endor
           , type(info.type)
       {
       }
+      WebGLActiveInfo(const std::string &name, int size, int type)
+          : name(name)
+          , size(size)
+          , type(type)
+      {
+      }
 
     public:
       std::string name;
