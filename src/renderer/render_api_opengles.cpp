@@ -510,15 +510,7 @@ private:
     for (const auto &attrib : req->attribLocations)
     {
       if (attrib.name.rfind("gl_", 0) != 0)
-      {
         glBindAttribLocation(program, attrib.location, attrib.name.c_str());
-        DEBUG(LOG_TAG_RENDERER,
-              "[%d] GL::BindAttribLocation(program=%d, location=%d, name=%s)",
-              options.isDefaultQueue(),
-              program,
-              attrib.location,
-              attrib.name.c_str());
-      }
     }
     glLinkProgram(program);
     reqContentRenderer->getContextGL()->MarkAsDirty();
@@ -2198,6 +2190,9 @@ private:
     auto type = req->indicesType;
     auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
+    PrintDebugInfo(req, nullptr, nullptr, options);
+    DumpDrawCallInfo(DEBUG_TAG, "DrawElements", options.isDefaultQueue(), mode, count, type, indices);
+
     reqContentRenderer->getContextGL()->drawElements(mode, count, type, indices);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
@@ -2814,35 +2809,47 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   {
     commandbuffers::TrCommandBufferBase *commandbuffer = *it;
     assert(commandbuffer != nullptr && "command buffer must not be nullptr");
-
     CommandBufferType commandType = commandbuffer->type;
-    // if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
-    // {
-    //   auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
-    //   assert(req != nullptr);
 
-    //   if (pass_type == ExecutingPassType::kXRFrame &&
-    //       (req->target == GL_FRAMEBUFFER ||
-    //        req->target == GL_DRAW_FRAMEBUFFER))
-    //   {
-    //     if (req->isBindToDefault()) // Stop copying commandbuffers into offscreen pass if it is to bind to default.
-    //       should_move_to_offscreen_pass = false;
-    //     else
-    //     {
-    //       GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
-    //       should_move_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
-    //       if (should_move_to_offscreen_pass == true)
-    //         content_renderer->resetOffscreenPassGLContext(framebuffer);
-    //     }
-    //   }
-    // }
+    // Determine if we need to move this command buffer to other passes such as offscreen pass.
+    if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
+    {
+      auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
+      assert(req != nullptr);
+
+      if (pass_type == ExecutingPassType::kXRFrame &&
+          (req->target == GL_FRAMEBUFFER ||
+           req->target == GL_DRAW_FRAMEBUFFER))
+      {
+        if (req->isBindToDefault()) // Stop copying commandbuffers into offscreen pass if it is to bind to default.
+          should_move_to_offscreen_pass = false;
+        else
+        {
+          GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
+          should_move_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
+          if (should_move_to_offscreen_pass == true)
+            content_renderer->resetOffscreenPassGLContext(framebuffer);
+        }
+      }
+    }
 
     // Move the command buffers to offscreen pass if needed
-    if (pass_type == ExecutingPassType::kXRFrame && should_move_to_offscreen_pass == true)
+    if (pass_type == ExecutingPassType::kXRFrame &&
+        should_move_to_offscreen_pass == true)
     {
-      content_renderer->scheduleCommandBufferAtOffscreenPass(commandbuffer);
-      it = list.erase(it); // Remove this command buffer from the original list
-      continue;            // Skip to the next command buffer
+      // Move only framebuffer dependent command buffers
+      if (CommandTypes::IsFramebufferDependentCommand(commandType))
+      {
+        content_renderer->scheduleCommandBufferAtOffscreenPass(commandbuffer);
+        it = list.erase(it); // Remove this command buffer from the original list
+        continue;            // Skip to the next command buffer
+      }
+      else
+      {
+        DEBUG(DEBUG_TAG,
+              "Executing resource creation command for offscreen pass in advance: %s.",
+              commandTypeToStr(commandType).c_str());
+      }
     }
 
     // Move to the next command buffer

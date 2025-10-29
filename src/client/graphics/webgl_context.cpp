@@ -322,7 +322,6 @@ namespace endor
       auto buffer = make_shared<WebGLBuffer>();
       auto req = CreateBufferCommandBufferRequest(buffer->id);
       sendCommandBufferRequest(req);
-      cerr << "Created buffer with id: " << buffer->id << endl;
       return buffer;
     }
 
