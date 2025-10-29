@@ -101,6 +101,10 @@ include_directories(
     ${SKIA_HEADERS_PATH}/include
 )
 
+# GLSLang headers
+set(GLSLANG_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/glslang/include)
+include_directories(${GLSLANG_HEADERS_PATH})
+
 # Add Unity headers
 set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
 include_directories(${UNITY_HEADERS_PATH})
@@ -130,6 +134,10 @@ function(tr_target_link_thirdparty_library TARGET LIBRARY_NAME)
     else()
         tr_target_link_library(${TARGET} ${TR_THIRDPARTY_PATH}/lib ${LIBRARY_NAME} STATIC)
     endif()
+endfunction()
+
+function(tr_target_link_thirdparty_library_with_path TARGET LIBRARY_PATH LIBRARY_NAME)
+    tr_target_link_library(${TARGET} ${TR_THIRDPARTY_PATH}/lib/${LIBRARY_PATH} ${LIBRARY_NAME} STATIC)
 endfunction()
 
 function(tr_target_link_skia_library TARGET)

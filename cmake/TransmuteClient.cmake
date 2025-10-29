@@ -73,10 +73,19 @@ set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addo
 target_include_directories(TransmuteClient PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
 target_include_directories(TransmuteClientLibrary PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
 
+#
 # Link libraries
+#
+
 tr_target_link_library(TransmuteClientLibrary ${TR_CRATE_BUILD_PATH} jsar_jsbindings STATIC)
 tr_target_link_thirdparty_library(TransmuteClientLibrary node)
 tr_target_link_skia_library(TransmuteClientLibrary)
+
+# GLSLang libraries
+tr_target_link_thirdparty_library_with_path(TransmuteClientLibrary glslang glslang)
+tr_target_link_thirdparty_library_with_path(TransmuteClientLibrary glslang glslang-default-resource-limits)
+tr_target_link_thirdparty_library_with_path(TransmuteClientLibrary glslang MachineIndependent)
+tr_target_link_thirdparty_library_with_path(TransmuteClientLibrary glslang OSDependent)
 
 if(APPLE)
     set(APPLE_CLIENT_DEPS

@@ -506,108 +506,104 @@ private:
   {
     auto glContext = reqContentRenderer->getContextGL();
     GLuint program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+
+    for (const auto &attrib : req->attribLocations)
+    {
+      if (attrib.name.rfind("gl_", 0) != 0)
+      {
+        glBindAttribLocation(program, attrib.location, attrib.name.c_str());
+        DEBUG(LOG_TAG_RENDERER,
+              "[%d] GL::BindAttribLocation(program=%d, location=%d, name=%s)",
+              options.isDefaultQueue(),
+              program,
+              attrib.location,
+              attrib.name.c_str());
+      }
+    }
     glLinkProgram(program);
     reqContentRenderer->getContextGL()->MarkAsDirty();
 
-    /**
-		 * Check the link status of the program.
-		 */
-    GLenum status;
-    glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
-    if (status == GL_FALSE)
-    {
-      GLint errorLength;
-      glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
-      GLchar *errorStr = new GLchar[errorLength];
-      glGetProgramInfoLog(program, errorLength, NULL, errorStr);
-      DEBUG(LOG_TAG_ERROR, "Failed to link program(%d): %s", program, errorStr);
-      delete[] errorStr;
-
-      LinkProgramCommandBufferResponse failureRes(req, false);
-      // reqContentRenderer->sendCommandBufferResponse(failureRes);
-      return;
-    }
-
-    // Create response object
-    LinkProgramCommandBufferResponse res(req, true);
-
-    /**
-		 * Fetch the locations of the attributes when link successfully.
-		 */
-    GLint numAttributes = 0;
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
-    for (int i = 0; i < numAttributes; i++)
-    {
-      GLsizei nameLength;
-      GLint size; /** FIXME: need size for attribs? */
-      GLenum type;
-      GLchar name[256];
-
-      glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
-      name[nameLength] = '\0';
-      res.activeAttribs.push_back(ActiveInfo(name, size, type));
-
-      GLint location = glGetAttribLocation(program, name);
-      res.attribLocations.push_back(AttribLocation(name, location));
-      DEBUG(DEBUG_TAG,
-            "    Attribute[%d](%s) => (size=%d, type=%s)",
-            location,
-            name,
-            size,
-            gles::glUniformTypesToString(type).c_str());
-    }
-
-    /**
-		 * Fetch the locations of the uniforms and attributes when link successfully.
-		 */
-    GLint numUniforms = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
-    for (int i = 0; i < numUniforms; i++)
-    {
-      GLsizei nameLength;
-      GLint size;
-      GLenum type;
-      GLchar name[256];
-
-      glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
-      name[nameLength] = '\0';
-      res.activeUniforms.push_back(ActiveInfo(name, size, type));
-
-      GLint location = glGetUniformLocation(program, name);
-      if (location <= -1)
-        continue;
-
-      res.uniformLocations.push_back(UniformLocation(name, location, size));
-      DEBUG(DEBUG_TAG,
-            "    Uniform[%d](%s) => (loc=%d, size=%d, type=%s)",
-            i,
-            name,
-            location,
-            size,
-            gles::glUniformTypesToString(type).c_str());
-    }
-
-    /**
-		 * Fetch the uniform blocks when link successfully.
-		 */
-    GLint numUniformBlocks = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
-    for (int i = 0; i < numUniformBlocks; i++)
-    {
-      GLsizei nameLength;
-      GLchar name[256];
-
-      glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
-      name[nameLength] = '\0';
-
-      GLuint index = glGetUniformBlockIndex(program, name);
-      res.uniformBlocks.push_back(UniformBlock(name, index));
-      DEBUG(DEBUG_TAG, "    UniformBlock[%s] => %d", name, index);
-    }
-
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
       PrintDebugInfo(req, to_string(program).c_str(), nullptr, options);
-    reqContentRenderer->sendCommandBufferResponse(res);
+
+      // Check the link status of the program.
+      GLenum status;
+      glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
+      if (status == GL_FALSE)
+      {
+        GLint errorLength;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
+        GLchar *errorStr = new GLchar[errorLength];
+        glGetProgramInfoLog(program, errorLength, NULL, errorStr);
+        DEBUG(LOG_TAG_ERROR, "Failed to link program(%d): %s", program, errorStr);
+        delete[] errorStr;
+        return;
+      }
+
+      // Fetch the locations of the attributes when link successfully.
+      GLint numAttributes = 0;
+      glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+      for (int i = 0; i < numAttributes; i++)
+      {
+        GLsizei nameLength;
+        GLint size; /** FIXME: need size for attribs? */
+        GLenum type;
+        GLchar name[256];
+
+        glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+        name[nameLength] = '\0';
+
+        GLint location = glGetAttribLocation(program, name);
+        DEBUG(DEBUG_TAG,
+              "    Attribute[%d](%s) => (size=%d, type=%s)",
+              location,
+              name,
+              size,
+              gles::glUniformTypesToString(type).c_str());
+      }
+
+      // Fetch the locations of the uniforms and attributes when link successfully.
+      GLint numUniforms = 0;
+      glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
+      for (int i = 0; i < numUniforms; i++)
+      {
+        GLsizei nameLength;
+        GLint size;
+        GLenum type;
+        GLchar name[256];
+
+        glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+        name[nameLength] = '\0';
+
+        GLint location = glGetUniformLocation(program, name);
+        if (location <= -1)
+          continue;
+
+        DEBUG(DEBUG_TAG,
+              "    Uniform[%d](%s) => (loc=%d, size=%d, type=%s)",
+              i,
+              name,
+              location,
+              size,
+              gles::glUniformTypesToString(type).c_str());
+      }
+
+      // Fetch the uniform blocks when link successfully.
+      GLint numUniformBlocks = 0;
+      glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
+      for (int i = 0; i < numUniformBlocks; i++)
+      {
+        GLsizei nameLength;
+        GLchar name[256];
+
+        glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
+        name[nameLength] = '\0';
+
+        GLuint index = glGetUniformBlockIndex(program, name);
+        DEBUG(DEBUG_TAG, "    UniformBlock[%s] => %d", name, index);
+      }
+    }
   }
   TR_OPENGL_FUNC void OnUseProgram(UseProgramCommandBufferRequest *req,
                                    renderer::TrContentRenderer *reqContentRenderer,
@@ -2820,26 +2816,26 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     assert(commandbuffer != nullptr && "command buffer must not be nullptr");
 
     CommandBufferType commandType = commandbuffer->type;
-    if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
-    {
-      auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
-      assert(req != nullptr);
+    // if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
+    // {
+    //   auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
+    //   assert(req != nullptr);
 
-      if (pass_type == ExecutingPassType::kXRFrame &&
-          (req->target == GL_FRAMEBUFFER ||
-           req->target == GL_DRAW_FRAMEBUFFER))
-      {
-        if (req->isBindToDefault()) // Stop copying commandbuffers into offscreen pass if it is to bind to default.
-          should_move_to_offscreen_pass = false;
-        else
-        {
-          GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
-          should_move_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
-          if (should_move_to_offscreen_pass == true)
-            content_renderer->resetOffscreenPassGLContext(framebuffer);
-        }
-      }
-    }
+    //   if (pass_type == ExecutingPassType::kXRFrame &&
+    //       (req->target == GL_FRAMEBUFFER ||
+    //        req->target == GL_DRAW_FRAMEBUFFER))
+    //   {
+    //     if (req->isBindToDefault()) // Stop copying commandbuffers into offscreen pass if it is to bind to default.
+    //       should_move_to_offscreen_pass = false;
+    //     else
+    //     {
+    //       GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
+    //       should_move_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
+    //       if (should_move_to_offscreen_pass == true)
+    //         content_renderer->resetOffscreenPassGLContext(framebuffer);
+    //     }
+    //   }
+    // }
 
     // Move the command buffers to offscreen pass if needed
     if (pass_type == ExecutingPassType::kXRFrame && should_move_to_offscreen_pass == true)

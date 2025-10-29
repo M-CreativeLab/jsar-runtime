@@ -5,6 +5,63 @@
 
 namespace commandbuffers
 {
+  enum LinkProgramCommandBufferResponseSegmentType
+  {
+    SEGMENT_ACTIVE_ATTRIB,
+    SEGMENT_ACTIVE_UNIFORM,
+    SEGMENT_ATTRIB_LOCATION,
+    SEGMENT_UNIFORM_LOCATION,
+    SEGMENT_UNIFORM_BLOCK
+  };
+
+  class ActiveInfo
+  {
+  public:
+    ActiveInfo() = default;
+    ActiveInfo(const ActiveInfo &that) = default;
+    ActiveInfo(string name, int size, int type)
+        : name(name)
+        , size(size)
+        , type(type)
+    {
+    }
+
+  public:
+    string name;
+    int size = 0;
+    int type = 0;
+  };
+
+  class Location
+  {
+  public:
+    Location(string name, int location)
+        : name(name)
+        , location(location)
+    {
+    }
+
+  public:
+    string name;
+    int location;
+  };
+  using AttribLocation = Location;
+  using UniformLocation = Location;
+
+  class UniformBlock
+  {
+  public:
+    UniformBlock(string name, int index)
+        : name(name)
+        , index(index)
+    {
+    }
+
+  public:
+    string name;
+    int index;
+  };
+
   class CreateProgramCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<CreateProgramCommandBufferRequest,
                                             COMMAND_BUFFER_CREATE_PROGRAM_REQ>
@@ -103,150 +160,13 @@ namespace commandbuffers
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
       return ss.str();
     }
-
-  public:
-    uint32_t clientId;
-  };
-
-  class ValidateProgramCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<ValidateProgramCommandBufferRequest,
-                                            COMMAND_BUFFER_VALIDATE_PROGRAM_REQ>
-  {
-  public:
-    ValidateProgramCommandBufferRequest() = delete;
-    ValidateProgramCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferSimpleRequest()
-        , clientId(clientId)
-    {
-    }
-    ValidateProgramCommandBufferRequest(const ValidateProgramCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that)
-        , clientId(that.clientId)
-    {
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
-      return ss.str();
-    }
-
-  public:
-    uint32_t clientId;
-  };
-
-  class ActiveInfo
-  {
-  public:
-    ActiveInfo() = default;
-    ActiveInfo(const ActiveInfo &that) = default;
-    ActiveInfo(string name, int size, int type)
-        : name(name)
-        , size(size)
-        , type(type)
-    {
-    }
-
-  public:
-    string name;
-    int size;
-    int type;
-  };
-
-  class AttribLocation
-  {
-  public:
-    AttribLocation(string name, int location)
-        : name(name)
-        , location(location)
-    {
-    }
-
-  public:
-    string name;
-    int location;
-  };
-
-  class UniformLocation
-  {
-  public:
-    UniformLocation(string name, int location, int size)
-        : name(name)
-        , location(location)
-        , size(size)
-    {
-    }
-
-  public:
-    string name;
-    int location;
-    int size;
-  };
-
-  class UniformBlock
-  {
-  public:
-    UniformBlock(string name, int index)
-        : name(name)
-        , index(index)
-    {
-    }
-
-  public:
-    string name;
-    int index;
-  };
-
-  enum LinkProgramCommandBufferResponseSegmentType
-  {
-    SEGMENT_ACTIVE_ATTRIB,
-    SEGMENT_ACTIVE_UNIFORM,
-    SEGMENT_ATTRIB_LOCATION,
-    SEGMENT_UNIFORM_LOCATION,
-    SEGMENT_UNIFORM_BLOCK
-  };
-
-  class LinkProgramCommandBufferResponse final
-      : public TrCommandBufferSimpleResponse<LinkProgramCommandBufferResponse>
-  {
-  public:
-    LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that)
-        : TrCommandBufferSimpleResponse(that)
-        , success(that.success)
-    {
-    }
-    LinkProgramCommandBufferResponse(LinkProgramCommandBufferRequest *req, bool success)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req)
-        , success(success)
-    {
-    }
-    LinkProgramCommandBufferResponse(const LinkProgramCommandBufferResponse &that, bool clone = false)
-        : TrCommandBufferSimpleResponse(that, clone)
-        , success(that.success)
-    {
-      if (clone)
-      {
-        activeAttribs = that.activeAttribs;
-        activeUniforms = that.activeUniforms;
-        attribLocations = that.attribLocations;
-        uniformLocations = that.uniformLocations;
-        uniformBlocks = that.uniformBlocks;
-      }
-    }
-
-  public:
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      for (auto &activeAttrib : activeAttribs)
-        addActiveInfoSegment(activeAttrib, SEGMENT_ACTIVE_ATTRIB, message);
-      for (auto &activeUniform : activeUniforms)
-        addActiveInfoSegment(activeUniform, SEGMENT_ACTIVE_UNIFORM, message);
       for (auto &attribLocation : attribLocations)
-        addAttribLocationSegment(attribLocation, message);
+        addLocationSegment(SEGMENT_ATTRIB_LOCATION, attribLocation, message);
       for (auto &uniformLocation : uniformLocations)
-        addUniformLocationSegment(uniformLocation, message);
+        addLocationSegment(SEGMENT_UNIFORM_LOCATION, uniformLocation, message);
       for (auto &uniformBlock : uniformBlocks)
         addUniformBlockSegment(uniformBlock, message);
       return message;
@@ -275,16 +195,6 @@ namespace commandbuffers
 
         switch (segmentType)
         {
-        case SEGMENT_ACTIVE_ATTRIB:
-        {
-          activeAttribs.push_back(getActiveInfoFromBuffer(name, &pSourceData));
-          break;
-        }
-        case SEGMENT_ACTIVE_UNIFORM:
-        {
-          activeUniforms.push_back(getActiveInfoFromBuffer(name, &pSourceData));
-          break;
-        }
         case SEGMENT_ATTRIB_LOCATION:
         {
           int location;
@@ -298,10 +208,7 @@ namespace commandbuffers
           int location;
           memcpy(&location, pSourceData, sizeof(int));
           pSourceData += sizeof(int);
-          int size;
-          memcpy(&size, pSourceData, sizeof(int));
-          pSourceData += sizeof(int);
-          uniformLocations.push_back(UniformLocation(name, location, size));
+          uniformLocations.push_back(UniformLocation(name, location));
           break;
         };
         case SEGMENT_UNIFORM_BLOCK:
@@ -362,24 +269,14 @@ namespace commandbuffers
       message->addSegment(new ipc::TrIpcMessageSegment(base));
     }
 
-    void addAttribLocationSegment(AttribLocation &attribLocation, TrCommandBufferMessage *message)
+    void addLocationSegment(LinkProgramCommandBufferResponseSegmentType type,
+                            Location &loc,
+                            TrCommandBufferMessage *message)
     {
-      auto base = getSegmentBase(SEGMENT_ATTRIB_LOCATION, attribLocation.name);
+      auto base = getSegmentBase(type, loc.name);
       base.insert(base.end(),
-                  reinterpret_cast<char *>(&attribLocation.location),
-                  reinterpret_cast<char *>(&attribLocation.location) + sizeof(attribLocation.location));
-      message->addSegment(new ipc::TrIpcMessageSegment(base));
-    }
-
-    void addUniformLocationSegment(UniformLocation &uniformLocation, TrCommandBufferMessage *message)
-    {
-      auto base = getSegmentBase(SEGMENT_UNIFORM_LOCATION, uniformLocation.name);
-      base.insert(base.end(),
-                  reinterpret_cast<char *>(&uniformLocation.location),
-                  reinterpret_cast<char *>(&uniformLocation.location) + sizeof(uniformLocation.location));
-      base.insert(base.end(),
-                  reinterpret_cast<char *>(&uniformLocation.size),
-                  reinterpret_cast<char *>(&uniformLocation.size) + sizeof(uniformLocation.size));
+                  reinterpret_cast<char *>(&loc.location),
+                  reinterpret_cast<char *>(&loc.location) + sizeof(loc.location));
       message->addSegment(new ipc::TrIpcMessageSegment(base));
     }
 
@@ -393,12 +290,38 @@ namespace commandbuffers
     }
 
   public:
-    bool success;
-    vector<ActiveInfo> activeAttribs;
-    vector<ActiveInfo> activeUniforms;
+    uint32_t clientId;
     vector<AttribLocation> attribLocations;
     vector<UniformLocation> uniformLocations;
     vector<UniformBlock> uniformBlocks;
+  };
+
+  class ValidateProgramCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<ValidateProgramCommandBufferRequest,
+                                            COMMAND_BUFFER_VALIDATE_PROGRAM_REQ>
+  {
+  public:
+    ValidateProgramCommandBufferRequest() = delete;
+    ValidateProgramCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
+    {
+    }
+    ValidateProgramCommandBufferRequest(const ValidateProgramCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
+
+  public:
+    uint32_t clientId;
   };
 
   class UseProgramCommandBufferRequest final

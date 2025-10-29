@@ -156,7 +156,6 @@
   XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferResponse, "GL::ContextInit")                              \
   XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferResponse, "GL::Context2Init")                            \
   XX(GET_EXTENSIONS, GetExtensionsCommandBufferResponse, "GL::GetExtensions")                                    \
-  XX(LINK_PROGRAM, LinkProgramCommandBufferResponse, "GL::LinkProgram")                                          \
   XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferResponse, "GL::GetProgramParam")                             \
   XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferResponse, "GL::GetProgramInfoLog")                      \
   XX(GET_SHADER_SOURCE, GetShaderSourceCommandBufferResponse, "GL::GetShaderSource")                             \

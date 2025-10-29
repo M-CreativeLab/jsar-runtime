@@ -462,7 +462,7 @@ std::optional<GLint> ContextGLApp::getAttribLoc(commandbuffers::SetVertexAttribC
 optional<GLint> ContextGLApp::getUniformLoc(commandbuffers::SetUniformCommandBufferRequestBase *req) const
 {
   optional<GLint> loc = nullopt;
-  if (req->locationAvailable)
+  if (req->locationAvailable && false)
   {
     loc = req->location;
   }
