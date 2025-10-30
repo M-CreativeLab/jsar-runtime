@@ -8,17 +8,17 @@
 
 namespace gles
 {
-  class GPUCommandEncoderImpl : public commandbuffers::GPUCommandEncoder
+  class GPUCommandEncoderImpl : public commandbuffers::gpu::GPUCommandEncoderBase
   {
     friend class GPUDeviceImpl;
-    using commandbuffers::GPUCommandEncoder::GPUCommandEncoder;
+    using commandbuffers::gpu::GPUCommandEncoderBase::GPUCommandEncoderBase;
 
   public:
-    commandbuffers::GPURenderPassEncoder beginRenderPass(commandbuffers::GPURenderPassDescriptor &) override;
-    std::unique_ptr<commandbuffers::GPUCommandBuffer> finish(std::optional<std::string> label = std::nullopt) const override;
+    commandbuffers::gpu::GPURenderPassEncoderBase beginRenderPass(commandbuffers::gpu::GPURenderPassDescriptor &) override;
+    std::unique_ptr<commandbuffers::gpu::GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const override;
 
   public:
-    commandbuffers::GPURenderPassEncoder &getOrStartRecordingRenderPass();
+    commandbuffers::gpu::GPURenderPassEncoderBase &getOrStartRecordingRenderPass();
     bool isRenderPassWith(GLuint target_framebuffer) const;
   };
 }

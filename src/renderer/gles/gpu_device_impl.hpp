@@ -5,19 +5,19 @@
 
 namespace gles
 {
-  class GPUQueueImpl : public commandbuffers::GPUQueue
+  class GPUQueueImpl : public commandbuffers::gpu::GPUQueue
   {
   public:
     GPUQueueImpl();
-    void submit(const std::vector<std::shared_ptr<commandbuffers::GPUCommandBuffer>> &) override;
+    void submit(const std::vector<std::shared_ptr<commandbuffers::gpu::GPUCommandBufferBase>> &) override;
   };
 
-  class GPUDeviceImpl : public commandbuffers::GPUDevice
+  class GPUDeviceImpl : public commandbuffers::gpu::GPUDeviceBase
   {
   public:
     GPUDeviceImpl();
 
   public:
-    std::unique_ptr<commandbuffers::GPUCommandEncoder> createCommandEncoder(std::optional<std::string> label) override;
+    std::unique_ptr<commandbuffers::gpu::GPUCommandEncoderBase> createCommandEncoder(std::optional<std::string> label) override;
   };
 }

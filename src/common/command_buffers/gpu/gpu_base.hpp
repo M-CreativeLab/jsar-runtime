@@ -5,6 +5,40 @@
 
 namespace commandbuffers
 {
+  enum class GPUHandleType : uint32_t
+  {
+    kAdapter,
+    kBindGroup,
+    kBindGroupLayout,
+    kBuffer,
+    kCommandBuffer,
+    kCommandEncoder,
+    kComputePassEncoder,
+    kComputePipeline,
+    kDevice,
+    kExternalTexture,
+    kInstance,
+    kPipelineLayout,
+    kQuerySet,
+    kQueue,
+    kRenderBundle,
+    kRenderBundleEncoder,
+    kRenderPassEncoder,
+    kRenderPipeline,
+    kSampler,
+    kShaderModule,
+    kSharedBufferMemory,
+    kSharedFence,
+    kSharedTextureMemory,
+    kSurface,
+    kTexelBufferView,
+    kTexture,
+    kTextureView,
+
+    // Additional internal object types. Keep kExtraObjectTypes in sync when updating.
+    kBindGroupLayoutInternal,
+  };
+
   enum class GPUShaderStage
   {
     kVertex,
@@ -51,6 +85,8 @@ namespace commandbuffers
         , id(Ids.get())
     {
     }
+
+    virtual GPUHandleType type() const = 0;
 
   public:
     const std::string label = "";

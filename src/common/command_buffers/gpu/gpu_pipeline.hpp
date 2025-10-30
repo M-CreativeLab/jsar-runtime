@@ -9,10 +9,10 @@
 
 namespace commandbuffers
 {
-  class GPUPipelineLayout : public GPUHandle
+  class GPUPipelineLayoutBase : public GPUHandle
   {
   private:
-    std::vector<GPUBindGroupLayout> bind_group_layouts_;
+    std::vector<GPUBindGroupLayoutBase> bind_group_layouts_;
   };
 
   class GPURenderPipelineDescriptor
@@ -21,12 +21,12 @@ namespace commandbuffers
     std::optional<std::string> label;
   };
 
-  class GPURenderPipeline : public GPUHandle
+  class GPURenderPipelineBase : public GPUHandle
   {
     using GPUHandle::GPUHandle;
 
   public:
-    GPUBindGroupLayout &getBindGroupLayout(size_t index)
+    GPUBindGroupLayoutBase &getBindGroupLayout(size_t index)
     {
       if (index < bind_group_layouts_.size())
         return bind_group_layouts_[index];
@@ -34,6 +34,6 @@ namespace commandbuffers
     }
 
   private:
-    std::vector<GPUBindGroupLayout> bind_group_layouts_;
+    std::vector<GPUBindGroupLayoutBase> bind_group_layouts_;
   };
 }

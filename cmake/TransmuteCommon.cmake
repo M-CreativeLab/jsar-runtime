@@ -1,7 +1,6 @@
 # Set the common source files.
-file(GLOB TR_COMMON_SOURCE
+file(GLOB_RECURSE TR_COMMON_SOURCE
     "src/common/*.cpp"
-    "src/common/**/*.cpp"
 )
 
 # Set the common include directories

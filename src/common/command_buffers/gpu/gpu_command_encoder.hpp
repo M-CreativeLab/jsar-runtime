@@ -9,17 +9,22 @@
 
 namespace commandbuffers
 {
-  class GPUCommandEncoder : public GPUHandle
+  class GPUCommandEncoderBase : public GPUHandle
   {
     using GPUHandle::GPUHandle;
 
   public:
-    virtual ~GPUCommandEncoder() = default;
+    virtual ~GPUCommandEncoderBase() = default;
+
+    GPUHandleType type() const override
+    {
+      return GPUHandleType::kCommandEncoder;
+    }
 
   public:
     // TODO(yorkie): begineComputePass
-    virtual GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor &) = 0;
-    virtual std::unique_ptr<GPUCommandBuffer> finish(std::optional<std::string> label = std::nullopt) const = 0;
+    virtual GPURenderPassEncoderBase beginRenderPass(GPURenderPassDescriptor &) = 0;
+    virtual std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const = 0;
 
   protected:
     std::shared_ptr<GPUPassEncoderBase> current_pass_encoder_;

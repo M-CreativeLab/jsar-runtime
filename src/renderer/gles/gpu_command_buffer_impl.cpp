@@ -8,13 +8,13 @@ namespace gles
   using namespace commandbuffers;
 
   GPUCommandBufferImpl::GPUCommandBufferImpl(optional<string> label)
-      : GPUCommandBuffer(move(label))
+      : GPUCommandBufferBase(move(label))
       , framebuffer_(0)
   {
   }
 
   GPUCommandBufferImpl::GPUCommandBufferImpl(optional<string> label, const GPURenderPassEncoderImpl &renderpass_encoder)
-      : GPUCommandBuffer(move(label), renderpass_encoder.commandBuffer())
+      : GPUCommandBufferBase(move(label), renderpass_encoder.commandBuffer())
       , framebuffer_(renderpass_encoder.framebuffer_)
   {
     assert(framebuffer_ > 0 && "Framebuffer must be bound before creating GPUCommandBufferImpl");
@@ -39,7 +39,7 @@ namespace gles
       case GPUCommand::kSetViewport:
         setViewport(*dynamic_pointer_cast<GPUSetViewportCommand>(command));
         break;
-      case GPUCommand::kSetScissor:
+      case GPUCommand::kSetScissorRect:
         setScissorRect(*dynamic_pointer_cast<GPUSetScissorCommand>(command));
         break;
       default:

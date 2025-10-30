@@ -9,7 +9,7 @@
 namespace gles
 {
   using namespace std;
-  using namespace commandbuffers;
+  using namespace commandbuffers::gpu;
 
   GPUQueueImpl::GPUQueueImpl()
       : GPUQueue()
@@ -18,14 +18,14 @@ namespace gles
     // For GLES, this might not require any specific initialization.
   }
 
-  void GPUQueueImpl::submit(const vector<shared_ptr<commandbuffers::GPUCommandBuffer>> &command_buffers)
+  void GPUQueueImpl::submit(const vector<shared_ptr<GPUCommandBufferBase>> &command_buffers)
   {
     for (const auto &command_buffer : command_buffers)
       command_buffer->execute();
   }
 
   GPUDeviceImpl::GPUDeviceImpl()
-      : GPUDevice()
+      : GPUDeviceBase()
   {
     queue_ = make_unique<GPUQueueImpl>();
 
@@ -65,8 +65,8 @@ namespace gles
     DEBUG(LOG_TAG_RENDERER, "GPU Device Info: %s", adapter_info_.toString().c_str());
   }
 
-  unique_ptr<GPUCommandEncoder> GPUDeviceImpl::createCommandEncoder(optional<string> label)
+  unique_ptr<GPUCommandEncoderBase> GPUDeviceImpl::createCommandEncoder(optional<string> label)
   {
-    return unique_ptr<GPUCommandEncoder>(new GPUCommandEncoderImpl(label.value_or("")));
+    return unique_ptr<GPUCommandEncoderBase>(new GPUCommandEncoderImpl(label.value_or("")));
   }
 }

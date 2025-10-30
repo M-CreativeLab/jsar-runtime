@@ -9,7 +9,7 @@
 #include "./gpu_command_buffer.hpp"
 #include "./gpu_command_encoder.hpp"
 
-namespace commandbuffers
+namespace commandbuffers::gpu
 {
   class GPUQueue : public GPUHandle
   {
@@ -17,7 +17,7 @@ namespace commandbuffers
     virtual ~GPUQueue() = default;
 
   public:
-    virtual void submit(const std::vector<std::shared_ptr<GPUCommandBuffer>> &) = 0;
+    virtual void submit(const std::vector<std::shared_ptr<GPUCommandBufferBase>> &) = 0;
   };
 
   /**
@@ -27,10 +27,10 @@ namespace commandbuffers
    * `GPUCommandBuffer` to the renderer. And at server-side's renderer, it implements the same `GPUDevice` interface to
    * execute the `GPUCommandBuffer` on the corresponding graphics API (e.g. OpenGL, Vulkan, etc.) via RHI.
    */
-  class GPUDevice : public GPUHandle
+  class GPUDeviceBase : public GPUHandle
   {
   public:
-    virtual ~GPUDevice() = default;
+    virtual ~GPUDeviceBase() = default;
 
   public:
     const GPUAdapterInfo &adapterInfo() const
@@ -51,7 +51,7 @@ namespace commandbuffers
       return *queue_;
     }
 
-    virtual std::unique_ptr<GPUCommandEncoder> createCommandEncoder(std::optional<std::string> label) = 0;
+    virtual std::unique_ptr<GPUCommandEncoderBase> createCommandEncoder(std::optional<std::string> label) = 0;
 
   protected:
     GPUAdapterInfo adapter_info_;

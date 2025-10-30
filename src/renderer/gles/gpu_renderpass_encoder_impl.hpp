@@ -6,7 +6,7 @@
 
 namespace gles
 {
-  class GPURenderPassEncoderImpl : public commandbuffers::GPURenderPassEncoder
+  class GPURenderPassEncoderImpl : public commandbuffers::GPURenderPassEncoderBase
   {
     friend class GPUCommandBufferImpl;
 

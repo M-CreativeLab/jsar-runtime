@@ -32,8 +32,8 @@ namespace commandbuffers
       float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
       LoadOp loadOp;
       StoreOp storeOp;
-      std::optional<GPUTextureView> resolveTarget;
-      GPUTextureView view;
+      std::weak_ptr<GPUTextureViewBase> resolveTarget;
+      std::weak_ptr<GPUTextureViewBase> view;
     };
 
     class DepthStencilAttachment
@@ -47,7 +47,7 @@ namespace commandbuffers
       std::optional<bool> stencilReadOnly;
       std::optional<LoadOp> stencilLoadOp;
       std::optional<StoreOp> stencilStoreOp;
-      GPUTextureView view;
+      std::weak_ptr<GPUTextureViewBase> view;
     };
 
   public:
@@ -57,11 +57,11 @@ namespace commandbuffers
     std::optional<DepthStencilAttachment> depthStencilAttachment;
   };
 
-  class GPURenderPassEncoder : public GPUPassEncoderBase,
-                               public GPUHandle
+  class GPURenderPassEncoderBase : public GPUPassEncoderBase,
+                                   public GPUHandle
   {
   public:
-    GPURenderPassEncoder(std::string label)
+    GPURenderPassEncoderBase(std::string label)
         : GPUPassEncoderBase()
         , GPUHandle(label)
     {
@@ -107,17 +107,17 @@ namespace commandbuffers
       if (!ended_) [[likely]]
         command_buffer_->addCommand<GPUSetScissorCommand>(x, y, width, height);
     }
-    void setPipeline(const GPURenderPipeline &pipeline)
+    void setPipeline(const GPURenderPipelineBase &pipeline)
     {
       if (!ended_) [[likely]]
         command_buffer_->addCommand<GPUSetRenderPipelineCommand>(pipeline);
     }
-    void setIndexBuffer(const GPUBuffer &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size)
+    void setIndexBuffer(const GPUBufferBase &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size)
     {
       if (!ended_) [[likely]]
         command_buffer_->addCommand<GPUSetIndexBufferCommand>(buffer, index_format, offset, size);
     }
-    void setVertexBuffer(uint32_t slot, const GPUBuffer &buffer, uint32_t offset = 0, uint32_t size = 0)
+    void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0)
     {
       if (!ended_) [[likely]]
         command_buffer_->addCommand<GPUSetVertexBufferCommand>(slot, buffer, offset, size);

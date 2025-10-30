@@ -7,7 +7,7 @@
 
 namespace commandbuffers
 {
-  class GPUTextureView : public GPUHandle
+  class GPUTextureViewBase : public GPUHandle
   {
   public:
     const GPUTexture &textureRef() const

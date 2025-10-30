@@ -5,63 +5,16 @@
 #include <variant>
 
 #include "./gpu_base.hpp"
-#include "./gpu_texture.hpp"
+#include "./gpu_bind_group_layout.hpp"
 
 namespace commandbuffers
 {
-  class GPUBindGroupLayout : public GPUHandle
+  class GPUBindGroupBase : public GPUHandle
   {
   public:
-    class BufferLayout
-    {
-    public:
-      GPUBufferType type;
-      bool hasDynamicOffset = false;
-      uint32_t minBindingSize = 0; // in bytes
-    };
-
-    class TextureLayout
-    {
-    public:
-      bool multisampled = false;
-    };
-
-    class StorageTextureLayout
-    {
-    public:
-      GPUStorageAccess access;
-      GPUTextureFormat format;
-      std::optional<GPUTextureDimension> viewDimension;
-    };
-
-    class ExternalTextureLayout
-    {
-    };
-
-    class SamplerLayout
-    {
-    public:
-      GPUSamplerType type;
-    };
-
-    using ResourceLayout = std::variant<BufferLayout,
-                                        TextureLayout,
-                                        StorageTextureLayout,
-                                        ExternalTextureLayout,
-                                        SamplerLayout>;
-    class Entry
-    {
-    public:
-      uint32_t binding;
-      GPUShaderStage visibility;
-      ResourceLayout layout;
-    };
+    virtual ~GPUBindGroupBase() = default;
 
   private:
-    std::vector<Entry> entries_;
-  };
-
-  class GPUBindGroup : public GPUHandle
-  {
+    std::shared_ptr<GPUBindGroupLayoutBase> *layout_ = nullptr;
   };
 }

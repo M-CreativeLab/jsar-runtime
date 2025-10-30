@@ -10,7 +10,7 @@
 
 namespace gles
 {
-  class GPUCommandBufferImpl : public commandbuffers::GPUCommandBuffer
+  class GPUCommandBufferImpl : public commandbuffers::GPUCommandBufferBase
   {
   public:
     GPUCommandBufferImpl(std::optional<std::string> label);
