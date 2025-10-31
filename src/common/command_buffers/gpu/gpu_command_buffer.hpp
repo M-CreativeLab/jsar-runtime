@@ -2,44 +2,64 @@
 
 #include <vector>
 #include <memory>
+#include <string_view>
+#include <string>
 
-#include "./gpu_base.hpp"
-#include "./gpu_buffer.hpp"
-#include "./gpu_pipeline.hpp"
-#include "./gpu_commands.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_commands.hpp>
+#include <common/command_buffers/gpu/gpu_command_encoder.hpp>
+#include <common/command_buffers/gpu/command_allocator.hpp>
+#include <common/command_buffers/gpu/indirect_draw_metadata.hpp>
+#include <common/command_buffers/gpu/pass_resource_usage.hpp>
 
 namespace commandbuffers
 {
+  struct GPUCommandBufferDescriptor
+  {
+    std::string_view label;
+  };
+
   class GPUCommandBufferBase : public GPUHandle
   {
     friend class GPUComputePassEncoderBase;
     friend class GPURenderPassEncoderBase;
 
   public:
-    GPUCommandBufferBase(std::optional<std::string> label)
-        : GPUHandle(label.value_or("GPUCommandBuffer"))
-        , commands_()
-    {
-    }
-    GPUCommandBufferBase(std::optional<std::string> label, const GPUCommandBufferBase &source)
-        : GPUHandle(label.value_or("GPUCommandBuffer"))
-        , commands_(source.commands_)
-    {
-    }
+    GPUCommandBufferBase(GPUCommandEncoderBase *encoder,
+                         const GPUCommandBufferDescriptor *descriptor);
     virtual ~GPUCommandBufferBase() = default;
 
-  public:
-    virtual void execute() = 0;
-
-  private:
-    template <typename T, typename... Args>
-    void addCommand(Args &&...args)
+    GPUHandleType type() const override final
     {
-      auto command = std::make_shared<T>(std::forward<Args>(args)...);
-      commands_.push_back(command);
+      return GPUHandleType::kCommandBuffer;
+    }
+
+    const std::string &getEncoderLabel() const;
+    void setEncoderLabel(std::string encoderLabel);
+
+    const GPUCommandBufferResourceUsage &getResourceUsages() const;
+    const std::vector<GPUIndirectDrawMetadata> &getIndirectDrawMetadata();
+
+    template <typename F>
+    auto useCommands(F func) -> auto
+    {
+      auto result = func(commands_);
+      commands_.reset();
+      return result;
     }
 
   protected:
-    std::vector<std::shared_ptr<GPUCommand>> commands_;
+    gpu::CommandIterator commands_;
+
+  private:
+    GPUCommandBufferBase(std::shared_ptr<GPUDeviceBase> device,
+                         GPUHandle::ErrorTag tag,
+                         std::string_view label);
+
+    GPUCommandBufferResourceUsage resource_usages_;
+    std::vector<GPUIndirectDrawMetadata> indirect_draw_metadata_;
+    std::string encoder_label_;
   };
 }

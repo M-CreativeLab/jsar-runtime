@@ -135,7 +135,7 @@ namespace commandbuffers
     kTexture3D,
   };
 
-  class GPUTexture : public GPUHandle
+  class GPUTextureBase : public GPUHandle
   {
   public:
   private:

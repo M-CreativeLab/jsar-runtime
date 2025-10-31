@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string_view>
 
 #include "./gpu_base.hpp"
 #include "./gpu_command_buffer.hpp"
@@ -9,12 +10,21 @@
 
 namespace commandbuffers
 {
-  class GPUCommandEncoderBase : public GPUHandle
+  struct GPUCommandEncoderDescriptor
   {
-    using GPUHandle::GPUHandle;
+    std::string_view label;
+  };
 
+  enum class GPUUsageValidationMode
+  {
+    kDefault,
+    kInternal,
+  };
+
+  class GPUCommandEncoder final : public GPUHandle
+  {
   public:
-    virtual ~GPUCommandEncoderBase() = default;
+    virtual ~GPUCommandEncoder() = default;
 
     GPUHandleType type() const override
     {
@@ -26,7 +36,20 @@ namespace commandbuffers
     virtual GPURenderPassEncoderBase beginRenderPass(GPURenderPassDescriptor &) = 0;
     virtual std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const = 0;
 
-  protected:
-    std::shared_ptr<GPUPassEncoderBase> current_pass_encoder_;
+  private:
+    GPUCommandEncoder(std::shared_ptr<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
+    GPUCommandEncoder(std::shared_ptr<GPUDeviceBase> device,
+                      GPUHandle::ErrorTag tag,
+                      std::string_view label);
+
+    bool validateFinish() const;
+
+    GPUEncodingContext encoding_context_;
+    std::unordered_set<GPUBufferBase *> top_level_buffers_;
+    std::unordered_set<GPUTextureBase *> top_level_textures_;
+    // std::unordered_set<GPUQuerySetBase *> used_query_sets_;
+
+    uint64_t debug_group_stack_size_ = 0;
+    GPUUsageValidationMode usage_validation_mode_;
   };
 }

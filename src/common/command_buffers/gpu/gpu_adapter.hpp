@@ -1,14 +1,17 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <iostream>
 #include <unordered_set>
 #include <unordered_map>
-#include <iostream>
-#include <sstream>
-
-#include "./gpu_base.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
 
 namespace commandbuffers
 {
+  class GPUInstanceBase;
+  class GPUPhysicalDeviceBase;
+
   class GPUAdapterInfo
   {
   public:
@@ -40,52 +43,37 @@ namespace commandbuffers
     }
   };
 
-  class GPUSupportedFeatures : public std::unordered_set<std::string>
+  class GPUAdapterBase : ErrorMonad
   {
   public:
-    GPUSupportedFeatures()
-    {
-      // TODO(yorkie): add required features
-    }
-  };
+    GPUAdapterBase(std::shared_ptr<GPUInstanceBase> instance,
+                   std::shared_ptr<GPUPhysicalDeviceBase> physicalDevice,
+                   GPUFeatureLevel level,
+                   GPUPowerPreference powerPreference);
 
-  class GPUSupportedLimits : public std::unordered_map<std::string, uint32_t>
-  {
-  public:
-    GPUSupportedLimits()
-    {
-      insert({"maxTextureDimension1D", 8192});
-      insert({"maxTextureDimension2D", 8192});
-      insert({"maxTextureDimension3D", 2048});
-      insert({"maxTextureArrayLayers", 256});
-      insert({"maxBindGroups", 4});
-      insert({"maxBindGroupEntries", 640});
-    }
+    GPUInstanceBase *instance() const;
+    const GPUAdapterInfo &info() const;
+    bool hasFeature(GPUFeatureName) const;
+    void requestDevice(const GPUDeviceDescriptor *descriptor,
+                       std::function<void(std::unique_ptr<GPUDeviceBase>)> callback);
+    std::unique_ptr<GPUDeviceBase> createDevice(const GPUDeviceDescriptor *descriptor = nullptr);
 
-  public:
-    uint32_t maxTextureDimension1D() const
-    {
-      return at("maxTextureDimension1D");
-    }
-    uint32_t maxTextureDimension2D() const
-    {
-      return at("maxTextureDimension2D");
-    }
-    uint32_t maxTextureDimension3D() const
-    {
-      return at("maxTextureDimension3D");
-    }
-    uint32_t maxTextureArrayLayers() const
-    {
-      return at("maxTextureArrayLayers");
-    }
-    uint32_t maxBindGroups() const
-    {
-      return at("maxBindGroups");
-    }
-    uint32_t maxBindGroupEntries() const
-    {
-      return at("maxBindGroupEntries");
-    }
+    GPUPhysicalDeviceBase *physicalDevice();
+    const GPUPhysicalDeviceBase *physicalDevice() const;
+    GPUFeatureLevel featureLevel() const;
+
+    const std::string &name() const;
+
+  private:
+    std::shared_ptr<GPUInstanceBase> instance_;
+    std::shared_ptr<GPUPhysicalDeviceBase> physical_device_;
+    GPUFeatureLevel feature_level_;
+    GPUPowerPreference power_preference_;
+
+    bool use_tiered_limits = false;
+
+    // The adapter becomes "consumed" once it has successfully been used to
+    // create a device.
+    bool adapter_is_consumed = false;
   };
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <concepts>
 #include <memory>
+#include <utility>
 #include <unistd.h>
 
 #ifndef TR_UNLIKELY
@@ -252,4 +253,20 @@ namespace transmute::common
   template <class Derived, class Base>
   concept derived_from = std::derived_from<Derived, Base>;
 #endif
+
+  inline std::pair<std::string, bool> GetEnvironmentVar(const char *variableName)
+  {
+    char *value = getenv(variableName);
+    return value == nullptr ? std::make_pair(std::string(), false)
+                            : std::make_pair(std::string(value), true);
+  }
+
+  inline bool SetEnvironmentVar(const char *variableName, const char *value)
+  {
+    if (value == nullptr)
+    {
+      return unsetenv(variableName) == 0;
+    }
+    return setenv(variableName, value, 1) == 0;
+  }
 }

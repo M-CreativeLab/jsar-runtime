@@ -3,60 +3,61 @@
 #include <cassert>
 #include <memory>
 #include <vector>
+#include <string>
+#include <string_view>
 
-#include "./gpu_base.hpp"
-#include "./gpu_adapter.hpp"
-#include "./gpu_command_buffer.hpp"
-#include "./gpu_command_encoder.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_adapter.hpp>
+#include <common/command_buffers/gpu/gpu_instance.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_command_encoder.hpp>
+#include <common/command_buffers/gpu/gpu_bind_group.hpp>
 
-namespace commandbuffers::gpu
+
+namespace commandbuffers
 {
-  class GPUQueue : public GPUHandle
+  struct GPUDeviceDescriptor
   {
-  public:
-    virtual ~GPUQueue() = default;
-
-  public:
-    virtual void submit(const std::vector<std::shared_ptr<GPUCommandBufferBase>> &) = 0;
+    std::string_view label;
+    size_t requiredFeatureCount = 0;
+    GPUFeatureName const *requiredFeatures = nullptr;
+    GPUSupportedLimits *requiredLimits = nullptr;
   };
 
-  /**
-   * The `GPUDevice` interface represents a logical GPU device.
-   * 
-   * In usually, at client-side WebGPU implementation, it implements the `GPUDevice` interface to send 
-   * `GPUCommandBuffer` to the renderer. And at server-side's renderer, it implements the same `GPUDevice` interface to
-   * execute the `GPUCommandBuffer` on the corresponding graphics API (e.g. OpenGL, Vulkan, etc.) via RHI.
-   */
   class GPUDeviceBase : public GPUHandle
   {
   public:
+    GPUDeviceBase(GPUAdapterBase *adapter,
+                  GPUDeviceDescriptor &descriptor);
     virtual ~GPUDeviceBase() = default;
 
   public:
-    const GPUAdapterInfo &adapterInfo() const
-    {
-      return adapter_info_;
-    }
-    const GPUSupportedFeatures &features() const
-    {
-      return features_;
-    }
-    const GPUSupportedLimits &limits() const
-    {
-      return limits_;
-    }
-    GPUQueue &queueRef()
-    {
-      assert(queue_ != nullptr);
-      return *queue_;
-    }
+    const GPUAdapterInfo &adapterInfo() const;
+    const GPUSupportedFeatures &features() const;
+    const GPUSupportedLimits &limits() const;
 
-    virtual std::unique_ptr<GPUCommandEncoderBase> createCommandEncoder(std::optional<std::string> label) = 0;
+    bool validateHandle(const GPUHandle &handle) const;
+
+    GPUInstanceBase *getInstance() const;
+    GPUAdapterBase *getAdapter() const;
+    GPUPhysicalDeviceBase *getPhysicalDevice() const;
+
+    virtual std::unique_ptr<GPUCommandBufferBase> createCommandBuffer(
+      GPUCommandEncoder &encoder,
+      const GPUCommandBufferDescriptor *descriptor = nullptr) = 0;
+
+    std::shared_ptr<GPUBindGroupLayoutBase> GetOrCreateBindGroupLayout();
+
+    bool isValidationEnabled() const;
+    bool isRobustnessEnabled() const;
+    bool isCompatibilityMode() const;
+    bool isImmediateErrorHandlingEnabled() const;
+
+    virtual bool mayRequireDuplicationOfIndirectParameters() const;
 
   protected:
     GPUAdapterInfo adapter_info_;
     GPUSupportedFeatures features_;
     GPUSupportedLimits limits_;
-    std::unique_ptr<GPUQueue> queue_;
   };
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cassert>
 #include <algorithm>
 
 namespace transmute::common
@@ -44,5 +45,51 @@ namespace transmute::common
     {
       return std::fabs(a - b) <= epsilon;
     }
+
+    /**
+     * Check if a number is a power of two.
+     * 
+     * @param n The number to check, must be non-zero.
+     * @returns True if n is a power of two, false otherwise.
+     */
+    static bool IsPowerOfTwo(uint64_t n)
+    {
+      assert(n != 0);
+      return (n & (n - 1)) == 0;
+    }
   };
+
+  inline bool IsPtrAligned(const void *ptr, size_t alignment)
+  {
+    assert(math_utils::IsPowerOfTwo(alignment));
+    assert(alignment != 0);
+    return (reinterpret_cast<size_t>(ptr) & (alignment - 1)) == 0;
+  }
+
+  inline bool IsAligned(uint32_t value, size_t alignment)
+  {
+    assert(alignment <= UINT32_MAX);
+    assert(math_utils::IsPowerOfTwo(alignment));
+    assert(alignment != 0);
+    uint32_t alignment32 = static_cast<uint32_t>(alignment);
+    return (value & (alignment32 - 1)) == 0;
+  }
+
+  template <typename T>
+  inline T *AlignPtr(T *ptr, size_t alignment)
+  {
+    assert(math_utils::IsPowerOfTwo(alignment));
+    assert(alignment != 0);
+    return reinterpret_cast<T *>((reinterpret_cast<size_t>(ptr) + (alignment - 1)) &
+                                 ~(alignment - 1));
+  }
+
+  template <typename T>
+  inline const T *AlignPtr(const T *ptr, size_t alignment)
+  {
+    assert(math_utils::IsPowerOfTwo(alignment));
+    assert(alignment != 0);
+    return reinterpret_cast<const T *>((reinterpret_cast<size_t>(ptr) + (alignment - 1)) &
+                                       ~(alignment - 1));
+  }
 }
