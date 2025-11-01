@@ -17,11 +17,11 @@ namespace endor
   namespace canvas
   {
     /**
-   * @class CanvasBase
-   * The `CanvasBase` class is a base class for canvas implementations, providing common functionality for both `Canvas` and `OffscreenCanvas`.
-   *
-   * @tparam T The derived class type (e.g., `Canvas` or `OffscreenCanvas`).
-   */
+     * @class CanvasBase
+     * The `CanvasBase` class is a base class for canvas implementations, providing common functionality for both `Canvas` and `OffscreenCanvas`.
+     *
+     * @tparam T The derived class type (e.g., `Canvas` or `OffscreenCanvas`).
+     */
     template <typename T>
     class CanvasBase : public ImageSource,
                        public dom::DOMEventTarget,
@@ -35,9 +35,6 @@ namespace endor
       static constexpr const int DEFAULT_CANVAS_HEIGHT = 150;
 
     public:
-      /**
-     * Default constructor for `CanvasBase`.
-     */
       CanvasBase(std::optional<int> width = std::nullopt,
                  std::optional<int> height = std::nullopt)
           : ImageSource()
@@ -52,41 +49,41 @@ namespace endor
 
     public:
       /**
-     * Creates or gets the rendering context with the specified type.
-     *
-     * @param type The type of the rendering context: 2d, webgl, webgl2.
-     * @returns The rendering context.
-     * @throws std::invalid_argument if the context type is unsupported.
-     */
+       * Creates or gets the rendering context with the specified type.
+       *
+       * @param type The type of the rendering context: 2d, webgl, webgl2.
+       * @returns The rendering context.
+       * @throws std::invalid_argument if the context type is unsupported.
+       */
       std::shared_ptr<RenderingContextBase<T>> getContext(RenderingContextType type);
 
     public:
       /**
-     * Gets the width of the canvas.
-     *
-     * @returns The width of the canvas in pixels.
-     */
+       * Gets the width of the canvas.
+       *
+       * @returns The width of the canvas in pixels.
+       */
       size_t width() const override final
       {
         return skSurface == nullptr ? 0 : skSurface->width();
       }
 
       /**
-     * Gets the height of the canvas.
-     *
-     * @returns The height of the canvas in pixels.
-     */
+       * Gets the height of the canvas.
+       *
+       * @returns The height of the canvas in pixels.
+       */
       size_t height() const override final
       {
         return skSurface == nullptr ? 0 : skSurface->height();
       }
 
       /**
-     * Reads the pixel data from the canvas into the specified `SkPixmap`.
-     *
-     * @param dst The destination `SkPixmap` to store the pixel data.
-     * @returns True if the pixel data was successfully read, false otherwise.
-     */
+       * Reads the pixel data from the canvas into the specified `SkPixmap`.
+       *
+       * @param dst The destination `SkPixmap` to store the pixel data.
+       * @returns True if the pixel data was successfully read, false otherwise.
+       */
       bool readPixels(SkPixmap &dst) const override final
       {
         if (skSurface == nullptr)
@@ -97,11 +94,11 @@ namespace endor
       }
 
       /**
-     * Peeks the pixel data from the canvas into the specified `SkPixmap` without copying.
-     * 
-     * @param pixmap The destination `SkPixmap` to store the pixel data.
-     * @returns True if the pixel data was successfully peeked, false otherwise.
-     */
+       * Peeks the pixel data from the canvas into the specified `SkPixmap` without copying.
+       * 
+       * @param pixmap The destination `SkPixmap` to store the pixel data.
+       * @returns True if the pixel data was successfully peeked, false otherwise.
+       */
       bool peekPixels(SkPixmap *pixmap) const override final
       {
         if (skSurface == nullptr || pixmap == nullptr)
@@ -110,8 +107,8 @@ namespace endor
       }
 
       /**
-     * This callback is used to listen for pixel updates on the canvas.
-     */
+       * This callback is used to listen for pixel updates on the canvas.
+       */
       void setPixelsUpdatedCallback(std::function<void()> callback)
       {
         pixels_updated_callback_ = std::move(callback);
@@ -119,10 +116,10 @@ namespace endor
 
     public:
       /**
-     * Sets the width of the canvas.
-     *
-     * @param width The new width of the canvas in pixels.
-     */
+       * Sets the width of the canvas.
+       *
+       * @param width The new width of the canvas in pixels.
+       */
       void setWidth(uint32_t width)
       {
         widthToSet = width;
@@ -130,10 +127,10 @@ namespace endor
       }
 
       /**
-     * Sets the height of the canvas.
-     *
-     * @param height The new height of the canvas in pixels.
-     */
+       * Sets the height of the canvas.
+       *
+       * @param height The new height of the canvas in pixels.
+       */
       void setHeight(uint32_t height)
       {
         heightToSet = height;
@@ -141,16 +138,16 @@ namespace endor
       }
 
       /**
-     * Resizes the canvas to the specified width and height.
-     */
+       * Resizes the canvas to the specified width and height.
+       */
       inline void resize()
       {
         resetSkSurface();
       }
 
       /**
-     * @returns The constant shared pointer to the SkBitmap that stores the canvas content.
-     */
+       * @returns The constant shared pointer to the SkBitmap that stores the canvas content.
+       */
       inline std::shared_ptr<const SkBitmap> getSkBitmap() const
       {
         return bitmap_;
@@ -158,18 +155,18 @@ namespace endor
 
     protected:
       /**
-     * Gets a shared pointer to the derived class instance.
-     *
-     * @returns A shared pointer to the derived class instance.
-     */
+       * Gets a shared pointer to the derived class instance.
+       *
+       * @returns A shared pointer to the derived class instance.
+       */
       std::shared_ptr<T> getPtr()
       {
         return this->shared_from_this();
       }
 
       /**
-     * Resets the Skia surface to match the current width and height.
-     */
+       * Resets the Skia surface to match the current width and height.
+       */
       void resetSkSurface();
 
     protected:
@@ -190,9 +187,9 @@ namespace endor
     };
 
     /**
-   * @class Canvas
-   * The `Canvas` class represents an HTML canvas element.
-   */
+     * @class Canvas
+     * The `Canvas` class represents an HTML canvas element.
+     */
     class Canvas final : public CanvasBase<Canvas>
     {
     public:
@@ -200,34 +197,34 @@ namespace endor
 
     public:
       /**
-     * Converts the canvas content to a data URL.
-     *
-     * @param type The MIME type of the image (e.g., "image/png").
-     * @param encoderOptions The encoding options for the image.
-     * @returns A data URL containing the canvas content.
-     */
+       * Converts the canvas content to a data URL.
+       *
+       * @param type The MIME type of the image (e.g., "image/png").
+       * @param encoderOptions The encoding options for the image.
+       * @returns A data URL containing the canvas content.
+       */
       std::string toDataURL(const std::string &type, double encoderOptions);
     };
 
     /**
-   * @class OffscreenCanvas
-   * The `OffscreenCanvas` class represents an offscreen canvas element.
-   */
+     * @class OffscreenCanvas
+     * The `OffscreenCanvas` class represents an offscreen canvas element.
+     */
     class OffscreenCanvas final : public CanvasBase<OffscreenCanvas>
     {
     public:
       /**
-     * Constructs a new `OffscreenCanvas` with the specified width and height.
-     *
-     * @param width The width of the canvas in pixels.
-     * @param height The height of the canvas in pixels.
-     */
+       * Constructs a new `OffscreenCanvas` with the specified width and height.
+       *
+       * @param width The width of the canvas in pixels.
+       * @param height The height of the canvas in pixels.
+       */
       OffscreenCanvas(uint32_t width, uint32_t height);
 
     public:
       /**
-     * Commits the offscreen canvas content to the main thread.
-     */
+       * Commits the offscreen canvas content to the main thread.
+       */
       void commit();
     };
   } // namespace canvas

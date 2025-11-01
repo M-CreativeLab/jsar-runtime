@@ -21,11 +21,11 @@ namespace endor
                                                              EventTarget>;
 
       /**
-     * OffscreenCanvas wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps canvas::OffscreenCanvas objects for use in V8 JavaScript execution contexts.
-     * It provides the standard OffscreenCanvas interface for off-screen rendering.
-     */
+       * OffscreenCanvas wrapper for V8 objects using scripting_base::ObjectWrap.
+       * 
+       * This class wraps canvas::OffscreenCanvas objects for use in V8 JavaScript execution contexts.
+       * It provides the standard OffscreenCanvas interface for off-screen rendering.
+       */
       class OffscreenCanvas : public OffscreenCanvasBase
       {
         using OffscreenCanvasBase::ObjectWrap;
