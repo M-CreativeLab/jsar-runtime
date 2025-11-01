@@ -68,41 +68,8 @@ namespace endor
       const uint8_t* data = encodedData->bytes();
       size_t dataSize = encodedData->size();
       
-      // Manual base64 encoding since the utility function is templated for fixed arrays
-      const std::string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-      std::string base64Result;
-      
-      for (size_t i = 0; i < dataSize; i += 3)
-      {
-        uint32_t val = 0;
-        int padding = 0;
-
-        for (int j = 0; j < 3; j++)
-        {
-          val <<= 8;
-          if (i + j < dataSize)
-          {
-            val |= data[i + j];
-          }
-          else
-          {
-            padding++;
-          }
-        }
-
-        for (int j = 0; j < 4; j++)
-        {
-          if (j < 4 - padding)
-          {
-            base64Result += chars[(val >> (18 - j * 6)) & 0x3F];
-          }
-          else
-          {
-            base64Result += '=';
-          }
-        }
-      }
-
+      // Use the shared utility function for base64 encoding
+      std::string base64Result = Base64Encode(data, dataSize);
       // Return the data URL
       return "data:" + mimeType + ";base64," + base64Result;
     }
