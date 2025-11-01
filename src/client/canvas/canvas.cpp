@@ -65,9 +65,9 @@ namespace endor
       }
 
       // Base64 encode the data
-      const uint8_t* data = encodedData->bytes();
+      const uint8_t *data = encodedData->bytes();
       size_t dataSize = encodedData->size();
-      
+
       // Use the shared utility function for base64 encoding
       std::string base64Result = Base64Encode(data, dataSize);
       // Return the data URL
