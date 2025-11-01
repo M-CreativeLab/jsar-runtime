@@ -1,3 +1,4 @@
+#include <array>
 #include <skia/include/encode/SkPngEncoder.h>
 #include <skia/include/encode/SkJpegEncoder.h>
 #include <skia/include/core/SkData.h>
@@ -69,7 +70,7 @@ namespace endor
       size_t dataSize = encodedData->size();
 
       // Use the shared utility function for base64 encoding
-      std::string base64Result = Base64Encode(data, dataSize);
+      string base64Result = Base64Encode(data, dataSize);
       // Return the data URL
       return "data:" + mimeType + ";base64," + base64Result;
     }
