@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API: toDataURL()</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      background-color: white;
+      margin: 10px;
+      display: block;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .test-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+
+    .data-url-output {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .test-result {
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .test-result.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+
+    .test-result.error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+
+    .preview-image {
+      max-width: 200px;
+      max-height: 150px;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API: toDataURL() Method</h1>
+  <p class="description">Tests the Canvas toDataURL() method with different formats and quality settings</p>
+
+  <div class="test-section">
+    <div class="test-title">1. Default PNG Export (no parameters)</div>
+    <canvas id="pngDefaultCanvas" width="300" height="200"></canvas>
+    <div id="pngDefaultResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">2. Explicit PNG Export</div>
+    <canvas id="pngExplicitCanvas" width="300" height="200"></canvas>
+    <div id="pngExplicitResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">3. JPEG Export with High Quality (0.9)</div>
+    <canvas id="jpegHighCanvas" width="300" height="200"></canvas>
+    <div id="jpegHighResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">4. JPEG Export with Low Quality (0.3)</div>
+    <canvas id="jpegLowCanvas" width="300" height="200"></canvas>
+    <div id="jpegLowResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">5. JPEG Export with Default Quality (no quality parameter)</div>
+    <canvas id="jpegDefaultCanvas" width="300" height="200"></canvas>
+    <div id="jpegDefaultResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">6. Unsupported Format (WebP) - Should fallback to PNG</div>
+    <canvas id="webpFallbackCanvas" width="300" height="200"></canvas>
+    <div id="webpFallbackResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">7. Empty Canvas Export</div>
+    <canvas id="emptyCanvas" width="300" height="200"></canvas>
+    <div id="emptyResult"></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">8. Complex Drawing Export</div>
+    <canvas id="complexCanvas" width="300" height="200"></canvas>
+    <div id="complexResult"></div>
+  </div>
+
+  <script>
+    // Helper function to create a test drawing on canvas
+    function createTestDrawing(ctx, canvasWidth, canvasHeight) {
+      ctx.fillStyle = '#87ceeb';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      // Some shapes
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(50, 50, 80, 60);
+      
+      ctx.fillStyle = '#333333';
+      ctx.beginPath();
+      ctx.arc(200, 80, 40, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Text
+      ctx.fillStyle = '#000000';
+      ctx.font = '20px Arial';
+      ctx.fillText('Test Canvas', 80, 150);
+
+      // Stroke
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(20, 20, canvasWidth - 40, canvasHeight - 40);
+    }
+
+    // Helper function to display test results
+    function displayResult(containerId, dataUrl, expectedFormat, testName) {
+      const container = document.getElementById(containerId);
+      
+      try {
+        // Validate data URL format
+        if (!dataUrl || typeof dataUrl !== 'string') {
+          throw new Error('Invalid data URL returned');
+        }
+
+        if (!dataUrl.startsWith('data:')) {
+          throw new Error('Data URL does not start with "data:"');
+        }
+
+        // Extract MIME type
+        const mimeMatch = dataUrl.match(/^data:([^;]+)/);
+        const actualMimeType = mimeMatch ? mimeMatch[1] : 'unknown';
+
+        // Check if it's base64 encoded
+        const isBase64 = dataUrl.includes(';base64,');
+        
+        // Create result HTML
+        let resultHtml = `
+          <div class="test-result success">
+            <strong>✓ ${testName} - SUCCESS</strong><br>
+            Expected format: ${expectedFormat}<br>
+            Actual MIME type: ${actualMimeType}<br>
+            Base64 encoded: ${isBase64 ? 'Yes' : 'No'}<br>
+            Data URL length: ${dataUrl.length} characters
+          </div>
+          <div class="data-url-output">
+            <strong>Data URL:</strong><br>
+            ${dataUrl.substring(0, 200)}${dataUrl.length > 200 ? '...' : ''}
+          </div>
+        `;
+
+        // Try to create an image preview if possible
+        if (isBase64 && dataUrl.length > 50) {
+          resultHtml += `
+            <div>
+              <strong>Preview:</strong><br>
+              <img src="${dataUrl}" class="preview-image" alt="Canvas export preview" 
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+              <div style="display:none; color:#666; font-style:italic;">Preview not available</div>
+            </div>
+          `;
+        }
+
+        container.innerHTML = resultHtml;
+
+        console.log(`${testName} - SUCCESS:`, {
+          expectedFormat,
+          actualMimeType,
+          dataUrlLength: dataUrl.length,
+          isBase64,
+          preview: dataUrl.substring(0, 100) + '...'
+        });
+
+      } catch (error) {
+        container.innerHTML = `
+          <div class="test-result error">
+            <strong>✗ ${testName} - ERROR</strong><br>
+            ${error.message}
+          </div>
+          <div class="data-url-output">
+            <strong>Returned value:</strong><br>
+            ${String(dataUrl).substring(0, 200)}
+          </div>
+        `;
+
+        console.error(`${testName} - ERROR:`, error, 'Returned:', dataUrl);
+      }
+    }
+
+    // Test 1: Default PNG export
+    function testDefaultPNG() {
+      const canvas = document.getElementById('pngDefaultCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      createTestDrawing(ctx, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL();
+      displayResult('pngDefaultResult', dataUrl, 'image/png', 'Default PNG Export');
+    }
+
+    // Test 2: Explicit PNG export
+    function testExplicitPNG() {
+      const canvas = document.getElementById('pngExplicitCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      createTestDrawing(ctx, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      displayResult('pngExplicitResult', dataUrl, 'image/png', 'Explicit PNG Export');
+    }
+
+    // Test 3: JPEG high quality
+    function testJPEGHigh() {
+      const canvas = document.getElementById('jpegHighCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      createTestDrawing(ctx, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      displayResult('jpegHighResult', dataUrl, 'image/jpeg', 'JPEG High Quality (0.9)');
+    }
+
+    // Test 4: JPEG low quality
+    function testJPEGLow() {
+      const canvas = document.getElementById('jpegLowCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      createTestDrawing(ctx, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.3);
+      displayResult('jpegLowResult', dataUrl, 'image/jpeg', 'JPEG Low Quality (0.3)');
+    }
+
+    // Test 5: JPEG default quality
+    function testJPEGDefault() {
+      const canvas = document.getElementById('jpegDefaultCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      createTestDrawing(ctx, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      displayResult('jpegDefaultResult', dataUrl, 'image/jpeg', 'JPEG Default Quality');
+    }
+
+    // Test 6: WebP fallback to PNG
+    function testWebPFallback() {
+      const canvas = document.getElementById('webpFallbackCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      createTestDrawing(ctx, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/webp', 0.8);
+      displayResult('webpFallbackResult', dataUrl, 'image/png (fallback)', 'WebP Fallback to PNG');
+    }
+
+    // Test 7: Empty canvas
+    function testEmptyCanvas() {
+      const canvas = document.getElementById('emptyCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Don't draw anything - test empty canvas
+      
+      const dataUrl = canvas.toDataURL();
+      displayResult('emptyResult', dataUrl, 'image/png', 'Empty Canvas Export');
+    }
+
+    // Test 8: Complex drawing
+    function testComplexDrawing() {
+      const canvas = document.getElementById('complexCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Create a more complex drawing
+      // Background
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Multiple gradients and shapes
+      for (let i = 0; i < 5; i++) {
+        const gradient = ctx.createRadialGradient(
+          50 + i * 50, 100, 10,
+          50 + i * 50, 100, 30
+        );
+        gradient.addColorStop(0, `hsl(${i * 60}, 70%, 60%)`);
+        gradient.addColorStop(1, `hsl(${i * 60}, 70%, 30%)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(50 + i * 50, 100, 30, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Text with shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      ctx.fillStyle = '#333';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('Complex Canvas Drawing', 50, 170);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      displayResult('complexResult', dataUrl, 'image/png', 'Complex Drawing Export');
+    }
+
+    // Run all tests
+    function runAllTests() {
+      console.log('Starting Canvas toDataURL() tests...');
+
+      try {
+        testDefaultPNG();
+        testExplicitPNG();
+        testJPEGHigh();
+        testJPEGLow();
+        testJPEGDefault();
+        testWebPFallback();
+        testEmptyCanvas();
+        testComplexDrawing();
+
+        console.log('All toDataURL() tests completed!');
+      } catch (error) {
+        console.error('Error during toDataURL() tests:', error);
+      }
+    }
+
+    // Run tests when page loads
+    runAllTests();
+  </script>
+
+</body>
+
+</html>

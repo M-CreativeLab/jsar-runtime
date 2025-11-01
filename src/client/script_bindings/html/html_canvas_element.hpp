@@ -15,19 +15,16 @@ namespace endor
       using HTMLCanvasElementBase = scripting_base::ObjectWrap<HTMLCanvasElement, dom::HTMLCanvasElement, HTMLElement>;
 
       /**
-     * HTMLCanvasElement wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps dom::HTMLCanvasElement objects for use in V8 JavaScript execution contexts.
-     * It provides the HTML Canvas element interface for 2D and WebGL rendering contexts.
-     */
+       * HTMLCanvasElement wrapper for V8 objects using scripting_base::ObjectWrap.
+       * 
+       * This class wraps dom::HTMLCanvasElement objects for use in V8 JavaScript execution contexts.
+       * It provides the HTML Canvas element interface for 2D and WebGL rendering contexts.
+       */
       class HTMLCanvasElement : public HTMLCanvasElementBase
       {
         using HTMLCanvasElementBase::ObjectWrap;
 
       public:
-        /**
-       * The name of the HTMLCanvasElement class for V8.
-       */
         static std::string Name()
         {
           return "HTMLCanvasElement";
