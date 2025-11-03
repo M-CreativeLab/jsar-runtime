@@ -435,7 +435,13 @@ namespace jsar::example
 
     // Create contents bar component
     contentsBarComponent_ = make_shared<BarComponent>();
-
+    // Ensure close button removes content and components
+    auto close_content = [this](Content *content)
+    {
+      if (content)
+        closeContent(content->getId());
+    };
+    contentsBarComponent_->setOnCloseCallback(close_content);
     // Setup screen renderer and GUI
     setupScreenRenderer();
 
@@ -934,6 +940,13 @@ namespace jsar::example
       isKeySpacePressed = false;
       if (embedder_)
         embedder_->constellation->resetContents();
+    }
+
+    for (auto it = contents_.begin(); it != contents_.end(); /* no increment */)
+    {
+      auto current = it++; // Advance iterator BEFORE processing
+      // Now 'current' is safe to use even if the element is erased
+      current->second->processInput();
     }
   }
 

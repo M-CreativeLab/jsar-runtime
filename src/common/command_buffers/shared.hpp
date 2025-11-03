@@ -244,15 +244,16 @@ namespace commandbuffers
 
   std::string commandTypeToStr(CommandBufferType type);
 
-  /**
-   * Check this command type is a XRFrame control.
-   */
-  inline bool isXRFrameControlCommandType(CommandBufferType type)
+  class CommandTypes
   {
-    return type == COMMAND_BUFFER_XRFRAME_START_REQ ||
-           type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ ||
-           type == COMMAND_BUFFER_XRFRAME_END_REQ;
-  }
+  public:
+    // Check this command type is a XRFrame control.
+    static bool IsXRFrameControl(CommandBufferType);
+    // Check this command type is a framebuffer dependent command, such as draw calls, read pixels, etc.
+    static bool IsFramebufferDependentCommand(CommandBufferType);
+    // Check this command type is a resource creating command.
+    static bool IsResourceCreatingCommand(CommandBufferType);
+  };
 
   // Check this command type is a request type.
   template <CommandBufferType Type>

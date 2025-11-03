@@ -159,7 +159,7 @@ namespace endor
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
       info.GetReturnValue().Set(String::NewFromUtf8(isolate,
-                                                    handle()->text.c_str())
+                                                    handle()->getText().c_str())
                                   .ToLocalChecked());
     }
 
@@ -176,7 +176,7 @@ namespace endor
       }
 
       String::Utf8Value text(isolate, value);
-      handle()->text = *text ? *text : "";
+      handle()->setText(*text ? *text : "");
     }
 
     void HTMLScriptElement::CharsetGetter(const PropertyCallbackInfo<Value> &info)

@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 
 #include "./window_ctx.hpp"
+#include "./shader.hpp"
 
 namespace jsar::example
 {
@@ -61,6 +62,13 @@ namespace jsar::example
      */
     void setContentDragging(Content *content, bool dragging);
 
+    void processInput(Content *content);
+
+    void setOnCloseCallback(std::function<void(Content *)> callback)
+    {
+      onCloseCallback_ = callback;
+    }
+
   private:
     struct BarInstance
     {
@@ -68,6 +76,8 @@ namespace jsar::example
       glm::mat4 transform;
       bool isHovered;
       bool isDragging;
+      bool buttonIsHovered;
+      bool buttonIsPressed;
 
       BarInstance(Content *c)
           : content(c)
@@ -84,6 +94,11 @@ namespace jsar::example
     void createBarTexture();
     glm::mat4 calculateBarTransform(const glm::vec3 &contentPosition) const;
 
+    void createButtonGeometry();
+    void updateButtonInstanceBuffer();
+    glm::vec3 calculateButtonWorldPos(const glm::vec3 &contentPosition) const;
+    float rayDistanceToPoint(const glm::vec3 &rayOrigin, const glm::vec3 &rayDir, const glm::vec3 &point) const;
+
   private:
     std::vector<BarInstance> instances_;
 
@@ -91,13 +106,16 @@ namespace jsar::example
     GLuint vao_;
     GLuint vertexVBO_;   // Vertex data for the bar quad
     GLuint instanceVBO_; // Instance transformation matrices and states
-    GLuint program_;
-    GLuint barTexture_; // Skia-generated bar texture
+    GLuint barTexture_;  // Skia-generated bar texture
 
-    // Shader uniforms
-    GLint viewMatrixLoc_;
-    GLint projectionMatrixLoc_;
-    GLint textureLoc_;
+    // shader
+    Shader barShader_;
+
+    // OpenGL resources for button instanced rendering
+    GLuint buttonVAO_;
+    GLuint buttonVertexVBO_;
+    GLuint buttonInstanceVBO_;
+    std::vector<GLfloat> buttonVertices_;
 
     // 3D bar properties
     static constexpr float BAR_WIDTH = 0.20f;     // World space width
@@ -107,6 +125,8 @@ namespace jsar::example
     // Texture properties
     static constexpr int TEXTURE_WIDTH = 256;
     static constexpr int TEXTURE_HEIGHT = TEXTURE_WIDTH * (BAR_HEIGHT / BAR_WIDTH);
+    static constexpr float CLOSE_BUTTON_RADIUS = (BAR_HEIGHT / 2);
+    static constexpr float CLOSE_BUTTON_OFFSET = 0.01f; // Offset from left edge
 
     // Vertex data for a quad
     std::vector<float> vertices_;
@@ -114,5 +134,7 @@ namespace jsar::example
     // Shaders for 3D rendering
     const char *barVertSource_;
     const char *barFragSource_;
+
+    std::function<void(Content *)> onCloseCallback_;
   };
 }

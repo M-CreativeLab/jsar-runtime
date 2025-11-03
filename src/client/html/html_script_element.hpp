@@ -65,6 +65,14 @@ namespace endor
         src = value;
         setAttribute("src", value);
       }
+      inline void setText(const string &value)
+      {
+        setTextContent(value);
+      }
+      inline string getText() const
+      {
+        return textContent();
+      }
 
     protected:
       void createdCallback(bool from_scripting) override;

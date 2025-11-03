@@ -196,17 +196,17 @@ inline std::string ToCapitalize(std::string str)
 
 /**
  * Base64 encode a byte array.
- *
+ * 
+ * @param size The size of the byte array.
  * @param input The byte array to encode.
  * @returns The base64 encoded string.
  */
-template <size_t N>
-inline std::string Base64Encode(const std::array<uint8_t, N> &input)
+inline std::string Base64Encode(const uint8_t *input, size_t size)
 {
   const std::string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   std::string result;
 
-  for (size_t i = 0; i < input.size(); i += 3)
+  for (size_t i = 0; i < size; i += 3)
   {
     uint32_t val = 0;
     int padding = 0;
@@ -214,7 +214,7 @@ inline std::string Base64Encode(const std::array<uint8_t, N> &input)
     for (int j = 0; j < 3; j++)
     {
       val <<= 8;
-      if (i + j < input.size())
+      if (i + j < size)
       {
         val |= input[i + j];
       }
@@ -238,6 +238,18 @@ inline std::string Base64Encode(const std::array<uint8_t, N> &input)
   }
 
   return result;
+}
+
+/**
+ * Base64 encode a byte array.
+ *
+ * @param input The byte array to encode.
+ * @returns The base64 encoded string.
+ */
+template <size_t N>
+inline std::string Base64Encode(const std::array<uint8_t, N> &input)
+{
+  return Base64Encode(input.data(), N);
 }
 
 namespace transmute::common
