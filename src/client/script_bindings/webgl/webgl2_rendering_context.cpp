@@ -1186,36 +1186,192 @@ namespace endor
       {
         Isolate *isolate = args.GetIsolate();
         HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
 
-        isolate->ThrowException(Exception::Error(
-          MakeMethodError(isolate, "vertexAttribI4i", "Not implemented")));
+        if (args.Length() < 5)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "vertexAttribI4i", 5, args.Length())));
+          return;
+        }
+        for (int i = 0; i < 5; ++i)
+        {
+          if (!args[i]->IsNumber())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodArgTypeError(isolate, "vertexAttribI4i", i, "number", args[i])));
+            return;
+          }
+        }
+
+        int index = args[0]->Int32Value(context).ToChecked();
+        int v0 = args[1]->Int32Value(context).ToChecked();
+        int v1 = args[2]->Int32Value(context).ToChecked();
+        int v2 = args[3]->Int32Value(context).ToChecked();
+        int v3 = args[4]->Int32Value(context).ToChecked();
+
+        handle()->vertexAttribI4i(index, v0, v1, v2, v3);
+        args.GetReturnValue().SetUndefined();
       }
 
       void WebGL2RenderingContext::VertexAttribI4ui(const v8::FunctionCallbackInfo<v8::Value> &args)
       {
         Isolate *isolate = args.GetIsolate();
         HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
 
-        isolate->ThrowException(Exception::Error(
-          MakeMethodError(isolate, "vertexAttribI4ui", "Not implemented")));
+        if (args.Length() < 5)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "vertexAttribI4ui", 5, args.Length())));
+          return;
+        }
+        for (int i = 0; i < 5; ++i)
+        {
+          if (!args[i]->IsNumber())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodArgTypeError(isolate, "vertexAttribI4ui", i, "number", args[i])));
+            return;
+          }
+        }
+
+        int index = args[0]->Int32Value(context).ToChecked();
+        uint32_t v0 = args[1]->Uint32Value(context).ToChecked();
+        uint32_t v1 = args[2]->Uint32Value(context).ToChecked();
+        uint32_t v2 = args[3]->Uint32Value(context).ToChecked();
+        uint32_t v3 = args[4]->Uint32Value(context).ToChecked();
+
+        handle()->vertexAttribI4ui(index, v0, v1, v2, v3);
+        args.GetReturnValue().SetUndefined();
       }
 
       void WebGL2RenderingContext::VertexAttribI4iv(const v8::FunctionCallbackInfo<v8::Value> &args)
       {
         Isolate *isolate = args.GetIsolate();
         HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
 
-        isolate->ThrowException(Exception::Error(
-          MakeMethodError(isolate, "vertexAttribI4iv", "Not implemented")));
+        if (args.Length() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "vertexAttribI4iv", 2, args.Length())));
+          return;
+        }
+        if (!args[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "vertexAttribI4iv", 0, "number", args[0])));
+          return;
+        }
+        if (!args[1]->IsInt32Array() && !args[1]->IsArray())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "vertexAttribI4iv", 1, "Int32Array or Array", args[1])));
+          return;
+        }
+
+        int index = args[0]->Int32Value(context).ToChecked();
+        std::vector<int> values;
+
+        if (args[1]->IsInt32Array())
+        {
+          auto data = args[1].As<Int32Array>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "vertexAttribI4iv", "Invalid Int32Array")));
+            return;
+          }
+          auto bufferData = static_cast<int32_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(int32_t);
+          values.assign(bufferData, bufferData + data->Length());
+        }
+        else
+        {
+          auto arr = args[1].As<Array>();
+          uint32_t length = arr->Length();
+          values.reserve(length);
+          for (uint32_t i = 0; i < length; ++i)
+          {
+            auto item = arr->Get(context, i).ToLocalChecked();
+            values.push_back(item->Int32Value(context).ToChecked());
+          }
+        }
+
+        if (values.size() < 4)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttribI4iv", "Expected at least 4 components")));
+          return;
+        }
+
+        handle()->vertexAttribI4iv(index, values);
+        args.GetReturnValue().SetUndefined();
       }
 
       void WebGL2RenderingContext::VertexAttribI4uiv(const v8::FunctionCallbackInfo<v8::Value> &args)
       {
         Isolate *isolate = args.GetIsolate();
         HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
 
-        isolate->ThrowException(Exception::Error(
-          MakeMethodError(isolate, "vertexAttribI4uiv", "Not implemented")));
+        if (args.Length() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "vertexAttribI4uiv", 2, args.Length())));
+          return;
+        }
+        if (!args[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "vertexAttribI4uiv", 0, "number", args[0])));
+          return;
+        }
+        if (!args[1]->IsUint32Array() && !args[1]->IsArray())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "vertexAttribI4uiv", 1, "Uint32Array or Array", args[1])));
+          return;
+        }
+
+        int index = args[0]->Int32Value(context).ToChecked();
+        std::vector<uint32_t> values;
+
+        if (args[1]->IsUint32Array())
+        {
+          auto data = args[1].As<Uint32Array>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "vertexAttribI4uiv", "Invalid Uint32Array")));
+            return;
+          }
+          auto bufferData = static_cast<uint32_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(uint32_t);
+          values.assign(bufferData, bufferData + data->Length());
+        }
+        else
+        {
+          auto arr = args[1].As<Array>();
+          uint32_t length = arr->Length();
+          values.reserve(length);
+          for (uint32_t i = 0; i < length; ++i)
+          {
+            auto item = arr->Get(context, i).ToLocalChecked();
+            values.push_back(item->Uint32Value(context).ToChecked());
+          }
+        }
+
+        if (values.size() < 4)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttribI4uiv", "Expected at least 4 components")));
+          return;
+        }
+
+        handle()->vertexAttribI4uiv(index, values);
+        args.GetReturnValue().SetUndefined();
       }
 
       void WebGL2RenderingContext::GetUniformIndices(const FunctionCallbackInfo<Value> &args)
