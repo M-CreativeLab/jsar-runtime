@@ -436,9 +436,12 @@ namespace jsar::example
     // Create contents bar component
     contentsBarComponent_ = make_shared<BarComponent>();
     // Ensure close button removes content and components
-    contentsBarComponent_->setOnCloseCallback([this](Content *c)
-                                              {
-      if (c) closeContent(c->getId()); });
+    auto close_content = [this](Content *content)
+    {
+      if (content)
+        closeContent(content->getId());
+    };
+    contentsBarComponent_->setOnCloseCallback(close_content);
     // Setup screen renderer and GUI
     setupScreenRenderer();
 
