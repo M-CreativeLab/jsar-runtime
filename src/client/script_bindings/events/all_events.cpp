@@ -27,7 +27,7 @@ namespace endor
     void Initialize(Isolate *isolate)
     {
 #define XX(T) T::Initialize(isolate);
-      ALL_EVENT_CLASSES_MAP(XX)
+      ALL_EVENT_CLASSES_MAP(XX);
 #undef XX
     }
 

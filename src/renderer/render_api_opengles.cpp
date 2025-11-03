@@ -2844,12 +2844,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
         it = list.erase(it); // Remove this command buffer from the original list
         continue;            // Skip to the next command buffer
       }
-      else
-      {
-        DEBUG(DEBUG_TAG,
-              "Executing resource creation command for offscreen pass in advance: %s.",
-              commandTypeToStr(commandType).c_str());
-      }
     }
 
     // Move to the next command buffer
