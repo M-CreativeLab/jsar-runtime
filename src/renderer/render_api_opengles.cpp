@@ -2190,9 +2190,6 @@ private:
     auto type = req->indicesType;
     auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
-    PrintDebugInfo(req, nullptr, nullptr, options);
-    DumpDrawCallInfo(DEBUG_TAG, "DrawElements", options.isDefaultQueue(), mode, count, type, indices);
-
     reqContentRenderer->getContextGL()->drawElements(mode, count, type, indices);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
@@ -2843,12 +2840,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
         content_renderer->scheduleCommandBufferAtOffscreenPass(commandbuffer);
         it = list.erase(it); // Remove this command buffer from the original list
         continue;            // Skip to the next command buffer
-      }
-      else
-      {
-        DEBUG(DEBUG_TAG,
-              "Executing resource creation command for offscreen pass in advance: %s.",
-              commandTypeToStr(commandType).c_str());
       }
     }
 

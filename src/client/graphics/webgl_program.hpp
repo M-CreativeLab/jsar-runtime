@@ -31,7 +31,7 @@ namespace endor
       void attachShader(std::shared_ptr<WebGLShader> shader);
       void detachShader(std::shared_ptr<WebGLShader> shader);
       void link();
-      const char* getInfoLog();
+      const char *getInfoLog();
 
       // Returns if this program is incomplete, it means the program response has not been received from channel peer.
       bool isIncomplete() const
