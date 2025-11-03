@@ -462,17 +462,10 @@ std::optional<GLint> ContextGLApp::getAttribLoc(commandbuffers::SetVertexAttribC
 optional<GLint> ContextGLApp::getUniformLoc(commandbuffers::SetUniformCommandBufferRequestBase *req) const
 {
   optional<GLint> loc = nullopt;
-  if (req->locationAvailable)
+  GLuint program = ObjectManagerRef().FindProgram(req->program);
+  if (program != 0) [[likely]]
   {
-    loc = req->location;
-  }
-  else
-  {
-    GLuint program = ObjectManagerRef().FindProgram(req->program);
-    if (program != 0) [[likely]]
-    {
-      loc = glGetUniformLocation(program, req->locationQueryName.c_str());
-    }
+    loc = glGetUniformLocation(program, req->locationQueryName.c_str());
   }
   return loc;
 }

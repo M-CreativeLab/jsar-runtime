@@ -166,7 +166,7 @@ namespace renderer
   // such as `defaultCommandBufferRequests` or `stereoFramesList`, otherwise it will be deleted in this function.
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
   {
-    if (!req->renderingInfo.isValid() && !commandbuffers::isXRFrameControlCommandType(req->type))
+    if (!req->renderingInfo.isValid() && !commandbuffers::CommandTypes::IsXRFrameControl(req->type))
     {
       unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
       defaultCommandBufferRequests.push_back(req);

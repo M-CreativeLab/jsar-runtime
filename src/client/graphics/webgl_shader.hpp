@@ -1,9 +1,10 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
-
-#include "common/command_buffers/details/program.hpp"
+#include <glslang/Public/ShaderLang.h>
+#include <common/command_buffers/details/program.hpp>
 #include "./webgl_object.hpp"
 
 namespace endor
@@ -21,43 +22,39 @@ namespace endor
       friend class WebGLContext;
 
     public:
-      WebGLShader(WebGLShaderType type)
-          : WebGLObject(WebGLObjectType::Shader)
-          , type(type)
+      WebGLShader(WebGLShaderType type);
+
+      glslang::TShader *glslangShader()
       {
+        return glslang_shader_.get();
       }
 
-      bool hasDeleteStatus() const
-      {
-        return delete_status_.has_value();
-      }
-      bool hasCompileStatus() const
-      {
-        return compile_status_.has_value();
-      }
-      bool getDeleteStatus()
-      {
-        return delete_status_.value_or(false);
-      }
-      bool getCompileStatus()
-      {
-        return compile_status_.value_or(false);
-      }
+      void setSource(const std::string &source);
+      const std::string &source() const;
+      void compile();
+      const char *getInfoLog();
+
+      bool hasDeleteStatus() const;
+      bool hasCompileStatus() const;
+      bool getDeleteStatus();
+      bool getCompileStatus();
 
     private:
-      void setShaderParameters(bool deleteStatus, bool compileStatus)
-      {
-        delete_status_ = deleteStatus;
-        compile_status_ = compileStatus;
-      }
+      void setShaderParameters(bool deleteStatus, bool compileStatus);
 
     public:
       WebGLShaderType type;
-      std::string source;
 
     private:
+      std::string source_;
+      const char *source_cstr_ = nullptr;
+
+      std::unique_ptr<glslang::TShader> glslang_shader_;
       std::optional<bool> delete_status_;
       std::optional<bool> compile_status_;
+
+    private:
+      static constexpr int s_DefaultVersion = 300;
     };
   }
 } // namespace endor

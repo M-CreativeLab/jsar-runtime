@@ -506,108 +506,96 @@ private:
   {
     auto glContext = reqContentRenderer->getContextGL();
     GLuint program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+
+    for (const auto &attrib : req->attribLocations)
+    {
+      if (attrib.name.rfind("gl_", 0) != 0)
+        glBindAttribLocation(program, attrib.location, attrib.name.c_str());
+    }
     glLinkProgram(program);
     reqContentRenderer->getContextGL()->MarkAsDirty();
 
-    /**
-		 * Check the link status of the program.
-		 */
-    GLenum status;
-    glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
-    if (status == GL_FALSE)
-    {
-      GLint errorLength;
-      glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
-      GLchar *errorStr = new GLchar[errorLength];
-      glGetProgramInfoLog(program, errorLength, NULL, errorStr);
-      DEBUG(LOG_TAG_ERROR, "Failed to link program(%d): %s", program, errorStr);
-      delete[] errorStr;
-
-      LinkProgramCommandBufferResponse failureRes(req, false);
-      // reqContentRenderer->sendCommandBufferResponse(failureRes);
-      return;
-    }
-
-    // Create response object
-    LinkProgramCommandBufferResponse res(req, true);
-
-    /**
-		 * Fetch the locations of the attributes when link successfully.
-		 */
-    GLint numAttributes = 0;
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
-    for (int i = 0; i < numAttributes; i++)
-    {
-      GLsizei nameLength;
-      GLint size; /** FIXME: need size for attribs? */
-      GLenum type;
-      GLchar name[256];
-
-      glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
-      name[nameLength] = '\0';
-      res.activeAttribs.push_back(ActiveInfo(name, size, type));
-
-      GLint location = glGetAttribLocation(program, name);
-      res.attribLocations.push_back(AttribLocation(name, location));
-      DEBUG(DEBUG_TAG,
-            "    Attribute[%d](%s) => (size=%d, type=%s)",
-            location,
-            name,
-            size,
-            gles::glUniformTypesToString(type).c_str());
-    }
-
-    /**
-		 * Fetch the locations of the uniforms and attributes when link successfully.
-		 */
-    GLint numUniforms = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
-    for (int i = 0; i < numUniforms; i++)
-    {
-      GLsizei nameLength;
-      GLint size;
-      GLenum type;
-      GLchar name[256];
-
-      glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
-      name[nameLength] = '\0';
-      res.activeUniforms.push_back(ActiveInfo(name, size, type));
-
-      GLint location = glGetUniformLocation(program, name);
-      if (location <= -1)
-        continue;
-
-      res.uniformLocations.push_back(UniformLocation(name, location, size));
-      DEBUG(DEBUG_TAG,
-            "    Uniform[%d](%s) => (loc=%d, size=%d, type=%s)",
-            i,
-            name,
-            location,
-            size,
-            gles::glUniformTypesToString(type).c_str());
-    }
-
-    /**
-		 * Fetch the uniform blocks when link successfully.
-		 */
-    GLint numUniformBlocks = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
-    for (int i = 0; i < numUniformBlocks; i++)
-    {
-      GLsizei nameLength;
-      GLchar name[256];
-
-      glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
-      name[nameLength] = '\0';
-
-      GLuint index = glGetUniformBlockIndex(program, name);
-      res.uniformBlocks.push_back(UniformBlock(name, index));
-      DEBUG(DEBUG_TAG, "    UniformBlock[%s] => %d", name, index);
-    }
-
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
       PrintDebugInfo(req, to_string(program).c_str(), nullptr, options);
-    reqContentRenderer->sendCommandBufferResponse(res);
+
+      // Check the link status of the program.
+      GLenum status;
+      glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
+      if (status == GL_FALSE)
+      {
+        GLint errorLength;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
+        GLchar *errorStr = new GLchar[errorLength];
+        glGetProgramInfoLog(program, errorLength, NULL, errorStr);
+        DEBUG(LOG_TAG_ERROR, "Failed to link program(%d): %s", program, errorStr);
+        delete[] errorStr;
+        return;
+      }
+
+      // Fetch the locations of the attributes when link successfully.
+      GLint numAttributes = 0;
+      glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+      for (int i = 0; i < numAttributes; i++)
+      {
+        GLsizei nameLength;
+        GLint size; /** FIXME: need size for attribs? */
+        GLenum type;
+        GLchar name[256];
+
+        glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+        name[nameLength] = '\0';
+
+        GLint location = glGetAttribLocation(program, name);
+        DEBUG(DEBUG_TAG,
+              "    Attribute[%d](%s) => (size=%d, type=%s)",
+              location,
+              name,
+              size,
+              gles::glUniformTypesToString(type).c_str());
+      }
+
+      // Fetch the locations of the uniforms and attributes when link successfully.
+      GLint numUniforms = 0;
+      glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
+      for (int i = 0; i < numUniforms; i++)
+      {
+        GLsizei nameLength;
+        GLint size;
+        GLenum type;
+        GLchar name[256];
+
+        glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+        name[nameLength] = '\0';
+
+        GLint location = glGetUniformLocation(program, name);
+        if (location <= -1)
+          continue;
+
+        DEBUG(DEBUG_TAG,
+              "    Uniform[%d](%s) => (loc=%d, size=%d, type=%s)",
+              i,
+              name,
+              location,
+              size,
+              gles::glUniformTypesToString(type).c_str());
+      }
+
+      // Fetch the uniform blocks when link successfully.
+      GLint numUniformBlocks = 0;
+      glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
+      for (int i = 0; i < numUniformBlocks; i++)
+      {
+        GLsizei nameLength;
+        GLchar name[256];
+
+        glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
+        name[nameLength] = '\0';
+
+        GLuint index = glGetUniformBlockIndex(program, name);
+        DEBUG(DEBUG_TAG, "    UniformBlock[%s] => %d", name, index);
+      }
+    }
   }
   TR_OPENGL_FUNC void OnUseProgram(UseProgramCommandBufferRequest *req,
                                    renderer::TrContentRenderer *reqContentRenderer,
@@ -2818,8 +2806,9 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   {
     commandbuffers::TrCommandBufferBase *commandbuffer = *it;
     assert(commandbuffer != nullptr && "command buffer must not be nullptr");
-
     CommandBufferType commandType = commandbuffer->type;
+
+    // Determine if we need to move this command buffer to other passes such as offscreen pass.
     if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
     {
       auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
@@ -2842,11 +2831,16 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     }
 
     // Move the command buffers to offscreen pass if needed
-    if (pass_type == ExecutingPassType::kXRFrame && should_move_to_offscreen_pass == true)
+    if (pass_type == ExecutingPassType::kXRFrame &&
+        should_move_to_offscreen_pass == true)
     {
-      content_renderer->scheduleCommandBufferAtOffscreenPass(commandbuffer);
-      it = list.erase(it); // Remove this command buffer from the original list
-      continue;            // Skip to the next command buffer
+      // Move only framebuffer dependent command buffers
+      if (CommandTypes::IsFramebufferDependentCommand(commandType))
+      {
+        content_renderer->scheduleCommandBufferAtOffscreenPass(commandbuffer);
+        it = list.erase(it); // Remove this command buffer from the original list
+        continue;            // Skip to the next command buffer
+      }
     }
 
     // Move to the next command buffer
