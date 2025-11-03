@@ -109,8 +109,16 @@ namespace jsar::example
      */
     bool isRayInBar(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
 
+    void processInput();
+
+    inline WindowContext *getWindowContext() const
+    {
+      return windowCtx_;
+    }
+
   private:
     uint32_t id_;
+    WindowContext *windowCtx_;
     std::shared_ptr<TrContentRuntime> contentRuntime_;
     std::shared_ptr<BarComponent> barComponent_;
 
