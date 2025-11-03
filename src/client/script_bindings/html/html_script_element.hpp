@@ -5,41 +5,44 @@
 #include <client/html/html_script_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLScriptElement;
-    using HTMLScriptElementBase = scripting_base::ObjectWrap<HTMLScriptElement, dom::HTMLScriptElement, HTMLElement>;
-
-    class HTMLScriptElement : public HTMLScriptElementBase
+    namespace html_bindings
     {
-      using HTMLScriptElementBase::ObjectWrap;
+      class HTMLScriptElement;
+      using HTMLScriptElementBase = scripting_base::ObjectWrap<HTMLScriptElement, dom::HTMLScriptElement, HTMLElement>;
 
-    public:
-      static std::string Name()
+      class HTMLScriptElement : public HTMLScriptElementBase
       {
-        return "HTMLScriptElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using HTMLScriptElementBase::ObjectWrap;
 
-    private:
-      // Property getters/setters
-      void AsyncGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void AsyncSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void DeferGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void DeferSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void SrcGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void SrcSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void TypeSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void TextGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void TextSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      void CharsetGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void CharsetSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      public:
+        static std::string Name()
+        {
+          return "HTMLScriptElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-      // Static methods
-      static void Supports(const v8::FunctionCallbackInfo<v8::Value> &info);
-    };
+      private:
+        // Property getters/setters
+        void AsyncGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void AsyncSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+        void DeferGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void DeferSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+        void SrcGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void SrcSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+        void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void TypeSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+        void TextGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void TextSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+        void CharsetGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void CharsetSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+
+        // Static methods
+        static void Supports(const v8::FunctionCallbackInfo<v8::Value> &info);
+      };
+    }
   }
-}
+} // namespace endor

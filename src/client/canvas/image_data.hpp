@@ -9,71 +9,74 @@
 #include <client/scripting_base/v8_object_holder.hpp>
 #include "./image_source.hpp"
 
-namespace canvas
+namespace endor
 {
-  class ImageData : public ImageSource,
-                    public scripting_base::JSObjectHolder
+  namespace canvas
   {
-  public:
-    ImageData(size_t width, size_t height, std::string colorSpaceName = "srgb");
-    ImageData(std::vector<char> &dataArray, size_t width, size_t height, std::string colorSpaceName = "srgb");
-    ~ImageData();
+    class ImageData : public ImageSource,
+                      public scripting_base::JSObjectHolder
+    {
+    public:
+      ImageData(size_t width, size_t height, std::string colorSpaceName = "srgb");
+      ImageData(std::vector<char> &dataArray, size_t width, size_t height, std::string colorSpaceName = "srgb");
+      ~ImageData();
 
-  public:
-    size_t width() const override
-    {
-      return pixmap.width();
-    }
-    size_t height() const override
-    {
-      return pixmap.height();
-    }
-    bool readPixels(SkPixmap &dst) const override
-    {
-      return pixmap.readPixels(dst, 0, 0);
-    }
-    bool peekPixels(SkPixmap *outPixmap) const override
-    {
-      if (outPixmap == nullptr)
-        return false;
-      *outPixmap = pixmap;
-      return true;
-    }
+    public:
+      size_t width() const override
+      {
+        return pixmap.width();
+      }
+      size_t height() const override
+      {
+        return pixmap.height();
+      }
+      bool readPixels(SkPixmap &dst) const override
+      {
+        return pixmap.readPixels(dst, 0, 0);
+      }
+      bool peekPixels(SkPixmap *outPixmap) const override
+      {
+        if (outPixmap == nullptr)
+          return false;
+        *outPixmap = pixmap;
+        return true;
+      }
 
-  public:
-    inline SkColorSpace *colorSpace() const
-    {
-      return pixmap.colorSpace();
-    }
-    inline std::string colorSpaceName() const
-    {
-      return colorSpaceName_;
-    }
-    inline void *addr() const
-    {
-      return pixmap.writable_addr();
-    }
-    inline size_t rowBytes() const
-    {
-      return pixmap.rowBytes();
-    }
-    inline size_t computeByteSize() const
-    {
-      return pixmap.computeByteSize();
-    }
+    public:
+      inline SkColorSpace *colorSpace() const
+      {
+        return pixmap.colorSpace();
+      }
+      inline std::string colorSpaceName() const
+      {
+        return colorSpaceName_;
+      }
+      inline void *addr() const
+      {
+        return pixmap.writable_addr();
+      }
+      inline size_t rowBytes() const
+      {
+        return pixmap.rowBytes();
+      }
+      inline size_t computeByteSize() const
+      {
+        return pixmap.computeByteSize();
+      }
 
-  private:
-    /**
+    private:
+      /**
      * Update the color space by name.
      *
      * @param colorSpaceName The name of the color space: "srgb" or "display-p3".
      * @return True if the color space was updated, false otherwise.
      */
-    bool updateColorSpace(std::string colorSpaceName);
+      bool updateColorSpace(std::string colorSpaceName);
 
-  private:
-    SkPixmap pixmap;
-    std::string colorSpaceName_;
-    char *pixelsStorage = nullptr;
-  };
-}
+    private:
+      SkPixmap pixmap;
+      std::string colorSpaceName_;
+      char *pixelsStorage = nullptr;
+    };
+  }
+} // namespace endor

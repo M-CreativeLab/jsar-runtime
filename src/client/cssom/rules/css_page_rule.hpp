@@ -5,20 +5,23 @@
 #include "../css_rule.hpp"
 #include "../css_style_declaration.hpp"
 
-namespace client_cssom::rules
+namespace endor
 {
-  class CSSPageRule : public CSSRule
+  namespace client_cssom::rules
   {
-    using CSSRule::CSSRule;
-
-  public:
-    std::string selectorText;
-    const CSSStyleDeclaration &style() const
+    class CSSPageRule : public CSSRule
     {
-      return style_;
-    }
+      using CSSRule::CSSRule;
 
-  private:
-    CSSStyleDeclaration style_;
-  };
-}
+    public:
+      std::string selectorText;
+      const CSSStyleDeclaration &style() const
+      {
+        return style_;
+      }
+
+    private:
+      CSSStyleDeclaration style_;
+    };
+  }
+} // namespace endor

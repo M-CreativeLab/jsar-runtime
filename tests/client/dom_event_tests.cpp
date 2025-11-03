@@ -6,7 +6,8 @@
 #include <chrono>
 #include <thread>
 
-using namespace dom;
+using namespace endor;
+using namespace endor::dom;
 
 TEST_CASE("DOM Event constructor", "[DOM Event]")
 {

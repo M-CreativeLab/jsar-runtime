@@ -4,6 +4,7 @@
 #include <client/browser/window.hpp>
 
 using namespace std;
+using namespace endor;
 
 class TransmuteUnitTestListener : public Catch::EventListenerBase
 {

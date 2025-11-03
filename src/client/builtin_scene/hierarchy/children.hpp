@@ -3,30 +3,33 @@
 #include <vector>
 #include "../ecs-inl.hpp"
 
-namespace builtin_scene::hierarchy
+namespace endor
 {
-  class Children : public ecs::Component
+  namespace builtin_scene::hierarchy
   {
-  public:
-    using ecs::Component::Component;
-
-  public:
-    const std::vector<ecs::EntityId> &children() const
+    class Children : public ecs::Component
     {
-      return children_;
-    }
-    std::vector<ecs::EntityId> &children()
-    {
-      return children_;
-    }
+    public:
+      using ecs::Component::Component;
 
-  public:
-    void addChild(ecs::EntityId child)
-    {
-      children_.push_back(child);
-    }
+    public:
+      const std::vector<ecs::EntityId> &children() const
+      {
+        return children_;
+      }
+      std::vector<ecs::EntityId> &children()
+      {
+        return children_;
+      }
 
-  private:
-    std::vector<ecs::EntityId> children_;
-  };
-}
+    public:
+      void addChild(ecs::EntityId child)
+      {
+        children_.push_back(child);
+      }
+
+    private:
+      std::vector<ecs::EntityId> children_;
+    };
+  }
+} // namespace endor

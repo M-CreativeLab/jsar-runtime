@@ -4,10 +4,13 @@
 #include <optional>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLPlaneElement : public HTMLElement
+  namespace dom
   {
-    using HTMLElement::HTMLElement;
-  };
-}
+    class HTMLPlaneElement : public HTMLElement
+    {
+      using HTMLElement::HTMLElement;
+    };
+  }
+} // namespace endor

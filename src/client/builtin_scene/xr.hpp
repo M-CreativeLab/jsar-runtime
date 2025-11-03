@@ -14,145 +14,148 @@
 
 #include "./ecs.hpp"
 
-namespace builtin_scene
+namespace endor
 {
-  class WebXRExperience : public ecs::Resource
+  namespace builtin_scene
   {
-    friend class Scene;
-
-  public:
-    WebXRExperience();
-    ~WebXRExperience();
-
-  public:
-    std::shared_ptr<client_xr::XRSession> session()
+    class WebXRExperience : public ecs::Resource
     {
-      return session_;
-    }
-    client_xr::XRSession &sessionRef()
+      friend class Scene;
+
+    public:
+      WebXRExperience();
+      ~WebXRExperience();
+
+    public:
+      std::shared_ptr<client_xr::XRSession> session()
+      {
+        return session_;
+      }
+      client_xr::XRSession &sessionRef()
+      {
+        return *session_;
+      }
+
+      std::shared_ptr<client_xr::XRReferenceSpace> referenceSpace()
+      {
+        return reference_space_;
+      }
+      const client_xr::XRReferenceSpace &referenceSpaceRef()
+      {
+        return *reference_space_;
+      }
+
+      std::shared_ptr<client_xr::XRFrame> currentFrame()
+      {
+        return current_frame_;
+      }
+      const client_xr::XRFrame &currentFrameRef()
+      {
+        return *current_frame_;
+      }
+
+      uint32_t currentTime()
+      {
+        return current_time_;
+      }
+      std::shared_ptr<client_xr::XRViewerPose> viewerPose()
+      {
+        if (current_frame_ == nullptr || reference_space_ == nullptr)
+          return nullptr;
+        return current_frame_->getViewerPose(reference_space_);
+      }
+
+      bool multiviewEnabled() const
+      {
+        return multiview_enabled_;
+      }
+      bool multiviewRequired() const;
+
+      void resetSelectStartHandler(std::function<void(client_xr::XRInputSourceEvent &)> handler)
+      {
+        select_start_handler_ = handler;
+      }
+      void resetSelectEndHandler(std::function<void(client_xr::XRInputSourceEvent &)> handler)
+      {
+        select_end_handler_ = handler;
+      }
+
+      // Request a session
+      std::shared_ptr<client_xr::XRSession> requestSession();
+
+      // Select a ray for hit testing
+      std::optional<collision::TrRay> selectRayForHitTesting();
+
+    private:
+      inline void updateReferenceSpace(std::shared_ptr<client_xr::XRReferenceSpace> space)
+      {
+        reference_space_ = space;
+      }
+      inline void updateCurrentFrame(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
+      {
+        current_time_ = time;
+        current_frame_ = frame;
+      }
+      inline void enableMultiview(bool enabled)
+      {
+        multiview_enabled_ = enabled;
+      }
+
+    private:
+      std::shared_ptr<client_xr::XRDeviceClient> client_;
+      std::shared_ptr<client_xr::XRSession> session_;
+      std::shared_ptr<client_xr::XRReferenceSpace> reference_space_;
+      std::shared_ptr<client_xr::XRFrame> current_frame_;
+      uint32_t current_time_;
+      bool multiview_enabled_;
+
+      std::function<void(client_xr::XRInputSourceEvent &)> select_start_handler_;
+      std::function<void(client_xr::XRInputSourceEvent &)> select_end_handler_;
+    };
+
+    class WebXRExperienceStartupSystem : public ecs::System
     {
-      return *session_;
-    }
+      using ecs::System::System;
 
-    std::shared_ptr<client_xr::XRReferenceSpace> referenceSpace()
+    public:
+      const std::string name() const override
+      {
+        return "WebXRExperienceStartupSystem";
+      }
+      void onExecute() override;
+    };
+
+    class WebXRExperienceUpdateSystem : public ecs::System
     {
-      return reference_space_;
-    }
-    const client_xr::XRReferenceSpace &referenceSpaceRef()
+      using ecs::System::System;
+
+    public:
+      const std::string name() const override
+      {
+        return "WebXRExperienceUpdateSystem";
+      }
+      void onExecute() override;
+    };
+
+    class WebXRCollisionBoxSystem : public ecs::System
     {
-      return *reference_space_;
-    }
+      using ecs::System::System;
 
-    std::shared_ptr<client_xr::XRFrame> currentFrame()
+    public:
+      const std::string name() const override
+      {
+        return "WebXRCollisionBoxSystem";
+      }
+      void onExecute() override;
+    };
+
+    class WebXRPlugin : public ecs::Plugin
     {
-      return current_frame_;
-    }
-    const client_xr::XRFrame &currentFrameRef()
-    {
-      return *current_frame_;
-    }
+    public:
+      using ecs::Plugin::Plugin;
 
-    uint32_t currentTime()
-    {
-      return current_time_;
-    }
-    std::shared_ptr<client_xr::XRViewerPose> viewerPose()
-    {
-      if (current_frame_ == nullptr || reference_space_ == nullptr)
-        return nullptr;
-      return current_frame_->getViewerPose(reference_space_);
-    }
-
-    bool multiviewEnabled() const
-    {
-      return multiview_enabled_;
-    }
-    bool multiviewRequired() const;
-
-    void resetSelectStartHandler(std::function<void(client_xr::XRInputSourceEvent &)> handler)
-    {
-      select_start_handler_ = handler;
-    }
-    void resetSelectEndHandler(std::function<void(client_xr::XRInputSourceEvent &)> handler)
-    {
-      select_end_handler_ = handler;
-    }
-
-    // Request a session
-    std::shared_ptr<client_xr::XRSession> requestSession();
-
-    // Select a ray for hit testing
-    std::optional<collision::TrRay> selectRayForHitTesting();
-
-  private:
-    inline void updateReferenceSpace(std::shared_ptr<client_xr::XRReferenceSpace> space)
-    {
-      reference_space_ = space;
-    }
-    inline void updateCurrentFrame(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
-    {
-      current_time_ = time;
-      current_frame_ = frame;
-    }
-    inline void enableMultiview(bool enabled)
-    {
-      multiview_enabled_ = enabled;
-    }
-
-  private:
-    std::shared_ptr<client_xr::XRDeviceClient> client_;
-    std::shared_ptr<client_xr::XRSession> session_;
-    std::shared_ptr<client_xr::XRReferenceSpace> reference_space_;
-    std::shared_ptr<client_xr::XRFrame> current_frame_;
-    uint32_t current_time_;
-    bool multiview_enabled_;
-
-    std::function<void(client_xr::XRInputSourceEvent &)> select_start_handler_;
-    std::function<void(client_xr::XRInputSourceEvent &)> select_end_handler_;
-  };
-
-  class WebXRExperienceStartupSystem : public ecs::System
-  {
-    using ecs::System::System;
-
-  public:
-    const std::string name() const override
-    {
-      return "WebXRExperienceStartupSystem";
-    }
-    void onExecute() override;
-  };
-
-  class WebXRExperienceUpdateSystem : public ecs::System
-  {
-    using ecs::System::System;
-
-  public:
-    const std::string name() const override
-    {
-      return "WebXRExperienceUpdateSystem";
-    }
-    void onExecute() override;
-  };
-
-  class WebXRCollisionBoxSystem : public ecs::System
-  {
-    using ecs::System::System;
-
-  public:
-    const std::string name() const override
-    {
-      return "WebXRCollisionBoxSystem";
-    }
-    void onExecute() override;
-  };
-
-  class WebXRPlugin : public ecs::Plugin
-  {
-  public:
-    using ecs::Plugin::Plugin;
-
-  protected:
-    void build(ecs::App &) override;
-  };
-}
+    protected:
+      void build(ecs::App &) override;
+    };
+  }
+} // namespace endor

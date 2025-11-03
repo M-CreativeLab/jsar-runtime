@@ -2,20 +2,23 @@
 
 #include "./layout_block.hpp"
 
-namespace client_layout
+namespace endor
 {
-  class LayoutFlexibleBox : public LayoutBlock
+  namespace client_layout
   {
-    using LayoutBlock::LayoutBlock;
+    class LayoutFlexibleBox : public LayoutBlock
+    {
+      using LayoutBlock::LayoutBlock;
 
-  public:
-    const char *name() const override
-    {
-      return "LayoutFlexBox";
-    }
-    bool isFlexibleBox() const override final
-    {
-      return true;
-    }
-  };
-}
+    public:
+      const char *name() const override
+      {
+        return "LayoutFlexBox";
+      }
+      bool isFlexibleBox() const override final
+      {
+        return true;
+      }
+    };
+  }
+} // namespace endor

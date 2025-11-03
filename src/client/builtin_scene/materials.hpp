@@ -8,11 +8,14 @@
 #include "./materials/web_content_instanced.hpp"
 #include "./materials/gaussian_splatting.hpp"
 
-namespace builtin_scene
+namespace endor
 {
-  class Materials : public asset::Assets<Material>
+  namespace builtin_scene
   {
-  public:
-    using asset::Assets<Material>::Assets;
-  };
-}
+    class Materials : public asset::Assets<Material>
+    {
+    public:
+      using asset::Assets<Material>::Assets;
+    };
+  }
+} // namespace endor

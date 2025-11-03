@@ -2,7 +2,8 @@
 #include <client/cssom/selectors/css_selector_parser.hpp>
 #include <iostream>
 
-using namespace client_cssom::selectors;
+using namespace endor;
+using namespace endor::client_cssom::selectors;
 
 TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
 {

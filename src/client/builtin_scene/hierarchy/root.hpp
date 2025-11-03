@@ -2,18 +2,21 @@
 
 #include "../ecs-inl.hpp"
 
-namespace builtin_scene::hierarchy
+namespace endor
 {
-  class Root : public ecs::Component
+  namespace builtin_scene::hierarchy
   {
-  public:
-    Root(bool renderable = false)
-        : renderable(renderable)
+    class Root : public ecs::Component
     {
-    }
+    public:
+      Root(bool renderable = false)
+          : renderable(renderable)
+      {
+      }
 
-  public:
-    // If the root entity can be renderer.
-    bool renderable;
-  };
-}
+    public:
+      // If the root entity can be renderer.
+      bool renderable;
+    };
+  }
+} // namespace endor

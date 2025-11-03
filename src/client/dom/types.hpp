@@ -1,13 +1,16 @@
 #pragma once
 
-namespace dom
+namespace endor
 {
-  class Node;
-  class Element;
-  class HTMLElement;
-  class Text;
+  namespace dom
+  {
+    class Node;
+    class Element;
+    class HTMLElement;
+    class Text;
 
-  class Document;
-  class DocumentFragment;
-  class HTMLDocument;
-}
+    class Document;
+    class DocumentFragment;
+    class HTMLDocument;
+  }
+} // namespace endor

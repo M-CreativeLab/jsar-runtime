@@ -5,26 +5,29 @@
 #include <client/html/html_span_element.hpp>
 #include "./html_element.hpp"
 
-namespace script_bindings
+namespace endor
 {
-  namespace html_bindings
+  namespace script_bindings
   {
-    class HTMLSpanElement;
-    using HTMLSpanElementBase = scripting_base::ObjectWrap<HTMLSpanElement, dom::HTMLSpanElement, HTMLElement>;
-
-    class HTMLSpanElement : public HTMLSpanElementBase
+    namespace html_bindings
     {
-      using HTMLSpanElementBase::ObjectWrap;
+      class HTMLSpanElement;
+      using HTMLSpanElementBase = scripting_base::ObjectWrap<HTMLSpanElement, dom::HTMLSpanElement, HTMLElement>;
 
-    public:
-      static std::string Name()
+      class HTMLSpanElement : public HTMLSpanElementBase
       {
-        return "HTMLSpanElement";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using HTMLSpanElementBase::ObjectWrap;
 
-    public:
-      HTMLSpanElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        static std::string Name()
+        {
+          return "HTMLSpanElement";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      public:
+        HTMLSpanElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+    }
   }
-}
+} // namespace endor

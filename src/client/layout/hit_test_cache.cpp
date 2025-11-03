@@ -1,47 +1,50 @@
 #include "./hit_test_cache.hpp"
 
-namespace client_layout
+namespace endor
 {
-  void HitTestCacheItem::cacheValues(const HitTestCacheItem &other)
+  namespace client_layout
   {
-    *this = other;
-    // result.cacheValues(other.result);
-  }
-
-  bool HitTestCache::lookupCachedResult(const HitTestRay &ray, HitTestResult &result)
-  {
-    if (result.getHitTestRequest().avoidCache())
-      return false;
-
-    for (const auto &cachedItem : items_)
+    void HitTestCacheItem::cacheValues(const HitTestCacheItem &other)
     {
-      if (cachedItem.ray == ray)
-      {
-        result = cachedItem.result;
-        return true;
-      }
+      *this = other;
+      // result.cacheValues(other.result);
     }
-    return false;
-  }
 
-  void HitTestCache::addCachedResult(const HitTestRay &ray, const HitTestResult &result)
-  {
-    if (items_.size() < kMaxCacheSize)
-      items_.resize(update_index_ + 1);
+    bool HitTestCache::lookupCachedResult(const HitTestRay &ray, HitTestResult &result)
+    {
+      if (result.getHitTestRequest().avoidCache())
+        return false;
 
-    HitTestCacheItem item;
-    item.ray = ray;
-    item.result = result;
-    items_[update_index_].cacheValues(item);
+      for (const auto &cachedItem : items_)
+      {
+        if (cachedItem.ray == ray)
+        {
+          result = cachedItem.result;
+          return true;
+        }
+      }
+      return false;
+    }
 
-    update_index_ += 1;
-    if (update_index_ >= kMaxCacheSize)
+    void HitTestCache::addCachedResult(const HitTestRay &ray, const HitTestResult &result)
+    {
+      if (items_.size() < kMaxCacheSize)
+        items_.resize(update_index_ + 1);
+
+      HitTestCacheItem item;
+      item.ray = ray;
+      item.result = result;
+      items_[update_index_].cacheValues(item);
+
+      update_index_ += 1;
+      if (update_index_ >= kMaxCacheSize)
+        update_index_ = 0;
+    }
+
+    void HitTestCache::clear()
+    {
+      items_.clear();
       update_index_ = 0;
+    }
   }
-
-  void HitTestCache::clear()
-  {
-    items_.clear();
-    update_index_ = 0;
-  }
-}
+} // namespace endor

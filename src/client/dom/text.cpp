@@ -10,216 +10,219 @@
 #include "./document.hpp"
 #include "./element.hpp"
 
-namespace dom
+namespace endor
 {
-  using namespace std;
-  using namespace pugi;
-  using namespace builtin_scene;
-  using namespace client_cssom;
-  using namespace skia::textlayout;
-
-  // Create a text node from a document and a value.
-  xml_node createTextNode(shared_ptr<xml_document> doc, const string &value = "")
+  namespace dom
   {
-    xml_node textNode(node_pcdata, doc.get());
-    if (!textNode.set_value(value.c_str()))
-      return xml_node();
-    return textNode;
-  }
+    using namespace std;
+    using namespace pugi;
+    using namespace builtin_scene;
+    using namespace client_cssom;
+    using namespace skia::textlayout;
 
-  // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
-  string processTextContent(const string &text)
-  {
-    string result(text);
-    size_t start = result.find_first_not_of(" \t\n\r");
-    if (start == string::npos || start >= result.length())
-      start = 0;
-    size_t end = result.find_last_not_of(" \t\n\r");
-    if (end == string::npos || end >= result.length())
-      end = result.length();
-    return result.substr(start, end - start + 1);
-  }
-
-  std::shared_ptr<Text> Text::CreateText(pugi::xml_node node, shared_ptr<Document> ownerDocument)
-  {
-    return make_shared<Text>(node, ownerDocument);
-  }
-
-  std::shared_ptr<Node> Text::CloneText(shared_ptr<Node> srcText)
-  {
-    auto textNode = dynamic_pointer_cast<Text>(srcText);
-    if (textNode != nullptr)
-      return make_shared<Text>(*textNode);
-
-    auto characterDataNode = dynamic_pointer_cast<CharacterData>(srcText);
-    if (characterDataNode != nullptr)
-      return make_shared<CharacterData>(*characterDataNode);
-
-    return nullptr;
-  }
-
-  Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
-      : CharacterData(node, ownerDocument)
-  {
-    client_cssom::CSSStyleDeclaration defaultStyle;
-    defaultStyle.setProperty("width", "auto");
-    defaultStyle.setProperty("height", "auto");
-    style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
-  }
-
-  Text::Text(shared_ptr<Document> ownerDocument)
-      : Text(createTextNode(ownerDocument->doc_internal_), ownerDocument)
-  {
-  }
-
-  Text::Text(const string value, shared_ptr<Document> ownerDocument)
-      : Text(createTextNode(ownerDocument->doc_internal_, value), ownerDocument)
-  {
-  }
-
-  Text::Text(const Text &other)
-      : CharacterData(other)
-      , style_(other.style_)
-  {
-  }
-
-  const string &Text::wholeText() const
-  {
-    return data_;
-  }
-
-  unique_ptr<Text> Text::splitText(size_t offset)
-  {
-    if (offset > data_.size())
-      throw out_of_range("Offset is out of range");
-
-    string first = data_.substr(0, offset);
-    string second = data_.substr(offset);
-
-    data_ = first; // Update the current text node's data
-    return make_unique<Text>(second, getOwnerDocumentReference());
-  }
-
-  builtin_scene::RenderQueue Text::computeRenderQueue() const
-  {
-    auto renderQueue = Node::computeRenderQueue();
-    auto parentElement = getParentElement();
-    if (parentElement != nullptr)
+    // Create a text node from a document and a value.
+    xml_node createTextNode(shared_ptr<xml_document> doc, const string &value = "")
     {
-      // Text will inherit the parent's render queue properties: zIndex and translateZ
-      auto parentRenderQueue = parentElement->getRenderQueue(true);
-      renderQueue.zIndex = parentRenderQueue.zIndex;
-      renderQueue.translateZ = parentRenderQueue.translateZ;
-    }
-    return renderQueue;
-  }
-
-  void Text::connectedCallback()
-  {
-    CharacterData::connectedCallback();
-
-    initCSSBoxes();
-    {
-      auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
-      assert(window != nullptr &&
-             "The window must not be null in a TextNode().");
-      auto initial_style = window->createComputedStyle(shared_from_this(), nullopt, false);
-      recalcStyleDirectly(*initial_style);
+      xml_node textNode(node_pcdata, doc.get());
+      if (!textNode.set_value(value.c_str()))
+        return xml_node();
+      return textNode;
     }
 
-    // Trigger text change at the beginning to ensure the text boxes are updated.
-    for (const auto &textBox : textBoxes_)
-      textBox->textDidChange();
-  }
-
-  void Text::disconnectedCallback()
-  {
-    resetCSSBoxes();
-    CharacterData::disconnectedCallback();
-  }
-
-  void Text::nodeValueChangedCallback(const std::string &newValue)
-  {
-    CharacterData::data() = newValue;
-    Node::markAsDirty();
-
-    if (textBoxes_.size() >= 1)
+    // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
+    string processTextContent(const string &text)
     {
-      auto textBox = dynamic_pointer_cast<client_layout::LayoutText>(textBoxes_.front());
-      assert(textBox != nullptr &&
-             "The text box must not be null in a TextNode().");
-      textBox->textDidChange();
+      string result(text);
+      size_t start = result.find_first_not_of(" \t\n\r");
+      if (start == string::npos || start >= result.length())
+        start = 0;
+      size_t end = result.find_last_not_of(" \t\n\r");
+      if (end == string::npos || end >= result.length())
+        end = result.length();
+      return result.substr(start, end - start + 1);
     }
-  }
 
-  void Text::layoutSizeChangedCallback(const client_layout::Fragment &)
-  {
-  }
-
-  void Text::initCSSBoxes()
-  {
-    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    if (ownerDocument != nullptr && isRenderable())
+    std::shared_ptr<Text> Text::CreateText(pugi::xml_node node, shared_ptr<Document> ownerDocument)
     {
+      return make_shared<Text>(node, ownerDocument);
+    }
+
+    std::shared_ptr<Node> Text::CloneText(shared_ptr<Node> srcText)
+    {
+      auto textNode = dynamic_pointer_cast<Text>(srcText);
+      if (textNode != nullptr)
+        return make_shared<Text>(*textNode);
+
+      auto characterDataNode = dynamic_pointer_cast<CharacterData>(srcText);
+      if (characterDataNode != nullptr)
+        return make_shared<CharacterData>(*characterDataNode);
+
+      return nullptr;
+    }
+
+    Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
+        : CharacterData(node, ownerDocument)
+    {
+      client_cssom::CSSStyleDeclaration defaultStyle;
+      defaultStyle.setProperty("width", "auto");
+      defaultStyle.setProperty("height", "auto");
+      style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
+    }
+
+    Text::Text(shared_ptr<Document> ownerDocument)
+        : Text(createTextNode(ownerDocument->doc_internal_), ownerDocument)
+    {
+    }
+
+    Text::Text(const string value, shared_ptr<Document> ownerDocument)
+        : Text(createTextNode(ownerDocument->doc_internal_, value), ownerDocument)
+    {
+    }
+
+    Text::Text(const Text &other)
+        : CharacterData(other)
+        , style_(other.style_)
+    {
+    }
+
+    const string &Text::wholeText() const
+    {
+      return data_;
+    }
+
+    unique_ptr<Text> Text::splitText(size_t offset)
+    {
+      if (offset > data_.size())
+        throw out_of_range("Offset is out of range");
+
+      string first = data_.substr(0, offset);
+      string second = data_.substr(offset);
+
+      data_ = first; // Update the current text node's data
+      return make_unique<Text>(second, getOwnerDocumentReference());
+    }
+
+    builtin_scene::RenderQueue Text::computeRenderQueue() const
+    {
+      auto renderQueue = Node::computeRenderQueue();
+      auto parentElement = getParentElement();
+      if (parentElement != nullptr)
+      {
+        // Text will inherit the parent's render queue properties: zIndex and translateZ
+        auto parentRenderQueue = parentElement->getRenderQueue(true);
+        renderQueue.zIndex = parentRenderQueue.zIndex;
+        renderQueue.translateZ = parentRenderQueue.translateZ;
+      }
+      return renderQueue;
+    }
+
+    void Text::connectedCallback()
+    {
+      CharacterData::connectedCallback();
+
+      initCSSBoxes();
+      {
+        auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
+        assert(window != nullptr &&
+               "The window must not be null in a TextNode().");
+        auto initial_style = window->createComputedStyle(shared_from_this(), nullopt, false);
+        recalcStyleDirectly(*initial_style);
+      }
+
+      // Trigger text change at the beginning to ensure the text boxes are updated.
+      for (const auto &textBox : textBoxes_)
+        textBox->textDidChange();
+    }
+
+    void Text::disconnectedCallback()
+    {
+      resetCSSBoxes();
+      CharacterData::disconnectedCallback();
+    }
+
+    void Text::nodeValueChangedCallback(const std::string &newValue)
+    {
+      CharacterData::data() = newValue;
+      Node::markAsDirty();
+
+      if (textBoxes_.size() >= 1)
+      {
+        auto textBox = dynamic_pointer_cast<client_layout::LayoutText>(textBoxes_.front());
+        assert(textBox != nullptr &&
+               "The text box must not be null in a TextNode().");
+        textBox->textDidChange();
+      }
+    }
+
+    void Text::layoutSizeChangedCallback(const client_layout::Fragment &)
+    {
+    }
+
+    void Text::initCSSBoxes()
+    {
+      auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+      if (ownerDocument != nullptr && isRenderable())
+      {
+        auto &layoutView = ownerDocument->layoutViewRef();
+        shared_ptr<client_layout::LayoutBoxModelObject> parentBox = nullptr;
+        {
+          auto parentElement = getParentElement();
+          assert(parentElement != nullptr &&
+                 "The parent element must not be null in a TextNode().");
+          parentBox = dynamic_pointer_cast<client_layout::LayoutBoxModelObject>(parentElement->principalBox());
+          assert(parentBox != nullptr &&
+                 "The parent box must not be null in a TextNode().");
+        }
+
+        auto textObject = layoutView.createText(getPtr<Text>(), parentBox);
+        if (textObject != nullptr)
+        {
+          textBoxes_ = {textObject};
+        }
+        else
+        {
+          textBoxes_.clear();
+        }
+      }
+    }
+
+    void Text::resetCSSBoxes(bool skipCheck)
+    {
+      if (textBoxes_.empty())
+        return;
+
+      shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+      if (!skipCheck &&
+          (TR_UNLIKELY(ownerDocument == nullptr) || !isRenderable()))
+        return;
+
+      assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");
       auto &layoutView = ownerDocument->layoutViewRef();
-      shared_ptr<client_layout::LayoutBoxModelObject> parentBox = nullptr;
-      {
-        auto parentElement = getParentElement();
-        assert(parentElement != nullptr &&
-               "The parent element must not be null in a TextNode().");
-        parentBox = dynamic_pointer_cast<client_layout::LayoutBoxModelObject>(parentElement->principalBox());
-        assert(parentBox != nullptr &&
-               "The parent box must not be null in a TextNode().");
-      }
-
-      auto textObject = layoutView.createText(getPtr<Text>(), parentBox);
-      if (textObject != nullptr)
-      {
-        textBoxes_ = {textObject};
-      }
-      else
-      {
-        textBoxes_.clear();
-      }
+      for (auto &box : textBoxes_)
+        layoutView.removeObject(box);
+      textBoxes_.clear();
     }
-  }
 
-  void Text::resetCSSBoxes(bool skipCheck)
-  {
-    if (textBoxes_.empty())
-      return;
-
-    shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    if (!skipCheck &&
-        (TR_UNLIKELY(ownerDocument == nullptr) || !isRenderable()))
-      return;
-
-    assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");
-    auto &layoutView = ownerDocument->layoutViewRef();
-    for (auto &box : textBoxes_)
-      layoutView.removeObject(box);
-    textBoxes_.clear();
-  }
-
-  bool Text::adoptStyle(const client_cssom::ComputedStyle &new_style)
-  {
-    if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
-        ComputedStyle::ComputeDifference(new_style, *adoptedStyle_) == ComputedStyle::kEqual)
-      return false;
-    return recalcStyleDirectly(new_style);
-  }
-
-  bool Text::recalcStyleDirectly(const client_cssom::ComputedStyle &new_style)
-  {
-    adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
-
-    // Update the layout node style.
-    bool updated = false;
-    for (auto box : textBoxes_)
+    bool Text::adoptStyle(const client_cssom::ComputedStyle &new_style)
     {
-      if (box->setStyle(adoptedStyleRef()))
-        updated = true;
+      if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
+          ComputedStyle::ComputeDifference(new_style, *adoptedStyle_) == ComputedStyle::kEqual)
+        return false;
+      return recalcStyleDirectly(new_style);
     }
-    return updated;
+
+    bool Text::recalcStyleDirectly(const client_cssom::ComputedStyle &new_style)
+    {
+      adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
+
+      // Update the layout node style.
+      bool updated = false;
+      for (auto box : textBoxes_)
+      {
+        if (box->setStyle(adoptedStyleRef()))
+          updated = true;
+      }
+      return updated;
+    }
   }
-}
+} // namespace endor

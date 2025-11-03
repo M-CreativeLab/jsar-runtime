@@ -6,29 +6,32 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/webgl/object.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    class WebGLRenderbuffer;
-    using WebGLRenderbufferBase = scripting_base::ObjectWrap<WebGLRenderbuffer,
-                                                             client_graphics::WebGLRenderbuffer,
-                                                             WebGLObject>;
-
-    class WebGLRenderbuffer : public WebGLRenderbufferBase
+    namespace webgl_bindings
     {
-      using WebGLRenderbufferBase::ObjectWrap;
+      class WebGLRenderbuffer;
+      using WebGLRenderbufferBase = scripting_base::ObjectWrap<WebGLRenderbuffer,
+                                                               client_graphics::WebGLRenderbuffer,
+                                                               WebGLObject>;
 
-    public:
-      static std::string Name()
+      class WebGLRenderbuffer : public WebGLRenderbufferBase
       {
-        return "WebGLRenderbuffer";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using WebGLRenderbufferBase::ObjectWrap;
 
-    public:
-      WebGLRenderbuffer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        static std::string Name()
+        {
+          return "WebGLRenderbuffer";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-  } // namespace webgl
-} // namespace script_bindings
+      public:
+        WebGLRenderbuffer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+
+    } // namespace webgl
+  }   // namespace script_bindings
+} // namespace endor

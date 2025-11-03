@@ -8,36 +8,39 @@
 
 using namespace std;
 
-namespace dom
+namespace endor
 {
-  class Element;
-  class Attr : public Node
+  namespace dom
   {
-  public:
-    inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, std::string name, std::string initialValue)
+    class Element;
+    class Attr : public Node
     {
-      return make_shared<Attr>(name, initialValue, ownerElement);
-    }
-    inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, pugi::xml_attribute attr)
-    {
-      assert(attr.name() != nullptr && "The attribute name is null.");
-      assert(attr.value() != nullptr && "The attribute value is null.");
-      return make_shared<Attr>(attr, ownerElement);
-    }
+    public:
+      inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, std::string name, std::string initialValue)
+      {
+        return make_shared<Attr>(name, initialValue, ownerElement);
+      }
+      inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, pugi::xml_attribute attr)
+      {
+        assert(attr.name() != nullptr && "The attribute name is null.");
+        assert(attr.value() != nullptr && "The attribute value is null.");
+        return make_shared<Attr>(attr, ownerElement);
+      }
 
-  public:
-    Attr(std::string name, std::string initialValue, shared_ptr<Element> ownerElement);
-    Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement);
-    Attr(Attr &other);
-    ~Attr() = default;
+    public:
+      Attr(std::string name, std::string initialValue, shared_ptr<Element> ownerElement);
+      Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement);
+      Attr(Attr &other);
+      ~Attr() = default;
 
-  public:
-    string localName;
-    string name;
-    string namespaceURI;
-    string prefix;
-    bool specified;
-    string value;
-    shared_ptr<Element> ownerElement;
-  };
-}
+    public:
+      string localName;
+      string name;
+      string namespaceURI;
+      string prefix;
+      bool specified;
+      string value;
+      shared_ptr<Element> ownerElement;
+    };
+  }
+} // namespace endor

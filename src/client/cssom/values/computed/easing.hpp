@@ -2,10 +2,13 @@
 
 #include <client/cssom/values/generics/easing.hpp>
 
-namespace client_cssom::values::computed
+namespace endor
 {
-  class TimingFunction : public generics::GenericTimingFunction<TimingFunction>
+  namespace client_cssom::values::computed
   {
-    using generics::GenericTimingFunction<TimingFunction>::GenericTimingFunction;
-  };
-}
+    class TimingFunction : public generics::GenericTimingFunction<TimingFunction>
+    {
+      using generics::GenericTimingFunction<TimingFunction>::GenericTimingFunction;
+    };
+  }
+} // namespace endor

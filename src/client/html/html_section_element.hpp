@@ -3,14 +3,17 @@
 #include <string>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLSectionElement final : public HTMLElement
+  namespace dom
   {
-  public:
-    using HTMLElement::HTMLElement;
+    class HTMLSectionElement final : public HTMLElement
+    {
+    public:
+      using HTMLElement::HTMLElement;
 
-  private:
-    void createdCallback(bool from_scripting) override;
-  };
-}
+    private:
+      void createdCallback(bool from_scripting) override;
+    };
+  }
+} // namespace endor

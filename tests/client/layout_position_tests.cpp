@@ -2,8 +2,9 @@
 #include <client/layout/layout_object.hpp>
 #include <client/cssom/computed_style.hpp>
 
-using namespace client_layout;
-using namespace client_cssom;
+using namespace endor;
+using namespace endor::client_layout;
+using namespace endor::client_cssom;
 
 TEST_CASE("Layout Position Tests", "[layout-position]")
 {

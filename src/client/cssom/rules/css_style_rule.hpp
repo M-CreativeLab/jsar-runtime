@@ -10,56 +10,59 @@
 
 #include "./css_grouping_rule.hpp"
 
-namespace client_cssom::rules
+namespace endor
 {
-  class CSSStyleRule final : public CSSGroupingRule
+  namespace client_cssom::rules
   {
-    friend class client_cssom::CSSRuleList;
-    using CSSGroupingRule::CSSGroupingRule;
-
-  public:
-    CSSStyleRule(crates::css2::stylesheets::StyleRule &inner)
-        : CSSGroupingRule()
-        , selectorText_(inner.selectorsText())
-        , style_(inner.takeBlock())
+    class CSSStyleRule final : public CSSGroupingRule
     {
-      auto parsed = selectors::CSSelectorParser::parseSelectors(selectorText_);
-      if (parsed)
+      friend class client_cssom::CSSRuleList;
+      using CSSGroupingRule::CSSGroupingRule;
+
+    public:
+      CSSStyleRule(crates::css2::stylesheets::StyleRule &inner)
+          : CSSGroupingRule()
+          , selectorText_(inner.selectorsText())
+          , style_(inner.takeBlock())
       {
-        selectors_ = std::move(*parsed);
+        auto parsed = selectors::CSSelectorParser::parseSelectors(selectorText_);
+        if (parsed)
+        {
+          selectors_ = std::move(*parsed);
+        }
+        // Note: If parsing fails, selectors_ will be empty, which is appropriate
       }
-      // Note: If parsing fails, selectors_ will be empty, which is appropriate
-    }
 
-  public:
-    const selectors::SelectorList &selectors() const
-    {
-      return selectors_;
-    }
+    public:
+      const selectors::SelectorList &selectors() const
+      {
+        return selectors_;
+      }
 
-    std::string selectorText() const
-    {
-      return selectorText_;
-    }
+      std::string selectorText() const
+      {
+        return selectorText_;
+      }
 
-    const CSSStyleDeclaration &style() const
-    {
-      return style_;
-    }
+      const CSSStyleDeclaration &style() const
+      {
+        return style_;
+      }
 
-    /**
+      /**
      * Check if an element matches this rule's selectors
      * @param element The element to check
      * @return true if the element matches any selector in this rule
      */
-    bool matches(const std::shared_ptr<dom::HTMLElement> element) const
-    {
-      return selectors::matchesSelectorList(selectors_, element);
-    }
+      bool matches(const std::shared_ptr<dom::HTMLElement> element) const
+      {
+        return selectors::matchesSelectorList(selectors_, element);
+      }
 
-  private:
-    std::string selectorText_;
-    selectors::SelectorList selectors_; // Native C++ selectors (replaces Rust selectors)
-    CSSStyleDeclaration style_;
-  };
-}
+    private:
+      std::string selectorText_;
+      selectors::SelectorList selectors_; // Native C++ selectors (replaces Rust selectors)
+      CSSStyleDeclaration style_;
+    };
+  }
+} // namespace endor

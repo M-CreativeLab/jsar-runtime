@@ -5,55 +5,58 @@
 #include <client/scripting_base/iterator_protocol_impl.hpp>
 #include <client/dom/node_list-inl.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace dom_bindings
+  namespace script_bindings
   {
-    class NodeList;
-    using NodeListBase = scripting_base::ObjectWrap<NodeList, dom::NodeListApi>;
-
-    class NodeList : public NodeListBase
+    namespace dom_bindings
     {
-      using NodeListBase::ObjectWrap;
+      class NodeList;
+      using NodeListBase = scripting_base::ObjectWrap<NodeList, dom::NodeListApi>;
 
-    private:
-      class NodeListIterator : public scripting_base::Iterable<NodeListIterator, dom::Node>
+      class NodeList : public NodeListBase
       {
-        using scripting_base::Iterable<NodeListIterator, dom::Node>::Iterable;
+        using NodeListBase::ObjectWrap;
+
+      private:
+        class NodeListIterator : public scripting_base::Iterable<NodeListIterator, dom::Node>
+        {
+          using scripting_base::Iterable<NodeListIterator, dom::Node>::Iterable;
+
+        public:
+          v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<dom::Node> value) override;
+        };
 
       public:
-        v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<dom::Node> value) override;
+        static std::string Name()
+        {
+          return "NodeList";
+        }
+        static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+
+      public:
+        NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+
+      private:
+        // Core methods
+        void Item(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void Entries(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void ForEach(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void Keys(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void Values(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+        // Property getters
+        void LengthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+
+        // Indexed property handlers for array-like access
+        static void IndexedPropertyGetter(uint32_t index, const v8::PropertyCallbackInfo<v8::Value> &info);
+        static void IndexedPropertySetter(uint32_t index,
+                                          v8::Local<v8::Value> value,
+                                          const v8::PropertyCallbackInfo<v8::Value> &info);
+        static void IndexedPropertyDeleter(uint32_t index, const v8::PropertyCallbackInfo<v8::Boolean> &info);
+        static void IndexedPropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
       };
-
-    public:
-      static std::string Name()
-      {
-        return "NodeList";
-      }
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
-    private:
-      // Core methods
-      void Item(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void Entries(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void ForEach(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void Keys(const v8::FunctionCallbackInfo<v8::Value> &info);
-      void Values(const v8::FunctionCallbackInfo<v8::Value> &info);
-
-      // Property getters
-      void LengthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-
-      // Indexed property handlers for array-like access
-      static void IndexedPropertyGetter(uint32_t index, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IndexedPropertySetter(uint32_t index,
-                                        v8::Local<v8::Value> value,
-                                        const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IndexedPropertyDeleter(uint32_t index, const v8::PropertyCallbackInfo<v8::Boolean> &info);
-      static void IndexedPropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
-    };
+    }
   }
-}
+} // namespace endor

@@ -27,6 +27,7 @@ The JSAR Runtime inspector now supports basic Chrome DevTools Protocol (CDP) fun
 - **`ContentCdpRuntimeDomain`** - Runtime domain with JavaScript runtime methods (runs in content processes)
 - **`ContentCdpExampleDomain`** - Example domain for testing connectivity (runs in content processes)
 - **`ContentCdpLogDomain`** - Log domain for collecting and broadcasting log entries from content processes
+- **`ContentCdpDomDomain`** - DOM domain for accessing and manipulating the Document Object Model (runs in content processes)
 
 ### IPC Communication
 
@@ -255,6 +256,84 @@ Sample domain for testing CDP connectivity and method invocation.
     "echoed": {
       "message": "Hello JSAR!",
       "data": { "test": true }
+    }
+  }
+}
+```
+
+### DOM Domain
+
+The DOM domain provides access to the Document Object Model, allowing CDP clients to inspect and manipulate the DOM tree structure.
+
+#### Methods
+
+- **`DOM.enable`** - Enables DOM domain
+- **`DOM.disable`** - Disables DOM domain  
+- **`DOM.getDocument`** - Returns the root DOM node with the current document
+
+#### Node Structure
+
+Each DOM node returned by the domain includes:
+- `nodeId` - Unique identifier for the node
+- `parentId` - Identifier of the parent node
+- `backendNodeId` - Backend-specific node identifier
+- `nodeType` - Type of the node (Document, Element, Text, etc.)
+- `nodeName` - Name of the node
+- `localName` - Local name for elements
+- `nodeValue` - Value for text nodes
+- `childNodeCount` - Number of child nodes
+- `children` - Array of child nodes (when included)
+- `attributes` - Array of attribute name/value pairs for elements
+- `documentURL` - URL of the document (for document nodes)
+- `baseURL` - Base URL of the document (for document nodes)
+
+#### Example Usage
+
+```javascript
+// Enable DOM domain
+{
+  "id": 1,
+  "method": "DOM.enable",
+  "params": {}
+}
+
+// Get document
+{
+  "id": 2,
+  "method": "DOM.getDocument",
+  "params": {}
+}
+
+// Response
+{
+  "id": 2,
+  "result": {
+    "root": {
+      "nodeId": 1,
+      "parentId": 0,
+      "backendNodeId": 1,
+      "nodeType": 9,
+      "nodeName": "#document",
+      "localName": "",
+      "nodeValue": "",
+      "childNodeCount": 1,
+      "children": [
+        {
+          "nodeId": 2,
+          "parentId": 1,
+          "backendNodeId": 2,
+          "nodeType": 1,
+          "nodeName": "HTML",
+          "localName": "html",
+          "nodeValue": "",
+          "childNodeCount": 0,
+          "children": [],
+          "attributes": []
+        }
+      ],
+      "attributes": [],
+      "documentURL": "about:blank",
+      "baseURL": "about:blank"
     }
   }
 }

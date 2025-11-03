@@ -4,38 +4,41 @@
 #include <client/script_bindings/event_target.hpp>
 #include <client/workers/worker_global_scope.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace workers_bindings
+  namespace script_bindings
   {
-    class WorkerGlobalScope;
-    using WorkerGlobalScopeBase = scripting_base::ObjectWrap<WorkerGlobalScope,
-                                                             client_workers::WorkerGlobalScope,
-                                                             EventTarget>;
-
-    class WorkerGlobalScope : public WorkerGlobalScopeBase
+    namespace workers_bindings
     {
-      using WorkerGlobalScopeBase::ObjectWrap;
+      class WorkerGlobalScope;
+      using WorkerGlobalScopeBase = scripting_base::ObjectWrap<WorkerGlobalScope,
+                                                               client_workers::WorkerGlobalScope,
+                                                               EventTarget>;
 
-    public:
-      static std::string Name()
+      class WorkerGlobalScope : public WorkerGlobalScopeBase
       {
-        return "WorkerGlobalScope";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::ObjectTemplate> GetInstanceTemplate(v8::Isolate *isolate);
-      /**
+        using WorkerGlobalScopeBase::ObjectWrap;
+
+      public:
+        static std::string Name()
+        {
+          return "WorkerGlobalScope";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        static v8::Local<v8::ObjectTemplate> GetInstanceTemplate(v8::Isolate *isolate);
+        /**
        * Create a new `WorkerGlobalScope` object and wrap it within the given object.
        */
-      static v8::Local<v8::Object> MakeAndWrap(v8::Isolate *isolate,
-                                               v8::Local<v8::Object> object,
-                                               std::shared_ptr<client_workers::WorkerGlobalScope>);
+        static v8::Local<v8::Object> MakeAndWrap(v8::Isolate *isolate,
+                                                 v8::Local<v8::Object> object,
+                                                 std::shared_ptr<client_workers::WorkerGlobalScope>);
 
-    public:
-      WorkerGlobalScope(v8::Isolate *, std::shared_ptr<client_workers::WorkerGlobalScope>);
+      public:
+        WorkerGlobalScope(v8::Isolate *, std::shared_ptr<client_workers::WorkerGlobalScope>);
 
-    private:
-      void Fetch(const v8::FunctionCallbackInfo<v8::Value> &info);
-    };
+      private:
+        void Fetch(const v8::FunctionCallbackInfo<v8::Value> &info);
+      };
+    }
   }
-}
+} // namespace endor

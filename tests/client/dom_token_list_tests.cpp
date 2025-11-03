@@ -2,7 +2,8 @@
 #include "../catch2/catch_amalgamated.hpp"
 #include <client/dom/dom_token_list.hpp>
 
-using namespace dom;
+using namespace endor;
+using namespace endor::dom;
 
 TEST_CASE("DOMTokenList constructor", "[DOMTokenList]")
 {

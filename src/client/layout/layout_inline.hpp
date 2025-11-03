@@ -5,9 +5,11 @@
 #include "./layout_box_model_object.hpp"
 #include "./layout_object_child_list.hpp"
 
-namespace client_layout
+namespace endor
 {
-  /**
+  namespace client_layout
+  {
+    /**
    * `LayoutInline` is the `LayoutObject` associated with "display: inline". This is called an "inline box" in CSS 2.1,
    * see: http://www.w3.org/TR/CSS2/visuren.html#inline-boxes.
    *
@@ -39,62 +41,63 @@ namespace client_layout
    *            text run: "More bold inlines."
    * ```
    */
-  class LayoutInline : public LayoutBoxModelObject
-  {
-  public:
-    LayoutInline(std::shared_ptr<dom::Node> node);
-
-  public:
-    const char *name() const override
+    class LayoutInline : public LayoutBoxModelObject
     {
-      return "LayoutInline";
-    }
-    bool isLayoutInline() const override final
-    {
-      return true;
-    }
+    public:
+      LayoutInline(std::shared_ptr<dom::Node> node);
 
-    inline std::shared_ptr<LayoutObjectChildList> children() const
-    {
-      return children_;
-    }
-    inline std::shared_ptr<LayoutObjectChildList> children()
-    {
-      return children_;
-    }
-    inline LayoutObjectChildList &childrenRef()
-    {
-      return *children_;
-    }
-    inline const LayoutObjectChildList &childrenRef() const
-    {
-      return *children_;
-    }
+    public:
+      const char *name() const override
+      {
+        return "LayoutInline";
+      }
+      bool isLayoutInline() const override final
+      {
+        return true;
+      }
 
-    std::shared_ptr<LayoutObject> firstChild() const;
-    std::shared_ptr<LayoutObject> lastChild() const;
+      inline std::shared_ptr<LayoutObjectChildList> children() const
+      {
+        return children_;
+      }
+      inline std::shared_ptr<LayoutObjectChildList> children()
+      {
+        return children_;
+      }
+      inline LayoutObjectChildList &childrenRef()
+      {
+        return *children_;
+      }
+      inline const LayoutObjectChildList &childrenRef() const
+      {
+        return *children_;
+      }
 
-    // If you have a `LayoutInline`, use `firstChild` or `lastChild` instead.
-    void slowFirstChild() const = delete;
-    void slowLastChild() const = delete;
+      std::shared_ptr<LayoutObject> firstChild() const;
+      std::shared_ptr<LayoutObject> lastChild() const;
 
-    bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase) override;
+      // If you have a `LayoutInline`, use `firstChild` or `lastChild` instead.
+      void slowFirstChild() const = delete;
+      void slowLastChild() const = delete;
 
-  private:
-    std::shared_ptr<LayoutObjectChildList> virtualChildren() const override final
-    {
-      return children();
-    }
-    std::shared_ptr<LayoutObjectChildList> virtualChildren() override final
-    {
-      return children();
-    }
+      bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase) override;
 
-    // Fast check if `NodeAtPoint` may find a hit based on the bounding box intersection.
-    bool mayIntersect(const HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset) const;
-    bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
+    private:
+      std::shared_ptr<LayoutObjectChildList> virtualChildren() const override final
+      {
+        return children();
+      }
+      std::shared_ptr<LayoutObjectChildList> virtualChildren() override final
+      {
+        return children();
+      }
 
-  private:
-    std::shared_ptr<LayoutObjectChildList> children_;
-  };
-}
+      // Fast check if `NodeAtPoint` may find a hit based on the bounding box intersection.
+      bool mayIntersect(const HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset) const;
+      bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
+
+    private:
+      std::shared_ptr<LayoutObjectChildList> children_;
+    };
+  }
+} // namespace endor

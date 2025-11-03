@@ -2,6 +2,7 @@
 #include "./browsing_context.hpp"
 
 using namespace std;
+using namespace endor;
 
 namespace dombinding
 {
@@ -23,7 +24,7 @@ namespace dombinding
 
   BrowsingContext::BrowsingContext(const Napi::CallbackInfo &info)
       : RuntimeContextBase<BrowsingContext, dom::BrowsingContext>(info)
-      , client_context_(TrClientContextPerProcess::Get())
+      , client_context_(endor::TrClientContextPerProcess::Get())
   {
     assert(this->contextImpl != nullptr && "contextImpl should not be null");
     client_context_->browsingContext = this->contextImpl;

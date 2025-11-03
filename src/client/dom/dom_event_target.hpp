@@ -5,21 +5,24 @@
 #include <client/scripting_base/v8_object_holder.hpp>
 #include "./dom_event.hpp"
 
-namespace dom
+namespace endor
 {
-  // Forward declaration
-  class Event;
-
-  class EventListener : public events_comm::TrEventListener<DOMEventType, Event>
+  namespace dom
   {
-    using events_comm::TrEventListener<DOMEventType, Event>::TrEventListener;
-  };
+    // Forward declaration
+    class Event;
 
-  class DOMEventTarget : public events_comm::TrEventTarget<DOMEventType, Event>,
-                         public scripting_base::JSObjectHolder
-  {
-  public:
-    DOMEventTarget() = default;
-    virtual ~DOMEventTarget() = default;
-  };
-}
+    class EventListener : public events_comm::TrEventListener<DOMEventType, Event>
+    {
+      using events_comm::TrEventListener<DOMEventType, Event>::TrEventListener;
+    };
+
+    class DOMEventTarget : public events_comm::TrEventTarget<DOMEventType, Event>,
+                           public scripting_base::JSObjectHolder
+    {
+    public:
+      DOMEventTarget() = default;
+      virtual ~DOMEventTarget() = default;
+    };
+  }
+} // namespace endor

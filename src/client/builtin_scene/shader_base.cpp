@@ -3,56 +3,59 @@
 #include "./material_base.hpp"
 #include "./shaders_store.gen.hpp"
 
-namespace builtin_scene
+namespace endor
 {
-  using namespace std;
-  using namespace client_graphics;
-
-  string ShaderPreprocessor::PreprocessSource(string source, const vector<string> &defines, WebGLShaderType shaderType)
+  namespace builtin_scene
   {
-    // The flag to check if the shader has multiview
-    bool shouldMultiview = false;
+    using namespace std;
+    using namespace client_graphics;
 
-    // Add the defines
-    for (const auto &define : defines)
+    string ShaderPreprocessor::PreprocessSource(string source, const vector<string> &defines, WebGLShaderType shaderType)
     {
-      source = "#define " + define + "\n" + source;
-      if (define == Material::kRequireMultiviewDefine)
-        shouldMultiview = true;
-    }
+      // The flag to check if the shader has multiview
+      bool shouldMultiview = false;
 
-    if (shaderType == WebGLShaderType::kVertex)
-    {
-      if (shouldMultiview)
+      // Add the defines
+      for (const auto &define : defines)
       {
-        // Add the multiview extension
-        std::vector<std::string> prependLines = {
-          "#extension GL_OVR_multiview2 : require",
-          "layout(num_views = 2) in;",
-          "#define VIEW_ID gl_ViewID_OVR"};
-        source = ConcatSource(source, prependLines);
+        source = "#define " + define + "\n" + source;
+        if (define == Material::kRequireMultiviewDefine)
+          shouldMultiview = true;
       }
+
+      if (shaderType == WebGLShaderType::kVertex)
+      {
+        if (shouldMultiview)
+        {
+          // Add the multiview extension
+          std::vector<std::string> prependLines = {
+            "#extension GL_OVR_multiview2 : require",
+            "layout(num_views = 2) in;",
+            "#define VIEW_ID gl_ViewID_OVR"};
+          source = ConcatSource(source, prependLines);
+        }
+      }
+
+      // Prepend WebGL 2.0 version: #version 300 es
+      source = "#version 300 es\n" + source;
+
+      // Return the preprocessed source
+      return source;
     }
 
-    // Prepend WebGL 2.0 version: #version 300 es
-    source = "#version 300 es\n" + source;
+    string ShaderPreprocessor::ConcatSource(const string &source, const vector<string> &lines)
+    {
+      string r;
+      for (const auto &line : lines)
+        r += line + "\n";
+      return r + source;
+    }
 
-    // Return the preprocessed source
-    return source;
+    ShaderSource ShaderRef::shader(const std::vector<std::string> &defines) const
+    {
+      if (shaders::SHADERS_STORE.find(name) == shaders::SHADERS_STORE.end())
+        throw std::runtime_error("The shader is not found: " + name);
+      return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines, type);
+    }
   }
-
-  string ShaderPreprocessor::ConcatSource(const string &source, const vector<string> &lines)
-  {
-    string r;
-    for (const auto &line : lines)
-      r += line + "\n";
-    return r + source;
-  }
-
-  ShaderSource ShaderRef::shader(const std::vector<std::string> &defines) const
-  {
-    if (shaders::SHADERS_STORE.find(name) == shaders::SHADERS_STORE.end())
-      throw std::runtime_error("The shader is not found: " + name);
-    return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines, type);
-  }
-}
+} // namespace endor

@@ -3,34 +3,37 @@
 #include <string>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLBodyElement final : public HTMLElement
+  namespace dom
   {
-    using HTMLElement::HTMLElement;
-
-  public:
-    HTMLBodyElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("BODY", ownerDocument)
+    class HTMLBodyElement final : public HTMLElement
     {
-    }
+      using HTMLElement::HTMLElement;
 
-  public:
-    bool isHTMLBodyElement() const override
-    {
-      return true;
-    }
+    public:
+      HTMLBodyElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLElement("BODY", ownerDocument)
+      {
+      }
 
-    void createdCallback(bool from_scripting) override
-    {
-      defaultStyle_.setProperty("width", "auto");
-      defaultStyle_.setProperty("height", "auto");
-      defaultStyle_.setProperty("min-width", "100vw");
-      defaultStyle_.setProperty("min-height", "100vh");
-      defaultStyle_.setProperty("background-color", "white");
-      renderable = true;
+    public:
+      bool isHTMLBodyElement() const override
+      {
+        return true;
+      }
 
-      HTMLElement::createdCallback(from_scripting);
-    }
-  };
-}
+      void createdCallback(bool from_scripting) override
+      {
+        defaultStyle_.setProperty("width", "auto");
+        defaultStyle_.setProperty("height", "auto");
+        defaultStyle_.setProperty("min-width", "100vw");
+        defaultStyle_.setProperty("min-height", "100vh");
+        defaultStyle_.setProperty("background-color", "white");
+        renderable = true;
+
+        HTMLElement::createdCallback(from_scripting);
+      }
+    };
+  }
+} // namespace endor

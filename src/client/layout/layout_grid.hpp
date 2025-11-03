@@ -2,20 +2,23 @@
 
 #include "./layout_block.hpp"
 
-namespace client_layout
+namespace endor
 {
-  class LayoutGrid : public LayoutBlock
+  namespace client_layout
   {
-    using LayoutBlock::LayoutBlock;
+    class LayoutGrid : public LayoutBlock
+    {
+      using LayoutBlock::LayoutBlock;
 
-  public:
-    const char *name() const override
-    {
-      return "LayoutGrid";
-    }
-    bool isLayoutGrid() const override final
-    {
-      return true;
-    }
-  };
-}
+    public:
+      const char *name() const override
+      {
+        return "LayoutGrid";
+      }
+      bool isLayoutGrid() const override final
+      {
+        return true;
+      }
+    };
+  }
+} // namespace endor

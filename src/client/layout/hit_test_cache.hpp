@@ -5,37 +5,40 @@
 #include "./hit_test_ray.hpp"
 #include "./hit_test_result.hpp"
 
-namespace client_layout
+namespace endor
 {
-  struct HitTestCacheItem
+  namespace client_layout
   {
-    HitTestRay ray;
-    HitTestResult result;
-
-    void cacheValues(const HitTestCacheItem &other);
-  };
-
-  class HitTestCache
-  {
-  private:
-    static constexpr size_t kMaxCacheSize = 2;
-
-  public:
-    HitTestCache()
-        : update_index_(0)
+    struct HitTestCacheItem
     {
-    }
-    HitTestCache(const HitTestCache &) = delete;
-    HitTestCache &operator=(const HitTestCache &) = delete;
+      HitTestRay ray;
+      HitTestResult result;
 
-  public:
-    bool lookupCachedResult(const HitTestRay &, HitTestResult &);
-    void addCachedResult(const HitTestRay &, const HitTestResult &);
+      void cacheValues(const HitTestCacheItem &other);
+    };
 
-    void clear();
+    class HitTestCache
+    {
+    private:
+      static constexpr size_t kMaxCacheSize = 2;
 
-  private:
-    unsigned update_index_;
-    std::vector<HitTestCacheItem> items_;
-  };
-}
+    public:
+      HitTestCache()
+          : update_index_(0)
+      {
+      }
+      HitTestCache(const HitTestCache &) = delete;
+      HitTestCache &operator=(const HitTestCache &) = delete;
+
+    public:
+      bool lookupCachedResult(const HitTestRay &, HitTestResult &);
+      void addCachedResult(const HitTestRay &, const HitTestResult &);
+
+      void clear();
+
+    private:
+      unsigned update_index_;
+      std::vector<HitTestCacheItem> items_;
+    };
+  }
+} // namespace endor

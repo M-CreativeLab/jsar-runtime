@@ -7,64 +7,67 @@
 
 #include "./animation.hpp"
 
-namespace dom
+namespace endor
 {
-  class AnimationTimeline
+  namespace dom
   {
-  public:
-    AnimationTimeline() = default;
-    virtual ~AnimationTimeline() = default;
-
-    virtual bool isDocumentTimeline() const
+    class AnimationTimeline
     {
-      return false;
-    }
-    virtual bool isScrollTimeline() const
-    {
-      return false;
-    }
-    virtual bool isViewTimeline() const
-    {
-      return false;
-    }
-    virtual bool isActive() const
-    {
-      return current_time_ != std::nullopt;
-    }
-    virtual bool isResolved() const
-    {
-      return true;
-    }
+    public:
+      AnimationTimeline() = default;
+      virtual ~AnimationTimeline() = default;
 
-    std::optional<long long> currentTime() const
-    {
-      if (!isActive())
-        return std::nullopt;
-      return std::chrono::duration_cast<std::chrono::milliseconds>(current_time_->time_since_epoch()).count();
-    }
+      virtual bool isDocumentTimeline() const
+      {
+        return false;
+      }
+      virtual bool isScrollTimeline() const
+      {
+        return false;
+      }
+      virtual bool isViewTimeline() const
+      {
+        return false;
+      }
+      virtual bool isActive() const
+      {
+        return current_time_ != std::nullopt;
+      }
+      virtual bool isResolved() const
+      {
+        return true;
+      }
 
-    virtual void animationAttached(std::shared_ptr<Animation>);
-    virtual void animationDetached(std::shared_ptr<Animation>);
-    virtual void detachInvalidAnimations();
+      std::optional<long long> currentTime() const
+      {
+        if (!isActive())
+          return std::nullopt;
+        return std::chrono::duration_cast<std::chrono::milliseconds>(current_time_->time_since_epoch()).count();
+      }
 
-    virtual void serviceAnimations(TimingUpdateReason);
-    virtual void scheduleNextService() = 0;
+      virtual void animationAttached(std::shared_ptr<Animation>);
+      virtual void animationDetached(std::shared_ptr<Animation>);
+      virtual void detachInvalidAnimations();
 
-    virtual bool hasAnimations() const
-    {
-      return !animations_.empty();
-    }
+      virtual void serviceAnimations(TimingUpdateReason);
+      virtual void scheduleNextService() = 0;
 
-  protected:
-    void updateCurrentTime()
-    {
-      current_time_ = std::chrono::high_resolution_clock::now();
-    }
+      virtual bool hasAnimations() const
+      {
+        return !animations_.empty();
+      }
 
-  protected:
-    std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> current_time_;
+    protected:
+      void updateCurrentTime()
+      {
+        current_time_ = std::chrono::high_resolution_clock::now();
+      }
 
-  private:
-    std::vector<std::weak_ptr<Animation>> animations_;
-  };
-}
+    protected:
+      std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> current_time_;
+
+    private:
+      std::vector<std::weak_ptr<Animation>> animations_;
+    };
+  }
+} // namespace endor

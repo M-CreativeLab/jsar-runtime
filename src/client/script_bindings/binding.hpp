@@ -2,16 +2,18 @@
 
 #include <node/v8.h>
 
-namespace script_bindings
+namespace endor
 {
-  enum ContextType
+  namespace script_bindings
   {
-    kScripting,
-    kWorker,
-    kServiceWorker
-  };
+    enum ContextType
+    {
+      kScripting,
+      kWorker,
+      kServiceWorker
+    };
 
-  /**
+    /**
    * Initialize all binding classes and register them with V8.
    * This function should be called once when setting up the V8 context.
    * 
@@ -19,5 +21,6 @@ namespace script_bindings
    * @param context The V8 context to attach DOM classes to
    * @param type The type of context being initialized (scripting, worker, etc.)
    */
-  void Initialize(v8::Isolate *isolate, v8::Local<v8::Context> context, ContextType type);
-}
+    void Initialize(v8::Isolate *isolate, v8::Local<v8::Context> context, ContextType type);
+  }
+} // namespace endor

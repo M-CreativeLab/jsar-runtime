@@ -3,342 +3,411 @@
 #include <client/dom/document.hpp>
 #include "./matching.hpp"
 
-namespace client_cssom::selectors
+namespace endor
 {
-  using namespace std;
-  using namespace dom;
-
-  // Helper functions for pseudo-class matching
-  bool isRootElement(const shared_ptr<HTMLElement> element)
+  namespace client_cssom::selectors
   {
-    try
+    using namespace std;
+    using namespace dom;
+
+    // Helper functions for pseudo-class matching
+    bool isRootElement(const shared_ptr<HTMLElement> element)
     {
-      const auto &document = element->getOwnerDocumentChecked();
-      auto documentElement = document.documentElement();
-      return documentElement && documentElement == element;
-    }
-    catch (...)
-    {
-      return false;
-    }
-  }
-
-  bool isFirstChild(const shared_ptr<HTMLElement> element)
-  {
-    auto parent = element->getParentNode();
-    if (!parent)
-      return false;
-
-    auto firstChild = parent->firstChild();
-    return firstChild && firstChild == element;
-  }
-
-  bool isLastChild(const shared_ptr<HTMLElement> element)
-  {
-    auto parent = element->getParentNode();
-    if (!parent)
-      return false;
-
-    auto lastChild = parent->lastChild();
-    return lastChild && lastChild == element;
-  }
-
-  bool isFirstOfType(const shared_ptr<HTMLElement> element)
-  {
-    auto parent = element->getParentNode();
-    if (!parent)
-      return false;
-
-    // Check all previous siblings to see if any have the same tag name
-    auto currentSibling = element->previousSibling();
-    while (currentSibling)
-    {
-      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
-      if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
-        return false; // Found a sibling of the same type before this element
-      currentSibling = currentSibling->previousSibling();
-    }
-    return true;
-  }
-
-  bool isLastOfType(const shared_ptr<HTMLElement> element)
-  {
-    auto parent = element->getParentNode();
-    if (!parent)
-      return false;
-
-    // Check all next siblings to see if any have the same tag name
-    auto currentSibling = element->nextSibling();
-    while (currentSibling)
-    {
-      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
-      if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
-        return false; // Found a sibling of the same type after this element
-      currentSibling = currentSibling->nextSibling();
-    }
-    return true;
-  }
-
-  bool isNthChild(const shared_ptr<HTMLElement> element, int a, int b)
-  {
-    auto parent = element->getParentNode();
-    if (!parent)
-      return false;
-
-    // Count the element's position among all element siblings (1-indexed)
-    int position = 1;
-    auto currentSibling = element->previousSibling();
-    while (currentSibling)
-    {
-      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
-      if (siblingElement)
-        position++;
-      currentSibling = currentSibling->previousSibling();
-    }
-
-    // Check if position matches the an+b formula
-    if (a == 0)
-    {
-      // Simple position match (e.g., nth-child(3))
-      return position == b;
-    }
-    else if (a > 0)
-    {
-      // Forward sequence (e.g., 2n+1)
-      if (position < b)
-        return false;
-      return (position - b) % a == 0;
-    }
-    else
-    {
-      // Backward sequence (e.g., -n+3)
-      if (position > b)
-        return false;
-      return (b - position) % (-a) == 0;
-    }
-  }
-
-  bool isNthOfType(const shared_ptr<HTMLElement> element, int a, int b)
-  {
-    auto parent = element->getParentNode();
-    if (!parent)
-      return false;
-
-    // Count the element's position among siblings of the same type (1-indexed)
-    int position = 1;
-    auto currentSibling = element->previousSibling();
-    while (currentSibling)
-    {
-      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
-      if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
-        position++;
-      currentSibling = currentSibling->previousSibling();
-    }
-
-    // Check if position matches the an+b formula
-    if (a == 0)
-    {
-      return position == b;
-    }
-    else if (a > 0)
-    {
-      if (position < b)
-        return false;
-      return (position - b) % a == 0;
-    }
-    else
-    {
-      if (position > b)
-        return false;
-      return (b - position) % (-a) == 0;
-    }
-  }
-
-  bool matchesSelectorList(const SelectorList &selectors, const shared_ptr<HTMLElement> element)
-  {
-    MatchingContext context;
-    for (const auto &selector : selectors)
-    {
-      if (matchesSelector(selector, element, context))
-        return true;
-    }
-    return false;
-  }
-
-  bool matchesSelector(const Selector &selector, const shared_ptr<HTMLElement> element, MatchingContext &context)
-  {
-    assert(!selector.empty());
-
-    // CSS selectors are matched right-to-left, so we need to start from the end
-    // and work backwards through the components
-    return matchesSelectorFromEnd(selector, element, context);
-  }
-
-  bool matchesSelectorComponentNonCombinator(const Component &component,
-                                             const shared_ptr<HTMLElement> element,
-                                             MatchingContext &context)
-  {
-    assert(!component.isCombinator());
-
-    if (component.isUniversal())
-      return true; // Universal selector matches any element
-    if (component.isLocalName())
-      return strcasecmp(element->tagName.c_str(), component.name().c_str()) == 0;
-    if (component.isId())
-      return element->id == component.id();
-    if (component.isClass())
-      return element->classList().contains(component.name());
-    if (component.isAttribute())
-    {
-      const std::string &attrName = component.attributeName();
-      const std::string &attrValue = component.attributeValue();
-
-      // Check if element has the attribute
-      if (!element->hasAttribute(attrName))
-        return false;
-
-      // For existence check, just having the attribute is enough
-      if (component.attributeMatchType() == AttributeMatchType::kExists)
-        return true;
-
-      // Get the actual attribute value
-      std::string elementAttrValue = element->getAttribute(attrName);
-
-      switch (component.attributeMatchType())
+      try
       {
-      case AttributeMatchType::kExact:
-        return elementAttrValue == attrValue;
-      case AttributeMatchType::kWhitespace:
+        const auto &document = element->getOwnerDocumentChecked();
+        auto documentElement = document.documentElement();
+        return documentElement && documentElement == element;
+      }
+      catch (...)
       {
-        // Check if attrValue appears as a whole word in a whitespace-separated list
-        std::istringstream iss(elementAttrValue);
-        std::string word;
-        while (iss >> word)
+        return false;
+      }
+    }
+
+    bool isFirstChild(const shared_ptr<HTMLElement> element)
+    {
+      auto parent = element->getParentNode();
+      if (!parent)
+        return false;
+
+      auto firstChild = parent->firstChild();
+      return firstChild && firstChild == element;
+    }
+
+    bool isLastChild(const shared_ptr<HTMLElement> element)
+    {
+      auto parent = element->getParentNode();
+      if (!parent)
+        return false;
+
+      auto lastChild = parent->lastChild();
+      return lastChild && lastChild == element;
+    }
+
+    bool isFirstOfType(const shared_ptr<HTMLElement> element)
+    {
+      auto parent = element->getParentNode();
+      if (!parent)
+        return false;
+
+      // Check all previous siblings to see if any have the same tag name
+      auto currentSibling = element->previousSibling();
+      while (currentSibling)
+      {
+        auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+        if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
+          return false; // Found a sibling of the same type before this element
+        currentSibling = currentSibling->previousSibling();
+      }
+      return true;
+    }
+
+    bool isLastOfType(const shared_ptr<HTMLElement> element)
+    {
+      auto parent = element->getParentNode();
+      if (!parent)
+        return false;
+
+      // Check all next siblings to see if any have the same tag name
+      auto currentSibling = element->nextSibling();
+      while (currentSibling)
+      {
+        auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+        if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
+          return false; // Found a sibling of the same type after this element
+        currentSibling = currentSibling->nextSibling();
+      }
+      return true;
+    }
+
+    bool isNthChild(const shared_ptr<HTMLElement> element, int a, int b)
+    {
+      auto parent = element->getParentNode();
+      if (!parent)
+        return false;
+
+      // Count the element's position among all element siblings (1-indexed)
+      int position = 1;
+      auto currentSibling = element->previousSibling();
+      while (currentSibling)
+      {
+        auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+        if (siblingElement)
+          position++;
+        currentSibling = currentSibling->previousSibling();
+      }
+
+      // Check if position matches the an+b formula
+      if (a == 0)
+      {
+        // Simple position match (e.g., nth-child(3))
+        return position == b;
+      }
+      else if (a > 0)
+      {
+        // Forward sequence (e.g., 2n+1)
+        if (position < b)
+          return false;
+        return (position - b) % a == 0;
+      }
+      else
+      {
+        // Backward sequence (e.g., -n+3)
+        if (position > b)
+          return false;
+        return (b - position) % (-a) == 0;
+      }
+    }
+
+    bool isNthOfType(const shared_ptr<HTMLElement> element, int a, int b)
+    {
+      auto parent = element->getParentNode();
+      if (!parent)
+        return false;
+
+      // Count the element's position among siblings of the same type (1-indexed)
+      int position = 1;
+      auto currentSibling = element->previousSibling();
+      while (currentSibling)
+      {
+        auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+        if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
+          position++;
+        currentSibling = currentSibling->previousSibling();
+      }
+
+      // Check if position matches the an+b formula
+      if (a == 0)
+      {
+        return position == b;
+      }
+      else if (a > 0)
+      {
+        if (position < b)
+          return false;
+        return (position - b) % a == 0;
+      }
+      else
+      {
+        if (position > b)
+          return false;
+        return (b - position) % (-a) == 0;
+      }
+    }
+
+    bool matchesSelectorList(const SelectorList &selectors, const shared_ptr<HTMLElement> element)
+    {
+      MatchingContext context;
+      for (const auto &selector : selectors)
+      {
+        if (matchesSelector(selector, element, context))
+          return true;
+      }
+      return false;
+    }
+
+    bool matchesSelector(const Selector &selector, const shared_ptr<HTMLElement> element, MatchingContext &context)
+    {
+      assert(!selector.empty());
+
+      // CSS selectors are matched right-to-left, so we need to start from the end
+      // and work backwards through the components
+      return matchesSelectorFromEnd(selector, element, context);
+    }
+
+    bool matchesSelectorComponentNonCombinator(const Component &component,
+                                               const shared_ptr<HTMLElement> element,
+                                               MatchingContext &context)
+    {
+      assert(!component.isCombinator());
+
+      if (component.isUniversal())
+        return true; // Universal selector matches any element
+      if (component.isLocalName())
+        return strcasecmp(element->tagName.c_str(), component.name().c_str()) == 0;
+      if (component.isId())
+        return element->id == component.id();
+      if (component.isClass())
+        return element->classList().contains(component.name());
+      if (component.isAttribute())
+      {
+        const std::string &attrName = component.attributeName();
+        const std::string &attrValue = component.attributeValue();
+
+        // Check if element has the attribute
+        if (!element->hasAttribute(attrName))
+          return false;
+
+        // For existence check, just having the attribute is enough
+        if (component.attributeMatchType() == AttributeMatchType::kExists)
+          return true;
+
+        // Get the actual attribute value
+        std::string elementAttrValue = element->getAttribute(attrName);
+
+        switch (component.attributeMatchType())
         {
-          if (word == attrValue)
-            return true;
-        }
-        return false;
-      }
-      case AttributeMatchType::kPrefix:
-        return elementAttrValue.length() >= attrValue.length() &&
-               elementAttrValue.substr(0, attrValue.length()) == attrValue;
-      case AttributeMatchType::kSuffix:
-        return elementAttrValue.length() >= attrValue.length() &&
-               elementAttrValue.substr(elementAttrValue.length() - attrValue.length()) == attrValue;
-      case AttributeMatchType::kSubstring:
-        return elementAttrValue.find(attrValue) != std::string::npos;
-      case AttributeMatchType::kDashPrefix:
-        return elementAttrValue == attrValue ||
-               (elementAttrValue.length() > attrValue.length() &&
-                elementAttrValue.substr(0, attrValue.length()) == attrValue &&
-                elementAttrValue[attrValue.length()] == '-');
-      default:
-        return false;
-      }
-    }
-
-    if (component.isPseudoClass())
-    {
-      if (component.isHover())
-        return element->isHovered();
-      if (component.isFocus())
-        return element->isFocused();
-      if (component.isFirstChild())
-        return isFirstChild(element);
-      if (component.isLastChild())
-        return isLastChild(element);
-      if (component.isFirstOfType())
-        return isFirstOfType(element);
-      if (component.isLastOfType())
-        return isLastOfType(element);
-      if (component.isWhere())
-      {
-        // :where() matches if any selector in its argument list matches the element
-        if (component.argumentSelectorList())
+        case AttributeMatchType::kExact:
+          return elementAttrValue == attrValue;
+        case AttributeMatchType::kWhitespace:
         {
-          return matchesSelectorList(*component.argumentSelectorList(), element);
+          // Check if attrValue appears as a whole word in a whitespace-separated list
+          std::istringstream iss(elementAttrValue);
+          std::string word;
+          while (iss >> word)
+          {
+            if (word == attrValue)
+              return true;
+          }
+          return false;
         }
-        return false; // Empty :where() matches nothing
+        case AttributeMatchType::kPrefix:
+          return elementAttrValue.length() >= attrValue.length() &&
+                 elementAttrValue.substr(0, attrValue.length()) == attrValue;
+        case AttributeMatchType::kSuffix:
+          return elementAttrValue.length() >= attrValue.length() &&
+                 elementAttrValue.substr(elementAttrValue.length() - attrValue.length()) == attrValue;
+        case AttributeMatchType::kSubstring:
+          return elementAttrValue.find(attrValue) != std::string::npos;
+        case AttributeMatchType::kDashPrefix:
+          return elementAttrValue == attrValue ||
+                 (elementAttrValue.length() > attrValue.length() &&
+                  elementAttrValue.substr(0, attrValue.length()) == attrValue &&
+                  elementAttrValue[attrValue.length()] == '-');
+        default:
+          return false;
+        }
       }
-      if (component.isNthChild())
+
+      if (component.isPseudoClass())
       {
-        return isNthChild(element, component.nthA(), component.nthB());
+        if (component.isHover())
+          return element->isHovered();
+        if (component.isFocus())
+          return element->isFocused();
+        if (component.isFirstChild())
+          return isFirstChild(element);
+        if (component.isLastChild())
+          return isLastChild(element);
+        if (component.isFirstOfType())
+          return isFirstOfType(element);
+        if (component.isLastOfType())
+          return isLastOfType(element);
+        if (component.isWhere())
+        {
+          // :where() matches if any selector in its argument list matches the element
+          if (component.argumentSelectorList())
+          {
+            return matchesSelectorList(*component.argumentSelectorList(), element);
+          }
+          return false; // Empty :where() matches nothing
+        }
+        if (component.isNthChild())
+        {
+          return isNthChild(element, component.nthA(), component.nthB());
+        }
+        if (component.isNthOfType())
+        {
+          return isNthOfType(element, component.nthA(), component.nthB());
+        }
+        // TODO: Implement support for :active pseudo-class when element->isActive() is available.
       }
-      if (component.isNthOfType())
-      {
-        return isNthOfType(element, component.nthA(), component.nthB());
-      }
-      // TODO: Implement support for :active pseudo-class when element->isActive() is available.
+
+      if (component.isRoot())
+        return isRootElement(element);
+      // if (component.isEmpty())
+      //   return element->isEmpty();
+
+      // Returns false if the above checks did not match.
+      return false;
     }
 
-    if (component.isRoot())
-      return isRootElement(element);
-    // if (component.isEmpty())
-    //   return element->isEmpty();
-
-    // Returns false if the above checks did not match.
-    return false;
-  }
-
-  bool matchesSelectorFromEnd(const Selector &selector,
-                              const shared_ptr<HTMLElement> element,
-                              MatchingContext &context)
-  {
-    const auto &components = selector.components();
-    if (components.empty())
-      return false;
-
-    // Start from the end (rightmost component) and work backwards
-    int currentPos = components.size() - 1;
-    shared_ptr<HTMLElement> currentElement = element;
-
-    while (currentPos >= 0)
+    bool matchesSelectorFromEnd(const Selector &selector,
+                                const shared_ptr<HTMLElement> element,
+                                MatchingContext &context)
     {
-      const auto &component = components[currentPos];
+      const auto &components = selector.components();
+      if (components.empty())
+        return false;
+
+      // Start from the end (rightmost component) and work backwards
+      int currentPos = components.size() - 1;
+      shared_ptr<HTMLElement> currentElement = element;
+
+      while (currentPos >= 0)
+      {
+        const auto &component = components[currentPos];
+
+        if (component.isCombinator())
+        {
+          // Move to the next element based on combinator type
+          switch (component.combinator())
+          {
+          case Combinator::kChild:
+            // Child combinator: element must be direct child
+            if (!currentElement->hasTypedParentNode<HTMLElement>())
+              return false;
+            currentElement = currentElement->getParentNodeAs<HTMLElement>();
+            break;
+
+          case Combinator::kDescendant:
+            // Descendant combinator: find an ancestor that matches next component
+            if (!currentElement->hasTypedParentNode<HTMLElement>())
+              return false;
+
+            // Get the next component (to the left) that we need to match
+            if (currentPos == 0)
+              return false; // No component to match
+
+            {
+              const auto &ancestorComponent = components[currentPos - 1];
+              shared_ptr<HTMLElement> ancestor = currentElement->getParentNodeAs<HTMLElement>();
+
+              // Search up the ancestor chain
+              while (ancestor != nullptr)
+              {
+                if (matchesSelectorComponentNonCombinator(ancestorComponent, ancestor, context))
+                {
+                  currentElement = ancestor;
+                  currentPos--; // Skip the ancestor component since we matched it
+                  break;
+                }
+                ancestor = ancestor->getParentNodeAs<HTMLElement>();
+              }
+
+              if (ancestor == nullptr)
+                return false; // No matching ancestor found
+            }
+            break;
+
+          case Combinator::kNextSibling:
+          case Combinator::kLaterSibling:
+          case Combinator::kPseudoElement:
+          case Combinator::kSlotAssignment:
+          case Combinator::kPart:
+          case Combinator::kUnknown:
+            // TODO: Implement these combinators
+            return false;
+          }
+        }
+        else
+        {
+          // Non-combinator component - check if current element matches
+          if (!matchesSelectorComponentNonCombinator(component, currentElement, context))
+            return false;
+        }
+
+        currentPos--;
+      }
+
+      return true; // All components matched
+    }
+
+    bool matchesSelectorComponent(const Selector &selector,
+                                  vector<Component>::const_iterator &it,
+                                  const shared_ptr<HTMLElement> element,
+                                  MatchingContext &context)
+    {
+      // If we reached the end of the selector, it means that the element matches all the components.
+      if (it == selector.components().end())
+        return true;
+
+      shared_ptr<HTMLElement> nextElement = element; // The next element to check
+      const auto &component = *it;
 
       if (component.isCombinator())
       {
-        // Move to the next element based on combinator type
         switch (component.combinator())
         {
         case Combinator::kChild:
-          // Child combinator: element must be direct child
-          if (!currentElement->hasTypedParentNode<HTMLElement>())
+          if (!element->hasTypedParentNode<HTMLElement>())
             return false;
-          currentElement = currentElement->getParentNodeAs<HTMLElement>();
+          nextElement = element->getParentNodeAs<HTMLElement>();
           break;
-
         case Combinator::kDescendant:
-          // Descendant combinator: find an ancestor that matches next component
-          if (!currentElement->hasTypedParentNode<HTMLElement>())
+          if (!element->hasTypedParentNode<HTMLElement>())
             return false;
-
-          // Get the next component (to the left) that we need to match
-          if (currentPos == 0)
-            return false; // No component to match
-
+          else
           {
-            const auto &ancestorComponent = components[currentPos - 1];
-            shared_ptr<HTMLElement> ancestor = currentElement->getParentNodeAs<HTMLElement>();
-
-            // Search up the ancestor chain
-            while (ancestor != nullptr)
+            const Component &ancestorComponent = *(++it);
+            shared_ptr<HTMLElement> maybeAncestorElement = element->getParentNodeAs<HTMLElement>();
+            while (true)
             {
-              if (matchesSelectorComponentNonCombinator(ancestorComponent, ancestor, context))
+              // If we reached the root element, we can stop.
+              if (maybeAncestorElement == nullptr)
+                return false;
+
+              // If the ancestor element matches the ancestor component, we can go to the next component.
+              if (matchesSelectorComponentNonCombinator(ancestorComponent, maybeAncestorElement, context))
               {
-                currentElement = ancestor;
-                currentPos--; // Skip the ancestor component since we matched it
+                nextElement = maybeAncestorElement;
                 break;
               }
-              ancestor = ancestor->getParentNodeAs<HTMLElement>();
+              maybeAncestorElement = maybeAncestorElement->getParentNodeAs<HTMLElement>();
             }
-
-            if (ancestor == nullptr)
-              return false; // No matching ancestor found
           }
           break;
-
         case Combinator::kNextSibling:
         case Combinator::kLaterSibling:
         case Combinator::kPseudoElement:
@@ -346,89 +415,23 @@ namespace client_cssom::selectors
         case Combinator::kPart:
         case Combinator::kUnknown:
           // TODO: Implement these combinators
-          return false;
+          break;
         }
       }
       else
       {
-        // Non-combinator component - check if current element matches
-        if (!matchesSelectorComponentNonCombinator(component, currentElement, context))
+        // Non-combinator component, we need to check if the element matches the component.
+        // - If the element matches the component, we can go to the next component to check until the end of the selector.
+        // - If the element does not match the component, we can stop and return false.
+        if (!matchesSelectorComponentNonCombinator(component, element, context))
           return false;
       }
 
-      currentPos--;
+      // Go to the next component
+      return matchesSelectorComponent(selector,
+                                      ++it,
+                                      nextElement,
+                                      context);
     }
-
-    return true; // All components matched
   }
-
-  bool matchesSelectorComponent(const Selector &selector,
-                                vector<Component>::const_iterator &it,
-                                const shared_ptr<HTMLElement> element,
-                                MatchingContext &context)
-  {
-    // If we reached the end of the selector, it means that the element matches all the components.
-    if (it == selector.components().end())
-      return true;
-
-    shared_ptr<HTMLElement> nextElement = element; // The next element to check
-    const auto &component = *it;
-
-    if (component.isCombinator())
-    {
-      switch (component.combinator())
-      {
-      case Combinator::kChild:
-        if (!element->hasTypedParentNode<HTMLElement>())
-          return false;
-        nextElement = element->getParentNodeAs<HTMLElement>();
-        break;
-      case Combinator::kDescendant:
-        if (!element->hasTypedParentNode<HTMLElement>())
-          return false;
-        else
-        {
-          const Component &ancestorComponent = *(++it);
-          shared_ptr<HTMLElement> maybeAncestorElement = element->getParentNodeAs<HTMLElement>();
-          while (true)
-          {
-            // If we reached the root element, we can stop.
-            if (maybeAncestorElement == nullptr)
-              return false;
-
-            // If the ancestor element matches the ancestor component, we can go to the next component.
-            if (matchesSelectorComponentNonCombinator(ancestorComponent, maybeAncestorElement, context))
-            {
-              nextElement = maybeAncestorElement;
-              break;
-            }
-            maybeAncestorElement = maybeAncestorElement->getParentNodeAs<HTMLElement>();
-          }
-        }
-        break;
-      case Combinator::kNextSibling:
-      case Combinator::kLaterSibling:
-      case Combinator::kPseudoElement:
-      case Combinator::kSlotAssignment:
-      case Combinator::kPart:
-      case Combinator::kUnknown:
-        // TODO: Implement these combinators
-        break;
-      }
-    }
-    else
-    {
-      // Non-combinator component, we need to check if the element matches the component.
-      // - If the element matches the component, we can go to the next component to check until the end of the selector.
-      // - If the element does not match the component, we can stop and return false.
-      if (!matchesSelectorComponentNonCombinator(component, element, context))
-        return false;
-    }
-
-    // Go to the next component
-    return matchesSelectorComponent(selector,
-                                    ++it,
-                                    nextElement,
-                                    context);
-  }
-}
+} // namespace endor

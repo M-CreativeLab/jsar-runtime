@@ -7,7 +7,8 @@
 #include <client/cssom/values/computed/length_percentage.hpp>
 #include <client/cssom/values/generics/image.hpp>
 
-using namespace client_cssom::values;
+using namespace endor;
+using namespace endor::client_cssom::values;
 
 TEST_CASE("Image gradient data extraction", "[image-gradient]")
 {

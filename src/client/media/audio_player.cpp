@@ -1,9 +1,12 @@
 #include "./audio_player.hpp"
 
-namespace media_client
+namespace endor
 {
-  AudioPlayer::AudioPlayer()
-      : MediaPlayer(MediaContentType::Audio)
+  namespace media_client
   {
+    AudioPlayer::AudioPlayer()
+        : MediaPlayer(MediaContentType::Audio)
+    {
+    }
   }
-}
+} // namespace endor

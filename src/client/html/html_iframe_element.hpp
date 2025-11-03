@@ -3,20 +3,23 @@
 #include <string>
 #include "./html_element.hpp"
 
-namespace dom
+namespace endor
 {
-  class HTMLIframeElement final : public HTMLElement
+  namespace dom
   {
-  public:
-    using HTMLElement::HTMLElement;
-
-  public:
-    HTMLIframeElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("IFRAME", ownerDocument)
+    class HTMLIframeElement final : public HTMLElement
     {
-    }
+    public:
+      using HTMLElement::HTMLElement;
 
-  private:
-    void createdCallback(bool from_scripting) override;
-  };
-}
+    public:
+      HTMLIframeElement(std::shared_ptr<Document> ownerDocument)
+          : HTMLElement("IFRAME", ownerDocument)
+      {
+      }
+
+    private:
+      void createdCallback(bool from_scripting) override;
+    };
+  }
+} // namespace endor

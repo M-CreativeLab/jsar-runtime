@@ -6,29 +6,32 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/webgl/object.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    class WebGLVertexArray;
-    using WebGLVertexArrayBase = scripting_base::ObjectWrap<WebGLVertexArray,
-                                                            client_graphics::WebGLVertexArray,
-                                                            WebGLObject>;
-
-    class WebGLVertexArray : public WebGLVertexArrayBase
+    namespace webgl_bindings
     {
-      using WebGLVertexArrayBase::ObjectWrap;
+      class WebGLVertexArray;
+      using WebGLVertexArrayBase = scripting_base::ObjectWrap<WebGLVertexArray,
+                                                              client_graphics::WebGLVertexArray,
+                                                              WebGLObject>;
 
-    public:
-      static std::string Name()
+      class WebGLVertexArray : public WebGLVertexArrayBase
       {
-        return "WebGLVertexArray";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using WebGLVertexArrayBase::ObjectWrap;
 
-    public:
-      WebGLVertexArray(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    };
+      public:
+        static std::string Name()
+        {
+          return "WebGLVertexArray";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-  } // namespace webgl
-} // namespace script_bindings
+      public:
+        WebGLVertexArray(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      };
+
+    } // namespace webgl
+  }   // namespace script_bindings
+} // namespace endor

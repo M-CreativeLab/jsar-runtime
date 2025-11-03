@@ -5,7 +5,8 @@
 #include <client/cssom/computed_style.hpp>
 #include <client/cssom/css_style_declaration.hpp>
 
-using namespace client_cssom::values;
+using namespace endor;
+using namespace endor::client_cssom::values;
 
 TEST_CASE("Filter parsing and conversion", "[css-filter]")
 {

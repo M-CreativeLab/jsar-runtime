@@ -7,7 +7,7 @@
 
 namespace dombinding
 {
-  class WorkerContext : public RuntimeContextBase<WorkerContext, dom::WorkerContext>
+  class WorkerContext : public RuntimeContextBase<WorkerContext, endor::dom::WorkerContext>
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);

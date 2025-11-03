@@ -2,19 +2,22 @@
 
 #include <client/script_bindings/webgl/extension_base.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings::extensions
+  namespace script_bindings
   {
-    class OES_texture_float_linear : public WebGLExtension<OES_texture_float_linear>
+    namespace webgl_bindings::extensions
     {
-      using WebGLExtension<OES_texture_float_linear>::WebGLExtension;
-
-    public:
-      static std::string Name()
+      class OES_texture_float_linear : public WebGLExtension<OES_texture_float_linear>
       {
-        return "OES_texture_float_linear";
-      }
-    };
+        using WebGLExtension<OES_texture_float_linear>::WebGLExtension;
+
+      public:
+        static std::string Name()
+        {
+          return "OES_texture_float_linear";
+        }
+      };
+    }
   }
-}
+} // namespace endor

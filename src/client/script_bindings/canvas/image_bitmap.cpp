@@ -1,54 +1,57 @@
 #include "image_bitmap.hpp"
 #include <client/canvas/image_bitmap.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace canvas_bindings
+  namespace script_bindings
   {
-    using namespace v8;
-
-    void ImageBitmap::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace canvas_bindings
     {
-      HandleScope scope(isolate);
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+      using namespace v8;
 
-      // Properties (read-only)
-      InstanceReadonlyAccessor(isolate, prototypeTemplate, "width", &ImageBitmap::WidthGetter);
-      InstanceReadonlyAccessor(isolate, prototypeTemplate, "height", &ImageBitmap::HeightGetter);
+      void ImageBitmap::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+        HandleScope scope(isolate);
+        Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+        Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
-      // Methods
-      InstanceMethod(isolate, prototypeTemplate, "close", &ImageBitmap::Close);
-    }
+        // Properties (read-only)
+        InstanceReadonlyAccessor(isolate, prototypeTemplate, "width", &ImageBitmap::WidthGetter);
+        InstanceReadonlyAccessor(isolate, prototypeTemplate, "height", &ImageBitmap::HeightGetter);
 
-    ImageBitmap::ImageBitmap(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : ImageBitmapBase(isolate, args)
-    {
-    }
+        // Methods
+        InstanceMethod(isolate, prototypeTemplate, "close", &ImageBitmap::Close);
+      }
 
-    void ImageBitmap::WidthGetter(const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
+      ImageBitmap::ImageBitmap(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+          : ImageBitmapBase(isolate, args)
+      {
+      }
 
-      info.GetReturnValue().Set(Number::New(isolate, handle()->width()));
-    }
+      void ImageBitmap::WidthGetter(const PropertyCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
 
-    void ImageBitmap::HeightGetter(const PropertyCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
+        info.GetReturnValue().Set(Number::New(isolate, handle()->width()));
+      }
 
-      info.GetReturnValue().Set(Number::New(isolate, handle()->height()));
-    }
+      void ImageBitmap::HeightGetter(const PropertyCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
 
-    void ImageBitmap::Close(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
+        info.GetReturnValue().Set(Number::New(isolate, handle()->height()));
+      }
 
-      handle()->close();
-      info.GetReturnValue().SetUndefined();
+      void ImageBitmap::Close(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        handle()->close();
+        info.GetReturnValue().SetUndefined();
+      }
     }
   }
-}
+} // namespace endor

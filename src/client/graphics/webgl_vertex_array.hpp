@@ -2,14 +2,17 @@
 
 #include "./webgl_object.hpp"
 
-namespace client_graphics
+namespace endor
 {
-  class WebGLVertexArray : public WebGLObject
+  namespace client_graphics
   {
-  public:
-    WebGLVertexArray()
-        : WebGLObject(WebGLObjectType::VertexArray)
+    class WebGLVertexArray : public WebGLObject
     {
-    }
-  };
-}
+    public:
+      WebGLVertexArray()
+          : WebGLObject(WebGLObjectType::VertexArray)
+      {
+      }
+    };
+  }
+} // namespace endor

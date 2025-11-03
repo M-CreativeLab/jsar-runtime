@@ -3,12 +3,15 @@
 #include <string>
 #include "./media_player.hpp"
 
-namespace media_client
+namespace endor
 {
-  class AudioPlayer : public MediaPlayer
+  namespace media_client
   {
-  public:
-    AudioPlayer();
-    ~AudioPlayer() = default;
-  };
-}
+    class AudioPlayer : public MediaPlayer
+    {
+    public:
+      AudioPlayer();
+      ~AudioPlayer() = default;
+    };
+  }
+} // namespace endor

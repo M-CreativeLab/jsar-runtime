@@ -11,27 +11,29 @@
 #include "./web_content_instanced.hpp"
 #include "../instanced_mesh.hpp"
 
-namespace builtin_scene::materials
+namespace endor
 {
-  using namespace std;
-  using namespace skia::textlayout;
-  using namespace client_graphics;
-
-  WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : Material(false)
-      , width_(0.0f)
-      , height_(0.0f)
-      , textureAtlas_(nullptr)
-      , textureOffset_(0.0f, 0.0f)
-      , textureScale_(1.0f, 1.0f)
+  namespace builtin_scene::materials
   {
-  }
+    using namespace std;
+    using namespace skia::textlayout;
+    using namespace client_graphics;
 
-  bool WebContentInstancedMaterial::initialize(shared_ptr<WebGL2Context> glContext,
-                                               shared_ptr<WebGLProgram> program)
-  {
-    if (TR_UNLIKELY(!Material::initialize(glContext, program)))
-      return false;
+    WebContentInstancedMaterial::WebContentInstancedMaterial()
+        : Material(false)
+        , width_(0.0f)
+        , height_(0.0f)
+        , textureAtlas_(nullptr)
+        , textureOffset_(0.0f, 0.0f)
+        , textureScale_(1.0f, 1.0f)
+    {
+    }
+
+    bool WebContentInstancedMaterial::initialize(shared_ptr<WebGL2Context> glContext,
+                                                 shared_ptr<WebGLProgram> program)
+    {
+      if (TR_UNLIKELY(!Material::initialize(glContext, program)))
+        return false;
 
 #define LOAD_UNIFORM_LOCATION(name)                          \
   {                                                          \
@@ -42,325 +44,326 @@ namespace builtin_scene::materials
     }                                                        \
   }
 
-    LOAD_UNIFORM_LOCATION("instanceTexAltas");
-    LOAD_UNIFORM_LOCATION("textureTransformation");
-    LOAD_UNIFORM_LOCATION("uSdfEnabled");
-    LOAD_UNIFORM_LOCATION("borderDataTexture");
-    // Fallback uniforms (only present when USE_INSTANCE_SDF is not defined)
-    LOAD_UNIFORM_LOCATION("uDimensions");
-    LOAD_UNIFORM_LOCATION("uBorderRadius");
-    LOAD_UNIFORM_LOCATION("uBorderWidth");
-    LOAD_UNIFORM_LOCATION("uBorderColor");
-    LOAD_UNIFORM_LOCATION("uBorderStyle");
+      LOAD_UNIFORM_LOCATION("instanceTexAltas");
+      LOAD_UNIFORM_LOCATION("textureTransformation");
+      LOAD_UNIFORM_LOCATION("uSdfEnabled");
+      LOAD_UNIFORM_LOCATION("borderDataTexture");
+      // Fallback uniforms (only present when USE_INSTANCE_SDF is not defined)
+      LOAD_UNIFORM_LOCATION("uDimensions");
+      LOAD_UNIFORM_LOCATION("uBorderRadius");
+      LOAD_UNIFORM_LOCATION("uBorderWidth");
+      LOAD_UNIFORM_LOCATION("uBorderColor");
+      LOAD_UNIFORM_LOCATION("uBorderStyle");
 #undef LOAD_UNIFORM_LOCATION
 
-    glContext->uniform1i(uniform("instanceTexAltas"), 0);
-    glContext->uniform1i(uniform("borderDataTexture"), 1);
+      glContext->uniform1i(uniform("instanceTexAltas"), 0);
+      glContext->uniform1i(uniform("borderDataTexture"), 1);
 
-    // Set the texture to be flipped by the Y-axis.
-    //
-    // WebGL uses the bottom-left corner as the origin, while Skia or Web uses the top-left, so flip the texture by
-    // the Y-axis to make it consistent.
-    flipTextureByY(true);
+      // Set the texture to be flipped by the Y-axis.
+      //
+      // WebGL uses the bottom-left corner as the origin, while Skia or Web uses the top-left, so flip the texture by
+      // the Y-axis to make it consistent.
+      flipTextureByY(true);
 
-    // Initialize the texture atlas.
-    assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
-    textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
+      // Initialize the texture atlas.
+      assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
+      textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
 
-    // Initialize border data texture manager
-    borderDataTexture_ = make_unique<CSSBorderDataTexture>();
-    if (!borderDataTexture_->initialize(glContext))
-    {
-      borderDataTexture_.reset();
-      return false;
+      // Initialize border data texture manager
+      borderDataTexture_ = make_unique<CSSBorderDataTexture>();
+      if (!borderDataTexture_->initialize(glContext))
+      {
+        borderDataTexture_.reset();
+        return false;
+      }
+
+      return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
     }
 
-    return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
-  }
-
-  void WebContentInstancedMaterial::drawMeshImpl(shared_ptr<WebGLProgram> program,
-                                                 const Mesh3d &mesh,
-                                                 RenderPass renderPass,
-                                                 optional<XRRenderTarget> renderTarget)
-  {
-    assert((renderPass == RenderPass::kTransparents) &&
-           "RenderPass must be either Transparents for instanced meshes.");
-
-    auto glContext = glContext_.lock();
-    if (glContext == nullptr) [[unlikely]]
-      return;
-
-    auto &instancedMesh = mesh.getHandleCheckedAsRef<InstancedMeshBase>();
-    if (instancedMesh.instanceCount() <= 0)
-      return;
-
-    // a) Check isStructureDirty_ and update layeredInstances_ if needed
-    instancedMesh.updateInstancesList(program);
-
-    size_t meshIndicesCount = mesh.indices().size();
-    CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();
-
-    // Set the base matrix once (shared uniform), move the transparent objects +z 0.001
-    auto loc = glContext->getUniformLocation(program, "modelMatrix");
-    glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
-    glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
-
-    bool inDepthWritePass = false;
-
-    // b) Render layeredInstances_ in order (0-1-2-...)
-    // First render scrollable container masks for each layer, then render regular content with stencil testing
-    auto renderLayer = [&](RenderLayer layer, ContentInstancesList &layerInstancesList)
+    void WebContentInstancedMaterial::drawMeshImpl(shared_ptr<WebGLProgram> program,
+                                                   const Mesh3d &mesh,
+                                                   RenderPass renderPass,
+                                                   optional<XRRenderTarget> renderTarget)
     {
-      // c) Switch RenderableInstancesList's vbo to current vao's vbo for this layer
-      WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
+      assert((renderPass == RenderPass::kTransparents) &&
+             "RenderPass must be either Transparents for instanced meshes.");
 
-      // Draw the layer
-      layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
+      auto glContext = glContext_.lock();
+      if (glContext == nullptr) [[unlikely]]
+        return;
+
+      auto &instancedMesh = mesh.getHandleCheckedAsRef<InstancedMeshBase>();
+      if (instancedMesh.instanceCount() <= 0)
+        return;
+
+      // a) Check isStructureDirty_ and update layeredInstances_ if needed
+      instancedMesh.updateInstancesList(program);
+
+      size_t meshIndicesCount = mesh.indices().size();
+      CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();
+
+      // Set the base matrix once (shared uniform), move the transparent objects +z 0.001
+      auto loc = glContext->getUniformLocation(program, "modelMatrix");
+      glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+      glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
+
+      bool inDepthWritePass = false;
+
+      // b) Render layeredInstances_ in order (0-1-2-...)
+      // First render scrollable container masks for each layer, then render regular content with stencil testing
+      auto renderLayer = [&](RenderLayer layer, ContentInstancesList &layerInstancesList)
       {
-        // Draw layer instances to color attachment
-        if (inDepthWritePass)
+        // c) Switch RenderableInstancesList's vbo to current vao's vbo for this layer
+        WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
+
+        // Draw the layer
+        layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
         {
-          // Depth write only pass, disable color writes and enable depth writes
-          glContext->colorMask(false, false, false, false);
-          glContext->depthMask(true);
-          glContext->disable(WEBGL_BLEND);
+          // Draw layer instances to color attachment
+          if (inDepthWritePass)
+          {
+            // Depth write only pass, disable color writes and enable depth writes
+            glContext->colorMask(false, false, false, false);
+            glContext->depthMask(true);
+            glContext->disable(WEBGL_BLEND);
+          }
+          else
+          {
+            // Normal pass, enable color writes and disable depth writes
+            glContext->colorMask(true, true, true, true);
+            glContext->depthMask(false);
+            glContext->enable(WEBGL_BLEND);
+            glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+          }
+
+          glContext->drawElementsInstanced(mesh.primitiveTopology(),
+                                           meshIndicesCount,
+                                           WEBGL_UNSIGNED_INT,
+                                           0,
+                                           layerInstancesList.count());
         }
-        else
-        {
-          // Normal pass, enable color writes and disable depth writes
-          glContext->colorMask(true, true, true, true);
-          glContext->depthMask(false);
-          glContext->enable(WEBGL_BLEND);
-          glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
-        }
+        layerInstancesList.afterInstancedDraw(*glContext);
+      };
 
-        glContext->drawElementsInstanced(mesh.primitiveTopology(),
-                                         meshIndicesCount,
-                                         WEBGL_UNSIGNED_INT,
-                                         0,
-                                         layerInstancesList.count());
-      }
-      layerInstancesList.afterInstancedDraw(*glContext);
-    };
-
-    // Render per-container with individual stencil isolation.
-    // This implements overflow behavior for Web Content by:
-    // 1. Clearing stencil buffer for each container
-    // 2. Rendering this container's mask to the stencil buffer
-    // 3. Rendering content belonging to this container with stencil testing
-    auto renderLayerWithMask = [&](RenderLayer layer,
-                                   ContainerInstance *containerInstance,
-                                   ContentInstancesList *contentInstances)
-    {
-      bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
-      bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;
-
-      if (hasScrollableContainer)
+      // Render per-container with individual stencil isolation.
+      // This implements overflow behavior for Web Content by:
+      // 1. Clearing stencil buffer for each container
+      // 2. Rendering this container's mask to the stencil buffer
+      // 3. Rendering content belonging to this container with stencil testing
+      auto renderLayerWithMask = [&](RenderLayer layer,
+                                     ContainerInstance *containerInstance,
+                                     ContentInstancesList *contentInstances)
       {
-        // Step 2: Render scrollable container instance as stencil mask
-        glContext->enable(WEBGL_STENCIL_TEST);
-        glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
-        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
-        glContext->stencilMask(0xff);
+        bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
+        bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;
 
-        /**
+        if (hasScrollableContainer)
+        {
+          // Step 2: Render scrollable container instance as stencil mask
+          glContext->enable(WEBGL_STENCIL_TEST);
+          glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
+          glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
+          glContext->stencilMask(0xff);
+
+          /**
          * Stencil masking format: [4 bits for container index | 4 bits for layer index]
          * 
          * NOTE(yorkie): the container index is reversed as well though it is not used at the moment.
          * NOTE(yorkie): this stores layer index reversely (0x0f - layer.index()) to work with `LESS` function, so that
          *               the stencil value zero can be filtered out.
          */
-        int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0x0f - layer.index()) & 0x0f);
-        if (layer.index() == 0)
-        {
-          glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xff);
-        }
-        else
-        {
-          // When drawing masks based on the parent layer, we need to ensure that the new mask is drawn inside the
-          // parent layer's mask, so we use `LESS` function to compare the layer index bits.
-          glContext->stencilFunc(WEBGL_LESS, maskRef, 0x0f);
-        }
+          int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0x0f - layer.index()) & 0x0f);
+          if (layer.index() == 0)
+          {
+            glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xff);
+          }
+          else
+          {
+            // When drawing masks based on the parent layer, we need to ensure that the new mask is drawn inside the
+            // parent layer's mask, so we use `LESS` function to compare the layer index bits.
+            glContext->stencilFunc(WEBGL_LESS, maskRef, 0x0f);
+          }
 
-        // Render the container mask
-        {
-          WebGLVertexArrayScope vaoScope(glContext, containerInstance->vao);
-          containerInstance->beforeInstancedDraw(*glContext);
-          glContext->drawElementsInstanced(mesh.primitiveTopology(),
-                                           meshIndicesCount,
-                                           WEBGL_UNSIGNED_INT,
-                                           0,
-                                           containerInstance->count());
-          containerInstance->afterInstancedDraw(*glContext);
+          // Render the container mask
+          {
+            WebGLVertexArrayScope vaoScope(glContext, containerInstance->vao);
+            containerInstance->beforeInstancedDraw(*glContext);
+            glContext->drawElementsInstanced(mesh.primitiveTopology(),
+                                             meshIndicesCount,
+                                             WEBGL_UNSIGNED_INT,
+                                             0,
+                                             containerInstance->count());
+            containerInstance->afterInstancedDraw(*glContext);
+          }
+
+          // Step 3: Render content with stencil testing enabled
+          if (hasContent)
+          {
+            glContext->stencilMask(0);                                // Disable writing to stencil buffer
+            glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
+            glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
+
+            // Render the content instances
+            renderLayer(layer, *contentInstances);
+          }
+
+          // Step 4: Disable stencil testing after rendering this container
+          glContext->disable(WEBGL_STENCIL_TEST);
         }
-
-        // Step 3: Render content with stencil testing enabled
-        if (hasContent)
+        else if (hasContent)
         {
-          glContext->stencilMask(0);                                // Disable writing to stencil buffer
-          glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
-          glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
-
-          // Render the content instances
+          // No container, render content directly
           renderLayer(layer, *contentInstances);
         }
+      };
 
-        // Step 4: Disable stencil testing after rendering this container
-        glContext->disable(WEBGL_STENCIL_TEST);
-      }
-      else if (hasContent)
-      {
-        // No container, render content directly
-        renderLayer(layer, *contentInstances);
-      }
-    };
-
-    // Iterate layers and render
-    inDepthWritePass = false;
-    instancedMesh.iterateLayers(renderLayerWithMask);
-
-    // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
-    if (instancedMesh.isDepthOnlyPassEnabled())
-    {
-      // Clear the stencil buffer for later use
-      glContext->clearStencil(0);
-      glContext->clear(WEBGL_STENCIL_BUFFER_BIT);
-
-      // Iterate layers and write depth
-      inDepthWritePass = true;
+      // Iterate layers and render
+      inDepthWritePass = false;
       instancedMesh.iterateLayers(renderLayerWithMask);
 
-      // Reset the state
-      glContext->colorMask(true, true, true, true);
-    }
-  }
-
-  void WebContentInstancedMaterial::onBeforeDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
-  {
-    auto glContext = glContext_.lock();
-    assert(glContext != nullptr);
-
-    // Update the uniforms
-    glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
-    glContext->uniformMatrix3fv(uniform("textureTransformation"),
-                                false,
-                                glm::mat3(textureScale_.x,
-                                          0.0f,
-                                          0.0f,
-                                          0.0f,
-                                          textureScale_.y,
-                                          0.0f,
-                                          textureOffset_.x,
-                                          textureOffset_.y,
-                                          1.0f));
-    glContext->uniform1i(uniform("instanceTexAltas"), 0);
-    glContext->uniform1i(uniform("borderDataTexture"), 1);
-
-    // Bind the texture atlas.
-    assert(textureAtlas_ != nullptr);
-    textureAtlas_->onBeforeDraw();
-
-    // Bind the border data texture
-    if (borderDataTexture_ && borderDataTexture_->isInitialized())
-      borderDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture1);
-  }
-
-  void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
-  {
-    // Unbind the border data texture
-    if (borderDataTexture_ && borderDataTexture_->isInitialized())
-      borderDataTexture_->unbind(client_graphics::WebGLTextureUnit::kTexture1);
-
-    // Unbind the texture atlas.
-    textureAtlas_->onAfterDraw();
-  }
-
-  void WebContentInstancedMaterial::flipTextureByY(bool flip)
-  {
-    if (flip)
-    {
-      textureOffset_ = glm::vec2(0.0f, 1.0f);
-      textureScale_ = glm::vec2(1.0f, -1.0f);
-    }
-    else
-    {
-      textureOffset_ = glm::vec2(0.0f, 0.0f);
-      textureScale_ = glm::vec2(1.0f, 1.0f);
-    }
-  }
-
-  void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
-  {
-    sdfEnabled_ = enabled;
-  }
-
-  CSSBorderDataTexture *WebContentInstancedMaterial::getBorderDataTexture() const
-  {
-    return borderDataTexture_.get();
-  }
-
-  WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
-  {
-    if (textureAtlas_ == nullptr)
-      return TextureUpdateStatus::kFailed; // Just skip the update when the texture atlas is not ready.
-
-    auto textureRect = content.resizeOrInitTexture(*textureAtlas_);
-    if (textureRect == nullptr)
-      return TextureUpdateStatus::kSkipped; // Just skip when the texture creation is failed.
-
-    unsigned char *pixels = nullptr;
-    int internalformat = WEBGL2_RGBA8;
-    WebGLTextureFormat format = WebGLTextureFormat::kRGBA;
-    WebGLPixelType pixelType = WebGLPixelType::kUnsignedByte;
-
-    SkCanvas *canvas = content.canvas();
-    SkSurface *surface = canvas->getSurface();
-    if (surface != nullptr)
-    {
-      SkImageInfo info = surface->imageInfo();
-      SkPixmap pixmap;
-      if (surface->peekPixels(&pixmap))
+      // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
+      if (instancedMesh.isDepthOnlyPassEnabled())
       {
-        pixels = (unsigned char *)pixmap.addr();
+        // Clear the stencil buffer for later use
+        glContext->clearStencil(0);
+        glContext->clear(WEBGL_STENCIL_BUFFER_BIT);
 
-        // Update the texture format based on the Skia surface color type.
-        SkColorType colorType = surface->imageInfo().colorType();
-        switch (colorType)
-        {
-        case kRGBA_8888_SkColorType:
-          // Keep the default values.
-          break;
-        case kRGB_888x_SkColorType:
-          format = WebGLTextureFormat::kRGB;
-          internalformat = WEBGL2_RGB8;
-          break;
-        case kRGBA_F16_SkColorType:
-          pixelType = WebGLPixelType::kHalfFloat;
-          internalformat = WEBGL2_RGBA16F;
-          break;
-        case kRGBA_F32_SkColorType:
-          pixelType = WebGLPixelType::kFloat;
-          internalformat = WEBGL2_RGBA32F;
-          break;
-        case kBGRA_8888_SkColorType:
-          cerr << name() << ": The BGRA_8888 color type is not supported." << endl;
-          break;
-        default:
-          cerr << name() << ": The color type is not supported." << endl;
-          break;
-        };
+        // Iterate layers and write depth
+        inDepthWritePass = true;
+        instancedMesh.iterateLayers(renderLayerWithMask);
+
+        // Reset the state
+        glContext->colorMask(true, true, true, true);
+      }
+    }
+
+    void WebContentInstancedMaterial::onBeforeDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
+    {
+      auto glContext = glContext_.lock();
+      assert(glContext != nullptr);
+
+      // Update the uniforms
+      glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
+      glContext->uniformMatrix3fv(uniform("textureTransformation"),
+                                  false,
+                                  glm::mat3(textureScale_.x,
+                                            0.0f,
+                                            0.0f,
+                                            0.0f,
+                                            textureScale_.y,
+                                            0.0f,
+                                            textureOffset_.x,
+                                            textureOffset_.y,
+                                            1.0f));
+      glContext->uniform1i(uniform("instanceTexAltas"), 0);
+      glContext->uniform1i(uniform("borderDataTexture"), 1);
+
+      // Bind the texture atlas.
+      assert(textureAtlas_ != nullptr);
+      textureAtlas_->onBeforeDraw();
+
+      // Bind the border data texture
+      if (borderDataTexture_ && borderDataTexture_->isInitialized())
+        borderDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture1);
+    }
+
+    void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
+    {
+      // Unbind the border data texture
+      if (borderDataTexture_ && borderDataTexture_->isInitialized())
+        borderDataTexture_->unbind(client_graphics::WebGLTextureUnit::kTexture1);
+
+      // Unbind the texture atlas.
+      textureAtlas_->onAfterDraw();
+    }
+
+    void WebContentInstancedMaterial::flipTextureByY(bool flip)
+    {
+      if (flip)
+      {
+        textureOffset_ = glm::vec2(0.0f, 1.0f);
+        textureScale_ = glm::vec2(1.0f, -1.0f);
       }
       else
       {
-        cerr << name() << ": The pixels are not readable." << endl;
+        textureOffset_ = glm::vec2(0.0f, 0.0f);
+        textureScale_ = glm::vec2(1.0f, 1.0f);
       }
     }
 
-    // Update the texture with the new pixels or the default values.
-    textureAtlas_->updateTexture(*textureRect, pixels, format, pixelType);
+    void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
+    {
+      sdfEnabled_ = enabled;
+    }
 
-    // No matter the texture update is successful or not, we will return the status.
-    return TextureUpdateStatus::kSuccess;
-  }
+    CSSBorderDataTexture *WebContentInstancedMaterial::getBorderDataTexture() const
+    {
+      return borderDataTexture_.get();
+    }
 
-} // namespace builtin_scene::materials
+    WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
+    {
+      if (textureAtlas_ == nullptr)
+        return TextureUpdateStatus::kFailed; // Just skip the update when the texture atlas is not ready.
+
+      auto textureRect = content.resizeOrInitTexture(*textureAtlas_);
+      if (textureRect == nullptr)
+        return TextureUpdateStatus::kSkipped; // Just skip when the texture creation is failed.
+
+      unsigned char *pixels = nullptr;
+      int internalformat = WEBGL2_RGBA8;
+      WebGLTextureFormat format = WebGLTextureFormat::kRGBA;
+      WebGLPixelType pixelType = WebGLPixelType::kUnsignedByte;
+
+      SkCanvas *canvas = content.canvas();
+      SkSurface *surface = canvas->getSurface();
+      if (surface != nullptr)
+      {
+        SkImageInfo info = surface->imageInfo();
+        SkPixmap pixmap;
+        if (surface->peekPixels(&pixmap))
+        {
+          pixels = (unsigned char *)pixmap.addr();
+
+          // Update the texture format based on the Skia surface color type.
+          SkColorType colorType = surface->imageInfo().colorType();
+          switch (colorType)
+          {
+          case kRGBA_8888_SkColorType:
+            // Keep the default values.
+            break;
+          case kRGB_888x_SkColorType:
+            format = WebGLTextureFormat::kRGB;
+            internalformat = WEBGL2_RGB8;
+            break;
+          case kRGBA_F16_SkColorType:
+            pixelType = WebGLPixelType::kHalfFloat;
+            internalformat = WEBGL2_RGBA16F;
+            break;
+          case kRGBA_F32_SkColorType:
+            pixelType = WebGLPixelType::kFloat;
+            internalformat = WEBGL2_RGBA32F;
+            break;
+          case kBGRA_8888_SkColorType:
+            cerr << name() << ": The BGRA_8888 color type is not supported." << endl;
+            break;
+          default:
+            cerr << name() << ": The color type is not supported." << endl;
+            break;
+          };
+        }
+        else
+        {
+          cerr << name() << ": The pixels are not readable." << endl;
+        }
+      }
+
+      // Update the texture with the new pixels or the default values.
+      textureAtlas_->updateTexture(*textureRect, pixels, format, pixelType);
+
+      // No matter the texture update is successful or not, we will return the status.
+      return TextureUpdateStatus::kSuccess;
+    }
+
+  } // namespace builtin_scene::materials
+} // namespace endor

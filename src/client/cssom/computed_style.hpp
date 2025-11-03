@@ -15,600 +15,602 @@
 #include "./css_style_declaration.hpp"
 #include "./variable_reference_tracker.hpp"
 
-namespace client_cssom
+namespace endor
 {
-  enum class Visibility
+  namespace client_cssom
   {
-    kVisible,
-    kHidden,
-    kCollapse,
-  };
-
-  enum class PointerEvents
-  {
-    kAuto,
-    kNone,
-  };
-
-  class ComputedStyle : std::map<std::string, std::string>
-  {
-  public:
-    enum Difference
+    enum class Visibility
     {
-      kEqual,
-      kNonInherited,
-      kPseudoElementStyle,
-      kIndependentInherited,
-      kInherited,
-      kDescendantAffecting,
+      kVisible,
+      kHidden,
+      kCollapse,
     };
-    static Difference ComputeDifference(const ComputedStyle &old_style, const ComputedStyle &new_style);
-    static bool IsInheritedProperty(const std::string property)
+
+    enum class PointerEvents
     {
-      // CSS custom properties always inherit by default
-      if (property.length() >= 2 && property.substr(0, 2) == "--")
-        return true;
+      kAuto,
+      kNone,
+    };
 
-      static const std::unordered_set<std::string> inherited_properties = {
-        "font-size",
-        "font-weight",
-        "font-style",
-        "line-height",
-        "color",
-        "visibility",
-        "text-align",
-        "direction",
-        "text-decoration",
-        "text-transform",
-        "letter-spacing",
-        "word-spacing",
-        "white-space",
-        "text-indent"};
-      return inherited_properties.find(property) != inherited_properties.end();
-    }
-    static bool IsAnimatableProperty(const std::string &property)
+    class ComputedStyle : std::map<std::string, std::string>
     {
-      static const std::unordered_set<std::string> animatable_properties = {
-        // CSS Transforms
-        "transform",
-        "transform-origin",
-        "perspective",
-        "perspective-origin",
-        "backface-visibility",
-
-        // Basic Box Model
-        "width",
-        "height",
-        "max-width",
-        "max-height",
-        "min-width",
-        "min-height",
-        "margin",
-        "margin-top",
-        "margin-right",
-        "margin-bottom",
-        "margin-left",
-        "padding",
-        "padding-top",
-        "padding-right",
-        "padding-bottom",
-        "padding-left",
-
-        // Border
-        "border-width",
-        "border-top-width",
-        "border-right-width",
-        "border-bottom-width",
-        "border-left-width",
-        "border-radius",
-        "border-top-left-radius",
-        "border-top-right-radius",
-        "border-bottom-right-radius",
-        "border-bottom-left-radius",
-        "border-color",
-        "border-top-color",
-        "border-right-color",
-        "border-bottom-color",
-        "border-left-color",
-
-        // Positioning
-        "top",
-        "right",
-        "bottom",
-        "left",
-
-        // Flexbox
-        "flex-grow",
-        "flex-shrink",
-        "flex-basis",
-        "gap",
-        "row-gap",
-        "column-gap",
-
-        // Colors and Backgrounds
-        "color",
-        "background-color",
-        "background-position",
-        "background-size",
-        "background-image",
-        "box-shadow",
-        "text-shadow",
-
-        // Text
-        "font-size",
-        "font-weight",
-        "letter-spacing",
-        "word-spacing",
-        "line-height",
-        "text-indent",
-        "vertical-align",
-
-        // Visibility and Opacity
-        "opacity",
-        "visibility",
-        "z-index",
-        "clip",
-        "clip-path",
-
-        // CSS Filters
-        "filter",
-        "backdrop-filter",
+    public:
+      enum Difference
+      {
+        kEqual,
+        kNonInherited,
+        kPseudoElementStyle,
+        kIndependentInherited,
+        kInherited,
+        kDescendantAffecting,
       };
-      return animatable_properties.find(property) != animatable_properties.end();
-    }
-
-    // Create a `ComputedStyle` from a `CSSStyleDeclaration` and a target node to create context.
-    static ComputedStyle Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node);
-
-  public:
-    ComputedStyle() = default;
-    ComputedStyle(const ComputedStyle &) = default;
-    ComputedStyle(const CSSStyleDeclaration &, std::optional<values::computed::Context> context);
-
-    operator crates::layout2::LayoutStyle() const;
-    friend std::ostream &operator<<(std::ostream &os, const ComputedStyle &style)
-    {
-      if (style.empty())
+      static Difference ComputeDifference(const ComputedStyle &old_style, const ComputedStyle &new_style);
+      static bool IsInheritedProperty(const std::string property)
       {
-        os << "ComputedStyle {}";
+        // CSS custom properties always inherit by default
+        if (property.length() >= 2 && property.substr(0, 2) == "--")
+          return true;
+
+        static const std::unordered_set<std::string> inherited_properties = {
+          "font-size",
+          "font-weight",
+          "font-style",
+          "line-height",
+          "color",
+          "visibility",
+          "text-align",
+          "direction",
+          "text-decoration",
+          "text-transform",
+          "letter-spacing",
+          "word-spacing",
+          "white-space",
+          "text-indent"};
+        return inherited_properties.find(property) != inherited_properties.end();
       }
-      else
+      static bool IsAnimatableProperty(const std::string &property)
       {
-        os << "ComputedStyle {" << std::endl;
-        for (const auto &[key, value] : style)
-          os << "  " << key << ": " << value << std::endl;
-        os << "}";
+        static const std::unordered_set<std::string> animatable_properties = {
+          // CSS Transforms
+          "transform",
+          "transform-origin",
+          "perspective",
+          "perspective-origin",
+          "backface-visibility",
+
+          // Basic Box Model
+          "width",
+          "height",
+          "max-width",
+          "max-height",
+          "min-width",
+          "min-height",
+          "margin",
+          "margin-top",
+          "margin-right",
+          "margin-bottom",
+          "margin-left",
+          "padding",
+          "padding-top",
+          "padding-right",
+          "padding-bottom",
+          "padding-left",
+
+          // Border
+          "border-width",
+          "border-top-width",
+          "border-right-width",
+          "border-bottom-width",
+          "border-left-width",
+          "border-radius",
+          "border-top-left-radius",
+          "border-top-right-radius",
+          "border-bottom-right-radius",
+          "border-bottom-left-radius",
+          "border-color",
+          "border-top-color",
+          "border-right-color",
+          "border-bottom-color",
+          "border-left-color",
+
+          // Positioning
+          "top",
+          "right",
+          "bottom",
+          "left",
+
+          // Flexbox
+          "flex-grow",
+          "flex-shrink",
+          "flex-basis",
+          "gap",
+          "row-gap",
+          "column-gap",
+
+          // Colors and Backgrounds
+          "color",
+          "background-color",
+          "background-position",
+          "background-size",
+          "background-image",
+          "box-shadow",
+          "text-shadow",
+
+          // Text
+          "font-size",
+          "font-weight",
+          "letter-spacing",
+          "word-spacing",
+          "line-height",
+          "text-indent",
+          "vertical-align",
+
+          // Visibility and Opacity
+          "opacity",
+          "visibility",
+          "z-index",
+          "clip",
+          "clip-path",
+
+          // CSS Filters
+          "filter",
+          "backdrop-filter",
+        };
+        return animatable_properties.find(property) != animatable_properties.end();
       }
-      return os;
-    }
 
-  public:
-    inline bool hasProperty(const std::string &name) const
-    {
-      return find(name) != end();
-    }
-    inline std::string getPropertyValue(const std::string &name) const
-    {
-      const auto &it = find(name);
-      if (it != end())
-        return it->second;
-      return "";
-    }
+      // Create a `ComputedStyle` from a `CSSStyleDeclaration` and a target node to create context.
+      static ComputedStyle Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node);
 
-    void resetProperties(std::optional<ComputedStyle>, values::computed::Context &);
-    size_t inheritProperties(const ComputedStyle &, values::computed::Context &);
+    public:
+      ComputedStyle() = default;
+      ComputedStyle(const ComputedStyle &) = default;
+      ComputedStyle(const CSSStyleDeclaration &, std::optional<values::computed::Context> context);
 
-    // Update the computed style from a context.
-    bool update(values::computed::Context &);
-    // Update the computed style from the given `CSSStyleDeclaration`, and a context to compute the values.
-    bool update(const CSSStyleDeclaration &, std::optional<values::computed::Context>);
+      operator crates::layout2::LayoutStyle() const;
+      friend std::ostream &operator<<(std::ostream &os, const ComputedStyle &style)
+      {
+        if (style.empty())
+        {
+          os << "ComputedStyle {}";
+        }
+        else
+        {
+          os << "ComputedStyle {" << std::endl;
+          for (const auto &[key, value] : style)
+            os << "  " << key << ": " << value << std::endl;
+          os << "}";
+        }
+        return os;
+      }
 
-    // If this `ComputedStyle` is affected by animation/transition, then the unanimated "base" style is called the
-    // "base computed style". It is used to compute the animated style.
-    //
-    // This method returns if the base computed style is set, namely if the computed style is affected by animations or
-    // transitions.
-    inline bool hasBaseComputedStyle() const
-    {
-      return base_computed_style_ != nullptr;
-    }
-    // Returns the base computed style, it asserts that the base computed style is set.
-    inline const ComputedStyle *getBaseComputedStyle() const
-    {
-      return base_computed_style_.get();
-    }
-    inline const ComputedStyle *getBaseComputedStyleOrThis() const
-    {
-      return hasBaseComputedStyle() ? getBaseComputedStyle() : this;
-    }
+    public:
+      inline bool hasProperty(const std::string &name) const
+      {
+        return find(name) != end();
+      }
+      inline std::string getPropertyValue(const std::string &name) const
+      {
+        const auto &it = find(name);
+        if (it != end())
+          return it->second;
+        return "";
+      }
 
-    // Properties
-    inline const values::computed::Display &display() const
-    {
-      return display_;
-    }
-    inline const values::computed::BoxSizing &boxSizing() const
-    {
-      return box_sizing_;
-    }
-    inline const values::computed::Overflow &overflowX() const
-    {
-      return overflow_x_;
-    }
-    inline const values::computed::Overflow &overflowY() const
-    {
-      return overflow_y_;
-    }
-    inline const values::computed::Margin &margin() const
-    {
-      return margin_;
-    }
-    inline const values::computed::Padding &padding() const
-    {
-      return padding_;
-    }
+      void resetProperties(std::optional<ComputedStyle>, values::computed::Context &);
+      size_t inheritProperties(const ComputedStyle &, values::computed::Context &);
 
-    inline const values::computed::Size &width() const
-    {
-      return width_;
-    }
-    inline const values::computed::Size &height() const
-    {
-      return height_;
-    }
-    inline const values::computed::Size &minWidth() const
-    {
-      return min_width_;
-    }
-    inline const values::computed::Size &minHeight() const
-    {
-      return min_height_;
-    }
-    inline const values::computed::MaxSize &maxWidth() const
-    {
-      return max_width_;
-    }
-    inline const values::computed::MaxSize &maxHeight() const
-    {
-      return max_height_;
-    }
+      // Update the computed style from a context.
+      bool update(values::computed::Context &);
+      // Update the computed style from the given `CSSStyleDeclaration`, and a context to compute the values.
+      bool update(const CSSStyleDeclaration &, std::optional<values::computed::Context>);
 
-    inline const values::computed::BorderWidth &borderWidth() const
-    {
-      return border_width_;
-    }
-    inline const values::computed::BorderColor &borderColor() const
-    {
-      return border_color_;
-    }
-    inline const values::computed::BorderStyle &borderStyle() const
-    {
-      return border_style_;
-    }
-    inline const values::computed::BorderRadius &borderRadius() const
-    {
-      return border_radius_;
-    }
-    inline const values::computed::BorderCornerRadius &borderTopLeftRadius() const
-    {
-      return border_radius_.topLeft();
-    }
-    inline const values::computed::BorderCornerRadius &borderTopRightRadius() const
-    {
-      return border_radius_.topRight();
-    }
-    inline const values::computed::BorderCornerRadius &borderBottomLeftRadius() const
-    {
-      return border_radius_.bottomLeft();
-    }
-    inline const values::computed::BorderCornerRadius &borderBottomRightRadius() const
-    {
-      return border_radius_.bottomRight();
-    }
+      // If this `ComputedStyle` is affected by animation/transition, then the unanimated "base" style is called the
+      // "base computed style". It is used to compute the animated style.
+      //
+      // This method returns if the base computed style is set, namely if the computed style is affected by animations or
+      // transitions.
+      inline bool hasBaseComputedStyle() const
+      {
+        return base_computed_style_ != nullptr;
+      }
+      // Returns the base computed style, it asserts that the base computed style is set.
+      inline const ComputedStyle *getBaseComputedStyle() const
+      {
+        return base_computed_style_.get();
+      }
+      inline const ComputedStyle *getBaseComputedStyleOrThis() const
+      {
+        return hasBaseComputedStyle() ? getBaseComputedStyle() : this;
+      }
 
-    // Returns `true` if any of the border radius values are non-zero.
-    inline const bool hasBorderRadius() const
-    {
-      if (!borderTopLeftRadius().isZero())
-        return true;
-      if (!borderTopRightRadius().isZero())
-        return true;
-      if (!borderBottomLeftRadius().isZero())
-        return true;
-      if (!borderBottomRightRadius().isZero())
-        return true;
-      return false;
-    }
+      // Properties
+      inline const values::computed::Display &display() const
+      {
+        return display_;
+      }
+      inline const values::computed::BoxSizing &boxSizing() const
+      {
+        return box_sizing_;
+      }
+      inline const values::computed::Overflow &overflowX() const
+      {
+        return overflow_x_;
+      }
+      inline const values::computed::Overflow &overflowY() const
+      {
+        return overflow_y_;
+      }
+      inline const values::computed::Margin &margin() const
+      {
+        return margin_;
+      }
+      inline const values::computed::Padding &padding() const
+      {
+        return padding_;
+      }
 
-    inline const values::computed::PositionType &positionType() const
-    {
-      return position_type_;
-    }
-    inline bool isPositioned() const
-    {
-      return !position_type_.isStatic();
-    }
-    inline bool hasZIndex() const
-    {
-      return bitfields_.HasZIndex();
-    }
-    inline std::optional<int> zIndex() const
-    {
-      return bitfields_.HasZIndex()
-               ? std::make_optional(z_index_)
-               : std::nullopt;
-    }
+      inline const values::computed::Size &width() const
+      {
+        return width_;
+      }
+      inline const values::computed::Size &height() const
+      {
+        return height_;
+      }
+      inline const values::computed::Size &minWidth() const
+      {
+        return min_width_;
+      }
+      inline const values::computed::Size &minHeight() const
+      {
+        return min_height_;
+      }
+      inline const values::computed::MaxSize &maxWidth() const
+      {
+        return max_width_;
+      }
+      inline const values::computed::MaxSize &maxHeight() const
+      {
+        return max_height_;
+      }
 
-    inline Visibility visibility() const
-    {
-      return visibility_.value_or(Visibility::kVisible);
-    }
-    inline PointerEvents pointerEvents() const
-    {
-      return pointer_events_.value_or(PointerEvents::kAuto);
-    }
+      inline const values::computed::BorderWidth &borderWidth() const
+      {
+        return border_width_;
+      }
+      inline const values::computed::BorderColor &borderColor() const
+      {
+        return border_color_;
+      }
+      inline const values::computed::BorderStyle &borderStyle() const
+      {
+        return border_style_;
+      }
+      inline const values::computed::BorderRadius &borderRadius() const
+      {
+        return border_radius_;
+      }
+      inline const values::computed::BorderCornerRadius &borderTopLeftRadius() const
+      {
+        return border_radius_.topLeft();
+      }
+      inline const values::computed::BorderCornerRadius &borderTopRightRadius() const
+      {
+        return border_radius_.topRight();
+      }
+      inline const values::computed::BorderCornerRadius &borderBottomLeftRadius() const
+      {
+        return border_radius_.bottomLeft();
+      }
+      inline const values::computed::BorderCornerRadius &borderBottomRightRadius() const
+      {
+        return border_radius_.bottomRight();
+      }
 
-    inline const std::vector<std::string> &fonts() const
-    {
-      return fonts_;
-    }
-    inline const values::computed::FontSize &fontSize() const
-    {
-      return font_size_;
-    }
-    inline const values::computed::FontWeight &fontWeight() const
-    {
-      return font_weight_;
-    }
-    inline const values::computed::FontStyle &fontStyle() const
-    {
-      return font_style_;
-    }
-    inline const values::computed::LineHeight &lineHeight() const
-    {
-      return line_height_;
-    }
+      // Returns `true` if any of the border radius values are non-zero.
+      inline const bool hasBorderRadius() const
+      {
+        if (!borderTopLeftRadius().isZero())
+          return true;
+        if (!borderTopRightRadius().isZero())
+          return true;
+        if (!borderBottomLeftRadius().isZero())
+          return true;
+        if (!borderBottomRightRadius().isZero())
+          return true;
+        return false;
+      }
 
-    inline const values::computed::TextAlign &textAlign() const
-    {
-      return text_align_;
-    }
-    inline const values::computed::Direction &textDirection() const
-    {
-      return text_direction_;
-    }
-    inline const values::computed::VerticalAlign &verticalAlign() const
-    {
-      return vertical_align_;
-    }
+      inline const values::computed::PositionType &positionType() const
+      {
+        return position_type_;
+      }
+      inline bool isPositioned() const
+      {
+        return !position_type_.isStatic();
+      }
+      inline bool hasZIndex() const
+      {
+        return bitfields_.HasZIndex();
+      }
+      inline std::optional<int> zIndex() const
+      {
+        return bitfields_.HasZIndex()
+                 ? std::make_optional(z_index_)
+                 : std::nullopt;
+      }
 
-    inline const values::computed::Color &color() const
-    {
-      return color_;
-    }
-    inline bool hasColor() const
-    {
-      return bitfields_.HasColor();
-    }
-    inline const values::computed::Color &backgroundColor() const
-    {
-      return background_color_;
-    }
-    inline bool hasBackgroundColor() const
-    {
-      return bitfields_.HasBackgroundColor();
-    }
-    inline values::computed::Image &backgroundImage()
-    {
-      return background_image_;
-    }
-    inline const values::computed::Image &backgroundImage() const
-    {
-      return background_image_;
-    }
-    inline bool hasBackgroundImage() const
-    {
-      return bitfields_.HasBackgroundImage();
-    }
-    inline const values::computed::BackgroundBlendMode &backgroundBlendMode() const
-    {
-      return background_blend_mode_;
-    }
-    inline const values::computed::BackgroundClip &backgroundClip() const
-    {
-      return background_clip_;
-    }
-    inline const values::computed::BackgroundOrigin &backgroundOrigin() const
-    {
-      return background_origin_;
-    }
-    inline const values::computed::BackgroundRepeat &backgroundRepeat() const
-    {
-      return background_repeat_;
-    }
-    inline const values::computed::BackgroundSize &backgroundSize() const
-    {
-      return background_size_;
-    }
-    inline const values::computed::BackgroundPosition &backgroundPosition() const
-    {
-      return background_position_;
-    }
+      inline Visibility visibility() const
+      {
+        return visibility_.value_or(Visibility::kVisible);
+      }
+      inline PointerEvents pointerEvents() const
+      {
+        return pointer_events_.value_or(PointerEvents::kAuto);
+      }
 
-    // Visibility utility functions.
-    inline bool visibleToHitTesting() const
-    {
-      return visibility_ == Visibility::kVisible &&
-             pointer_events_ != PointerEvents::kNone;
-    }
+      inline const std::vector<std::string> &fonts() const
+      {
+        return fonts_;
+      }
+      inline const values::computed::FontSize &fontSize() const
+      {
+        return font_size_;
+      }
+      inline const values::computed::FontWeight &fontWeight() const
+      {
+        return font_weight_;
+      }
+      inline const values::computed::FontStyle &fontStyle() const
+      {
+        return font_style_;
+      }
+      inline const values::computed::LineHeight &lineHeight() const
+      {
+        return line_height_;
+      }
 
-    // 3D Transforms
-    inline const bool hasTransform() const
-    {
-      return bitfields_.HasTransform();
-    }
-    inline const values::computed::Transform &transform() const
-    {
-      return transform_;
-    }
-    inline const size_t applyTransformTo(glm::mat4 &matrix) const
-    {
-      return transform_.applyTo(matrix);
-    }
-    inline const size_t applyTransformTo(glm::mat4 &matrix, const glm::vec2 &elementSize) const
-    {
-      return transform_.applyTo(matrix, elementSize);
-    }
+      inline const values::computed::TextAlign &textAlign() const
+      {
+        return text_align_;
+      }
+      inline const values::computed::Direction &textDirection() const
+      {
+        return text_direction_;
+      }
+      inline const values::computed::VerticalAlign &verticalAlign() const
+      {
+        return vertical_align_;
+      }
 
-    // Visual Effects
-    inline const values::computed::Filter &filter() const
-    {
-      return filter_;
-    }
-    inline const values::computed::Filter &backdropFilter() const
-    {
-      return backdrop_filter_;
-    }
+      inline const values::computed::Color &color() const
+      {
+        return color_;
+      }
+      inline bool hasColor() const
+      {
+        return bitfields_.HasColor();
+      }
+      inline const values::computed::Color &backgroundColor() const
+      {
+        return background_color_;
+      }
+      inline bool hasBackgroundColor() const
+      {
+        return bitfields_.HasBackgroundColor();
+      }
+      inline values::computed::Image &backgroundImage()
+      {
+        return background_image_;
+      }
+      inline const values::computed::Image &backgroundImage() const
+      {
+        return background_image_;
+      }
+      inline bool hasBackgroundImage() const
+      {
+        return bitfields_.HasBackgroundImage();
+      }
+      inline const values::computed::BackgroundBlendMode &backgroundBlendMode() const
+      {
+        return background_blend_mode_;
+      }
+      inline const values::computed::BackgroundClip &backgroundClip() const
+      {
+        return background_clip_;
+      }
+      inline const values::computed::BackgroundOrigin &backgroundOrigin() const
+      {
+        return background_origin_;
+      }
+      inline const values::computed::BackgroundRepeat &backgroundRepeat() const
+      {
+        return background_repeat_;
+      }
+      inline const values::computed::BackgroundSize &backgroundSize() const
+      {
+        return background_size_;
+      }
+      inline const values::computed::BackgroundPosition &backgroundPosition() const
+      {
+        return background_position_;
+      }
 
-    // Transitions and animations
-    inline const std::vector<values::computed::TransitionProperty> &transitionProperties() const
-    {
-      return transition_properties_;
-    }
-    inline const std::vector<values::computed::Time> &transitionDurations() const
-    {
-      return transition_durations_;
-    }
-    inline const std::vector<values::computed::Time> &transitionDelays() const
-    {
-      return transition_delays_;
-    }
-    inline const std::vector<values::computed::TimingFunction> &transitionTimingFunctions() const
-    {
-      return transition_timing_functions_;
-    }
+      // Visibility utility functions.
+      inline bool visibleToHitTesting() const
+      {
+        return visibility_ == Visibility::kVisible &&
+               pointer_events_ != PointerEvents::kNone;
+      }
 
-    struct TransitionProperty
-    {
-      values::computed::TransitionProperty property;
-      values::computed::Time duration;
-      values::computed::Time delay;
-      values::computed::TimingFunction timing_function;
-    };
-    // Returns the transition property at the given index, otherwise returns `std::nullopt`.
-    std::optional<TransitionProperty> getTransitionProperty(uint32_t index) const;
-    inline const size_t getTransitionPropertiesCount() const
-    {
-      return transition_properties_.size();
-    }
-    inline const bool hasTransitionProperties() const
-    {
-      return !transition_properties_.empty();
-    }
+      // 3D Transforms
+      inline const bool hasTransform() const
+      {
+        return bitfields_.HasTransform();
+      }
+      inline const values::computed::Transform &transform() const
+      {
+        return transform_;
+      }
+      inline const size_t applyTransformTo(glm::mat4 &matrix) const
+      {
+        return transform_.applyTo(matrix);
+      }
+      inline const size_t applyTransformTo(glm::mat4 &matrix, const glm::vec2 &elementSize) const
+      {
+        return transform_.applyTo(matrix, elementSize);
+      }
 
-    void setCustomProperty(const std::string &name, const std::string &value);
-    std::string getCustomProperty(const std::string &name) const;
-    bool hasCustomProperty(const std::string &name) const;
-    void inheritCustomProperties(const ComputedStyle &parentStyle);
-    std::string resolveVariables(const std::string &value, const values::computed::Context &context) const;
+      // Visual Effects
+      inline const values::computed::Filter &filter() const
+      {
+        return filter_;
+      }
+      inline const values::computed::Filter &backdropFilter() const
+      {
+        return backdrop_filter_;
+      }
 
-  private:
-    void setPropertyInternal(const std::string &name, const std::string &value);
-    void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
-    void computeShorthandProperties(values::computed::Context &);
-    void updateBaseComputedStyle();
+      // Transitions and animations
+      inline const std::vector<values::computed::TransitionProperty> &transitionProperties() const
+      {
+        return transition_properties_;
+      }
+      inline const std::vector<values::computed::Time> &transitionDurations() const
+      {
+        return transition_durations_;
+      }
+      inline const std::vector<values::computed::Time> &transitionDelays() const
+      {
+        return transition_delays_;
+      }
+      inline const std::vector<values::computed::TimingFunction> &transitionTimingFunctions() const
+      {
+        return transition_timing_functions_;
+      }
 
-  private:
-    // Box model
-    values::computed::Display display_ = values::computed::Display::Block();
-    values::computed::BoxSizing box_sizing_ = values::computed::BoxSizing::ContentBox();
-    values::computed::Overflow overflow_x_ = values::computed::Overflow::Visible();
-    values::computed::Overflow overflow_y_ = values::computed::Overflow::Visible();
-    values::computed::Margin margin_ = values::computed::Margin::Default();
-    values::computed::Padding padding_ = values::computed::Padding::Default();
+      struct TransitionProperty
+      {
+        values::computed::TransitionProperty property;
+        values::computed::Time duration;
+        values::computed::Time delay;
+        values::computed::TimingFunction timing_function;
+      };
+      // Returns the transition property at the given index, otherwise returns `std::nullopt`.
+      std::optional<TransitionProperty> getTransitionProperty(uint32_t index) const;
+      inline const size_t getTransitionPropertiesCount() const
+      {
+        return transition_properties_.size();
+      }
+      inline const bool hasTransitionProperties() const
+      {
+        return !transition_properties_.empty();
+      }
 
-    // Sizes
-    values::computed::Size width_ = values::computed::Size::Auto();
-    values::computed::Size height_ = values::computed::Size::Auto();
-    values::computed::Size min_width_ = values::computed::Size::Auto();
-    values::computed::Size min_height_ = values::computed::Size::Auto();
-    values::computed::MaxSize max_width_ = values::computed::MaxSize::None();
-    values::computed::MaxSize max_height_ = values::computed::MaxSize::None();
+      void setCustomProperty(const std::string &name, const std::string &value);
+      std::string getCustomProperty(const std::string &name) const;
+      bool hasCustomProperty(const std::string &name) const;
+      void inheritCustomProperties(const ComputedStyle &parentStyle);
+      std::string resolveVariables(const std::string &value, const values::computed::Context &context) const;
 
-    // Border
-    values::computed::BorderWidth border_width_ = values::computed::BorderWidth::Default();
-    values::computed::BorderColor border_color_ = values::computed::BorderColor::Default();
-    values::computed::BorderStyle border_style_ = values::computed::BorderStyle::Default();
-    values::computed::BorderRadius border_radius_ = values::computed::BorderRadius::Zero();
+    private:
+      void setPropertyInternal(const std::string &name, const std::string &value);
+      void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
+      void computeShorthandProperties(values::computed::Context &);
+      void updateBaseComputedStyle();
 
-    // Positional
-    values::computed::PositionType position_type_ = values::computed::PositionType::Static();
-    values::computed::Inset inset_ = values::computed::Inset::Default();
-    int z_index_ = 0;
+    private:
+      // Box model
+      values::computed::Display display_ = values::computed::Display::Block();
+      values::computed::BoxSizing box_sizing_ = values::computed::BoxSizing::ContentBox();
+      values::computed::Overflow overflow_x_ = values::computed::Overflow::Visible();
+      values::computed::Overflow overflow_y_ = values::computed::Overflow::Visible();
+      values::computed::Margin margin_ = values::computed::Margin::Default();
+      values::computed::Padding padding_ = values::computed::Padding::Default();
 
-    // Alignment
-    values::computed::AlignContent align_content_ = values::computed::AlignContent::Normal();
-    values::computed::JustifyContent justify_content_ = values::computed::JustifyContent::Normal();
-    values::computed::AlignSelf align_self_ = values::computed::AlignSelf::Auto();
-    values::computed::AlignItems align_items_ = values::computed::AlignItems::Normal();
-    values::computed::JustifySelf justify_self_ = values::computed::JustifySelf::Auto();
-    values::computed::JustifyItems justify_items_ = values::computed::JustifyItems::Legacy();
+      // Sizes
+      values::computed::Size width_ = values::computed::Size::Auto();
+      values::computed::Size height_ = values::computed::Size::Auto();
+      values::computed::Size min_width_ = values::computed::Size::Auto();
+      values::computed::Size min_height_ = values::computed::Size::Auto();
+      values::computed::MaxSize max_width_ = values::computed::MaxSize::None();
+      values::computed::MaxSize max_height_ = values::computed::MaxSize::None();
 
-    // Flexbox
-    values::computed::LengthPercentage row_gap_;
-    values::computed::LengthPercentage column_gap_;
-    values::computed::FlexDirection flex_direction_;
-    values::computed::FlexWrap flex_wrap_;
-    values::CSSFloat flex_grow_ = 0.0f;
-    values::CSSFloat flex_shrink_ = 1.0f;
+      // Border
+      values::computed::BorderWidth border_width_ = values::computed::BorderWidth::Default();
+      values::computed::BorderColor border_color_ = values::computed::BorderColor::Default();
+      values::computed::BorderStyle border_style_ = values::computed::BorderStyle::Default();
+      values::computed::BorderRadius border_radius_ = values::computed::BorderRadius::Zero();
 
-    // Grid
-    // TODO(yorkie): add grid properties when needed.
+      // Positional
+      values::computed::PositionType position_type_ = values::computed::PositionType::Static();
+      values::computed::Inset inset_ = values::computed::Inset::Default();
+      int z_index_ = 0;
 
-    // Visibility and UI
-    std::optional<Visibility> visibility_ = Visibility::kVisible;
-    std::optional<PointerEvents> pointer_events_ = PointerEvents::kAuto;
+      // Alignment
+      values::computed::AlignContent align_content_ = values::computed::AlignContent::Normal();
+      values::computed::JustifyContent justify_content_ = values::computed::JustifyContent::Normal();
+      values::computed::AlignSelf align_self_ = values::computed::AlignSelf::Auto();
+      values::computed::AlignItems align_items_ = values::computed::AlignItems::Normal();
+      values::computed::JustifySelf justify_self_ = values::computed::JustifySelf::Auto();
+      values::computed::JustifyItems justify_items_ = values::computed::JustifyItems::Legacy();
 
-    // Font
-    std::vector<std::string> fonts_;
-    values::computed::FontSize font_size_;
-    values::computed::FontWeight font_weight_;
-    values::computed::FontStyle font_style_;
-    values::computed::LineHeight line_height_ = values::computed::LineHeight::Normal();
+      // Flexbox
+      values::computed::LengthPercentage row_gap_;
+      values::computed::LengthPercentage column_gap_;
+      values::computed::FlexDirection flex_direction_;
+      values::computed::FlexWrap flex_wrap_;
+      values::CSSFloat flex_grow_ = 0.0f;
+      values::CSSFloat flex_shrink_ = 1.0f;
 
-    // Text
-    values::computed::TextAlign text_align_;
-    values::computed::Direction text_direction_;
-    values::computed::VerticalAlign vertical_align_;
+      // Grid
+      // TODO(yorkie): add grid properties when needed.
 
-    // Colors
-    values::computed::Color color_ = values::computed::Color::Black();
+      // Visibility and UI
+      std::optional<Visibility> visibility_ = Visibility::kVisible;
+      std::optional<PointerEvents> pointer_events_ = PointerEvents::kAuto;
 
-    // Background
-    values::computed::Color background_color_ = values::computed::Color::Transparent();
-    values::computed::Image background_image_ = values::computed::Image::None();
-    values::computed::BackgroundBlendMode background_blend_mode_ = values::computed::BackgroundBlendMode::Normal();
-    values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
-    values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
-    values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
-    values::computed::BackgroundSize background_size_ = values::computed::BackgroundSize::Auto();
-    values::computed::BackgroundPosition background_position_ = values::computed::BackgroundPosition::Default();
+      // Font
+      std::vector<std::string> fonts_;
+      values::computed::FontSize font_size_;
+      values::computed::FontWeight font_weight_;
+      values::computed::FontStyle font_style_;
+      values::computed::LineHeight line_height_ = values::computed::LineHeight::Normal();
 
-    // 3D Transforms
-    values::computed::Transform transform_;
+      // Text
+      values::computed::TextAlign text_align_;
+      values::computed::Direction text_direction_;
+      values::computed::VerticalAlign vertical_align_;
 
-    // Visual Effects
-    values::computed::Filter filter_ = values::computed::Filter::None();
-    values::computed::Filter backdrop_filter_ = values::computed::Filter::None();
+      // Colors
+      values::computed::Color color_ = values::computed::Color::Black();
 
-    // Transitions and animations
-    std::vector<values::computed::TransitionProperty> transition_properties_;
-    std::vector<values::computed::Time> transition_durations_;
-    std::vector<values::computed::Time> transition_delays_;
-    std::vector<values::computed::TimingFunction> transition_timing_functions_;
-    std::shared_ptr<ComputedStyle> base_computed_style_;
+      // Background
+      values::computed::Color background_color_ = values::computed::Color::Transparent();
+      values::computed::Image background_image_ = values::computed::Image::None();
+      values::computed::BackgroundBlendMode background_blend_mode_ = values::computed::BackgroundBlendMode::Normal();
+      values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
+      values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
+      values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
+      values::computed::BackgroundSize background_size_ = values::computed::BackgroundSize::Auto();
+      values::computed::BackgroundPosition background_position_ = values::computed::BackgroundPosition::Default();
 
-  private: // Bitfields for computed style properties.
+      // 3D Transforms
+      values::computed::Transform transform_;
+
+      // Visual Effects
+      values::computed::Filter filter_ = values::computed::Filter::None();
+      values::computed::Filter backdrop_filter_ = values::computed::Filter::None();
+
+      // Transitions and animations
+      std::vector<values::computed::TransitionProperty> transition_properties_;
+      std::vector<values::computed::Time> transition_durations_;
+      std::vector<values::computed::Time> transition_delays_;
+      std::vector<values::computed::TimingFunction> transition_timing_functions_;
+      std::shared_ptr<ComputedStyle> base_computed_style_;
+
+    private: // Bitfields for computed style properties.
 #define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME) \
 public:                                                 \
   bool PUBLIC_NAME() const                              \
@@ -623,33 +625,34 @@ public:                                                 \
 private:                                                \
   unsigned PRIVATE_NAME : 1
 
-    class ComputedStyleBitfields
-    {
-    public:
-      explicit ComputedStyleBitfields()
-          : has_transform_(false)
-          , has_background_image_(false)
+      class ComputedStyleBitfields
       {
-      }
+      public:
+        explicit ComputedStyleBitfields()
+            : has_transform_(false)
+            , has_background_image_(false)
+        {
+        }
 
-      ADD_BOOLEAN_BITFIELD(has_display_, HasDisplay);
-      ADD_BOOLEAN_BITFIELD(has_color_, HasColor);
-      ADD_BOOLEAN_BITFIELD(has_background_color_, HasBackgroundColor);
-      ADD_BOOLEAN_BITFIELD(has_background_image_, HasBackgroundImage);
-      ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
-      ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
-      ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
-      ADD_BOOLEAN_BITFIELD(has_z_index_, HasZIndex);
-      ADD_BOOLEAN_BITFIELD(has_transform_, HasTransform);
-    };
+        ADD_BOOLEAN_BITFIELD(has_display_, HasDisplay);
+        ADD_BOOLEAN_BITFIELD(has_color_, HasColor);
+        ADD_BOOLEAN_BITFIELD(has_background_color_, HasBackgroundColor);
+        ADD_BOOLEAN_BITFIELD(has_background_image_, HasBackgroundImage);
+        ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
+        ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
+        ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
+        ADD_BOOLEAN_BITFIELD(has_z_index_, HasZIndex);
+        ADD_BOOLEAN_BITFIELD(has_transform_, HasTransform);
+      };
 #undef ADD_BOOLEAN_BITFIELD
 
-    ComputedStyleBitfields bitfields_;
+      ComputedStyleBitfields bitfields_;
 
-    // CSS Custom Properties (CSS Variables) support
-    std::unordered_map<std::string, std::string> custom_properties_;
+      // CSS Custom Properties (CSS Variables) support
+      std::unordered_map<std::string, std::string> custom_properties_;
 
-    // Variable dependency tracking
-    VariableReferenceTracker variable_tracker_;
-  };
-}
+      // Variable dependency tracking
+      VariableReferenceTracker variable_tracker_;
+    };
+  }
+} // namespace endor

@@ -3,14 +3,17 @@
 #include <node/v8.h>
 #include <client/dom/document.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  class GlobalFetch
+  namespace script_bindings
   {
-  public:
-    static v8::Local<v8::Value> Fetch(std::shared_ptr<dom::Document> document,
-                                      const v8::FunctionCallbackInfo<v8::Value> &args);
-    static v8::Local<v8::Value> FetchLater(std::shared_ptr<dom::Document> document,
-                                           const v8::FunctionCallbackInfo<v8::Value> &args);
-  };
-}
+    class GlobalFetch
+    {
+    public:
+      static v8::Local<v8::Value> Fetch(std::shared_ptr<dom::Document> document,
+                                        const v8::FunctionCallbackInfo<v8::Value> &args);
+      static v8::Local<v8::Value> FetchLater(std::shared_ptr<dom::Document> document,
+                                             const v8::FunctionCallbackInfo<v8::Value> &args);
+    };
+  }
+} // namespace endor

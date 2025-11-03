@@ -4,40 +4,43 @@
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/canvas/image_bitmap.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace canvas_bindings
+  namespace script_bindings
   {
-    class ImageBitmap;
-    using ImageBitmapBase = scripting_base::ObjectWrap<ImageBitmap, ::canvas::ImageBitmap>;
+    namespace canvas_bindings
+    {
+      class ImageBitmap;
+      using ImageBitmapBase = scripting_base::ObjectWrap<ImageBitmap, ::endor::canvas::ImageBitmap>;
 
-    /**
+      /**
      * ImageBitmap wrapper for V8 objects using scripting_base::ObjectWrap.
      * 
      * This class wraps canvas::ImageBitmap objects for use in V8 JavaScript execution contexts.
      * It provides the standard ImageBitmap interface including width, height, and close methods.
      */
-    class ImageBitmap : public ImageBitmapBase
-    {
-      using ImageBitmapBase::ObjectWrap;
-
-    public:
-      static std::string Name()
+      class ImageBitmap : public ImageBitmapBase
       {
-        return "ImageBitmap";
-      }
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+        using ImageBitmapBase::ObjectWrap;
 
-    public:
-      ImageBitmap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+      public:
+        static std::string Name()
+        {
+          return "ImageBitmap";
+        }
+        static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
-    private:
-      // Property getters
-      void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
-      void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      public:
+        ImageBitmap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
-      // Methods
-      void Close(const v8::FunctionCallbackInfo<v8::Value> &info);
-    };
+      private:
+        // Property getters
+        void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+        void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+
+        // Methods
+        void Close(const v8::FunctionCallbackInfo<v8::Value> &info);
+      };
+    }
   }
-}
+} // namespace endor

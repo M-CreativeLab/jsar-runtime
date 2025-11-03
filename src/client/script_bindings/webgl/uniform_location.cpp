@@ -1,48 +1,51 @@
 #include "uniform_location.hpp"
 #include <v8.h>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    using namespace std;
-    using namespace v8;
-
-    void WebGLUniformLocation::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    namespace webgl_bindings
     {
-      HandleScope scope(isolate);
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      using namespace std;
+      using namespace v8;
 
-      InstanceReadonlyAccessor(isolate,
-                               instanceTemplate,
-                               "name",
-                               &WebGLUniformLocation::NameGetter);
-    }
+      void WebGLUniformLocation::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+      {
+        HandleScope scope(isolate);
+        Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
-    Local<Object> WebGLUniformLocation::NewInstance(Isolate *isolate,
-                                                    const client_graphics::WebGLUniformLocation &loc)
-    {
-      EscapableHandleScope scope(isolate);
-      return scope.Escape(WebGLUniformLocationBase::NewInstance(isolate,
-                                                                make_shared<client_graphics::WebGLUniformLocation>(loc))
-                            .As<Object>());
-    }
+        InstanceReadonlyAccessor(isolate,
+                                 instanceTemplate,
+                                 "name",
+                                 &WebGLUniformLocation::NameGetter);
+      }
 
-    WebGLUniformLocation::WebGLUniformLocation(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGLUniformLocationBase(isolate, args)
-    {
-    }
+      Local<Object> WebGLUniformLocation::NewInstance(Isolate *isolate,
+                                                      const client_graphics::WebGLUniformLocation &loc)
+      {
+        EscapableHandleScope scope(isolate);
+        return scope.Escape(WebGLUniformLocationBase::NewInstance(isolate,
+                                                                  make_shared<client_graphics::WebGLUniformLocation>(loc))
+                              .As<Object>());
+      }
 
-    void WebGLUniformLocation::NameGetter(const PropertyCallbackInfo<Value> &args)
-    {
-      Isolate *isolate = args.GetIsolate();
-      HandleScope scope(isolate);
+      WebGLUniformLocation::WebGLUniformLocation(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+          : WebGLUniformLocationBase(isolate, args)
+      {
+      }
 
-      const auto &name = handle()->name;
-      args.GetReturnValue().Set(String::NewFromUtf8(isolate,
-                                                    name.c_str())
-                                  .ToLocalChecked());
-    }
+      void WebGLUniformLocation::NameGetter(const PropertyCallbackInfo<Value> &args)
+      {
+        Isolate *isolate = args.GetIsolate();
+        HandleScope scope(isolate);
 
-  } // namespace webgl
-} // namespace script_bindings
+        const auto &name = handle()->name;
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                      name.c_str())
+                                    .ToLocalChecked());
+      }
+
+    } // namespace webgl
+  }   // namespace script_bindings
+} // namespace endor

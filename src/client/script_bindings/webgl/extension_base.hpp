@@ -2,14 +2,17 @@
 
 #include <client/scripting_base/v8_object_wrap.hpp>
 
-namespace script_bindings
+namespace endor
 {
-  namespace webgl_bindings
+  namespace script_bindings
   {
-    template <typename T>
-    class WebGLExtension : public scripting_base::ObjectWrap<T>
+    namespace webgl_bindings
     {
-      using scripting_base::ObjectWrap<T>::ObjectWrap;
-    };
+      template <typename T>
+      class WebGLExtension : public scripting_base::ObjectWrap<T>
+      {
+        using scripting_base::ObjectWrap<T>::ObjectWrap;
+      };
+    }
   }
-}
+} // namespace endor
