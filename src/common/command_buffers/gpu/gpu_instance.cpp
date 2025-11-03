@@ -4,7 +4,7 @@ using namespace std;
 
 namespace commandbuffers
 {
-  unique_ptr<GPUInstanceBase> GPUInstanceBase::Create(const GPUInstanceDescriptor *descriptor)
+  unique_ptr<GPUInstanceBase, GPUInstanceBase::Deleter> GPUInstanceBase::Create(const GPUInstanceDescriptor *descriptor)
   {
     static constexpr GPUInstanceDescriptor kDefaultDesc = {};
     if (descriptor == nullptr)
@@ -12,7 +12,7 @@ namespace commandbuffers
       descriptor = &kDefaultDesc;
     }
 
-    auto instance = make_unique<GPUInstanceBase>();
+    auto instance = unique_ptr<GPUInstanceBase, Deleter>(new GPUInstanceBase());
     instance->initialize(*descriptor);
     return instance;
   }

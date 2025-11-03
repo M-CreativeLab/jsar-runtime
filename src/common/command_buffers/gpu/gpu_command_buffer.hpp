@@ -9,13 +9,13 @@
 #include <common/command_buffers/gpu/gpu_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_pipeline.hpp>
 #include <common/command_buffers/gpu/gpu_commands.hpp>
-#include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include <common/command_buffers/gpu/command_allocator.hpp>
 #include <common/command_buffers/gpu/indirect_draw_metadata.hpp>
 #include <common/command_buffers/gpu/pass_resource_usage.hpp>
 
 namespace commandbuffers
 {
+  class GPUCommandEncoder;
   struct GPUCommandBufferDescriptor
   {
     std::string_view label;
@@ -27,7 +27,7 @@ namespace commandbuffers
     friend class GPURenderPassEncoderBase;
 
   public:
-    GPUCommandBufferBase(GPUCommandEncoderBase *encoder,
+    GPUCommandBufferBase(GPUCommandEncoder *encoder,
                          const GPUCommandBufferDescriptor *descriptor);
     virtual ~GPUCommandBufferBase() = default;
 
@@ -39,8 +39,8 @@ namespace commandbuffers
     const std::string &getEncoderLabel() const;
     void setEncoderLabel(std::string encoderLabel);
 
-    const GPUCommandBufferResourceUsage &getResourceUsages() const;
-    const std::vector<GPUIndirectDrawMetadata> &getIndirectDrawMetadata();
+    const gpu::CommandBufferResourceUsage &getResourceUsages() const;
+    const std::vector<gpu::IndirectDrawMetadata> &getIndirectDrawMetadata();
 
     template <typename F>
     auto useCommands(F func) -> auto
@@ -58,8 +58,8 @@ namespace commandbuffers
                          GPUHandle::ErrorTag tag,
                          std::string_view label);
 
-    GPUCommandBufferResourceUsage resource_usages_;
-    std::vector<GPUIndirectDrawMetadata> indirect_draw_metadata_;
+    gpu::CommandBufferResourceUsage resource_usages_;
+    std::vector<gpu::IndirectDrawMetadata> indirect_draw_metadata_;
     std::string encoder_label_;
   };
 }

@@ -6,6 +6,20 @@ using namespace std;
 
 namespace commandbuffers
 {
+  bool GPUExtent2D::operator==(const GPUExtent2D &rhs) const
+  {
+    const auto &lhs = std::tie(width, height);
+    return lhs == std::tie(rhs.width, rhs.height);
+  }
+
+  bool GPUExtent3D::operator==(const GPUExtent3D &rhs) const
+  {
+    const auto &lhs = std::tie(width, height, depthOrArrayLayers);
+    return lhs == std::tie(rhs.width,
+                           rhs.height,
+                           rhs.depthOrArrayLayers);
+  }
+
   //
   // ErrorMonad Implementation
   //
@@ -76,7 +90,7 @@ namespace commandbuffers
 
   GPUInstanceBase *GPUObject::instance() const
   {
-    return device_->instance();
+    return device_->getInstance();
   }
 
   shared_ptr<GPUDeviceBase> GPUObject::device() const
@@ -90,7 +104,7 @@ namespace commandbuffers
 
   GPUHandle::GPUHandle(shared_ptr<GPUDeviceBase> device, string_view label)
       : GPUObject(device)
-      , id_(Ids.get())
+      , id(Ids.get())
       , label_(string(label))
   {
   }
@@ -99,7 +113,7 @@ namespace commandbuffers
                        ErrorTag tag,
                        string_view label)
       : GPUObject(device, tag)
-      , id_(Ids.get())
+      , id(Ids.get())
       , label_(string(label))
   {
   }
@@ -108,14 +122,14 @@ namespace commandbuffers
                        DelayedInitializationTag tag,
                        string_view label)
       : GPUObject(device, tag)
-      , id_(Ids.get())
+      , id(Ids.get())
       , label_(string(label))
   {
   }
 
   GPUHandle::GPUHandle(shared_ptr<GPUDeviceBase> device, LabelNotImplementedTag tag)
       : GPUObject(device)
-      , id_(Ids.get())
+      , id(Ids.get())
   {
   }
 

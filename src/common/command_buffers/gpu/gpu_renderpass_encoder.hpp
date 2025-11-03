@@ -3,12 +3,12 @@
 #include <optional>
 #include <variant>
 
-#include "./gpu_base.hpp"
-#include "./gpu_pass_encoder_base.hpp"
-#include "./gpu_buffer.hpp"
-#include "./gpu_command_buffer.hpp"
-#include "./gpu_pipeline.hpp"
-#include "./gpu_texture_view.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_texture_view.hpp>
+#include <common/command_buffers/gpu/gpu_commands.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 
 namespace commandbuffers
 {
@@ -61,76 +61,32 @@ namespace commandbuffers
                                    public GPUHandle
   {
   public:
-    GPURenderPassEncoderBase(std::string label)
-        : GPUPassEncoderBase()
-        , GPUHandle(label)
+    GPUHandleType type() const override final
     {
+      return GPUHandleType::kRenderPassEncoder;
     }
-
-  public:
     bool isRenderPassEncoder() const override
     {
       return true;
     }
 
-    void draw(uint32_t vertex_count,
-              uint32_t instance_count = 1,
-              uint32_t first_vertex = 0,
-              uint32_t first_instance = 0)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUDrawCommand>(vertex_count,
-                                                    instance_count,
-                                                    first_vertex,
-                                                    first_instance);
-    }
-    void drawIndexed(uint32_t index_count,
-                     uint32_t instance_count = 1,
-                     uint32_t first_index = 0,
-                     int32_t base_vertex = 0,
-                     uint32_t first_instance = 0)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUDrawIndexedCommand>(index_count,
-                                                           instance_count,
-                                                           first_index,
-                                                           base_vertex,
-                                                           first_instance);
-    }
-    void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetViewportCommand>(x, y, width, height, min_depth, max_depth);
-    }
-    void setScissorRect(float x, float y, float width, float height)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetScissorCommand>(x, y, width, height);
-    }
-    void setPipeline(const GPURenderPipelineBase &pipeline)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetRenderPipelineCommand>(pipeline);
-    }
-    void setIndexBuffer(const GPUBufferBase &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetIndexBufferCommand>(buffer, index_format, offset, size);
-    }
-    void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetVertexBufferCommand>(slot, buffer, offset, size);
-    }
-    void setBlendConstant(float r, float g, float b, float a)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetBlendConstantCommand>(r, g, b, a);
-    }
-    void setStencilReference(uint32_t ref)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetStencilReferenceCommand>(ref);
-    }
+    void draw(
+      uint32_t vertex_count,
+      uint32_t instance_count = 1,
+      uint32_t first_vertex = 0,
+      uint32_t first_instance = 0);
+    void drawIndexed(
+      uint32_t index_count,
+      uint32_t instance_count = 1,
+      uint32_t first_index = 0,
+      int32_t base_vertex = 0,
+      uint32_t first_instance = 0);
+    void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f);
+    void setScissorRect(float x, float y, float width, float height);
+    void setPipeline(const GPURenderPipelineBase &pipeline);
+    void setIndexBuffer(const GPUBufferBase &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size);
+    void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0);
+    void setBlendConstant(float r, float g, float b, float a);
+    void setStencilReference(uint32_t ref);
   };
 }

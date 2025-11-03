@@ -17,8 +17,18 @@ namespace commandbuffers
 
   class GPUInstanceBase
   {
+  private:
+    // Custom deleter for `unique_ptr<GPUInstanceBase>`
+    struct Deleter
+    {
+      void operator()(GPUInstanceBase *ptr)
+      {
+        delete ptr;
+      }
+    };
+
   public:
-    static std::unique_ptr<GPUInstanceBase> Create(const GPUInstanceDescriptor *descriptor = nullptr);
+    static std::unique_ptr<GPUInstanceBase, Deleter> Create(const GPUInstanceDescriptor *descriptor = nullptr);
 
     void addDevice(std::shared_ptr<GPUDeviceBase>);
     void removeDevice(std::shared_ptr<GPUDeviceBase>);

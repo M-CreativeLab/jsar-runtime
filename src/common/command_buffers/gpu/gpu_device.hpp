@@ -24,7 +24,7 @@ namespace commandbuffers
     GPUSupportedLimits *requiredLimits = nullptr;
   };
 
-  class GPUDeviceBase : public GPUHandle
+  class GPUDeviceBase
   {
   public:
     GPUDeviceBase(GPUAdapterBase *adapter,

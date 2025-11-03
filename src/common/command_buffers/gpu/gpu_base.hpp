@@ -47,6 +47,47 @@ namespace commandbuffers
   using GPUBindGroupIndex = uint32_t;
   constexpr GPUBindGroupIndex kMaxBindGroupsTyped = GPUBindGroupIndex(gpu_constants::kMaxBindGroups);
 
+  struct GPUExtent2D
+  {
+    uint32_t width;
+    uint32_t height;
+
+    // Equality operators, mostly for testing. Note that this tests
+    // strict pointer-pointer equality if the struct contains member pointers.
+    bool operator==(const GPUExtent2D &rhs) const;
+  };
+
+  struct GPUExtent3D
+  {
+    uint32_t width;
+    uint32_t height = 1;
+    uint32_t depthOrArrayLayers = 1;
+
+    // Equality operators, mostly for testing. Note that this tests
+    // strict pointer-pointer equality if the struct contains member pointers.
+    bool operator==(const GPUExtent3D &rhs) const;
+  };
+
+  enum class GPUComponentSwizzle : uint32_t
+  {
+    kUndefined,
+    kZero,
+    kOne,
+    kR,
+    kG,
+    kB,
+    kA,
+  };
+
+  enum class GPUCompositeAlphaMode : uint32_t
+  {
+    kAuto,
+    kOpaque,
+    kPremultiplied,
+    kUnpremultiplied,
+    kInherit,
+  };
+
   enum class GPUHandleType : uint32_t
   {
     kAdapter,
@@ -135,6 +176,29 @@ namespace commandbuffers
     kComparison,
   };
 
+  enum class GPUTextureAspect : uint32_t
+  {
+    kUndefined,
+    kAll,
+    kStencilOnly,
+    kDepthOnly,
+    kPlane0Only,
+    kPlane1Only,
+    kPlane2Only,
+  };
+
+  enum class GPUTextureUsage : uint64_t
+  {
+    kNone,
+    kCopySrc,
+    kCopyDst,
+    kTextureBinding,
+    kStorageBinding,
+    kRenderAttachment,
+    kTransientAttachment,
+    kStorageAttachment,
+  };
+
   enum class GPUTextureSampleType : uint32_t
   {
     kBindingNotUsed,
@@ -144,6 +208,14 @@ namespace commandbuffers
     kDepth,
     kSint,
     kUint,
+  };
+
+  enum class GPUTextureDimension : uint32_t
+  {
+    kUndefined,
+    k1D,
+    k2D,
+    k3D,
   };
 
   enum class GPUTextureViewDimension : uint32_t
@@ -275,6 +347,14 @@ namespace commandbuffers
     kR10X6BG10X6Biplanar422Unorm,
     kR10X6BG10X6Biplanar444Unorm,
     kExternal,
+  };
+
+  struct GPUTextureComponentSwizzle
+  {
+    GPUComponentSwizzle r = GPUComponentSwizzle::kUndefined;
+    GPUComponentSwizzle g = GPUComponentSwizzle::kUndefined;
+    GPUComponentSwizzle b = GPUComponentSwizzle::kUndefined;
+    GPUComponentSwizzle a = GPUComponentSwizzle::kUndefined;
   };
 
   enum class GPUStorageTextureAccess : uint32_t
@@ -435,8 +515,10 @@ namespace commandbuffers
     void setLabel(std::string label);
     const std::string &getLabel() const;
 
+  public:
+    const GPUIdentifier id;
+
   private:
     std::string label_ = "";
-    const GPUIdentifier id_;
   };
 }

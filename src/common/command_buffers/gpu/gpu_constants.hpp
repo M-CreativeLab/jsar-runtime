@@ -29,6 +29,18 @@
 
 #include <cstdint>
 
+#define WGPU_ARRAY_LAYER_COUNT_UNDEFINED (UINT32_MAX)
+#define WGPU_COPY_STRIDE_UNDEFINED (UINT32_MAX)
+#define WGPU_DEPTH_CLEAR_VALUE_UNDEFINED (NAN)
+#define WGPU_DEPTH_SLICE_UNDEFINED (UINT32_MAX)
+#define WGPU_LIMIT_U32_UNDEFINED (UINT32_MAX)
+#define WGPU_LIMIT_U64_UNDEFINED (UINT64_MAX)
+#define WGPU_MIP_LEVEL_COUNT_UNDEFINED (UINT32_MAX)
+#define WGPU_QUERY_SET_INDEX_UNDEFINED (UINT32_MAX)
+#define WGPU_STRLEN (SIZE_MAX)
+#define WGPU_WHOLE_MAP_SIZE (SIZE_MAX)
+#define WGPU_WHOLE_SIZE (UINT64_MAX)
+
 namespace commandbuffers::gpu_constants
 {
   static constexpr uint32_t kMaxBindGroups = 4u;
@@ -43,4 +55,16 @@ namespace commandbuffers::gpu_constants
   static constexpr uint32_t kQueryResolveAlignment = 256u;
   static constexpr uint32_t kMaxInterStageShaderVariables = 16u;
   static constexpr uint64_t kAssumedMaxBufferSize = 0x80000000u; // Use 2 GB when the limit is unavailable
+
+  static constexpr uint32_t kArrayLayerCountUndefined = WGPU_ARRAY_LAYER_COUNT_UNDEFINED;
+  static constexpr uint32_t kCopyStrideUndefined = WGPU_COPY_STRIDE_UNDEFINED;
+  static constexpr float kDepthClearValueUndefined = std::numeric_limits<float>::quiet_NaN();
+  static constexpr uint32_t kDepthSliceUndefined = WGPU_DEPTH_SLICE_UNDEFINED;
+  static constexpr uint32_t kLimitU32Undefined = WGPU_LIMIT_U32_UNDEFINED;
+  static constexpr uint64_t kLimitU64Undefined = WGPU_LIMIT_U64_UNDEFINED;
+  static constexpr uint32_t kMipLevelCountUndefined = WGPU_MIP_LEVEL_COUNT_UNDEFINED;
+  static constexpr uint32_t kQuerySetIndexUndefined = WGPU_QUERY_SET_INDEX_UNDEFINED;
+  static constexpr size_t kStrlen = WGPU_STRLEN;
+  static constexpr size_t kWholeMapSize = WGPU_WHOLE_MAP_SIZE;
+  static constexpr uint64_t kWholeSize = WGPU_WHOLE_SIZE;
 };

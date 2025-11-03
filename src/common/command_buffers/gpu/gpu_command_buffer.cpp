@@ -1,10 +1,11 @@
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 
 using namespace std;
 
 namespace commandbuffers
 {
-  GPUCommandBufferBase::GPUCommandBufferBase(GPUCommandEncoderBase *encoder,
+  GPUCommandBufferBase::GPUCommandBufferBase(GPUCommandEncoder *encoder,
                                              const GPUCommandBufferDescriptor *descriptor)
       : GPUHandle(encoder->device(), descriptor->label)
   {
@@ -27,12 +28,12 @@ namespace commandbuffers
     encoder_label_ = move(encoderLabel);
   }
 
-  const GPUCommandBufferResourceUsage &GPUCommandBufferBase::getResourceUsages() const
+  const gpu::CommandBufferResourceUsage &GPUCommandBufferBase::getResourceUsages() const
   {
     return resource_usages_;
   }
 
-  const vector<GPUIndirectDrawMetadata> &GPUCommandBufferBase::getIndirectDrawMetadata()
+  const vector<gpu::IndirectDrawMetadata> &GPUCommandBufferBase::getIndirectDrawMetadata()
   {
     return indirect_draw_metadata_;
   }

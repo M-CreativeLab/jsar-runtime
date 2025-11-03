@@ -2,10 +2,11 @@
 
 #include <cassert>
 #include <memory>
-#include "./gpu_command_buffer.hpp"
 
 namespace commandbuffers
 {
+  class GPUCommandBufferBase;
+
   class GPUPassEncoderBase
   {
   public:

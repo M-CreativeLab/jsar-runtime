@@ -1,4 +1,5 @@
 #include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 
 namespace commandbuffers
 {

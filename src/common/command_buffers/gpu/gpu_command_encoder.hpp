@@ -3,10 +3,11 @@
 #include <memory>
 #include <string_view>
 
-#include "./gpu_base.hpp"
-#include "./gpu_command_buffer.hpp"
-#include "./gpu_pass_encoder_base.hpp"
-#include "./gpu_renderpass_encoder.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
+#include <common/command_buffers/gpu/gpu_renderpass_encoder.hpp>
+#include <common/command_buffers/gpu/encoding_context.hpp>
 
 namespace commandbuffers
 {
@@ -24,8 +25,6 @@ namespace commandbuffers
   class GPUCommandEncoder final : public GPUHandle
   {
   public:
-    virtual ~GPUCommandEncoder() = default;
-
     GPUHandleType type() const override
     {
       return GPUHandleType::kCommandEncoder;
@@ -33,8 +32,8 @@ namespace commandbuffers
 
   public:
     // TODO(yorkie): begineComputePass
-    virtual GPURenderPassEncoderBase beginRenderPass(GPURenderPassDescriptor &) = 0;
-    virtual std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const = 0;
+    GPURenderPassEncoderBase beginRenderPass(GPURenderPassDescriptor &);
+    std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const;
 
   private:
     GPUCommandEncoder(std::shared_ptr<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
@@ -44,7 +43,7 @@ namespace commandbuffers
 
     bool validateFinish() const;
 
-    GPUEncodingContext encoding_context_;
+    gpu::EncodingContext encoding_context_;
     std::unordered_set<GPUBufferBase *> top_level_buffers_;
     std::unordered_set<GPUTextureBase *> top_level_textures_;
     // std::unordered_set<GPUQuerySetBase *> used_query_sets_;

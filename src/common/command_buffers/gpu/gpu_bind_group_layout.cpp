@@ -25,7 +25,7 @@ namespace commandbuffers
   }
 
   bool GPUBindGroupLayoutBase::equal(const GPUBindGroupLayoutBase *other,
-                                     bool excludePipelineCompatibiltyToken = false) const
+                                     bool excludePipelineCompatibiltyToken) const
   {
     return getInternalBindGroupLayout() == other->getInternalBindGroupLayout();
   }

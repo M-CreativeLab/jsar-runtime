@@ -11,6 +11,7 @@ namespace commandbuffers
 {
   class GPUInstanceBase;
   class GPUPhysicalDeviceBase;
+  struct GPUDeviceDescriptor;
 
   class GPUAdapterInfo
   {
