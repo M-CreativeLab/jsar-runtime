@@ -32,7 +32,7 @@ namespace commandbuffers
 
   public:
     // TODO(yorkie): begineComputePass
-    GPURenderPassEncoderBase beginRenderPass(GPURenderPassDescriptor &);
+    GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor &);
     std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const;
 
   private:

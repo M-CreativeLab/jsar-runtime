@@ -57,8 +57,8 @@ namespace commandbuffers
     std::optional<DepthStencilAttachment> depthStencilAttachment;
   };
 
-  class GPURenderPassEncoderBase : public GPUPassEncoderBase,
-                                   public GPUHandle
+  class GPURenderPassEncoder : public GPUPassEncoderBase,
+                               public GPUHandle
   {
   public:
     GPUHandleType type() const override final

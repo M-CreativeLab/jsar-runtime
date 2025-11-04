@@ -104,7 +104,8 @@ class TrRenderHardwareInterface
   friend class RHIFactory;
 
 public:
-  TrRenderHardwareInterface(RHIBackendType backend_type, std::unique_ptr<commandbuffers::GPUDevice> gpu_device = nullptr)
+  TrRenderHardwareInterface(RHIBackendType backend_type,
+                            std::unique_ptr<commandbuffers::GPUDeviceBase> gpu_device = nullptr)
       : backendType(backend_type)
       , gpuDevice(std::move(gpu_device))
   {
@@ -158,7 +159,7 @@ public:
   /**
    * Submit a GPUCommandBuffer list to the GPU device for execution.
    */
-  void SubmitGPUCommandBuffer(std::vector<std::shared_ptr<commandbuffers::GPUCommandBuffer>> &);
+  void SubmitGPUCommandBuffer(std::vector<std::shared_ptr<commandbuffers::GPUCommandBufferBase>> &);
   std::unique_ptr<commandbuffers::GPUCommandEncoder> CreateCommandEncoder();
 
   /**
@@ -328,7 +329,7 @@ protected:
   /**
    * The GPU device instance.
    */
-  std::unique_ptr<commandbuffers::GPUDevice> gpuDevice = nullptr;
+  std::unique_ptr<commandbuffers::GPUDeviceBase> gpuDevice = nullptr;
 
   /**
    * The default command buffer queue.

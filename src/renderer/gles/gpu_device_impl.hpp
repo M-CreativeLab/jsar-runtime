@@ -8,15 +8,11 @@ namespace gles
   class GPUDeviceImpl final : public commandbuffers::GPUDeviceBase
   {
   private:
-    GPUDeviceImpl();
+    GPUDeviceImpl(commandbuffers::GPUAdapterBase *adapter, commandbuffers::GPUDeviceDescriptor &descriptor);
 
   public:
-    commandbuffers::GPUHandleType type() const override
-    {
-      return commandbuffers::GPUHandleType::kDevice;
-    }
-
-  public:
-    std::unique_ptr<commandbuffers::GPUCommandEncoderBase> createCommandEncoder(std::optional<std::string> label) override;
+    std::unique_ptr<commandbuffers::GPUCommandBufferBase> createCommandBuffer(
+      commandbuffers::GPUCommandEncoder &encoder,
+      const commandbuffers::GPUCommandBufferDescriptor *descriptor = nullptr) override;
   };
 }

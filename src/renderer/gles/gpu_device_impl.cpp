@@ -4,31 +4,15 @@
 
 #include "./common.hpp"
 #include "./gpu_device_impl.hpp"
-#include "./gpu_command_encoder_impl.hpp"
 
 namespace gles
 {
   using namespace std;
-  using namespace commandbuffers::gpu;
+  using namespace commandbuffers;
 
-  GPUQueueImpl::GPUQueueImpl()
-      : GPUQueue()
+  GPUDeviceImpl::GPUDeviceImpl(GPUAdapterBase *adapter, GPUDeviceDescriptor &descriptor)
+      : GPUDeviceBase(adapter, descriptor)
   {
-    // Initialize the queue if needed.
-    // For GLES, this might not require any specific initialization.
-  }
-
-  void GPUQueueImpl::submit(const vector<shared_ptr<GPUCommandBufferBase>> &command_buffers)
-  {
-    for (const auto &command_buffer : command_buffers)
-      command_buffer->execute();
-  }
-
-  GPUDeviceImpl::GPUDeviceImpl()
-      : GPUDeviceBase()
-  {
-    queue_ = make_unique<GPUQueueImpl>();
-
     auto get_gl_string = [](GLenum name) -> string
     {
       const char *str = (const char *)glGetString(name);
@@ -65,8 +49,9 @@ namespace gles
     DEBUG(LOG_TAG_RENDERER, "GPU Device Info: %s", adapter_info_.toString().c_str());
   }
 
-  unique_ptr<GPUCommandEncoderBase> GPUDeviceImpl::createCommandEncoder(optional<string> label)
+  unique_ptr<GPUCommandBufferBase> GPUDeviceImpl::createCommandBuffer(GPUCommandEncoder &encoder,
+                                                                      const GPUCommandBufferDescriptor *descriptor)
   {
-    return unique_ptr<GPUCommandEncoderBase>(new GPUCommandEncoderImpl(label.value_or("")));
+    return nullptr;
   }
 }

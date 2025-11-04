@@ -3,9 +3,11 @@
 #include <vector>
 #include <memory>
 
-#include "./gpu_base.hpp"
-#include "./gpu_buffer.hpp"
-#include "./gpu_pipeline.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_render_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_compute_pipeline.hpp>
 
 namespace commandbuffers
 {

@@ -47,6 +47,12 @@ namespace commandbuffers
   using GPUBindGroupIndex = uint32_t;
   constexpr GPUBindGroupIndex kMaxBindGroupsTyped = GPUBindGroupIndex(gpu_constants::kMaxBindGroups);
 
+  struct GPUConstantEntry
+  {
+    std::string_view key;
+    double value;
+  };
+
   struct GPUExtent2D
   {
     uint32_t width;
@@ -68,6 +74,90 @@ namespace commandbuffers
     bool operator==(const GPUExtent3D &rhs) const;
   };
 
+  enum class GPUPrimitiveTopology : uint32_t
+  {
+    kUndefined,
+    kPointList,
+    kLineList,
+    kLineStrip,
+    kTriangleList,
+    kTriangleStrip,
+  };
+
+  enum class GPUIndexFormat : uint32_t
+  {
+    kUndefined,
+    kUint16,
+    kUint32,
+  };
+
+  enum class GPUFrontFace : uint32_t
+  {
+    kUndefined,
+    kCCW,
+    kCW,
+  };
+
+  enum class GPUCullMode : uint32_t
+  {
+    kUndefined,
+    kNone,
+    kFront,
+    kBack,
+  };
+
+  enum class GPUVertexStepMode : uint32_t
+  {
+    kUndefined,
+    kVertex,
+    kInstance,
+  };
+
+  enum class GPUVertexFormat : uint32_t
+  {
+    kUint8,
+    kUint8x2,
+    kUint8x4,
+    kSint8,
+    kSint8x2,
+    kSint8x4,
+    kUnorm8,
+    kUnorm8x2,
+    kUnorm8x4,
+    kSnorm8,
+    kSnorm8x2,
+    kSnorm8x4,
+    kUint16,
+    kUint16x2,
+    kUint16x4,
+    kSint16,
+    kSint16x2,
+    kSint16x4,
+    kUnorm16,
+    kUnorm16x2,
+    kUnorm16x4,
+    kSnorm16,
+    kSnorm16x2,
+    kSnorm16x4,
+    kFloat16,
+    kFloat16x2,
+    kFloat16x4,
+    kFloat32,
+    kFloat32x2,
+    kFloat32x3,
+    kFloat32x4,
+    kUint32,
+    kUint32x2,
+    kUint32x3,
+    kUint32x4,
+    kSint32,
+    kSint32x2,
+    kSint32x3,
+    kSint32x4,
+    kUnorm10_10_10_2,
+    kUnorm8x4BGRA,
+  };
+
   enum class GPUComponentSwizzle : uint32_t
   {
     kUndefined,
@@ -86,6 +176,74 @@ namespace commandbuffers
     kPremultiplied,
     kUnpremultiplied,
     kInherit,
+  };
+
+  enum class GPUColorWriteMask : uint64_t
+  {
+    kNone,
+    kRed,
+    kGreen,
+    kBlue,
+    kAlpha,
+    kAll,
+  };
+
+  enum class GPUBlendFactor : uint32_t
+  {
+    kUndefined,
+    kZero,
+    kOne,
+    kSrc,
+    kOneMinusSrc,
+    kSrcAlpha,
+    kOneMinusSrcAlpha,
+    kDst,
+    kOneMinusDst,
+    kDstAlpha,
+    kOneMinusDstAlpha,
+    kSrcAlphaSaturated,
+    kConstant,
+    kOneMinusConstant,
+    kSrc1,
+    kOneMinusSrc1,
+    kSrc1Alpha,
+    kOneMinusSrc1Alpha,
+  };
+
+  enum class GPUBlendOperation : uint32_t
+  {
+    kUndefined,
+    kAdd,
+    kSubtract,
+    kReverseSubtract,
+    kMin,
+    kMax,
+  };
+
+  enum class GPUCompareFunction : uint32_t
+  {
+    kUndefined,
+    kNever,
+    kLess,
+    kEqual,
+    kLessEqual,
+    kGreater,
+    kNotEqual,
+    kGreaterEqual,
+    kAlways,
+  };
+
+  enum class GPUStencilOperation : uint32_t
+  {
+    kUndefined,
+    kKeep,
+    kZero,
+    kReplace,
+    kInvert,
+    kIncrementClamp,
+    kDecrementClamp,
+    kIncrementWrap,
+    kDecrementWrap,
   };
 
   enum class GPUHandleType : uint32_t
@@ -229,12 +387,6 @@ namespace commandbuffers
     k3D,
   };
 
-  enum class GPUIndexFormat
-  {
-    kUint16,
-    kUint32,
-  };
-
   enum class GPUTextureFormat : uint32_t
   {
     kUndefined,
@@ -364,6 +516,99 @@ namespace commandbuffers
     kWriteOnly,
     kReadOnly,
     kReadWrite,
+  };
+
+  struct GPUPrimitiveState
+  {
+    GPUPrimitiveTopology topology = GPUPrimitiveTopology::kTriangleList;
+    GPUIndexFormat stripIndexFormat = GPUIndexFormat::kUndefined;
+    GPUFrontFace frontFace = GPUFrontFace::kCCW;
+    GPUCullMode cullMode = GPUCullMode::kNone;
+    bool unclippedDepth = false;
+  };
+
+  struct GPUStencilFaceState
+  {
+    GPUCompareFunction compare = GPUCompareFunction::kUndefined;
+    GPUStencilOperation failOp = GPUStencilOperation::kUndefined;
+    GPUStencilOperation depthFailOp = GPUStencilOperation::kUndefined;
+    GPUStencilOperation passOp = GPUStencilOperation::kUndefined;
+  };
+
+  struct GPUDepthStencilState
+  {
+    GPUTextureFormat format = GPUTextureFormat::kUndefined;
+    std::optional<bool> depthWriteEnabled = std::nullopt;
+    GPUCompareFunction depthCompare = GPUCompareFunction::kUndefined;
+    GPUStencilFaceState stencilFront;
+    GPUStencilFaceState stencilBack;
+    uint32_t stencilReadMask = 0xFFFFFFFF;
+    uint32_t stencilWriteMask = 0xFFFFFFFF;
+    int32_t depthBias = 0;
+    float depthBiasSlopeScale = 0.f;
+    float depthBiasClamp = 0.f;
+  };
+
+  struct GPUMultisampleState
+  {
+    uint32_t count = 1;
+    uint32_t mask = 0xFFFFFFFF;
+    bool alphaToCoverageEnabled = false;
+  };
+
+  struct GPUBlendComponent
+  {
+    GPUBlendOperation operation = GPUBlendOperation::kUndefined;
+    GPUBlendFactor srcFactor = GPUBlendFactor::kUndefined;
+    GPUBlendFactor dstFactor = GPUBlendFactor::kUndefined;
+  };
+
+  struct GPUBlendState
+  {
+    GPUBlendComponent color = {};
+    GPUBlendComponent alpha = {};
+  };
+
+  struct GPUColorTargetState
+  {
+    GPUTextureFormat format = GPUTextureFormat::kUndefined;
+    GPUBlendState const *blend = nullptr;
+    GPUColorWriteMask writeMask = GPUColorWriteMask::kAll;
+  };
+
+  struct GPUFragmentState
+  {
+    // ShaderModuleBase *module;
+    std::string_view entryPoint;
+    size_t constantCount = 0;
+    GPUConstantEntry const *constants = nullptr;
+    size_t targetCount;
+    GPUColorTargetState const *targets = nullptr;
+  };
+
+  struct GPUVertexAttribute
+  {
+    GPUVertexFormat format = {};
+    uint64_t offset;
+    uint32_t shaderLocation;
+  };
+
+  struct GPUVertexBufferLayout
+  {
+    GPUVertexStepMode stepMode = GPUVertexStepMode::kUndefined;
+    uint64_t arrayStride;
+    size_t attributeCount;
+    GPUVertexAttribute const *attributes = nullptr;
+  };
+
+  struct GPUVertexState
+  {
+    // ShaderModuleBase *module;
+    std::string_view entryPoint;
+    size_t constantCount = 0;
+    GPUConstantEntry const *constants = nullptr;
+    size_t bufferCount = 0;
+    GPUVertexBufferLayout const *buffers = nullptr;
   };
 
   enum class GPUDynamicBindingKind : uint32_t
