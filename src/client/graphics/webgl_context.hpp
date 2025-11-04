@@ -392,6 +392,14 @@ namespace endor
       void vertexAttrib3f(int index, float v0, float v1, float v2);
       void vertexAttrib4f(const WebGLAttribLocation &, float v0, float v1, float v2, float v3);
       void vertexAttrib4f(int index, float v0, float v1, float v2, float v3);
+      void vertexAttrib1fv(const WebGLAttribLocation &, const std::vector<float> values);
+      void vertexAttrib1fv(int index, const std::vector<float> values);
+      void vertexAttrib2fv(const WebGLAttribLocation &, const std::vector<float> values);
+      void vertexAttrib2fv(int index, const std::vector<float> values);
+      void vertexAttrib3fv(const WebGLAttribLocation &, const std::vector<float> values);
+      void vertexAttrib3fv(int index, const std::vector<float> values);
+      void vertexAttrib4fv(const WebGLAttribLocation &, const std::vector<float> values);
+      void vertexAttrib4fv(int index, const std::vector<float> values);
       std::optional<WebGLActiveInfo> getActiveAttrib(std::shared_ptr<WebGLProgram> program, unsigned int index);
       std::optional<WebGLActiveInfo> getActiveUniform(std::shared_ptr<WebGLProgram> program, unsigned int index);
       std::optional<WebGLAttribLocation> getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);

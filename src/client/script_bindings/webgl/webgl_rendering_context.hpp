@@ -164,6 +164,10 @@ namespace endor
         void VertexAttrib2f(const v8::FunctionCallbackInfo<v8::Value> &info);
         void VertexAttrib3f(const v8::FunctionCallbackInfo<v8::Value> &info);
         void VertexAttrib4f(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void VertexAttrib1fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void VertexAttrib2fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void VertexAttrib3fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+        void VertexAttrib4fv(const v8::FunctionCallbackInfo<v8::Value> &info);
         void VertexAttribPointer(const v8::FunctionCallbackInfo<v8::Value> &info);
 
         // Viewport & scissor

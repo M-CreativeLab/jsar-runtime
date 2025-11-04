@@ -1704,6 +1704,83 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
+
+  TR_OPENGL_FUNC void OnVertexAttrib1fv(VertexAttrib1fvCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib1fv(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib1fv(loc.value(), req->values.data());
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+
+  TR_OPENGL_FUNC void OnVertexAttrib2fv(VertexAttrib2fvCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib2fv(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib2fv(loc.value(), req->values.data());
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+
+  TR_OPENGL_FUNC void OnVertexAttrib3fv(VertexAttrib3fvCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib3fv(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib3fv(loc.value(), req->values.data());
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+
+  TR_OPENGL_FUNC void OnVertexAttrib4fv(VertexAttrib4fvCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib4fv(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib4fv(loc.value(), req->values.data());
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+
   TR_OPENGL_FUNC void OnUniformBlockBinding(UniformBlockBindingCommandBufferRequest *req,
                                             renderer::TrContentRenderer *reqContentRenderer,
                                             ApiCallOptions &options)
@@ -2930,6 +3007,14 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest, EnableVertexAttribArray)
       ADD_COMMAND_BUFFER_HANDLER(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest, DisableVertexAttribArray)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest, VertexAttribPointer)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_1F, VertexAttrib1fCommandBufferRequest, VertexAttrib1f)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_2F, VertexAttrib2fCommandBufferRequest, VertexAttrib2f)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_3F, VertexAttrib3fCommandBufferRequest, VertexAttrib3f)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_4F, VertexAttrib4fCommandBufferRequest, VertexAttrib4f)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_1FV, VertexAttrib1fvCommandBufferRequest, VertexAttrib1fv)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_2FV, VertexAttrib2fvCommandBufferRequest, VertexAttrib2fv)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_3FV, VertexAttrib3fvCommandBufferRequest, VertexAttrib3fv)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_4FV, VertexAttrib4fvCommandBufferRequest, VertexAttrib4fv)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest, VertexAttribIPointer)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest, VertexAttribDivisor)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4I, VertexAttribI4iCommandBufferRequest, VertexAttribI4i)
