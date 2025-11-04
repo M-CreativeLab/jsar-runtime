@@ -6,9 +6,9 @@
 
 namespace gles
 {
-  class GPURenderPipelineImpl : public commandbuffers::GPURenderPipelineBase
+  class GPUPipelineImpl
   {
   public:
-    GPURenderPipelineImpl();
+    GPUPipelineImpl();
   };
 }

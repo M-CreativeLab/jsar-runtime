@@ -2,8 +2,7 @@
 
 namespace gles
 {
-  GPURenderPipelineImpl::GPURenderPipelineImpl()
-      : commandbuffers::GPURenderPipelineBase()
+  GPUPipelineImpl::GPUPipelineImpl()
   {
   }
 }

@@ -8,18 +8,20 @@
 #include "xr/frame.hpp"
 
 using namespace std;
+using namespace commandbuffers;
 
-void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<shared_ptr<commandbuffers::GPUCommandBuffer>> &commandBuffers)
+void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<shared_ptr<GPUCommandBufferBase>> &commandBuffers)
 {
-  gpuDevice->queueRef().submit(commandBuffers);
+  // TODO(yorkie): Handle the submission result and errors.
 }
 
-unique_ptr<commandbuffers::GPUCommandEncoder> TrRenderHardwareInterface::CreateCommandEncoder()
+unique_ptr<GPUCommandEncoder> TrRenderHardwareInterface::CreateCommandEncoder()
 {
-  return gpuDevice->createCommandEncoder("");
+  // TODO(yorkie): Create and return a GPU command encoder.
+  return nullptr;
 }
 
-void TrRenderHardwareInterface::AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer)
+void TrRenderHardwareInterface::AddCommandBuffer(TrCommandBufferBase *commandBuffer)
 {
   unique_lock<mutex> lock(m_CommandBuffersMutex);
   m_CommandBuffers.push_back(commandBuffer);
