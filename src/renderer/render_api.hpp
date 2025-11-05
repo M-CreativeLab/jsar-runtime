@@ -7,11 +7,13 @@
 
 #include <Unity/IUnityGraphics.h>
 #include <analytics/analytics.hpp>
-#include <common/debug.hpp>
 #include <common/classes.hpp>
+#include <common/utility.hpp>
+#include <common/debug.hpp>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/command_buffers.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
+#include <common/command_buffers/gpu/gpu_instance.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
 #include <xr/device.hpp>
 
@@ -104,12 +106,7 @@ class TrRenderHardwareInterface
   friend class RHIFactory;
 
 public:
-  TrRenderHardwareInterface(RHIBackendType backend_type,
-                            std::unique_ptr<commandbuffers::GPUDeviceBase> gpu_device = nullptr)
-      : backendType(backend_type)
-      , gpuDevice(std::move(gpu_device))
-  {
-  }
+  TrRenderHardwareInterface(RHIBackendType backend_type);
   virtual ~TrRenderHardwareInterface() = default;
 
   /**
@@ -326,10 +323,8 @@ protected:
    */
   bool m_PrintsContext = false;
 
-  /**
-   * The GPU device instance.
-   */
-  std::unique_ptr<commandbuffers::GPUDeviceBase> gpuDevice = nullptr;
+  Ref<commandbuffers::GPUInstance> gpuInstance = nullptr;
+  Ref<commandbuffers::GPUDeviceBase> gpuDevice = nullptr;
 
   /**
    * The default command buffer queue.

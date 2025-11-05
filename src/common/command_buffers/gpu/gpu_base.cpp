@@ -88,7 +88,7 @@ namespace commandbuffers
   {
   }
 
-  GPUInstanceBase *GPUObject::instance() const
+  GPUInstance *GPUObject::instance() const
   {
     return device_->getInstance();
   }

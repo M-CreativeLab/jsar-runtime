@@ -10,6 +10,75 @@
 using namespace std;
 using namespace commandbuffers;
 
+#if SUPPORT_D3D11 // D3D11 backend
+namespace d3d11
+{
+  extern gpu::BackendConnection *Connect(GPUInstance *, GPUBackendType);
+}
+#endif
+
+#if SUPPORT_OPENGL_UNIFIED // OpenGL / OpenGL ES backend
+namespace gles
+{
+  extern gpu::BackendConnection *Connect(GPUInstance *, GPUBackendType);
+}
+#endif
+
+#if SUPPORT_METAL // Metal backend
+namespace metal
+{
+  extern gpu::BackendConnection *Connect(GPUInstance *, GPUBackendType);
+}
+#endif
+
+#if SUPPORT_VULKAN // Vulkan backend
+namespace vulkan
+{
+  extern gpu::BackendConnection *Connect(GPUInstance *, GPUBackendType);
+}
+#endif
+
+TrRenderHardwareInterface::TrRenderHardwareInterface(RHIBackendType backend_type)
+    : backendType(backend_type)
+    , gpuInstance(GPUInstance::Create())
+{
+  switch (backend_type)
+  {
+#if SUPPORT_D3D11
+  case RHIBackendType::D3D11:
+    gpuInstance->registerBackend(d3d11::Connect(gpuInstance.get(), GPUBackendType::kD3D11));
+    break;
+#endif
+
+#if SUPPORT_OPENGL_UNIFIED
+  case RHIBackendType::OpenGLCore:
+    gpuInstance->registerBackend(gles::Connect(gpuInstance.get(), GPUBackendType::kOpenGL));
+    break;
+
+  case RHIBackendType::OpenGLESv2:
+  case RHIBackendType::OpenGLESv3:
+    gpuInstance->registerBackend(gles::Connect(gpuInstance.get(), GPUBackendType::kOpenGLES));
+    break;
+#endif
+
+#if SUPPORT_METAL
+  case RHIBackendType::Metal:
+    gpuInstance->registerBackend(metal::Connect(gpuInstance.get(), GPUBackendType::kMetal));
+    break;
+#endif
+
+#if SUPPORT_VULKAN
+  case RHIBackendType::VULKAN:
+    gpuInstance->registerBackend(vulkan::Connect(gpuInstance.get(), GPUBackendType::kVulkan));
+    break;
+#endif
+
+  default:
+    // Unsupported backend type
+    assert(false && "Unsupported RHI backend type.");
+  }
+}
+
 void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<shared_ptr<GPUCommandBufferBase>> &commandBuffers)
 {
   // TODO(yorkie): Handle the submission result and errors.

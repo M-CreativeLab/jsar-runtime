@@ -70,7 +70,7 @@ namespace commandbuffers
                            rhs.maxComputeWorkgroupsPerDimension);
   }
 
-  GPUAdapterBase::GPUAdapterBase(shared_ptr<GPUInstanceBase> instance,
+  GPUAdapterBase::GPUAdapterBase(shared_ptr<GPUInstance> instance,
                                  shared_ptr<GPUPhysicalDeviceBase> physicalDevice,
                                  GPUFeatureLevel level,
                                  GPUPowerPreference powerPreference)

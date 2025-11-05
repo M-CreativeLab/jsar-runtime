@@ -33,6 +33,9 @@ public:                                      \
 private:                                     \
   void *operator new(size_t) = delete
 
+template <typename T>
+using Ref = std::shared_ptr<T>;
+
 /**
  * Shared reference is a template class that holds the shared pointer of a type.
  *

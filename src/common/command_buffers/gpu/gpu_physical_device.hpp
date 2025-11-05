@@ -37,8 +37,8 @@ namespace commandbuffers
 
   private:
     virtual std::unique_ptr<GPUDeviceBase> createDeviceImpl(std::shared_ptr<GPUAdapterBase> adapter,
-                                                            GPUDeviceDescriptor &descriptor);
-    virtual void initializeImpl();
+                                                            GPUDeviceDescriptor &descriptor) = 0;
+    virtual void initializeImpl() = 0;
     virtual void initializeSupportedFeaturesImpl() = 0;
     virtual void initializeVendorArchitectureImpl();
 

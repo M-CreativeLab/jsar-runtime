@@ -718,8 +718,8 @@ namespace commandbuffers
     static constexpr uint64_t kInitialized = 0b0;
   };
 
+  class GPUInstance;
   class GPUDeviceBase;
-  class GPUInstanceBase;
 
   class GPUObject : public ErrorMonad
   {
@@ -728,7 +728,7 @@ namespace commandbuffers
     GPUObject(std::shared_ptr<GPUDeviceBase> device, ErrorTag tag);
     GPUObject(std::shared_ptr<GPUDeviceBase> device, DelayedInitializationTag tag);
 
-    GPUInstanceBase *instance() const;
+    GPUInstance *instance() const;
     std::shared_ptr<GPUDeviceBase> device() const;
 
   private:

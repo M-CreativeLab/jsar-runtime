@@ -9,7 +9,7 @@
 
 namespace commandbuffers
 {
-  class GPUInstanceBase;
+  class GPUInstance;
   class GPUPhysicalDeviceBase;
   struct GPUDeviceDescriptor;
 
@@ -47,12 +47,12 @@ namespace commandbuffers
   class GPUAdapterBase : ErrorMonad
   {
   public:
-    GPUAdapterBase(std::shared_ptr<GPUInstanceBase> instance,
+    GPUAdapterBase(std::shared_ptr<GPUInstance> instance,
                    std::shared_ptr<GPUPhysicalDeviceBase> physicalDevice,
                    GPUFeatureLevel level,
                    GPUPowerPreference powerPreference);
 
-    GPUInstanceBase *instance() const;
+    GPUInstance *instance() const;
     const GPUAdapterInfo &info() const;
     bool hasFeature(GPUFeatureName) const;
     void requestDevice(const GPUDeviceDescriptor *descriptor,
@@ -66,7 +66,7 @@ namespace commandbuffers
     const std::string &name() const;
 
   private:
-    std::shared_ptr<GPUInstanceBase> instance_;
+    std::shared_ptr<GPUInstance> instance_;
     std::shared_ptr<GPUPhysicalDeviceBase> physical_device_;
     GPUFeatureLevel feature_level_;
     GPUPowerPreference power_preference_;

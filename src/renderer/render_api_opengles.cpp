@@ -60,7 +60,7 @@ private:
 
 public:
   RHI_OpenGL(RHIBackendType backend_type)
-      : TrRenderHardwareInterface(backend_type, make_unique<gles::GPUDeviceImpl>())
+      : TrRenderHardwareInterface(backend_type)
   {
     memset(m_TmpMatrixL, 0, 16);
     memset(m_TmpMatrixR, 0, 16);

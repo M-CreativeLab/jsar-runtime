@@ -38,7 +38,7 @@ namespace commandbuffers
 
     bool validateHandle(const GPUHandle &handle) const;
 
-    GPUInstanceBase *getInstance() const;
+    GPUInstance *getInstance() const;
     GPUAdapterBase *getAdapter() const;
     GPUPhysicalDeviceBase *getPhysicalDevice() const;
 

@@ -3,11 +3,17 @@
 #include <memory>
 #include <vector>
 #include <unordered_set>
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_adapter.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
 
 namespace commandbuffers
 {
+  namespace gpu
+  {
+    class BackendConnection;
+  }
+
   struct GPUInstanceDescriptor
   {
     size_t requiredFeatureCount = 0;
@@ -15,35 +21,32 @@ namespace commandbuffers
     GPUSupportedLimits *requiredLimits = nullptr;
   };
 
-  class GPUInstanceBase
+  class GPUInstance final
   {
-  private:
-    // Custom deleter for `unique_ptr<GPUInstanceBase>`
-    struct Deleter
-    {
-      void operator()(GPUInstanceBase *ptr)
-      {
-        delete ptr;
-      }
-    };
-
   public:
-    static std::unique_ptr<GPUInstanceBase, Deleter> Create(const GPUInstanceDescriptor *descriptor = nullptr);
+    static Ref<GPUInstance> Create(const GPUInstanceDescriptor *descriptor = nullptr);
 
-    void addDevice(std::shared_ptr<GPUDeviceBase>);
-    void removeDevice(std::shared_ptr<GPUDeviceBase>);
+    void registerBackend(gpu::BackendConnection *backend);
+
+    void addDevice(Ref<GPUDeviceBase>);
+    void removeDevice(Ref<GPUDeviceBase>);
 
     bool hasFeature(GPUFeatureName feature) const;
 
   private:
-    explicit GPUInstanceBase();
-    virtual ~GPUInstanceBase() = default;
+    explicit GPUInstance();
+    virtual ~GPUInstance() = default;
 
     void initialize(const GPUInstanceDescriptor &descriptor);
-    std::shared_ptr<GPUAdapterBase> createAdapter();
+    Ref<GPUAdapterBase> createAdapter(Ref<GPUPhysicalDeviceBase> physicalDevice,
+                                      GPUFeatureLevel featureLevel,
+                                      GPUPowerPreference powerPreference);
+
+    gpu::BackendConnection *getBackendConnection() const;
 
   private:
     std::unordered_set<GPUFeatureName> instance_features_;
     std::vector<std::shared_ptr<GPUDeviceBase>> devices_list_;
+    Ref<gpu::BackendConnection> backend_ = nullptr;
   };
 }

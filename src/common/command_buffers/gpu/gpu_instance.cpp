@@ -1,10 +1,11 @@
 #include <common/command_buffers/gpu/gpu_instance.hpp>
+#include <common/command_buffers/gpu/backend_connection.hpp>
 
 using namespace std;
 
 namespace commandbuffers
 {
-  unique_ptr<GPUInstanceBase, GPUInstanceBase::Deleter> GPUInstanceBase::Create(const GPUInstanceDescriptor *descriptor)
+  Ref<GPUInstance> GPUInstance::Create(const GPUInstanceDescriptor *descriptor)
   {
     static constexpr GPUInstanceDescriptor kDefaultDesc = {};
     if (descriptor == nullptr)
@@ -12,29 +13,30 @@ namespace commandbuffers
       descriptor = &kDefaultDesc;
     }
 
-    auto instance = unique_ptr<GPUInstanceBase, Deleter>(new GPUInstanceBase());
+    auto instance = Ref<GPUInstance>(new GPUInstance(), [](GPUInstance *ptr)
+                                     { delete ptr; });
     instance->initialize(*descriptor);
     return instance;
   }
 
-  void GPUInstanceBase::addDevice(shared_ptr<GPUDeviceBase>)
+  void GPUInstance::addDevice(shared_ptr<GPUDeviceBase>)
   {
   }
 
-  void GPUInstanceBase::removeDevice(shared_ptr<GPUDeviceBase>)
+  void GPUInstance::removeDevice(shared_ptr<GPUDeviceBase>)
   {
   }
 
-  bool GPUInstanceBase::hasFeature(GPUFeatureName feature) const
+  bool GPUInstance::hasFeature(GPUFeatureName feature) const
   {
     return instance_features_.find(feature) != instance_features_.end();
   }
 
-  GPUInstanceBase::GPUInstanceBase()
+  GPUInstance::GPUInstance()
   {
   }
 
-  void GPUInstanceBase::initialize(const GPUInstanceDescriptor &descriptor)
+  void GPUInstance::initialize(const GPUInstanceDescriptor &descriptor)
   {
   }
 }
