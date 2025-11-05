@@ -11,8 +11,10 @@ namespace gles
     bool supportsExternalImages() const override;
 
   private:
-    std::unique_ptr<GPUDeviceBase> createDeviceImpl(std::shared_ptr<GPUAdapterBase> adapter,
-                                                    GPUDeviceDescriptor &descriptor) override;
+    std::unique_ptr<commandbuffers::GPUDeviceBase> createDeviceImpl(
+      std::shared_ptr<commandbuffers::GPUAdapterBase> adapter,
+      commandbuffers::GPUDeviceDescriptor &descriptor) override;
+
     void initializeImpl() override;
     void initializeSupportedFeaturesImpl() override;
   };
