@@ -24,6 +24,7 @@ namespace endor
   XX(ErrorEvent)                           \
   XX(MouseEvent)                           \
   XX(PointerEvent)                         \
+  XX(WheelEvent)                           \
   XX(XRSessionEvent)                       \
   XX(XRInputSourceEvent)                   \
   XX(XRInputSourcesChangeEvent)
@@ -104,44 +105,45 @@ namespace endor
 #define NODE_EVENT_TYPES_MAP(XX) \
   XX(SelectStart, "selectstart")
 
-#define ELEMENT_EVENT_TYPES_MAP(XX)            \
-  XX(AnimationCancel, "animationcancel")       \
-  XX(AnimationEnd, "animationend")             \
-  XX(AnimationIteration, "animationiteration") \
-  XX(AnimationStart, "animationstart")         \
-  XX(AuxClick, "auxclick")                     \
-  XX(BeforeInput, "beforeinput")               \
-  XX(Blur, "blur")                             \
-  XX(Click, "click")                           \
-  XX(CompositionEnd, "compositionend")         \
-  XX(CompositionStart, "compositionstart")     \
-  XX(CompositionUpdate, "compositionupdate")   \
-  XX(ContextMenu, "contextmenu")               \
-  XX(Copy, "copy")                             \
-  XX(Cut, "cut")                               \
-  XX(DoubleClick, "dbclick")                   \
-  XX(Input, "input")                           \
-  XX(KeyDown, "keydown")                       \
-  XX(KeyUp, "keyup")                           \
-  XX(MouseDown, "mousedown")                   \
-  XX(MouseEnter, "mouseenter")                 \
-  XX(MouseLeave, "mouseleave")                 \
-  XX(MouseMove, "mousemove")                   \
-  XX(MouseOut, "mouseout")                     \
-  XX(MouseOver, "mouseover")                   \
-  XX(MouseUp, "mouseup")                       \
-  XX(Paste, "paste")                           \
-  XX(PointerCancel, "pointercancel")           \
-  XX(PointerDown, "pointerdown")               \
-  XX(PointerEnter, "pointerenter")             \
-  XX(PointerLeave, "pointerleave")             \
-  XX(PointerMove, "pointermove")               \
-  XX(PointerOut, "pointerout")                 \
-  XX(PointerOver, "pointerover")               \
-  XX(PointerUp, "pointerup")                   \
-  XX(Scroll, "scroll")                         \
-  XX(ScrollEnd, "scrollend")                   \
-  XX(SecurityPolicyViolation, "securitypolicyviolation")
+#define ELEMENT_EVENT_TYPES_MAP(XX)                      \
+  XX(AnimationCancel, "animationcancel")                 \
+  XX(AnimationEnd, "animationend")                       \
+  XX(AnimationIteration, "animationiteration")           \
+  XX(AnimationStart, "animationstart")                   \
+  XX(AuxClick, "auxclick")                               \
+  XX(BeforeInput, "beforeinput")                         \
+  XX(Blur, "blur")                                       \
+  XX(Click, "click")                                     \
+  XX(CompositionEnd, "compositionend")                   \
+  XX(CompositionStart, "compositionstart")               \
+  XX(CompositionUpdate, "compositionupdate")             \
+  XX(ContextMenu, "contextmenu")                         \
+  XX(Copy, "copy")                                       \
+  XX(Cut, "cut")                                         \
+  XX(DoubleClick, "dbclick")                             \
+  XX(Input, "input")                                     \
+  XX(KeyDown, "keydown")                                 \
+  XX(KeyUp, "keyup")                                     \
+  XX(MouseDown, "mousedown")                             \
+  XX(MouseEnter, "mouseenter")                           \
+  XX(MouseLeave, "mouseleave")                           \
+  XX(MouseMove, "mousemove")                             \
+  XX(MouseOut, "mouseout")                               \
+  XX(MouseOver, "mouseover")                             \
+  XX(MouseUp, "mouseup")                                 \
+  XX(Paste, "paste")                                     \
+  XX(PointerCancel, "pointercancel")                     \
+  XX(PointerDown, "pointerdown")                         \
+  XX(PointerEnter, "pointerenter")                       \
+  XX(PointerLeave, "pointerleave")                       \
+  XX(PointerMove, "pointermove")                         \
+  XX(PointerOut, "pointerout")                           \
+  XX(PointerOver, "pointerover")                         \
+  XX(PointerUp, "pointerup")                             \
+  XX(Scroll, "scroll")                                   \
+  XX(ScrollEnd, "scrollend")                             \
+  XX(SecurityPolicyViolation, "securitypolicyviolation") \
+  XX(Wheel, "wheel")
 
 #define HTMLELEMENT_EVENT_TYPES_MAP(XX) \
   XX(BeforeToggle, "beforetoggle")      \
@@ -407,6 +409,10 @@ namespace endor
         return false;
       }
       virtual bool isPointerEvent() const
+      {
+        return false;
+      }
+      virtual bool isWheelEvent() const
       {
         return false;
       }

@@ -13,7 +13,8 @@ namespace endor
   XX(MessageEvent)                \
   XX(UIEvent)                     \
   XX(MouseEvent)                  \
-  XX(PointerEvent)
+  XX(PointerEvent)                \
+  XX(WheelEvent)
 
 #define XR_EVENT_CLASSES_MAP(XX) \
   XX(XRSessionEvent)             \

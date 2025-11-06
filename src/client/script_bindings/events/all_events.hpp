@@ -6,6 +6,7 @@
 #include "./mouse_event.hpp"
 #include "./pointer_event.hpp"
 #include "./ui_event.hpp"
+#include "./wheel_event.hpp"
 #include "./xr_session_event.hpp"
 #include "./xr_input_source_event.hpp"
 #include "./xr_input_sources_change_event.hpp"

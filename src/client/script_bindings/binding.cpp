@@ -131,6 +131,7 @@ namespace endor
       ADD_EVENT(UIEvent)
       ADD_EVENT(MouseEvent)
       ADD_EVENT(PointerEvent)
+      ADD_EVENT(WheelEvent)
 
       // WebXR events
       ADD_EVENT(XRSessionEvent)
