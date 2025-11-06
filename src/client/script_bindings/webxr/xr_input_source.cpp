@@ -2,6 +2,7 @@
 #include "./xr_input_source.hpp"
 #include "./xr_space.hpp"
 #include "./xr_hand.hpp"
+#include "./xr_gamepad.hpp"
 
 using namespace std;
 using namespace v8;
@@ -40,8 +41,15 @@ namespace endor
         Isolate *isolate = info.GetIsolate();
         HandleScope scope(isolate);
 
-        cerr << "Warning: XRInputSource.gamepad is not implemented yet." << endl;
-        info.GetReturnValue().SetNull();
+        auto gamepad = handle()->gamepad();
+        if (gamepad == nullptr)
+        {
+          info.GetReturnValue().SetNull();
+        }
+        else
+        {
+          info.GetReturnValue().Set(Gamepad::GetOrNewInstance(isolate, gamepad));
+        }
       }
 
       void XRInputSource::GripSpaceGetter(const PropertyCallbackInfo<Value> &info)

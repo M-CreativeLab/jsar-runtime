@@ -1,4 +1,5 @@
 #include <set>
+#include <chrono>
 #include "./common.hpp"
 #include "./webxr_input_sources.hpp"
 #include "./webxr_session.hpp"
@@ -13,7 +14,28 @@ namespace endor
     XRInputSource::XRInputSource(shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData)
         : session_(session)
         , inputSourceData_(inputSourceData)
+        , gamepad_(nullptr)
     {
+      // Create gamepad if input source has axes or buttons
+      if (inputSourceData_->axesCount > 0 || inputSourceData_->buttonsCount > 0)
+      {
+        gamepad_ = make_shared<Gamepad>(inputSourceData_);
+      }
+    }
+
+    std::shared_ptr<Gamepad> XRInputSource::gamepad()
+    {
+      // Update gamepad state if it exists
+      if (gamepad_ != nullptr)
+      {
+        // Use current time as timestamp (in microseconds since epoch)
+        auto now = std::chrono::system_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(
+                           now.time_since_epoch())
+                           .count();
+        gamepad_->update(inputSourceData_, timestamp);
+      }
+      return gamepad_;
     }
 
     bool XRInputSource::dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame)

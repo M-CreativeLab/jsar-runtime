@@ -196,6 +196,15 @@ namespace xr
         gripBaseMatrix[i] = from->gripBaseMatrix[i];
       for (int i = 0; i < JointsCount; i++)
         joints[i] = from->joints[i];
+
+      // Copy gamepad/touchpad data
+      axesCount = from->axesCount;
+      for (int i = 0; i < MaxAxes; i++)
+        axes[i] = from->axes[i];
+      buttonsCount = from->buttonsCount;
+      for (int i = 0; i < MaxButtons; i++)
+        buttons[i] = from->buttons[i];
+      touchpadFingerCount = from->touchpadFingerCount;
     }
     inline void setName(string nameStr)
     {
@@ -239,6 +248,27 @@ namespace xr
     /** action states */
     bool primaryActionPressed = false;
     bool squeezeActionPressed = false;
+
+    /** Gamepad/Touchpad data for WebXR Gamepad Module compliance */
+    static const int MaxAxes = 4;
+    static const int MaxButtons = 8;
+
+    // Touchpad axes: [0]=x, [1]=y (normalized -1 to 1)
+    float axes[MaxAxes] = {0.0f};
+    int axesCount = 0;
+
+    // Button states: [0]=touchpad touch/click
+    struct ButtonState
+    {
+      bool touched = false; // Finger contact
+      bool pressed = false; // Physical click
+      float value = 0.0f;   // 0.0 or 1.0 (no pressure sensing)
+    };
+    ButtonState buttons[MaxButtons];
+    int buttonsCount = 0;
+
+    // Touchpad-specific data
+    uint8_t touchpadFingerCount = 0; // Number of fingers on touchpad
   };
 
   class TrXRInputSourcesData

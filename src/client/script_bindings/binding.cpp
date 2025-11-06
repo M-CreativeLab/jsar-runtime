@@ -93,6 +93,8 @@
 #include "./webxr/xr_layer.hpp"
 #include "./webxr/xr_input_source.hpp"
 #include "./webxr/xr_hand.hpp"
+#include "./webxr/xr_gamepad.hpp"
+#include "./webxr/xr_gamepad_button.hpp"
 
 // Workers bindings
 #include "./workers/worker.hpp"
@@ -295,6 +297,8 @@ namespace endor
         ADD_WEBXR_TYPE(XRWebGLLayer)
         ADD_WEBXR_TYPE(XRInputSource)
         ADD_WEBXR_TYPE(XRHand)
+        ADD_WEBXR_TYPE(Gamepad)
+        ADD_WEBXR_TYPE(GamepadButton)
 #undef ADD_WEBXR_TYPE
       }
 

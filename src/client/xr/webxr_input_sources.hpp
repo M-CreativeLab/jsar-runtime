@@ -8,6 +8,7 @@
 #include "./common.hpp"
 #include "./webxr_spaces.hpp"
 #include "./webxr_hand.hpp"
+#include "./webxr_gamepad.hpp"
 
 namespace endor
 {
@@ -103,6 +104,15 @@ namespace endor
       {
         return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kTargetRay);
       }
+      /**
+     * The read-only `gamepad` property of the `XRInputSource` interface returns a `Gamepad` object describing
+     * the state of the buttons and axes on the XR input source, if it is a gamepad-based device. If the input
+     * source is not a gamepad, this property returns `nullptr`.
+     *
+     * @returns A `Gamepad` object describing the state of the input device's buttons and axes, or `nullptr` if
+     *          the input source does not support gamepad-like input.
+     */
+      std::shared_ptr<Gamepad> gamepad();
 
     private:
       bool dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame);
@@ -112,6 +122,7 @@ namespace endor
       xr::TrXRInputSource *inputSourceData_;
       bool primaryActionPressed_ = false;
       bool squeezeActionPressed_ = false;
+      std::shared_ptr<Gamepad> gamepad_;
     };
 
     class XRInputSourceArray : public std::vector<std::shared_ptr<XRInputSource>>

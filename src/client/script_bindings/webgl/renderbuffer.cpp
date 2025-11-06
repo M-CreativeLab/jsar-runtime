@@ -19,5 +19,5 @@ namespace endor
         // WebGLRenderbuffer objects are created by WebGL context, not by user code
       }
     } // namespace webgl
-  }   // namespace script_bindings
+  } // namespace script_bindings
 } // namespace endor
