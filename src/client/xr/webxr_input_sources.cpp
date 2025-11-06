@@ -15,11 +15,16 @@ namespace endor
         : session_(session)
         , inputSourceData_(inputSourceData)
         , gamepad_(nullptr)
+        , touchpadProcessor_(nullptr)
     {
       // Create gamepad if input source has axes or buttons
       if (inputSourceData_->axesCount > 0 || inputSourceData_->buttonsCount > 0)
       {
         gamepad_ = make_shared<Gamepad>(inputSourceData_);
+
+        // Create touchpad processor for gamepad-enabled input sources
+        // (touchpad is typically represented via gamepad axes/buttons)
+        touchpadProcessor_ = make_shared<TouchpadInputProcessor>(session_, shared_from_this());
       }
     }
 
@@ -36,6 +41,11 @@ namespace endor
         gamepad_->update(inputSourceData_, timestamp);
       }
       return gamepad_;
+    }
+
+    std::shared_ptr<TouchpadInputProcessor> XRInputSource::touchpadProcessor()
+    {
+      return touchpadProcessor_;
     }
 
     bool XRInputSource::dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame)
@@ -226,7 +236,16 @@ namespace endor
       {
         auto inputSource = at(i);
         if (inputSource != nullptr)
+        {
           inputSource->dispatchSelectOrSqueezeEvents(frame);
+
+          // Update touchpad processor if available
+          auto touchpadProcessor = inputSource->touchpadProcessor();
+          if (touchpadProcessor != nullptr)
+          {
+            touchpadProcessor->update(frame);
+          }
+        }
         else
           std::cerr << "failed to dispatch events on XRInputSource(" << i << "): value is not an object." << std::endl;
       }

@@ -9,6 +9,7 @@
 #include "./webxr_spaces.hpp"
 #include "./webxr_hand.hpp"
 #include "./webxr_gamepad.hpp"
+#include "./touchpad_input_processor.hpp"
 
 namespace endor
 {
@@ -113,6 +114,11 @@ namespace endor
      *          the input source does not support gamepad-like input.
      */
       std::shared_ptr<Gamepad> gamepad();
+      /**
+     * Get the touchpad input processor for this input source.
+     * Returns nullptr if the input source does not have a touchpad.
+     */
+      std::shared_ptr<TouchpadInputProcessor> touchpadProcessor();
 
     private:
       bool dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame);
@@ -123,6 +129,7 @@ namespace endor
       bool primaryActionPressed_ = false;
       bool squeezeActionPressed_ = false;
       std::shared_ptr<Gamepad> gamepad_;
+      std::shared_ptr<TouchpadInputProcessor> touchpadProcessor_;
     };
 
     class XRInputSourceArray : public std::vector<std::shared_ptr<XRInputSource>>
