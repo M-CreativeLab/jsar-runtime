@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XR Touchpad - Gamepad Readout</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    
+    h1 {
+      color: #4ec9b0;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .gamepad-display {
+      background: #252526;
+      border: 2px solid #3e3e42;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .input-source {
+      margin-bottom: 30px;
+      padding: 15px;
+      background: #2d2d30;
+      border-left: 4px solid #007acc;
+      border-radius: 4px;
+    }
+    
+    .property {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    
+    .property-name {
+      color: #9cdcfe;
+      font-weight: bold;
+    }
+    
+    .property-value {
+      color: #ce9178;
+    }
+    
+    .axes-display {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .axis {
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .axis-bar {
+      height: 20px;
+      background: #3e3e42;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      margin-top: 8px;
+    }
+    
+    .axis-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #007acc, #0098ff);
+      transition: width 0.1s ease;
+      border-radius: 10px;
+    }
+    
+    .buttons-display {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .button {
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    .button.touched {
+      background: #264f78;
+    }
+    
+    .button.pressed {
+      background: #0e639c;
+    }
+    
+    .no-input {
+      color: #858585;
+      font-style: italic;
+      text-align: center;
+      padding: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 XR Gamepad Live Readout</h1>
+    <p>Real-time display of XR input source gamepad state, including touchpad axes and buttons.</p>
+    
+    <div class="gamepad-display" id="gamepad-container">
+      <div class="no-input">
+        Waiting for XR input sources with gamepad support...
+        <br><br>
+        Start an XR session and use a controller with a touchpad to see live data.
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let animationFrameId = null;
+    
+    function updateDisplay(inputSources) {
+      const container = document.getElementById('gamepad-container');
+      
+      // Filter input sources that have gamepads
+      const sourcesWithGamepads = Array.from(inputSources).filter(source => source.gamepad);
+      
+      if (sourcesWithGamepads.length === 0) {
+        container.innerHTML = `
+          <div class="no-input">
+            No input sources with gamepad support detected.
+            <br><br>
+            ${inputSources.length} input source(s) available, but none have gamepad property.
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      sourcesWithGamepads.forEach((inputSource, index) => {
+        const gamepad = inputSource.gamepad;
+        const div = document.createElement('div');
+        div.className = 'input-source';
+        
+        let html = `
+          <h3 style="color: #4ec9b0; margin-top: 0;">Input Source ${index + 1}</h3>
+          <div class="property">
+            <span class="property-name">ID:</span>
+            <span class="property-value">${gamepad.id}</span>
+          </div>
+          <div class="property">
+            <span class="property-name">Connected:</span>
+            <span class="property-value">${gamepad.connected}</span>
+          </div>
+          <div class="property">
+            <span class="property-name">Mapping:</span>
+            <span class="property-value">${gamepad.mapping}</span>
+          </div>
+          <div class="property">
+            <span class="property-name">Timestamp:</span>
+            <span class="property-value">${gamepad.timestamp}</span>
+          </div>
+          <div class="property">
+            <span class="property-name">Handedness:</span>
+            <span class="property-value">${inputSource.handedness}</span>
+          </div>
+          <div class="property">
+            <span class="property-name">Target Ray Mode:</span>
+            <span class="property-value">${inputSource.targetRayMode}</span>
+          </div>
+        `;
+        
+        // Axes
+        if (gamepad.axes && gamepad.axes.length > 0) {
+          html += `
+            <h4 style="color: #dcdcaa; margin-top: 20px;">Axes (${gamepad.axes.length})</h4>
+            <div class="axes-display">
+          `;
+          
+          gamepad.axes.forEach((value, axisIndex) => {
+            const percentage = ((value + 1) / 2 * 100).toFixed(1);
+            const axisName = axisIndex === 0 ? 'X (Horizontal)' : 
+                            axisIndex === 1 ? 'Y (Vertical)' : 
+                            `Axis ${axisIndex}`;
+            
+            html += `
+              <div class="axis">
+                <div style="margin-bottom: 4px;">
+                  <span class="property-name">${axisName}:</span>
+                  <span class="property-value">${value.toFixed(4)}</span>
+                </div>
+                <div class="axis-bar">
+                  <div class="axis-fill" style="width: ${percentage}%"></div>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `</div>`;
+        }
+        
+        // Buttons
+        if (gamepad.buttons && gamepad.buttons.length > 0) {
+          html += `
+            <h4 style="color: #dcdcaa; margin-top: 20px;">Buttons (${gamepad.buttons.length})</h4>
+            <div class="buttons-display">
+          `;
+          
+          gamepad.buttons.forEach((button, buttonIndex) => {
+            const buttonClass = button.pressed ? 'pressed' : (button.touched ? 'touched' : '');
+            const buttonName = buttonIndex === 0 ? 'Touchpad' : `Button ${buttonIndex}`;
+            
+            html += `
+              <div class="button ${buttonClass}">
+                <div style="font-weight: bold; color: #4ec9b0; margin-bottom: 5px;">
+                  ${buttonName}
+                </div>
+                <div style="font-size: 12px;">
+                  <div>Touched: ${button.touched ? '✓' : '✗'}</div>
+                  <div>Pressed: ${button.pressed ? '✓' : '✗'}</div>
+                  <div>Value: ${button.value.toFixed(2)}</div>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `</div>`;
+        }
+        
+        div.innerHTML = html;
+        container.appendChild(div);
+      });
+    }
+    
+    // Example XR session code (would be integrated with actual XR session)
+    function startXRSession() {
+      if (!navigator.xr) {
+        console.log('WebXR not supported');
+        return;
+      }
+      
+      navigator.xr.requestSession('immersive-vr').then(session => {
+        console.log('XR session started');
+        
+        function onXRFrame(time, frame) {
+          session.requestAnimationFrame(onXRFrame);
+          
+          // Update display with current input sources
+          updateDisplay(session.inputSources);
+        }
+        
+        session.requestAnimationFrame(onXRFrame);
+      }).catch(err => {
+        console.log('Could not start XR session:', err);
+      });
+    }
+    
+    // For testing without XR: simulate gamepad data
+    function simulateGamepad() {
+      const mockInputSource = {
+        handedness: 'none',
+        targetRayMode: 'tracked-pointer',
+        gamepad: {
+          id: 'xr-input-simulated',
+          connected: true,
+          mapping: 'xr-standard',
+          timestamp: performance.now(),
+          axes: [
+            Math.sin(Date.now() / 1000) * 0.8,
+            Math.cos(Date.now() / 1000) * 0.8
+          ],
+          buttons: [
+            {
+              touched: Math.random() > 0.5,
+              pressed: Math.random() > 0.8,
+              value: Math.random() > 0.8 ? 1.0 : 0.0
+            }
+          ]
+        }
+      };
+      
+      updateDisplay([mockInputSource]);
+    }
+    
+    // Check for XR support
+    if (navigator.xr) {
+      navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+        if (supported) {
+          console.log('WebXR supported. Call startXRSession() to begin.');
+        } else {
+          console.log('WebXR not supported on this device.');
+          // Uncomment to see simulated data:
+          // setInterval(simulateGamepad, 16);
+        }
+      });
+    } else {
+      console.log('WebXR API not available.');
+      // Uncomment to see simulated data:
+      // setInterval(simulateGamepad, 16);
+    }
+  </script>
+</body>
+</html>
