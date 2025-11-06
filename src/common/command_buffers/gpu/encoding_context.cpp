@@ -1,9 +1,11 @@
 #include <common/command_buffers/gpu/gpu_device.hpp>
 #include <common/command_buffers/gpu/encoding_context.hpp>
 
+using namespace std;
+
 namespace commandbuffers::gpu
 {
-  EncodingContext::EncodingContext(std::shared_ptr<GPUDeviceBase> device, std::shared_ptr<const GPUHandle> initialEncoder)
+  EncodingContext::EncodingContext(Ref<GPUDeviceBase> device, Ref<const GPUHandle> initialEncoder)
       : device_(device.get())
       , top_level_encoder_(initialEncoder.get())
       , current_encoder_(initialEncoder.get())
@@ -12,7 +14,7 @@ namespace commandbuffers::gpu
     assert(!initialEncoder->isError());
   }
 
-  EncodingContext::EncodingContext(std::shared_ptr<GPUDeviceBase> device, GPUHandle::ErrorTag tag)
+  EncodingContext::EncodingContext(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag)
       : device_(device.get())
       , top_level_encoder_(nullptr)
       , current_encoder_(nullptr)
@@ -88,6 +90,11 @@ namespace commandbuffers::gpu
     // mComputePassUsages.push_back(std::move(usages));
   }
 
+  bool EncodingContext::finish()
+  {
+    return false;
+  }
+
   void EncodingContext::ensurePassExited(const GPUHandle *passEncoder)
   {
     if (current_encoder_ != top_level_encoder_ && current_encoder_ == passEncoder)
@@ -97,5 +104,21 @@ namespace commandbuffers::gpu
       // HandleError(DAWN_VALIDATION_ERROR("Command buffer recording ended before %s was ended.",
       //                                   passEncoder));
     }
+  }
+
+  void EncodingContext::pushDebugGroupLabel(string_view groupLabel)
+  {
+  }
+
+  void EncodingContext::popDebugGroupLabel()
+  {
+  }
+
+  void EncodingContext::commitCommands(CommandAllocator allocator)
+  {
+  }
+
+  void EncodingContext::closeWithStatus(Status status)
+  {
   }
 }

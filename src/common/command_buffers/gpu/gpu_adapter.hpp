@@ -5,13 +5,18 @@
 #include <iostream>
 #include <unordered_set>
 #include <unordered_map>
+
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 
 namespace commandbuffers
 {
   class GPUInstance;
-  class GPUPhysicalDeviceBase;
   struct GPUDeviceDescriptor;
+  namespace gpu
+  {
+    class PhysicalDeviceBase;
+  }
 
   class GPUAdapterInfo
   {
@@ -47,8 +52,8 @@ namespace commandbuffers
   class GPUAdapterBase : ErrorMonad
   {
   public:
-    GPUAdapterBase(std::shared_ptr<GPUInstance> instance,
-                   std::shared_ptr<GPUPhysicalDeviceBase> physicalDevice,
+    GPUAdapterBase(Ref<GPUInstance> instance,
+                   Ref<gpu::PhysicalDeviceBase> physicalDevice,
                    GPUFeatureLevel level,
                    GPUPowerPreference powerPreference);
 
@@ -59,15 +64,16 @@ namespace commandbuffers
                        std::function<void(std::unique_ptr<GPUDeviceBase>)> callback);
     std::unique_ptr<GPUDeviceBase> createDevice(const GPUDeviceDescriptor *descriptor = nullptr);
 
-    GPUPhysicalDeviceBase *physicalDevice();
-    const GPUPhysicalDeviceBase *physicalDevice() const;
+    gpu::PhysicalDeviceBase *physicalDevice();
+    const gpu::PhysicalDeviceBase *physicalDevice() const;
     GPUFeatureLevel featureLevel() const;
 
     const std::string &name() const;
 
   private:
-    std::shared_ptr<GPUInstance> instance_;
-    std::shared_ptr<GPUPhysicalDeviceBase> physical_device_;
+    Ref<GPUInstance> instance_;
+    Ref<gpu::PhysicalDeviceBase> physical_device_;
+    GPUAdapterInfo info_;
     GPUFeatureLevel feature_level_;
     GPUPowerPreference power_preference_;
 

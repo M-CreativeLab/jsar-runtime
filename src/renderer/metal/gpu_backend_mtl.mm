@@ -1,9 +1,9 @@
-#include <renderer/gles/gpu_backend_impl.hpp>
+#include <renderer/metal/gpu_backend_mtl.h>
 
 using namespace std;
 using namespace commandbuffers;
 
-namespace gles
+namespace metal
 {
   GPUBackend::GPUBackend(GPUInstance *instance, GPUBackendType type)
       : BackendConnection(instance, type)
@@ -17,7 +17,7 @@ namespace gles
 
   gpu::BackendConnection *Connect(GPUInstance *instance, GPUBackendType type)
   {
-    assert(type == GPUBackendType::kOpenGL || type == GPUBackendType::kOpenGLES);
+    assert(type == GPUBackendType::kMetal);
     return new GPUBackend(instance, type);
   }
 }

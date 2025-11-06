@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_adapter.hpp>
 #include <common/command_buffers/gpu/gpu_instance.hpp>
@@ -13,9 +14,13 @@
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
 
-
 namespace commandbuffers
 {
+  namespace gpu
+  {
+    class PhysicalDeviceBase;
+  }
+
   struct GPUDeviceDescriptor
   {
     std::string_view label;
@@ -40,13 +45,13 @@ namespace commandbuffers
 
     GPUInstance *getInstance() const;
     GPUAdapterBase *getAdapter() const;
-    GPUPhysicalDeviceBase *getPhysicalDevice() const;
+    gpu::PhysicalDeviceBase *getPhysicalDevice() const;
 
     virtual std::unique_ptr<GPUCommandBufferBase> createCommandBuffer(
       GPUCommandEncoder &encoder,
       const GPUCommandBufferDescriptor *descriptor = nullptr) = 0;
 
-    std::shared_ptr<GPUBindGroupLayoutBase> GetOrCreateBindGroupLayout();
+    Ref<GPUBindGroupLayoutBase> getOrCreateBindGroupLayout();
 
     bool isValidationEnabled() const;
     bool isRobustnessEnabled() const;
@@ -59,5 +64,8 @@ namespace commandbuffers
     GPUAdapterInfo adapter_info_;
     GPUSupportedFeatures features_;
     GPUSupportedLimits limits_;
+
+  private:
+    Ref<GPUAdapterBase> adapter_;
   };
 }

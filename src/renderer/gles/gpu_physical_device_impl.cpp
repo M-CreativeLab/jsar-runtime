@@ -10,8 +10,8 @@ namespace gles
     return false;
   }
 
-  unique_ptr<GPUDeviceBase> GPUPhysicalDeviceImpl::createDeviceImpl(shared_ptr<GPUAdapterBase> adapter,
-                                                                    GPUDeviceDescriptor &descriptor)
+  std::unique_ptr<GPUDeviceBase> GPUPhysicalDeviceImpl::createDeviceImpl(Ref<GPUAdapterBase> adapter,
+                                                                         GPUDeviceDescriptor &descriptor)
   {
     return nullptr;
   }
@@ -23,5 +23,4 @@ namespace gles
   void GPUPhysicalDeviceImpl::initializeSupportedFeaturesImpl()
   {
   }
-
 }

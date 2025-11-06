@@ -5,11 +5,9 @@ using namespace std;
 
 namespace commandbuffers
 {
-  GPURenderPipelineBase::GPURenderPipelineBase(shared_ptr<GPUDeviceBase> device,
+  GPURenderPipelineBase::GPURenderPipelineBase(Ref<GPUDeviceBase> device,
                                                const GPURenderPipelineDescriptor &descriptor)
-      : GPUPipelineBase(device,
-                        descriptor.layout,
-                        descriptor.label)
+      : GPUPipelineBase(device, descriptor.layout, descriptor.label)
   {
   }
 }

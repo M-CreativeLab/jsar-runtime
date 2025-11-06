@@ -11,7 +11,7 @@ if(NOT TR_ENABLE_INSPECTOR)
 endif()
 
 if(APPLE)
-    file(GLOB TR_CORE_SOURCE_MM "src/renderer/*.mm")
+    file(GLOB TR_CORE_SOURCE_MM "src/renderer/*.mm" "src/renderer/metal/*.mm")
     list(APPEND TR_CORE_SOURCE ${TR_CORE_SOURCE_MM})
 endif()
 

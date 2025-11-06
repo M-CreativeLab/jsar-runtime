@@ -1,5 +1,6 @@
 #include <common/command_buffers/gpu/gpu_instance.hpp>
 #include <common/command_buffers/gpu/backend_connection.hpp>
+#include <common/command_buffers/gpu/physical_device.hpp>
 
 using namespace std;
 
@@ -17,6 +18,12 @@ namespace commandbuffers
                                      { delete ptr; });
     instance->initialize(*descriptor);
     return instance;
+  }
+
+  void GPUInstance::registerBackend(gpu::BackendConnection *backend)
+  {
+    assert(backend != nullptr && "Backend connection cannot be null.");
+    backend_ = std::unique_ptr<gpu::BackendConnection>(backend);
   }
 
   void GPUInstance::addDevice(shared_ptr<GPUDeviceBase>)

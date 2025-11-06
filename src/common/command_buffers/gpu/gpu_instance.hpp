@@ -12,6 +12,7 @@ namespace commandbuffers
   namespace gpu
   {
     class BackendConnection;
+    class PhysicalDeviceBase;
   }
 
   struct GPUInstanceDescriptor
@@ -27,7 +28,6 @@ namespace commandbuffers
     static Ref<GPUInstance> Create(const GPUInstanceDescriptor *descriptor = nullptr);
 
     void registerBackend(gpu::BackendConnection *backend);
-
     void addDevice(Ref<GPUDeviceBase>);
     void removeDevice(Ref<GPUDeviceBase>);
 
@@ -38,7 +38,7 @@ namespace commandbuffers
     virtual ~GPUInstance() = default;
 
     void initialize(const GPUInstanceDescriptor &descriptor);
-    Ref<GPUAdapterBase> createAdapter(Ref<GPUPhysicalDeviceBase> physicalDevice,
+    Ref<GPUAdapterBase> createAdapter(Ref<gpu::PhysicalDeviceBase> physicalDevice,
                                       GPUFeatureLevel featureLevel,
                                       GPUPowerPreference powerPreference);
 
@@ -46,7 +46,7 @@ namespace commandbuffers
 
   private:
     std::unordered_set<GPUFeatureName> instance_features_;
-    std::vector<std::shared_ptr<GPUDeviceBase>> devices_list_;
-    Ref<gpu::BackendConnection> backend_ = nullptr;
+    std::vector<Ref<GPUDeviceBase>> devices_list_;
+    std::unique_ptr<gpu::BackendConnection> backend_;
   };
 }

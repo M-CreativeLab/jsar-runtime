@@ -5,7 +5,7 @@
 #include <common/command_buffers/gpu/gpu_instance.hpp>
 #include <common/command_buffers/gpu/backend_connection.hpp>
 
-namespace gles
+namespace metal
 {
   class GPUBackend final : public commandbuffers::gpu::BackendConnection
   {

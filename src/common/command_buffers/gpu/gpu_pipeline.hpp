@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
 
@@ -27,19 +28,19 @@ namespace commandbuffers
     virtual const GPURenderPipelineBase *getAsRenderPipeline() const;
     virtual GPURenderPipelineBase *getAsRenderPipeline();
 
-    GPUPipelineBase *layout();
+    GPUPipelineLayoutBase *layout();
     const GPUPipelineLayoutBase *layout() const;
 
   protected:
-    GPUPipelineBase(std::shared_ptr<GPUDeviceBase> device,
-                    std::shared_ptr<GPUPipelineLayoutBase> layout,
+    GPUPipelineBase(Ref<GPUDeviceBase> device,
+                    Ref<GPUPipelineLayoutBase> layout,
                     std::string_view label);
-    GPUPipelineBase(std::shared_ptr<GPUDeviceBase> device,
+    GPUPipelineBase(Ref<GPUDeviceBase> device,
                     GPUHandle::ErrorTag,
                     std::string_view label);
 
   private:
     GPUShaderStage stage_mask_ = GPUShaderStage::kNone;
-    std::shared_ptr<GPUPipelineLayoutBase> layout_;
+    Ref<GPUPipelineLayoutBase> layout_;
   };
 }

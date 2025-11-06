@@ -6,7 +6,7 @@
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_instance.hpp>
 #include <common/command_buffers/gpu/gpu_adapter.hpp>
-#include <common/command_buffers/gpu/gpu_physical_device.hpp>
+#include <common/command_buffers/gpu/physical_device.hpp>
 
 namespace commandbuffers::gpu
 {
@@ -27,7 +27,7 @@ namespace commandbuffers::gpu
     GPUBackendType type() const;
     GPUInstance *getInstance() const;
 
-    virtual std::vector<Ref<GPUPhysicalDeviceBase>> discoverPhysicalDevices(const RequestAdapterOptions &) = 0;
+    virtual std::vector<Ref<gpu::PhysicalDeviceBase>> discoverPhysicalDevices(const RequestAdapterOptions &) = 0;
 
   private:
     GPUInstance *instance_ = nullptr;

@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <string_view>
+
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/error_data.hpp>
 #include <common/command_buffers/gpu/command_allocator.hpp>
@@ -19,8 +21,8 @@ namespace commandbuffers
     class EncodingContext
     {
     public:
-      EncodingContext(std::shared_ptr<GPUDeviceBase> device, std::shared_ptr<const GPUHandle> initialEncoder);
-      EncodingContext(std::shared_ptr<GPUDeviceBase> device, GPUHandle::ErrorTag tag);
+      EncodingContext(Ref<GPUDeviceBase> device, Ref<const GPUHandle> initialEncoder);
+      EncodingContext(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag);
       ~EncodingContext();
 
       // Marks the encoding context as destroyed so that any future encodes will fail, and all
