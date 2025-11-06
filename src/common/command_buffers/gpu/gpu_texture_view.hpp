@@ -3,6 +3,8 @@
 #include <string>
 #include <string_view>
 #include <memory>
+
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_texture.hpp>
 
@@ -24,9 +26,9 @@ namespace commandbuffers
   class GPUTextureViewBase : public GPUHandle
   {
   public:
-    GPUTextureViewBase(std::shared_ptr<GPUTextureBase> texture, const TextureViewDescriptor &descriptor);
+    GPUTextureViewBase(Ref<GPUTextureBase> texture, const TextureViewDescriptor &descriptor);
 
-    std::shared_ptr<GPUTextureBase> texture() const;
+    Ref<GPUTextureBase> texture() const;
     const GPUTextureBase &textureRef() const;
 
     GPUTextureViewDimension dimension() const;
@@ -39,7 +41,7 @@ namespace commandbuffers
     bool isSwizzleIdentity() const;
 
   private:
-    std::shared_ptr<GPUTextureBase> texture_;
+    Ref<GPUTextureBase> texture_;
     GPUTextureViewDimension dimension_;
     GPUTextureUsage usage_ = GPUTextureUsage::kNone;
     GPUTextureUsage internal_usage_ = GPUTextureUsage::kNone;

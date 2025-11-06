@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_texture.hpp>
@@ -63,7 +64,7 @@ namespace commandbuffers::gpu
     ComputePassUsages computePasses;
 
     // Resources used in commands that aren't in a pass.
-    std::unordered_set<std::shared_ptr<GPUBufferBase>> topLevelBuffers;
-    std::unordered_set<std::shared_ptr<GPUTextureBase>> topLevelTextures;
+    std::unordered_set<Ref<GPUBufferBase>> topLevelBuffers;
+    std::unordered_set<Ref<GPUTextureBase>> topLevelTextures;
   };
 }

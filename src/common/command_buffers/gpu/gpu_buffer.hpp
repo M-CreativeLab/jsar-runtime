@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <string_view>
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 
 namespace commandbuffers
@@ -69,9 +70,8 @@ namespace commandbuffers
     void unmap();
 
   protected:
-    GPUBufferBase(std::shared_ptr<GPUDeviceBase> device,
-                  const GPUBufferDescriptor &descriptor);
-    GPUBufferBase(std::shared_ptr<GPUDeviceBase> device,
+    GPUBufferBase(Ref<GPUDeviceBase> device, const GPUBufferDescriptor &descriptor);
+    GPUBufferBase(Ref<GPUDeviceBase> device,
                   const GPUBufferDescriptor *descriptor,
                   GPUHandle::ErrorTag tag);
 
@@ -93,7 +93,7 @@ namespace commandbuffers
     std::atomic<BufferState> map_state_ = BufferState::kUnmapped;
 
     // A recursive buffer used to implement mappedAtCreation for buffers with non-mappable usage.
-    std::shared_ptr<GPUBufferBase> staging_buffer_ = nullptr;
+    Ref<GPUBufferBase> staging_buffer_ = nullptr;
 
     // Mapping specific states.
     GPUMapMode mMapMode = GPUMapMode::kNone;

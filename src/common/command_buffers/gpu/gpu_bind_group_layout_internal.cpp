@@ -4,7 +4,7 @@ using namespace std;
 
 namespace commandbuffers
 {
-  GPUBindGroupLayoutInternalBase::GPUBindGroupLayoutInternalBase(shared_ptr<GPUDeviceBase> device,
+  GPUBindGroupLayoutInternalBase::GPUBindGroupLayoutInternalBase(Ref<GPUDeviceBase> device,
                                                                  const GPUBindGroupLayoutDescriptor &descriptor)
       : GPUHandle(device, descriptor.label)
   {

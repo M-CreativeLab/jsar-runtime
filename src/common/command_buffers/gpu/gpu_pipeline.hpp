@@ -32,12 +32,8 @@ namespace commandbuffers
     const GPUPipelineLayoutBase *layout() const;
 
   protected:
-    GPUPipelineBase(Ref<GPUDeviceBase> device,
-                    Ref<GPUPipelineLayoutBase> layout,
-                    std::string_view label);
-    GPUPipelineBase(Ref<GPUDeviceBase> device,
-                    GPUHandle::ErrorTag,
-                    std::string_view label);
+    GPUPipelineBase(Ref<GPUDeviceBase> device, Ref<GPUPipelineLayoutBase> layout, std::string_view label);
+    GPUPipelineBase(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag, std::string_view label);
 
   private:
     GPUShaderStage stage_mask_ = GPUShaderStage::kNone;

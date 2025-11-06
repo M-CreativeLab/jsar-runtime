@@ -26,11 +26,11 @@ namespace commandbuffers
     backend_ = std::unique_ptr<gpu::BackendConnection>(backend);
   }
 
-  void GPUInstance::addDevice(shared_ptr<GPUDeviceBase>)
+  void GPUInstance::addDevice(Ref<GPUDeviceBase>)
   {
   }
 
-  void GPUInstance::removeDevice(shared_ptr<GPUDeviceBase>)
+  void GPUInstance::removeDevice(Ref<GPUDeviceBase>)
   {
   }
 

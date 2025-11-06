@@ -11,9 +11,7 @@ namespace commandbuffers
   {
   }
 
-  GPUCommandBufferBase::GPUCommandBufferBase(shared_ptr<GPUDeviceBase> device,
-                                             GPUHandle::ErrorTag tag,
-                                             string_view label)
+  GPUCommandBufferBase::GPUCommandBufferBase(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag, string_view label)
       : GPUHandle(device, tag, label)
   {
   }

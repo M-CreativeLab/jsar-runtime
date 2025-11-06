@@ -3,6 +3,7 @@
 #include <memory>
 #include <string_view>
 
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
@@ -36,8 +37,8 @@ namespace commandbuffers
     std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const;
 
   private:
-    GPUCommandEncoder(std::shared_ptr<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
-    GPUCommandEncoder(std::shared_ptr<GPUDeviceBase> device,
+    GPUCommandEncoder(Ref<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
+    GPUCommandEncoder(Ref<GPUDeviceBase> device,
                       GPUHandle::ErrorTag tag,
                       std::string_view label);
 

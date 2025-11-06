@@ -4,8 +4,9 @@
 #include <vector>
 #include <variant>
 
-#include "./gpu_base.hpp"
-#include "./gpu_bind_group_layout.hpp"
+#include <common/utility.hpp>
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_bind_group_layout.hpp>
 
 namespace commandbuffers
 {
@@ -15,6 +16,6 @@ namespace commandbuffers
     virtual ~GPUBindGroupBase() = default;
 
   private:
-    std::shared_ptr<GPUBindGroupLayoutBase> *layout_ = nullptr;
+    Ref<GPUBindGroupLayoutBase> *layout_ = nullptr;
   };
 }

@@ -5,6 +5,7 @@
 #include <string_view>
 #include <string>
 
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_pipeline.hpp>
@@ -54,9 +55,7 @@ namespace commandbuffers
     gpu::CommandIterator commands_;
 
   private:
-    GPUCommandBufferBase(std::shared_ptr<GPUDeviceBase> device,
-                         GPUHandle::ErrorTag tag,
-                         std::string_view label);
+    GPUCommandBufferBase(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag, std::string_view label);
 
     gpu::CommandBufferResourceUsage resource_usages_;
     std::vector<gpu::IndirectDrawMetadata> indirect_draw_metadata_;

@@ -2,6 +2,8 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group_layout_base.hpp>
 #include <common/command_buffers/gpu/gpu_binding_info.hpp>
@@ -9,7 +11,6 @@
 namespace commandbuffers
 {
   class GPUDeviceBase;
-
 
   // In the BindGroupLayout, entries are sorted by type for more efficient lookup and iteration.
   // This enum is the order that's used and can also be used to index various ranges of entries.
@@ -41,7 +42,7 @@ namespace commandbuffers
     using BindingMap = std::map<GPUBindingNumber, GPUClientBindingIndex>;
 
   public:
-    GPUBindGroupLayoutInternalBase(std::shared_ptr<GPUDeviceBase> device,
+    GPUBindGroupLayoutInternalBase(Ref<GPUDeviceBase> device,
                                    const GPUBindGroupLayoutDescriptor &descriptor);
     virtual ~GPUBindGroupLayoutInternalBase();
 

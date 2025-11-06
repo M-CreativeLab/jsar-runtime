@@ -4,15 +4,15 @@ using namespace std;
 
 namespace commandbuffers
 {
-  GPUBindGroupLayoutBase::GPUBindGroupLayoutBase(shared_ptr<GPUDeviceBase> device,
+  GPUBindGroupLayoutBase::GPUBindGroupLayoutBase(Ref<GPUDeviceBase> device,
                                                  string_view label,
-                                                 shared_ptr<GPUBindGroupLayoutInternalBase> internal)
+                                                 Ref<GPUBindGroupLayoutInternalBase> internal)
       : GPUHandle(device, label)
       , internal_layout_(internal)
   {
   }
 
-  GPUBindGroupLayoutBase::GPUBindGroupLayoutBase(shared_ptr<GPUDeviceBase> device,
+  GPUBindGroupLayoutBase::GPUBindGroupLayoutBase(Ref<GPUDeviceBase> device,
                                                  GPUHandle::ErrorTag tag,
                                                  string_view label)
       : GPUHandle(device, tag, label)

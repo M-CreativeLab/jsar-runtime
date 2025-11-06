@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_texture.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group_layout_base.hpp>
@@ -11,9 +12,9 @@ namespace commandbuffers
   class GPUBindGroupLayoutBase : public GPUHandle
   {
   public:
-    GPUBindGroupLayoutBase(std::shared_ptr<GPUDeviceBase> device,
+    GPUBindGroupLayoutBase(Ref<GPUDeviceBase> device,
                            std::string_view label,
-                           std::shared_ptr<GPUBindGroupLayoutInternalBase> internal);
+                           Ref<GPUBindGroupLayoutInternalBase> internal);
     virtual ~GPUBindGroupLayoutBase() = default;
 
     GPUHandleType type() const override
@@ -28,11 +29,11 @@ namespace commandbuffers
     bool isEmpty() const;
 
   private:
-    GPUBindGroupLayoutBase(std::shared_ptr<GPUDeviceBase> device,
+    GPUBindGroupLayoutBase(Ref<GPUDeviceBase> device,
                            GPUHandle::ErrorTag tag,
                            std::string_view label);
 
   private:
-    std::shared_ptr<GPUBindGroupLayoutInternalBase> internal_layout_;
+    Ref<GPUBindGroupLayoutInternalBase> internal_layout_;
   };
 }
