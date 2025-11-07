@@ -15,8 +15,7 @@ namespace commandbuffers
       descriptor = &kDefaultDesc;
     }
 
-    auto instance = Ref<GPUInstance>(new GPUInstance(), [](GPUInstance *ptr)
-                                     { delete ptr; });
+    auto instance = AcquireRef(new GPUInstance());
     instance->initialize(*descriptor);
     return instance;
   }

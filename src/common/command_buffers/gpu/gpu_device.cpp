@@ -2,8 +2,7 @@
 
 namespace commandbuffers
 {
-  GPUDeviceBase::GPUDeviceBase(GPUAdapterBase *adapter,
-                               GPUDeviceDescriptor &descriptor)
+  GPUDeviceBase::GPUDeviceBase(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor)
       : adapter_(adapter)
   {
   }

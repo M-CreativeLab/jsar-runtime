@@ -2,15 +2,23 @@
 #include <memory>
 #include <sstream>
 
-#include "./common.hpp"
-#include "./gpu_device_impl.hpp"
+#include <renderer/gles/common.hpp>
+#include <renderer/gles/gpu_device_impl.hpp>
 
 namespace gles
 {
   using namespace std;
   using namespace commandbuffers;
 
-  GPUDeviceImpl::GPUDeviceImpl(GPUAdapterBase *adapter, GPUDeviceDescriptor &descriptor)
+  // static
+  Ref<GPUDeviceImpl> GPUDeviceImpl::Create(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor)
+  {
+    Ref<GPUDeviceImpl> device = AcquireRef(new GPUDeviceImpl(adapter, descriptor));
+    device->initialize(descriptor);
+    return device;
+  }
+
+  GPUDeviceImpl::GPUDeviceImpl(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor)
       : GPUDeviceBase(adapter, descriptor)
   {
     auto get_gl_string = [](GLenum name) -> string
@@ -47,6 +55,11 @@ namespace gles
       adapter_info_.description = description_ss.str();
     }
     DEBUG(LOG_TAG_RENDERER, "GPU Device Info: %s", adapter_info_.toString().c_str());
+  }
+
+  bool GPUDeviceImpl::initialize(const GPUDeviceDescriptor &descriptor)
+  {
+    return true;
   }
 
   unique_ptr<GPUCommandBufferBase> GPUDeviceImpl::createCommandBuffer(GPUCommandEncoder &encoder,

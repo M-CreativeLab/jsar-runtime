@@ -32,8 +32,7 @@ namespace commandbuffers
   class GPUDeviceBase
   {
   public:
-    GPUDeviceBase(GPUAdapterBase *adapter,
-                  GPUDeviceDescriptor &descriptor);
+    GPUDeviceBase(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor);
     virtual ~GPUDeviceBase() = default;
 
   public:

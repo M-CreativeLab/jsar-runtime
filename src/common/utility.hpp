@@ -39,8 +39,17 @@ using Ref = std::shared_ptr<T>;
 template <typename T>
 inline Ref<T> AcquireRef(T *ptr)
 {
-  return std::shared_ptr<T>(ptr, [](T *p)
-                            { delete p; });
+  auto ref = std::shared_ptr<T>(ptr, [](T *p)
+                                { delete p; });
+
+  // If T derives from std::enable_shared_from_this, set the weak_from_this pointer.
+  if constexpr (std::derived_from<T, std::enable_shared_from_this<T>>)
+  {
+    ref->weak_from_this() = ref;
+  }
+
+  // Return the shared pointer.
+  return ref;
 }
 
 /**

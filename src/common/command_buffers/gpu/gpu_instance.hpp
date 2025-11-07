@@ -22,7 +22,7 @@ namespace commandbuffers
     GPUSupportedLimits *requiredLimits = nullptr;
   };
 
-  class GPUInstance final : std::enable_shared_from_this<GPUInstance>
+  class GPUInstance final : public std::enable_shared_from_this<GPUInstance>
   {
   public:
     static Ref<GPUInstance> Create(const GPUInstanceDescriptor *descriptor = nullptr);
@@ -40,6 +40,9 @@ namespace commandbuffers
     void removeDevice(Ref<GPUDeviceBase>);
 
     bool hasFeature(GPUFeatureName feature) const;
+
+    // Allow AcquireRef to access the private constructor.
+    friend Ref<GPUInstance> (::AcquireRef)(GPUInstance *ptr);
 
   private:
     explicit GPUInstance();
