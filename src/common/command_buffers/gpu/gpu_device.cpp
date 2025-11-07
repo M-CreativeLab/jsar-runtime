@@ -42,7 +42,49 @@ namespace commandbuffers
     return adapter_->physicalDevice();
   }
 
-  Ref<GPUBindGroupLayoutBase> GPUDeviceBase::getOrCreateBindGroupLayout()
+  Ref<GPUBindGroupLayoutBase> GPUDeviceBase::getOrCreateBindGroupLayout(
+    const GPUBindGroupLayoutDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  GPUBindGroupLayoutBase *GPUDeviceBase::getEmptyBindGroupLayout()
+  {
+    assert(empty_bind_group_layout_ != nullptr);
+    return empty_bind_group_layout_.get();
+  }
+
+  GPUPipelineLayoutBase *GPUDeviceBase::getEmptyPipelineLayout()
+  {
+    assert(empty_pipeline_layout_ != nullptr);
+    return empty_pipeline_layout_.get();
+  }
+
+  // Object creation methods that be used in a reentrant manner.
+  Ref<GPUBindGroupBase> GPUDeviceBase::createBindGroup(
+    const GPUBindGroupDescriptor *descriptor,
+    GPUUsageValidationMode mode)
+  {
+    return createBindGroupImpl(*descriptor);
+  }
+
+  Ref<GPUBindGroupLayoutBase> GPUDeviceBase::createBindGroupLayout(const GPUBindGroupLayoutDescriptor *descriptor,
+                                                                   bool allowInternalBinding)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUBufferBase> GPUDeviceBase::createBuffer(const GPUBufferDescriptor *rawDescriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUCommandEncoder> GPUDeviceBase::createCommandEncoder(const GPUCommandEncoderDescriptor *descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUComputePipelineBase> GPUDeviceBase::createComputePipeline(const GPUComputePipelineDescriptor *descriptor)
   {
     return nullptr;
   }
@@ -74,5 +116,20 @@ namespace commandbuffers
   bool GPUDeviceBase::mayRequireDuplicationOfIndirectParameters() const
   {
     return false;
+  }
+
+  Ref<GPUBindGroupLayoutBase> GPUDeviceBase::createEmptyBindGroupLayout()
+  {
+    GPUBindGroupLayoutDescriptor desc = {};
+    desc.entryCount = 0;
+    desc.entries = nullptr;
+
+    return getOrCreateBindGroupLayout(desc);
+  }
+
+  Ref<GPUPipelineLayoutBase> GPUDeviceBase::createEmptyPipelineLayout()
+  {
+    // TODO(yorkie): implement this.
+    return nullptr;
   }
 }

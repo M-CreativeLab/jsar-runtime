@@ -67,4 +67,16 @@ namespace gles
   {
     return nullptr;
   }
+
+  Ref<GPUBindGroupBase> GPUDeviceImpl::createBindGroupImpl(
+    const GPUBindGroupDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUBindGroupLayoutInternalBase> GPUDeviceImpl::createBindGroupLayoutImpl(
+    const GPUBindGroupLayoutDescriptor &descriptor)
+  {
+    return nullptr;
+  }
 }

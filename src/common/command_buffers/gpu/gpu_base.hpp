@@ -719,6 +719,14 @@ namespace commandbuffers
     bool operator==(const GPUSupportedLimits &rhs) const;
   };
 
+  struct GPUComputeState
+  {
+    // ShaderModuleBase *module;
+    std::string_view entryPoint;
+    size_t constantCount = 0;
+    GPUConstantEntry const *constants = nullptr;
+  };
+
   class ErrorMonad
   {
   public:

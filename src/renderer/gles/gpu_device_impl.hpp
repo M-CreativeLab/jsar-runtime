@@ -22,5 +22,11 @@ namespace gles
     std::unique_ptr<commandbuffers::GPUCommandBufferBase> createCommandBuffer(
       commandbuffers::GPUCommandEncoder &encoder,
       const commandbuffers::GPUCommandBufferDescriptor *descriptor = nullptr) override;
+
+  private:
+    Ref<commandbuffers::GPUBindGroupBase> createBindGroupImpl(
+      const commandbuffers::GPUBindGroupDescriptor &descriptor) override;
+    Ref<commandbuffers::GPUBindGroupLayoutInternalBase> createBindGroupLayoutImpl(
+      const commandbuffers::GPUBindGroupLayoutDescriptor &descriptor) override;
   };
 }

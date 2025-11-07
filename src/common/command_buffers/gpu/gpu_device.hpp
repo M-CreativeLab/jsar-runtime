@@ -13,6 +13,10 @@
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
+#include <common/command_buffers/gpu/gpu_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_render_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_compute_pipeline.hpp>
 
 namespace commandbuffers
 {
@@ -50,7 +54,20 @@ namespace commandbuffers
       GPUCommandEncoder &encoder,
       const GPUCommandBufferDescriptor *descriptor = nullptr) = 0;
 
-    Ref<GPUBindGroupLayoutBase> getOrCreateBindGroupLayout();
+    Ref<GPUBindGroupLayoutBase> getOrCreateBindGroupLayout(
+      const GPUBindGroupLayoutDescriptor &descriptor);
+
+    GPUBindGroupLayoutBase *getEmptyBindGroupLayout();
+    GPUPipelineLayoutBase *getEmptyPipelineLayout();
+
+    // Object creation methods that be used in a reentrant manner.
+    Ref<GPUBindGroupBase> createBindGroup(const GPUBindGroupDescriptor *descriptor,
+                                          GPUUsageValidationMode mode = GPUUsageValidationMode::kDefault);
+    Ref<GPUBindGroupLayoutBase> createBindGroupLayout(const GPUBindGroupLayoutDescriptor *descriptor,
+                                                      bool allowInternalBinding = false);
+    Ref<GPUBufferBase> createBuffer(const GPUBufferDescriptor *rawDescriptor);
+    Ref<GPUCommandEncoder> createCommandEncoder(const GPUCommandEncoderDescriptor *descriptor = nullptr);
+    Ref<GPUComputePipelineBase> createComputePipeline(const GPUComputePipelineDescriptor *descriptor);
 
     bool isValidationEnabled() const;
     bool isRobustnessEnabled() const;
@@ -65,6 +82,17 @@ namespace commandbuffers
     GPUSupportedLimits limits_;
 
   private:
+    virtual Ref<GPUBindGroupBase> createBindGroupImpl(
+      const GPUBindGroupDescriptor &descriptor) = 0;
+    virtual Ref<GPUBindGroupLayoutInternalBase> createBindGroupLayoutImpl(
+      const GPUBindGroupLayoutDescriptor &descriptor) = 0;
+
+    Ref<GPUBindGroupLayoutBase> createEmptyBindGroupLayout();
+    Ref<GPUPipelineLayoutBase> createEmptyPipelineLayout();
+
     Ref<GPUAdapterBase> adapter_;
+
+    Ref<GPUBindGroupLayoutBase> empty_bind_group_layout_;
+    Ref<GPUPipelineLayoutBase> empty_pipeline_layout_;
   };
 }

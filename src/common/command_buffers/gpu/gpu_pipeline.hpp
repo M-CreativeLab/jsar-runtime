@@ -7,15 +7,10 @@
 #include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline_layout.hpp>
 
 namespace commandbuffers
 {
-  class GPUPipelineLayoutBase : public GPUHandle
-  {
-  private:
-    std::vector<GPUBindGroupLayoutBase> bind_group_layouts_;
-  };
-
   class GPURenderPipelineBase;
   class GPUComputePipelineBase;
 
