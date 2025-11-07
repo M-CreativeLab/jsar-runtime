@@ -10,7 +10,7 @@ namespace metal
   {
   }
 
-  vector<Ref<gpu::PhysicalDeviceBase>> GPUBackend::discoverPhysicalDevices(const gpu::RequestAdapterOptions &options)
+  vector<Ref<gpu::PhysicalDeviceBase>> GPUBackend::discoverPhysicalDevices(const RequestAdapterOptions &options)
   {
     return {};
   }

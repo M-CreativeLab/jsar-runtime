@@ -5,15 +5,33 @@ using namespace commandbuffers;
 
 namespace gles
 {
+  // static
+  Ref<GPUPhysicalDeviceImpl> GPUPhysicalDeviceImpl::Create(GPUBackendType backendType,
+                                                           Ref<DisplayEGL> display,
+                                                           bool forceES31AndMinExtensions)
+  {
+    return nullptr;
+  }
+
+  GPUPhysicalDeviceImpl::GPUPhysicalDeviceImpl(GPUBackendType backendType, Ref<DisplayEGL> display)
+      : PhysicalDeviceBase(backendType)
+  {
+  }
+
+  DisplayEGL *GPUPhysicalDeviceImpl::display() const
+  {
+    return display_.get();
+  }
+
   bool GPUPhysicalDeviceImpl::supportsExternalImages() const
   {
     return false;
   }
 
-  std::unique_ptr<GPUDeviceBase> GPUPhysicalDeviceImpl::createDeviceImpl(Ref<GPUAdapterBase> adapter,
-                                                                         GPUDeviceDescriptor &descriptor)
+  bool GPUPhysicalDeviceImpl::supportsFeatureLevel(GPUFeatureLevel featureLevel,
+                                                   GPUInstance *instance) const
   {
-    return nullptr;
+    return false;
   }
 
   void GPUPhysicalDeviceImpl::initializeImpl()
@@ -22,5 +40,11 @@ namespace gles
 
   void GPUPhysicalDeviceImpl::initializeSupportedFeaturesImpl()
   {
+  }
+
+  Ref<GPUDeviceBase> GPUPhysicalDeviceImpl::createDeviceImpl(Ref<GPUAdapterBase> adapter,
+                                                             const GPUDeviceDescriptor &descriptor)
+  {
+    return nullptr;
   }
 }

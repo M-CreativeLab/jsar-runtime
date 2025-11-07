@@ -42,34 +42,43 @@ TrRenderHardwareInterface::TrRenderHardwareInterface(RHIBackendType backend_type
     : backendType(backend_type)
     , gpuInstance(GPUInstance::Create())
 {
+  RequestAdapterOptions requestOptions;
+  requestOptions.featureLevel = GPUFeatureLevel::kCompatibility;
+  requestOptions.powerPreference = GPUPowerPreference::kHighPerformance;
+
   switch (backend_type)
   {
 #if SUPPORT_D3D11
   case RHIBackendType::D3D11:
     gpuInstance->registerBackend(d3d11::Connect(gpuInstance.get(), GPUBackendType::kD3D11));
+    requestOptions.backendType = GPUBackendType::kD3D11;
     break;
 #endif
 
 #if SUPPORT_OPENGL_UNIFIED
   case RHIBackendType::OpenGLCore:
     gpuInstance->registerBackend(gles::Connect(gpuInstance.get(), GPUBackendType::kOpenGL));
+    requestOptions.backendType = GPUBackendType::kOpenGL;
     break;
 
   case RHIBackendType::OpenGLESv2:
   case RHIBackendType::OpenGLESv3:
     gpuInstance->registerBackend(gles::Connect(gpuInstance.get(), GPUBackendType::kOpenGLES));
+    requestOptions.backendType = GPUBackendType::kOpenGLES;
     break;
 #endif
 
 #if SUPPORT_METAL
   case RHIBackendType::Metal:
     gpuInstance->registerBackend(metal::Connect(gpuInstance.get(), GPUBackendType::kMetal));
+    requestOptions.backendType = GPUBackendType::kMetal;
     break;
 #endif
 
 #if SUPPORT_VULKAN
   case RHIBackendType::VULKAN:
     gpuInstance->registerBackend(vulkan::Connect(gpuInstance.get(), GPUBackendType::kVulkan));
+    requestOptions.backendType = GPUBackendType::kVulkan;
     break;
 #endif
 
@@ -77,9 +86,12 @@ TrRenderHardwareInterface::TrRenderHardwareInterface(RHIBackendType backend_type
     // Unsupported backend type
     assert(false && "Unsupported RHI backend type.");
   }
+
+  gpuAdapter = gpuInstance->requestAdapter(requestOptions);
+  gpuDevice = gpuAdapter->createDevice();
 }
 
-void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<shared_ptr<GPUCommandBufferBase>> &commandBuffers)
+void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<Ref<GPUCommandBufferBase>> &commandBuffers)
 {
   // TODO(yorkie): Handle the submission result and errors.
 }

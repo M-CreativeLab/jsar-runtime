@@ -10,14 +10,6 @@
 
 namespace commandbuffers::gpu
 {
-  struct RequestAdapterOptions
-  {
-    GPUFeatureLevel featureLevel = GPUFeatureLevel::kCore;
-    GPUPowerPreference powerPreference = GPUPowerPreference::Undefined;
-    bool forceFallbackAdapter = false;
-    GPUBackendType backendType = GPUBackendType::kUndefined;
-  };
-
   class BackendConnection : public NonMovable
   {
   public:

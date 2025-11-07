@@ -4,14 +4,21 @@ using namespace std;
 
 namespace commandbuffers::gpu
 {
-  void PhysicalDeviceBase::initialize()
+  PhysicalDeviceBase::PhysicalDeviceBase(GPUBackendType type)
+      : backend_type_(type)
   {
   }
 
-  Ref<GPUDeviceBase> PhysicalDeviceBase::createDevice(Ref<GPUAdapterBase> adapter,
-                                                      GPUDeviceDescriptor &descriptor)
+  void PhysicalDeviceBase::initialize()
   {
-    return nullptr;
+    initializeImpl();
+    initializeVendorArchitectureImpl();
+  }
+
+  Ref<GPUDeviceBase> PhysicalDeviceBase::createDevice(Ref<GPUAdapterBase> adapter,
+                                                      const GPUDeviceDescriptor &descriptor)
+  {
+    return createDeviceImpl(adapter, descriptor);
   }
 
   uint32_t PhysicalDeviceBase::vendorId() const
@@ -75,5 +82,7 @@ namespace commandbuffers::gpu
 
   void PhysicalDeviceBase::initializeVendorArchitectureImpl()
   {
+    vendor_name_ = gpu_info::GetVendorName(vendor_id_);
+    arch_name_ = gpu_info::GetArchitectureName(vendor_id_, device_id_);
   }
 }

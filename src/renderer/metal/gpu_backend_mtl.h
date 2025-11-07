@@ -13,6 +13,6 @@ namespace metal
     GPUBackend(commandbuffers::GPUInstance *instance, commandbuffers::GPUBackendType type);
 
     std::vector<Ref<commandbuffers::gpu::PhysicalDeviceBase>> discoverPhysicalDevices(
-      const commandbuffers::gpu::RequestAdapterOptions &options) override;
+      const commandbuffers::RequestAdapterOptions &options) override;
   };
 }

@@ -8,16 +8,17 @@
 #include <common/command_buffers/gpu/gpu_adapter.hpp>
 #include <common/command_buffers/gpu/gpu_info.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
+#include <common/command_buffers/gpu/gpu_instance.hpp>
 
 namespace commandbuffers::gpu
 {
   class PhysicalDeviceBase
   {
   public:
-    explicit PhysicalDeviceBase() = default;
+    explicit PhysicalDeviceBase(GPUBackendType);
 
     void initialize();
-    Ref<GPUDeviceBase> createDevice(Ref<GPUAdapterBase> adapter, GPUDeviceDescriptor &descriptor);
+    Ref<GPUDeviceBase> createDevice(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor);
 
     uint32_t vendorId() const;
     uint32_t deviceId() const;
@@ -32,13 +33,14 @@ namespace commandbuffers::gpu
     uint32_t subgroupMaxSize() const;
 
     virtual bool supportsExternalImages() const = 0;
+    virtual bool supportsFeatureLevel(GPUFeatureLevel featureLevel, GPUInstance *instance) const = 0;
 
   protected:
     void enableFeature(GPUFeatureName feature);
 
   private:
-    virtual std::unique_ptr<GPUDeviceBase> createDeviceImpl(Ref<GPUAdapterBase> adapter,
-                                                            GPUDeviceDescriptor &descriptor) = 0;
+    virtual Ref<GPUDeviceBase> createDeviceImpl(Ref<GPUAdapterBase> adapter,
+                                                const GPUDeviceDescriptor &descriptor) = 0;
     virtual void initializeImpl() = 0;
     virtual void initializeSupportedFeaturesImpl() = 0;
     virtual void initializeVendorArchitectureImpl();

@@ -22,10 +22,18 @@ namespace commandbuffers
     GPUSupportedLimits *requiredLimits = nullptr;
   };
 
-  class GPUInstance final
+  class GPUInstance final : std::enable_shared_from_this<GPUInstance>
   {
   public:
     static Ref<GPUInstance> Create(const GPUInstanceDescriptor *descriptor = nullptr);
+
+    // Discovers and returns a single adapter based on the `options`.
+    Ref<GPUAdapterBase> requestAdapter(const RequestAdapterOptions &options);
+
+    // Discovers and returns a vector of adapters.
+    // All systems adapters that can be found are returned if no options are passed.
+    // Otherwise, returns adapters based on the `options`.
+    std::vector<Ref<GPUAdapterBase>> enumerateAdapters(const RequestAdapterOptions *options = nullptr);
 
     void registerBackend(gpu::BackendConnection *backend);
     void addDevice(Ref<GPUDeviceBase>);
@@ -43,6 +51,9 @@ namespace commandbuffers
                                       GPUPowerPreference powerPreference);
 
     gpu::BackendConnection *getBackendConnection() const;
+
+    // Enumerate physical devices according to options and return them.
+    std::vector<Ref<gpu::PhysicalDeviceBase>> enumeratePhysicalDevices(const RequestAdapterOptions &options);
 
   private:
     std::unordered_set<GPUFeatureName> instance_features_;

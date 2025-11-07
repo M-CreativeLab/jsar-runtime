@@ -18,6 +18,14 @@ namespace commandbuffers
     class PhysicalDeviceBase;
   }
 
+  struct RequestAdapterOptions
+  {
+    GPUFeatureLevel featureLevel = GPUFeatureLevel::kCore;
+    GPUPowerPreference powerPreference = GPUPowerPreference::kUndefined;
+    bool forceFallbackAdapter = false;
+    GPUBackendType backendType = GPUBackendType::kUndefined;
+  };
+
   class GPUAdapterInfo
   {
   public:
@@ -49,7 +57,7 @@ namespace commandbuffers
     }
   };
 
-  class GPUAdapterBase : ErrorMonad
+  class GPUAdapterBase : ErrorMonad, public std::enable_shared_from_this<GPUAdapterBase>
   {
   public:
     GPUAdapterBase(Ref<GPUInstance> instance,
@@ -61,8 +69,8 @@ namespace commandbuffers
     const GPUAdapterInfo &info() const;
     bool hasFeature(GPUFeatureName) const;
     void requestDevice(const GPUDeviceDescriptor *descriptor,
-                       std::function<void(std::unique_ptr<GPUDeviceBase>)> callback);
-    std::unique_ptr<GPUDeviceBase> createDevice(const GPUDeviceDescriptor *descriptor = nullptr);
+                       std::function<void(GPUDeviceBase &)> callback);
+    Ref<GPUDeviceBase> createDevice(const GPUDeviceDescriptor *descriptor = nullptr);
 
     gpu::PhysicalDeviceBase *physicalDevice();
     const gpu::PhysicalDeviceBase *physicalDevice() const;
@@ -83,4 +91,7 @@ namespace commandbuffers
     // create a device.
     bool adapter_is_consumed = false;
   };
+
+  std::vector<Ref<GPUAdapterBase>> SortAdapters(std::vector<Ref<GPUAdapterBase>> adapters,
+                                                const RequestAdapterOptions &options);
 }

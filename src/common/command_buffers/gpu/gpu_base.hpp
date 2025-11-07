@@ -280,26 +280,67 @@ namespace commandbuffers
     kBindGroupLayoutInternal,
   };
 
-  enum class GPUBackendType : uint32_t
-  {
-    kUndefined,
-    kNull,
-    kWebGPU,
-    kD3D11,
-    kD3D12,
-    kMetal,
-    kVulkan,
-    kOpenGL,
-    kOpenGLES,
+#define GPU_BACKEND_TYPES(XX) \
+  XX(kUndefined, "undefined") \
+  XX(kNull, "null")           \
+  XX(kWebGPU, "webgpu")       \
+  XX(kD3D11, "d3d11")         \
+  XX(kD3D12, "d3d12")         \
+  XX(kMetal, "metal")         \
+  XX(kVulkan, "vulkan")       \
+  XX(kOpenGL, "opengl")       \
+  XX(kOpenGLES, "opengles")
+
+#define GPU_ADAPTER_TYPES(XX)          \
+  XX(kDiscreteGPU, "discrete-gpu")     \
+  XX(kIntegratedGPU, "integrated-gpu") \
+  XX(kCPU, "cpu")                      \
+  XX(kUnknown, "unknown")
+
+#define DECL_GPU_ENUM_ITEM(NAME, _) NAME,
+#define ADD_GPU_ENUM(ENUM_TYPE, BASE_TYPE, MAP) \
+  enum class ENUM_TYPE : BASE_TYPE              \
+  {                                             \
+    MAP(DECL_GPU_ENUM_ITEM)                     \
   };
 
-  enum class GPUAdapterType : uint32_t
+  ADD_GPU_ENUM(GPUBackendType, uint32_t, GPU_BACKEND_TYPES)
+  ADD_GPU_ENUM(GPUAdapterType, uint32_t, GPU_ADAPTER_TYPES)
+
+#undef DECL_GPU_ENUM_ITEM
+#undef ADD_GPU_ENUM
+
+  inline std::string to_string(GPUBackendType type)
   {
-    kDiscreteGPU,
-    kIntegratedGPU,
-    kCPU,
-    kUnknown,
-  };
+#define XX(NAME, STR)        \
+  case GPUBackendType::NAME: \
+    return STR;
+
+    switch (type)
+    {
+      GPU_BACKEND_TYPES(XX)
+    default:
+      assert(false && "Unknown GPUBackendType");
+      return "unknown";
+    }
+#undef XX
+  }
+
+  inline std::string to_string(GPUAdapterType type)
+  {
+#define XX(NAME, STR)        \
+  case GPUAdapterType::NAME: \
+    return STR;
+
+    switch (type)
+    {
+      GPU_ADAPTER_TYPES(XX)
+    default:
+      assert(false && "Unknown GPUAdapterType");
+      return "unknown";
+    }
+#undef XX
+  }
 
   enum class GPUShaderStage : uint64_t
   {
@@ -632,9 +673,9 @@ namespace commandbuffers
 
   enum class GPUPowerPreference : uint32_t
   {
-    Undefined = 0x00000000,
-    LowPower = 0x00000001,
-    HighPerformance = 0x00000002,
+    kUndefined = 0x00000000,
+    kLowPower = 0x00000001,
+    kHighPerformance = 0x00000002,
   };
 
   class GPUSupportedFeatures : public std::unordered_set<GPUFeatureName>

@@ -36,6 +36,13 @@ private:                                     \
 template <typename T>
 using Ref = std::shared_ptr<T>;
 
+template <typename T>
+inline Ref<T> AcquireRef(T *ptr)
+{
+  return std::shared_ptr<T>(ptr, [](T *p)
+                            { delete p; });
+}
+
 /**
  * Shared reference is a template class that holds the shared pointer of a type.
  *

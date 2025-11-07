@@ -156,7 +156,7 @@ public:
   /**
    * Submit a GPUCommandBuffer list to the GPU device for execution.
    */
-  void SubmitGPUCommandBuffer(std::vector<std::shared_ptr<commandbuffers::GPUCommandBufferBase>> &);
+  void SubmitGPUCommandBuffer(std::vector<Ref<commandbuffers::GPUCommandBufferBase>> &);
   std::unique_ptr<commandbuffers::GPUCommandEncoder> CreateCommandEncoder();
 
   /**
@@ -269,7 +269,7 @@ protected:
   /**
    * @returns the `renderer::TrRenderer` shared pointer to use.
    */
-  inline std::shared_ptr<renderer::TrRenderer> GetRenderer()
+  inline Ref<renderer::TrRenderer> GetRenderer()
   {
     return renderer.lock();
   }
@@ -324,6 +324,7 @@ protected:
   bool m_PrintsContext = false;
 
   Ref<commandbuffers::GPUInstance> gpuInstance = nullptr;
+  Ref<commandbuffers::GPUAdapterBase> gpuAdapter = nullptr;
   Ref<commandbuffers::GPUDeviceBase> gpuDevice = nullptr;
 
   /**
