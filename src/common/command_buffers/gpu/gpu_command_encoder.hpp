@@ -32,9 +32,43 @@ namespace commandbuffers
     }
 
   public:
-    // TODO(yorkie): begineComputePass
+    // Pass Encoding
+    // TODO(yorkie): beginComputePass
     GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor &);
     std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const;
+
+    // Copy Operations
+    // WebGPU Spec: https://www.w3.org/TR/webgpu/#copy-operations
+    //
+    // TODO: Implement copy operations for TrCommandBufferManager generic command encoding.
+    // These methods are needed to handle buffer and texture copy commands.
+    //
+    // void copyBufferToBuffer(
+    //   const GPUBufferBase& source,
+    //   uint64_t sourceOffset,
+    //   const GPUBufferBase& destination,
+    //   uint64_t destinationOffset,
+    //   uint64_t size);
+    //
+    // void copyBufferToTexture(
+    //   const GPUImageCopyBuffer& source,
+    //   const GPUImageCopyTexture& destination,
+    //   const GPUExtent3D& copySize);
+    //
+    // void copyTextureToBuffer(
+    //   const GPUImageCopyTexture& source,
+    //   const GPUImageCopyBuffer& destination,
+    //   const GPUExtent3D& copySize);
+    //
+    // void copyTextureToTexture(
+    //   const GPUImageCopyTexture& source,
+    //   const GPUImageCopyTexture& destination,
+    //   const GPUExtent3D& copySize);
+    //
+    // void clearBuffer(
+    //   const GPUBufferBase& buffer,
+    //   uint64_t offset = 0,
+    //   std::optional<uint64_t> size = std::nullopt);
 
   private:
     GPUCommandEncoder(Ref<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
