@@ -14,6 +14,7 @@
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
 #include <common/command_buffers/gpu/gpu_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_shader_module.hpp>
 #include <common/command_buffers/gpu/gpu_pipeline.hpp>
 #include <common/command_buffers/gpu/gpu_render_pipeline.hpp>
 #include <common/command_buffers/gpu/gpu_compute_pipeline.hpp>
@@ -68,6 +69,8 @@ namespace commandbuffers
     Ref<GPUBufferBase> createBuffer(const GPUBufferDescriptor *rawDescriptor);
     Ref<GPUCommandEncoder> createCommandEncoder(const GPUCommandEncoderDescriptor *descriptor = nullptr);
     Ref<GPUComputePipelineBase> createComputePipeline(const GPUComputePipelineDescriptor *descriptor);
+    Ref<GPUShaderModuleBase> createShaderModule(const GPUShaderModuleDescriptor *descriptor = nullptr,
+                                                const std::vector<wgsl::Extension> &internalExtensions = {});
 
     bool isValidationEnabled() const;
     bool isRobustnessEnabled() const;
@@ -82,10 +85,22 @@ namespace commandbuffers
     GPUSupportedLimits limits_;
 
   private:
-    virtual Ref<GPUBindGroupBase> createBindGroupImpl(
-      const GPUBindGroupDescriptor &descriptor) = 0;
-    virtual Ref<GPUBindGroupLayoutInternalBase> createBindGroupLayoutImpl(
-      const GPUBindGroupLayoutDescriptor &descriptor) = 0;
+    virtual Ref<GPUBindGroupBase> createBindGroupImpl(const GPUBindGroupDescriptor &) = 0;
+    virtual Ref<GPUBindGroupLayoutInternalBase> createBindGroupLayoutImpl(const GPUBindGroupLayoutDescriptor &) = 0;
+    virtual Ref<GPUBufferBase> createBufferImpl(const GPUBufferDescriptor &) = 0;
+    virtual Ref<GPUPipelineLayoutBase> createPipelineLayoutImpl(const GPUPipelineLayoutDescriptor &) = 0;
+    virtual Ref<GPUShaderModuleBase> createShaderModuleImpl(const GPUShaderModuleDescriptor &,
+                                                            const std::vector<wgsl::Extension> &) = 0;
+    virtual Ref<GPUTextureBase> createTextureImpl(const GPUTextureDescriptor &) = 0;
+    virtual Ref<GPUTextureViewBase> createTextureViewImpl(Ref<GPUTextureBase> texture,
+                                                          const GPUTextureViewDescriptor &) = 0;
+    virtual Ref<GPUComputePipelineBase> createUninitializedComputePipelineImpl(const GPUComputePipelineDescriptor &) = 0;
+    virtual Ref<GPURenderPipelineBase> createUninitializedRenderPipelineImpl(const GPURenderPipelineDescriptor &) = 0;
+
+    virtual bool tickImpl() = 0;
+    virtual void setLabelImpl();
+    virtual bool reduceMemoryUsageImpl();
+    virtual void performIdleTasksImpl();
 
     Ref<GPUBindGroupLayoutBase> createEmptyBindGroupLayout();
     Ref<GPUPipelineLayoutBase> createEmptyPipelineLayout();

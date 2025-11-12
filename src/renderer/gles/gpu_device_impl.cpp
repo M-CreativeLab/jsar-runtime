@@ -79,4 +79,53 @@ namespace gles
   {
     return nullptr;
   }
+
+  Ref<GPUBufferBase> GPUDeviceImpl::createBufferImpl(
+    const GPUBufferDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUPipelineLayoutBase> GPUDeviceImpl::createPipelineLayoutImpl(
+    const GPUPipelineLayoutDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUShaderModuleBase> GPUDeviceImpl::createShaderModuleImpl(
+    const GPUShaderModuleDescriptor &descriptor,
+    const std::vector<wgsl::Extension> &internalExtensions)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUTextureBase> GPUDeviceImpl::createTextureImpl(
+    const GPUTextureDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUTextureViewBase> GPUDeviceImpl::createTextureViewImpl(
+    Ref<GPUTextureBase> texture,
+    const GPUTextureViewDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUComputePipelineBase> GPUDeviceImpl::createUninitializedComputePipelineImpl(
+    const GPUComputePipelineDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPURenderPipelineBase> GPUDeviceImpl::createUninitializedRenderPipelineImpl(
+    const GPURenderPipelineDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  bool GPUDeviceImpl::tickImpl()
+  {
+    return true;
+  }
 }

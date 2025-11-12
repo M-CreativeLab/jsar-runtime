@@ -10,6 +10,10 @@
 
 namespace commandbuffers
 {
+  struct GPUPipelineLayoutDescriptor
+  {
+  };
+
   class GPUPipelineLayoutBase : public GPUHandle
   {
   private:

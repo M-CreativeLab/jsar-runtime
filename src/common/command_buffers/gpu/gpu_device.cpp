@@ -89,6 +89,12 @@ namespace commandbuffers
     return nullptr;
   }
 
+  Ref<GPUShaderModuleBase> GPUDeviceBase::createShaderModule(const GPUShaderModuleDescriptor *descriptor,
+                                                             const std::vector<wgsl::Extension> &internalExtensions)
+  {
+    return nullptr;
+  }
+
   bool GPUDeviceBase::isValidationEnabled() const
   {
     // return !IsToggleEnabled(Toggle::SkipValidation);
@@ -116,6 +122,19 @@ namespace commandbuffers
   bool GPUDeviceBase::mayRequireDuplicationOfIndirectParameters() const
   {
     return false;
+  }
+
+  void GPUDeviceBase::setLabelImpl()
+  {
+  }
+
+  bool GPUDeviceBase::reduceMemoryUsageImpl()
+  {
+    return false;
+  }
+
+  void GPUDeviceBase::performIdleTasksImpl()
+  {
   }
 
   Ref<GPUBindGroupLayoutBase> GPUDeviceBase::createEmptyBindGroupLayout()

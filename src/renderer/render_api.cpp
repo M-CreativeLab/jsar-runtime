@@ -89,6 +89,7 @@ TrRenderHardwareInterface::TrRenderHardwareInterface(RHIBackendType backend_type
 
   gpuAdapter = gpuInstance->requestAdapter(requestOptions);
   gpuDevice = gpuAdapter->createDevice();
+  assert(gpuDevice != nullptr && "Failed to create GPU device");
 }
 
 void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<Ref<GPUCommandBufferBase>> &commandBuffers)

@@ -6,6 +6,10 @@ namespace commandbuffers
 {
   class GPUTextureViewBase;
 
+  struct GPUTextureDescriptor
+  {
+  };
+
   class GPUTextureBase : public GPUHandle
   {
   public:

@@ -10,7 +10,7 @@
 
 namespace commandbuffers
 {
-  struct TextureViewDescriptor
+  struct GPUTextureViewDescriptor
   {
     std::string_view label;
     GPUTextureFormat format = GPUTextureFormat::kUndefined;
@@ -26,7 +26,7 @@ namespace commandbuffers
   class GPUTextureViewBase : public GPUHandle
   {
   public:
-    GPUTextureViewBase(Ref<GPUTextureBase> texture, const TextureViewDescriptor &descriptor);
+    GPUTextureViewBase(Ref<GPUTextureBase> texture, const GPUTextureViewDescriptor &);
 
     Ref<GPUTextureBase> texture() const;
     const GPUTextureBase &textureRef() const;
