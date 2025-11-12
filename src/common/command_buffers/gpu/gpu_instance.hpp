@@ -42,7 +42,7 @@ namespace commandbuffers
     bool hasFeature(GPUFeatureName feature) const;
 
     // Allow AcquireRef to access the private constructor.
-    friend Ref<GPUInstance> (::AcquireRef)(GPUInstance *ptr);
+    friend Ref<GPUInstance>(::AcquireRef)(GPUInstance *ptr);
 
   private:
     explicit GPUInstance();
