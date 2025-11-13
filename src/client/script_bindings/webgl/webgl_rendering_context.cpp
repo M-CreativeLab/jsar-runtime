@@ -1,3 +1,4 @@
+#include <set>
 #include <client/script_bindings/canvas/image_source.hpp>
 #include "./webgl_rendering_context.hpp"
 #include "./active_info.hpp"
@@ -2637,6 +2638,15 @@ namespace endor
 
         auto nameUtf8 = String::Utf8Value(isolate, info[1]);
         string name = *nameUtf8;
+
+        // WebGL 2.0 spec §5.18: Built-in attributes always return -1
+        static const std::set<string> kBuiltInAttribs = {
+          "gl_VertexID", "gl_InstanceID", "gl_Position", "gl_PointSize"};
+        if (kBuiltInAttribs.count(name))
+        {
+          info.GetReturnValue().Set(Number::New(isolate, -1));
+          return;
+        }
 
         auto loc = handle()->getAttribLocation(programBinding->handle(), name);
         if (!loc.has_value())
