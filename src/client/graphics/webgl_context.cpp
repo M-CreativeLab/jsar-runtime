@@ -1,3 +1,4 @@
+#include <set>
 #include <string>
 #include <idgen.hpp>
 #include <common/image/image_processor.hpp>
@@ -831,6 +832,15 @@ namespace endor
     optional<WebGLAttribLocation> WebGLContext::getAttribLocation(shared_ptr<WebGLProgram> program, const string &name)
     {
       assert(program != nullptr && "Program is not null");
+
+      // WebGL 2.0 spec §5.18: Built-in attributes always return -1
+      static const std::set<string> kBuiltInAttribs = {
+        "gl_VertexID", "gl_InstanceID", "gl_Position", "gl_PointSize"};
+      if (kBuiltInAttribs.count(name))
+      {
+        return nullopt; // Returns nullopt which script bindings converts to -1
+      }
+
       return program->hasAttribLocation(name) ? optional<WebGLAttribLocation>(program->getAttribLocation(name)) : nullopt;
     }
 
