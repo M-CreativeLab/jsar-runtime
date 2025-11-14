@@ -7,14 +7,7 @@
 
 namespace commandbuffers::gpu
 {
-  enum class InternalErrorType : uint32_t
-  {
-    kNone = 0,
-    kValidation = 1,
-    kDeviceLost = 2,
-    kInternal = 4,
-    kOutOfMemory = 8
-  };
+  enum class InternalErrorType : uint32_t;
 
   class [[nodiscard]] ErrorData
   {

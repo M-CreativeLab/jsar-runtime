@@ -26,6 +26,9 @@ namespace commandbuffers
   class GPUCommandEncoder final : public GPUHandle
   {
   public:
+    static Ref<GPUCommandEncoder> Create(Ref<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
+    static Ref<GPUCommandEncoder> MakeError(Ref<GPUDeviceBase> device, std::string_view label);
+
     GPUHandleType type() const override
     {
       return GPUHandleType::kCommandEncoder;
@@ -34,7 +37,19 @@ namespace commandbuffers
   public:
     // TODO(yorkie): begineComputePass
     GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor &);
+    void clearBuffer();
+    void copyBufferToBuffer();
+    void copyBufferToTexture();
+    void copyTextureToBuffer();
+    void copyTextureToTexture();
     std::unique_ptr<GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt) const;
+
+    void insertDebugMarker(std::string_view marker);
+    void pushDebugGroup(std::string_view group);
+    void popDebugGroup();
+
+    void resolveQuerySet();
+    void writeTimestamp();
 
   private:
     GPUCommandEncoder(Ref<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);

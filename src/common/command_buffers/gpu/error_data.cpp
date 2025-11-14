@@ -2,6 +2,7 @@
 #include <sstream>
 #include <common/assert.hpp>
 #include <common/utility.hpp>
+#include <common/command_buffers/gpu/error.hpp>
 #include <common/command_buffers/gpu/error_data.hpp>
 
 using namespace std;

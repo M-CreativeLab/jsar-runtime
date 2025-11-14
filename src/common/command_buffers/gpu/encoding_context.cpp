@@ -5,10 +5,10 @@ using namespace std;
 
 namespace commandbuffers::gpu
 {
-  EncodingContext::EncodingContext(Ref<GPUDeviceBase> device, Ref<const GPUHandle> initialEncoder)
+  EncodingContext::EncodingContext(Ref<GPUDeviceBase> device, const GPUHandle *initialEncoder)
       : device_(device.get())
-      , top_level_encoder_(initialEncoder.get())
-      , current_encoder_(initialEncoder.get())
+      , top_level_encoder_(initialEncoder)
+      , current_encoder_(initialEncoder)
       , status_(Status::kOpen)
   {
     assert(!initialEncoder->isError());

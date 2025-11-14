@@ -5,6 +5,7 @@
 
 #include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/error.hpp>
 #include <common/command_buffers/gpu/error_data.hpp>
 #include <common/command_buffers/gpu/command_allocator.hpp>
 #include <common/command_buffers/gpu/indirect_draw_metadata.hpp>
@@ -21,7 +22,7 @@ namespace commandbuffers
     class EncodingContext
     {
     public:
-      EncodingContext(Ref<GPUDeviceBase> device, Ref<const GPUHandle> initialEncoder);
+      EncodingContext(Ref<GPUDeviceBase> device, const GPUHandle *initialEncoder);
       EncodingContext(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag);
       ~EncodingContext();
 
@@ -29,6 +30,35 @@ namespace commandbuffers
       // encoded commands are released.
       void destroy();
       CommandIterator acquireCommands();
+
+      void handleError(std::unique_ptr<ErrorData> error);
+
+      inline bool consumedError(MaybeError maybeError)
+      {
+        if (maybeError.IsError()) [[unlikely]]
+        {
+          handleError(maybeError.AcquireError());
+          return true;
+        }
+        return false;
+      }
+
+      inline MaybeError validateCanEncodeOn(const GPUHandle *encoder)
+      {
+        // TODO: validate encoder is valid.
+        return {};
+      }
+
+      template <typename EncodeFunction>
+      inline bool tryEncode(const GPUHandle *encoder, EncodeFunction &&encodeFunction)
+      {
+        if (consumedError(validateCanEncodeOn(encoder)))
+        {
+          return false;
+        }
+        assert(!were_commands_acquired_);
+        return !consumedError(encodeFunction(&pending_commands_));
+      }
 
       // Must be called prior to encoding a BeginRenderPassCmd. Note that it's OK to call this
       // and then not actually call EnterPass+ExitRenderPass, for example if some other pass setup
