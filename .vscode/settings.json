@@ -105,5 +105,10 @@
   "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
   "C_Cpp.default.cppStandard": "c++17",
   "C_Cpp.default.cStandard": "c17",
-  "C_Cpp.errorSquiggles": "enabledIfIncludesResolve"
+  "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}/build/targets/darwin",
+    "--background-index",
+    "--query-driver=/usr/bin/clang*;${env:ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/darwin-x86_64/bin/*"
+  ]
 }
