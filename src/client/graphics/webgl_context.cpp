@@ -816,7 +816,7 @@ namespace endor
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib1fv(const WebGLAttribLocation &index, const vector<float> values)
+    void WebGLContext::vertexAttrib1fv(const WebGLAttribLocation &index, const vector<float> &values)
     {
       auto req = VertexAttrib1fvCommandBufferRequest(index.programId, index.name, values);
       if (index.index.has_value())
@@ -824,13 +824,13 @@ namespace endor
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib1fv(int index, const vector<float> values)
+    void WebGLContext::vertexAttrib1fv(int index, const vector<float> &values)
     {
       auto req = VertexAttrib1fvCommandBufferRequest(0, index, values);
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib2fv(const WebGLAttribLocation &index, const vector<float> values)
+    void WebGLContext::vertexAttrib2fv(const WebGLAttribLocation &index, const vector<float> &values)
     {
       auto req = VertexAttrib2fvCommandBufferRequest(index.programId, index.name, values);
       if (index.index.has_value())
@@ -838,13 +838,13 @@ namespace endor
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib2fv(int index, const vector<float> values)
+    void WebGLContext::vertexAttrib2fv(int index, const vector<float> &values)
     {
       auto req = VertexAttrib2fvCommandBufferRequest(0, index, values);
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib3fv(const WebGLAttribLocation &index, const vector<float> values)
+    void WebGLContext::vertexAttrib3fv(const WebGLAttribLocation &index, const vector<float> &values)
     {
       auto req = VertexAttrib3fvCommandBufferRequest(index.programId, index.name, values);
       if (index.index.has_value())
@@ -852,13 +852,13 @@ namespace endor
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib3fv(int index, const vector<float> values)
+    void WebGLContext::vertexAttrib3fv(int index, const vector<float> &values)
     {
       auto req = VertexAttrib3fvCommandBufferRequest(0, index, values);
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib4fv(const WebGLAttribLocation &index, const vector<float> values)
+    void WebGLContext::vertexAttrib4fv(const WebGLAttribLocation &index, const vector<float> &values)
     {
       auto req = VertexAttrib4fvCommandBufferRequest(index.programId, index.name, values);
       if (index.index.has_value())
@@ -866,7 +866,7 @@ namespace endor
       sendCommandBufferRequest(req);
     }
 
-    void WebGLContext::vertexAttrib4fv(int index, const vector<float> values)
+    void WebGLContext::vertexAttrib4fv(int index, const vector<float> &values)
     {
       auto req = VertexAttrib4fvCommandBufferRequest(0, index, values);
       sendCommandBufferRequest(req);
