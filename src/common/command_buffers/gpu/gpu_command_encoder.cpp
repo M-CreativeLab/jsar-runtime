@@ -1,5 +1,7 @@
 #include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
+#include <common/command_buffers/gpu/gpu_commands.hpp>
+#include <common/command_buffers/gpu/command_allocator.hpp>
 
 using namespace std;
 
@@ -69,7 +71,13 @@ namespace commandbuffers
 
   void GPUCommandEncoder::insertDebugMarker(std::string_view marker)
   {
-    throw runtime_error("insertDebugMarker is not implemented");
+    encoding_context_.tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        GPUInsertDebugMarkerCommand *cmd = allocator->allocate<GPUInsertDebugMarkerCommand>(GPUCommand::kInsertDebugMarker);
+        return {};
+      });
   }
 
   void GPUCommandEncoder::pushDebugGroup(std::string_view group)

@@ -63,6 +63,12 @@ namespace commandbuffers
     virtual ~GPUCommand() = default;
   };
 
+  class GPUInsertDebugMarkerCommand : public GPUCommand
+  {
+  public:
+    uint32_t length;
+  };
+
   class GPUDrawCommand : public GPUCommand
   {
   public:

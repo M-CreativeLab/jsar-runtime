@@ -45,6 +45,18 @@ namespace commandbuffers
 
       inline MaybeError validateCanEncodeOn(const GPUHandle *encoder)
       {
+        if (encoder != current_encoder_) [[unlikely]]
+        {
+          switch (status_)
+          {
+          case Status::kErrorAtCreation:
+          case Status::kErrorInRecording:
+          case Status::kDestroyed:
+          case Status::kFinished:
+          case Status::kOpen:
+            break;
+          }
+        }
         // TODO: validate encoder is valid.
         return {};
       }
