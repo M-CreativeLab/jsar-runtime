@@ -973,6 +973,7 @@ namespace endor
                          WebGLPixelType type,
                          unsigned char *pixels);
 
+      void transformFeedbackVaryings(std::shared_ptr<WebGLProgram> program, const std::vector<std::string> &varyings, uint32_t bufferMode);
       void uniformBlockBinding(std::shared_ptr<WebGLProgram> program, int uniformBlockIndex, uint32_t uniformBlockBinding);
       void uniformMatrix3x2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values);
       void uniformMatrix4x2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values);
