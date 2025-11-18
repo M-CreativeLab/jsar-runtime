@@ -1724,9 +1724,9 @@ namespace endor
           return;
         }
 
-        GLenum target = args[0]->Uint32Value(context).ToChecked();
-        GLenum internalformat = args[1]->Uint32Value(context).ToChecked();
-        GLenum pname = args[2]->Uint32Value(context).ToChecked();
+        uint32_t target = args[0]->Uint32Value(context).ToChecked();
+        uint32_t internalformat = args[1]->Uint32Value(context).ToChecked();
+        uint32_t pname = args[2]->Uint32Value(context).ToChecked();
 
         // According to WebGL2 spec, getInternalformatParameter returns an Int32Array
         // Most common pname is GL_SAMPLES which returns supported sample counts
@@ -1738,11 +1738,11 @@ namespace endor
         {
           // Return common sample counts: [4, 2, 1] or based on MAX_SAMPLES
           // This is a simplified implementation
-          GLint values[16] = {0};
+          int values[16] = {0};
           int numValues = 0;
 
           // Query MAX_SAMPLES to determine supported sample counts
-          GLint maxSamples = 4; // Default fallback
+          int maxSamples = 4; // Default fallback
 
           // Return sample counts in descending order
           if (maxSamples >= 8)
