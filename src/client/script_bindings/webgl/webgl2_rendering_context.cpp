@@ -1735,40 +1735,14 @@ namespace endor
         // Most common pname is GL_SAMPLES which returns supported sample counts
         // For now, return a simple implementation based on the pname
 
-        // For GL_SAMPLES (0x80A9), return an array of supported sample counts
+        // For GL_SAMPLES, return an array of supported sample counts
         // For other queries, return null (as per spec when not supported)
-        if (pname == 0x80A9) // GL_SAMPLES
+        if (pname == WEBGL_SAMPLES)
         {
-          // Return common sample counts: [4, 2, 1] or based on MAX_SAMPLES
-          // This is a simplified implementation
-          int values[16] = {0};
-          int numValues = 0;
-
-          // Query MAX_SAMPLES to determine supported sample counts
-          int maxSamples = 4; // Default fallback
-
-          // Return sample counts in descending order
-          if (maxSamples >= 8)
-          {
-            values[numValues++] = 8;
-            values[numValues++] = 4;
-            values[numValues++] = 2;
-          }
-          else if (maxSamples >= 4)
-          {
-            values[numValues++] = 4;
-            values[numValues++] = 2;
-          }
-          else if (maxSamples >= 2)
-          {
-            values[numValues++] = 2;
-          }
-
-          // Always include 1 sample (non-multisampled)
-          if (numValues == 0 || values[numValues - 1] != 1)
-          {
-            values[numValues++] = 1;
-          }
+          // Return common sample counts in descending order: [4, 2, 1]
+          // This is a simplified implementation with default supported sample counts
+          int values[] = {4, 2, 1};
+          int numValues = 3;
 
           // Create Int32Array to return
           auto arraybuffer = ArrayBuffer::New(isolate, sizeof(int32_t) * numValues);
