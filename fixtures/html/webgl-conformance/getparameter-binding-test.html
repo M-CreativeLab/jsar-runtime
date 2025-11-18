@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WebGL getParameter Binding Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .pass { color: green; }
+    .fail { color: red; }
+    pre { background: #f5f5f5; padding: 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>WebGL getParameter Binding Test</h1>
+  <p>This test verifies that context.getParameter() returns null (not undefined) for binding parameters.</p>
+  <div id="results"></div>
+  <script>
+    const results = document.getElementById('results');
+    
+    function log(message, isPass) {
+      const div = document.createElement('div');
+      div.className = isPass ? 'pass' : 'fail';
+      div.textContent = (isPass ? '✓ ' : '✗ ') + message;
+      results.appendChild(div);
+    }
+
+    function testParameter(gl, paramName, paramValue) {
+      const result = gl.getParameter(paramValue);
+      const isNull = result === null;
+      const isUndefined = result === undefined;
+      
+      if (isNull) {
+        log(`${paramName}: correctly returns null`, true);
+        return true;
+      } else if (isUndefined) {
+        log(`${paramName}: INCORRECTLY returns undefined (should be null)`, false);
+        return false;
+      } else {
+        log(`${paramName}: returns ${result} (expected null or object)`, true);
+        return true;
+      }
+    }
+
+    // Create WebGL1 context
+    const canvas1 = document.createElement('canvas');
+    const gl1 = canvas1.getContext('webgl');
+    
+    if (gl1) {
+      results.innerHTML += '<h2>WebGL 1.0 Binding Parameters</h2>';
+      testParameter(gl1, 'ARRAY_BUFFER_BINDING', gl1.ARRAY_BUFFER_BINDING);
+      testParameter(gl1, 'ELEMENT_ARRAY_BUFFER_BINDING', gl1.ELEMENT_ARRAY_BUFFER_BINDING);
+      testParameter(gl1, 'FRAMEBUFFER_BINDING', gl1.FRAMEBUFFER_BINDING);
+      testParameter(gl1, 'RENDERBUFFER_BINDING', gl1.RENDERBUFFER_BINDING);
+      testParameter(gl1, 'TEXTURE_BINDING_2D', gl1.TEXTURE_BINDING_2D);
+      testParameter(gl1, 'TEXTURE_BINDING_CUBE_MAP', gl1.TEXTURE_BINDING_CUBE_MAP);
+      testParameter(gl1, 'CURRENT_PROGRAM', gl1.CURRENT_PROGRAM);
+    } else {
+      log('WebGL 1.0 not supported', false);
+    }
+
+    // Create WebGL2 context
+    const canvas2 = document.createElement('canvas');
+    const gl2 = canvas2.getContext('webgl2');
+    
+    if (gl2) {
+      results.innerHTML += '<h2>WebGL 2.0 Binding Parameters</h2>';
+      testParameter(gl2, 'COPY_READ_BUFFER_BINDING', gl2.COPY_READ_BUFFER_BINDING);
+      testParameter(gl2, 'COPY_WRITE_BUFFER_BINDING', gl2.COPY_WRITE_BUFFER_BINDING);
+      testParameter(gl2, 'DRAW_FRAMEBUFFER_BINDING', gl2.DRAW_FRAMEBUFFER_BINDING);
+      testParameter(gl2, 'READ_FRAMEBUFFER_BINDING', gl2.READ_FRAMEBUFFER_BINDING);
+      testParameter(gl2, 'PIXEL_PACK_BUFFER_BINDING', gl2.PIXEL_PACK_BUFFER_BINDING);
+      testParameter(gl2, 'PIXEL_UNPACK_BUFFER_BINDING', gl2.PIXEL_UNPACK_BUFFER_BINDING);
+      testParameter(gl2, 'UNIFORM_BUFFER_BINDING', gl2.UNIFORM_BUFFER_BINDING);
+      testParameter(gl2, 'VERTEX_ARRAY_BINDING', gl2.VERTEX_ARRAY_BINDING);
+      testParameter(gl2, 'SAMPLER_BINDING', gl2.SAMPLER_BINDING);
+      testParameter(gl2, 'TRANSFORM_FEEDBACK_BINDING', gl2.TRANSFORM_FEEDBACK_BINDING);
+      testParameter(gl2, 'TRANSFORM_FEEDBACK_BUFFER_BINDING', gl2.TRANSFORM_FEEDBACK_BUFFER_BINDING);
+      testParameter(gl2, 'TEXTURE_BINDING_2D_ARRAY', gl2.TEXTURE_BINDING_2D_ARRAY);
+      testParameter(gl2, 'TEXTURE_BINDING_3D', gl2.TEXTURE_BINDING_3D);
+    } else {
+      log('WebGL 2.0 not supported', false);
+    }
+  </script>
+</body>
+</html>
