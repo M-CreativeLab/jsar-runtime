@@ -572,7 +572,7 @@ namespace commandbuffers
         , layer(layer)
     {
     }
-    FramebufferTextureLayerCommandBufferRequest(const FramebufferTextureLayerCommandBufferRequest &that, bool clone)
+    FramebufferTextureLayerCommandBufferRequest(const FramebufferTextureLayerCommandBufferRequest &that, bool clone = false)
         : TrCommandBufferSimpleRequest(that, clone)
         , target(that.target)
         , attachment(that.attachment)
