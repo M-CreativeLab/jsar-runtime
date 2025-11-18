@@ -4353,6 +4353,9 @@ namespace endor
         case WEBGL_STENCIL_TEST:
         case WEBGL_UNPACK_FLIP_Y_WEBGL:
         case WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+        case WEBGL_SAMPLE_ALPHA_TO_COVERAGE:
+        case WEBGL_SAMPLE_COVERAGE:
+        case WEBGL2_RASTERIZER_DISCARD:
         {
           jsValue = Boolean::New(isolate,
                                  handle()->getParameter(static_cast<client_graphics::WebGLBooleanParameterName>(pname)));
@@ -4423,6 +4426,33 @@ namespace endor
           case WEBGL2_MAX_UNIFORM_BLOCK_SIZE:
           case WEBGL2_MAX_TEXTURE_LOD_BIAS:
           case WEBGL2_EXT_MAX_VIEWS_OVR:
+          case WEBGL2_PACK_ROW_LENGTH:
+          case WEBGL2_PACK_SKIP_PIXELS:
+          case WEBGL2_PACK_SKIP_ROWS:
+          case WEBGL2_UNPACK_ROW_LENGTH:
+          case WEBGL2_UNPACK_IMAGE_HEIGHT:
+          case WEBGL2_UNPACK_SKIP_PIXELS:
+          case WEBGL2_UNPACK_SKIP_ROWS:
+          case WEBGL2_UNPACK_SKIP_IMAGES:
+          case WEBGL2_FRAGMENT_SHADER_DERIVATIVE_HINT:
+          case WEBGL2_READ_BUFFER:
+          case WEBGL2_DRAW_BUFFER0:
+          case WEBGL2_DRAW_BUFFER1:
+          case WEBGL2_DRAW_BUFFER2:
+          case WEBGL2_DRAW_BUFFER3:
+          case WEBGL2_DRAW_BUFFER4:
+          case WEBGL2_DRAW_BUFFER5:
+          case WEBGL2_DRAW_BUFFER6:
+          case WEBGL2_DRAW_BUFFER7:
+          case WEBGL2_DRAW_BUFFER8:
+          case WEBGL2_DRAW_BUFFER9:
+          case WEBGL2_DRAW_BUFFER10:
+          case WEBGL2_DRAW_BUFFER11:
+          case WEBGL2_DRAW_BUFFER12:
+          case WEBGL2_DRAW_BUFFER13:
+          case WEBGL2_DRAW_BUFFER14:
+          case WEBGL2_DRAW_BUFFER15:
+          case WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
           {
             auto value = handle<client_graphics::WebGL2Context>()
                            ->getParameterV2(static_cast<client_graphics::WebGL2IntegerParameterName>(pname));
