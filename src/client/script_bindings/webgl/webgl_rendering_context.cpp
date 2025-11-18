@@ -4387,17 +4387,76 @@ namespace endor
         }
         /**
        * WebGL object bindings (return null when nothing bound, object when bound)
-       * Currently return null as backend doesn't track all binding states
        */
         case WEBGL_ARRAY_BUFFER_BINDING:
+        {
+          auto &state = handle()->clientState();
+          if (state.vertexBuffer.has_value() && state.vertexBuffer.value() != nullptr)
+          {
+            jsValue = WebGLBuffer::NewInstance(isolate, state.vertexBuffer.value());
+          }
+          else
+          {
+            jsValue = Null(isolate);
+          }
+          break;
+        }
         case WEBGL_ELEMENT_ARRAY_BUFFER_BINDING:
+        {
+          auto &state = handle()->clientState();
+          if (state.elementBuffer.has_value() && state.elementBuffer.value() != nullptr)
+          {
+            jsValue = WebGLBuffer::NewInstance(isolate, state.elementBuffer.value());
+          }
+          else
+          {
+            jsValue = Null(isolate);
+          }
+          break;
+        }
         case WEBGL_FRAMEBUFFER_BINDING:
+        {
+          auto &state = handle()->clientState();
+          if (state.framebuffer.has_value() && state.framebuffer.value() != nullptr)
+          {
+            jsValue = WebGLFramebuffer::NewInstance(isolate, state.framebuffer.value());
+          }
+          else
+          {
+            jsValue = Null(isolate);
+          }
+          break;
+        }
         case WEBGL_RENDERBUFFER_BINDING:
-        case WEBGL_TEXTURE_BINDING_2D:
-        case WEBGL_TEXTURE_BINDING_CUBE_MAP:
+        {
+          auto &state = handle()->clientState();
+          if (state.renderbuffer.has_value() && state.renderbuffer.value() != nullptr)
+          {
+            jsValue = WebGLRenderbuffer::NewInstance(isolate, state.renderbuffer.value());
+          }
+          else
+          {
+            jsValue = Null(isolate);
+          }
+          break;
+        }
         case WEBGL_CURRENT_PROGRAM:
         {
-          // TODO: Implement proper object binding retrieval from backend
+          auto &state = handle()->clientState();
+          if (state.program.has_value() && state.program.value() != nullptr)
+          {
+            jsValue = WebGLProgram::NewInstance(isolate, state.program.value());
+          }
+          else
+          {
+            jsValue = Null(isolate);
+          }
+          break;
+        }
+        case WEBGL_TEXTURE_BINDING_2D:
+        case WEBGL_TEXTURE_BINDING_CUBE_MAP:
+        {
+          // TODO: Texture bindings not yet tracked in clientState
           jsValue = Null(isolate);
           break;
         }
@@ -4447,23 +4506,59 @@ namespace endor
           }
           /**
          * WebGL2 object bindings (return null when nothing bound, object when bound)
-         * Currently return null as backend doesn't track all binding states
          */
-          case WEBGL2_COPY_READ_BUFFER_BINDING:
-          case WEBGL2_COPY_WRITE_BUFFER_BINDING:
+          case WEBGL2_VERTEX_ARRAY_BINDING:
+          {
+            auto &state = handle()->clientState();
+            if (state.vertexArray.has_value() && state.vertexArray.value() != nullptr)
+            {
+              jsValue = WebGLVertexArray::NewInstance(isolate, state.vertexArray.value());
+            }
+            else
+            {
+              jsValue = Null(isolate);
+            }
+            break;
+          }
           case WEBGL2_DRAW_FRAMEBUFFER_BINDING:
           case WEBGL2_READ_FRAMEBUFFER_BINDING:
+          {
+            // Both draw and read framebuffer binding return the same framebuffer in WebGL2
+            auto &state = handle()->clientState();
+            if (state.framebuffer.has_value() && state.framebuffer.value() != nullptr)
+            {
+              jsValue = WebGLFramebuffer::NewInstance(isolate, state.framebuffer.value());
+            }
+            else
+            {
+              jsValue = Null(isolate);
+            }
+            break;
+          }
+          case WEBGL2_COPY_READ_BUFFER_BINDING:
+          case WEBGL2_COPY_WRITE_BUFFER_BINDING:
           case WEBGL2_PIXEL_PACK_BUFFER_BINDING:
           case WEBGL2_PIXEL_UNPACK_BUFFER_BINDING:
           case WEBGL2_UNIFORM_BUFFER_BINDING:
-          case WEBGL2_VERTEX_ARRAY_BINDING:
+          case WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+          {
+            // TODO: These buffer bindings are not yet tracked in clientState
+            // Would require extending WebGLState to track additional buffer binding points
+            jsValue = Null(isolate);
+            break;
+          }
           case WEBGL2_SAMPLER_BINDING:
           case WEBGL2_TRANSFORM_FEEDBACK_BINDING:
-          case WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+          {
+            // TODO: Sampler and transform feedback bindings not yet tracked
+            // Would require creating WebGLSampler and WebGLTransformFeedback JavaScript bindings
+            jsValue = Null(isolate);
+            break;
+          }
           case WEBGL2_TEXTURE_BINDING_2D_ARRAY:
           case WEBGL2_TEXTURE_BINDING_3D:
           {
-            // TODO: Implement proper object binding retrieval from backend
+            // TODO: Texture bindings not yet tracked in clientState
             jsValue = Null(isolate);
             break;
           }
