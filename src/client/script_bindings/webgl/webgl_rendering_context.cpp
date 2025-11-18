@@ -4348,6 +4348,8 @@ namespace endor
         case WEBGL_DEPTH_WRITEMASK:
         case WEBGL_DITHER:
         case WEBGL_POLYGON_OFFSET_FILL:
+        case WEBGL_SAMPLE_ALPHA_TO_COVERAGE:
+        case WEBGL_SAMPLE_COVERAGE:
         case WEBGL_SAMPLE_COVERAGE_INVERT:
         case WEBGL_SCISSOR_TEST:
         case WEBGL_STENCIL_TEST:
@@ -4395,6 +4397,7 @@ namespace endor
         {
           switch (pname)
           {
+          case WEBGL2_MAX_3D_TEXTURE_SIZE:
           case WEBGL2_MAX_ARRAY_TEXTURE_LAYERS:
           case WEBGL2_MAX_COLOR_ATTACHMENTS:
           case WEBGL2_MAX_COMBINED_UNIFORM_BLOCKS:
@@ -4422,11 +4425,19 @@ namespace endor
           case WEBGL2_MAX_SERVER_WAIT_TIMEOUT:
           case WEBGL2_MAX_UNIFORM_BLOCK_SIZE:
           case WEBGL2_MAX_TEXTURE_LOD_BIAS:
+          case WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
           case WEBGL2_EXT_MAX_VIEWS_OVR:
           {
             auto value = handle<client_graphics::WebGL2Context>()
                            ->getParameterV2(static_cast<client_graphics::WebGL2IntegerParameterName>(pname));
             jsValue = Integer::New(isolate, value);
+            break;
+          }
+          case WEBGL2_RASTERIZER_DISCARD:
+          {
+            jsValue = Boolean::New(isolate,
+                                   handle<client_graphics::WebGL2Context>()
+                                     ->getParameterV2(static_cast<client_graphics::WebGL2BooleanParameterName>(pname)));
             break;
           }
           default:
