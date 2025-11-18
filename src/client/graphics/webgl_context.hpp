@@ -96,6 +96,8 @@ namespace endor
       kDepthWrite = WEBGL_DEPTH_WRITEMASK,
       kDither = WEBGL_DITHER,
       kPolygonOffsetFill = WEBGL_POLYGON_OFFSET_FILL,
+      kSampleAlphaToCoverage = WEBGL_SAMPLE_ALPHA_TO_COVERAGE,
+      kSampleCoverage = WEBGL_SAMPLE_COVERAGE,
       kSampleCoverageInvert = WEBGL_SAMPLE_COVERAGE_INVERT,
       kScissorTest = WEBGL_SCISSOR_TEST,
       kStencilTest = WEBGL_STENCIL_TEST,
@@ -186,6 +188,11 @@ namespace endor
       kVersion = WEBGL_VERSION,
     };
 
+    enum class WebGL2BooleanParameterName
+    {
+      kRasterizerDiscard = WEBGL2_RASTERIZER_DISCARD,
+    };
+
     enum class WebGL2IntegerParameterName
     {
       kMax3DTextureSize = WEBGL2_MAX_3D_TEXTURE_SIZE,
@@ -216,6 +223,7 @@ namespace endor
       kMaxServerWaitTimeout = WEBGL2_MAX_SERVER_WAIT_TIMEOUT,
       kMaxUniformBlockSize = WEBGL2_MAX_UNIFORM_BLOCK_SIZE,
       kMaxTextureLodBias = WEBGL2_MAX_TEXTURE_LOD_BIAS,
+      kUniformBufferOffsetAlignment = WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
       kExtMaxViewsOvr = WEBGL2_EXT_MAX_VIEWS_OVR,
     };
 
@@ -917,6 +925,7 @@ namespace endor
         std::optional<int> length = std::nullopt);
       int getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
       int getParameterV2(WebGL2IntegerParameterName pname);
+      bool getParameterV2(WebGL2BooleanParameterName pname);
       std::shared_ptr<WebGLQuery> getQuery(WebGLQueryTarget target, int pname);
       int getUniformBlockIndex(std::shared_ptr<WebGLProgram> program, const std::string &uniformBlockName);
 
@@ -1020,6 +1029,7 @@ namespace endor
       int maxVertexUniformBlocks;
       int maxVertexUniformComponents;
       int minProgramTexelOffset;
+      int uniformBufferOffsetAlignment;
       int64_t maxClientWaitTimeout;
       int64_t maxCombinedFragmentUniformComponents;
       int64_t maxCombinedVertexUniformComponents;

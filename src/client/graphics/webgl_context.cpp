@@ -1639,6 +1639,7 @@ namespace endor
       maxVertexUniformBlocks = initResp->maxVertexUniformBlocks;
       maxVertexUniformComponents = initResp->maxVertexUniformComponents;
       minProgramTexelOffset = initResp->minProgramTexelOffset;
+      uniformBufferOffsetAlignment = 1; // Will be queried on first access
       maxClientWaitTimeout = initResp->maxClientWaitTimeout;
       maxCombinedFragmentUniformComponents = initResp->maxCombinedFragmentUniformComponents;
       maxCombinedVertexUniformComponents = initResp->maxCombinedVertexUniformComponents;
@@ -2023,6 +2024,22 @@ namespace endor
         return maxUniformBlockSize;
       else if (pname == WebGL2IntegerParameterName::kMaxTextureLodBias)
         return maxTextureLODBias;
+      else if (pname == WebGL2IntegerParameterName::kUniformBufferOffsetAlignment)
+      {
+        // Query once and cache
+        if (uniformBufferOffsetAlignment == 1)
+        {
+          auto req = GetIntegervCommandBufferRequest(static_cast<uint32_t>(pname));
+          sendCommandBufferRequest(req, true);
+          auto resp = recvResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES, req);
+          if (resp != nullptr)
+          {
+            uniformBufferOffsetAlignment = resp->value;
+            delete resp;
+          }
+        }
+        return uniformBufferOffsetAlignment;
+      }
       else if (pname == WebGL2IntegerParameterName::kExtMaxViewsOvr)
         return OVR_maxViews;
 
@@ -2034,6 +2051,22 @@ namespace endor
         throw runtime_error("Failed to get integer parameter: timeout.");
 
       int v = resp->value;
+      delete resp;
+      return v;
+    }
+
+    bool WebGL2Context::getParameterV2(WebGL2BooleanParameterName pname)
+    {
+      auto req = GetBooleanvCommandBufferRequest(static_cast<uint32_t>(pname));
+      sendCommandBufferRequest(req, true);
+
+      auto resp = recvResponse<GetBooleanvCommandBufferResponse>(COMMAND_BUFFER_GET_BOOLEANV_RES, req);
+      if (resp == nullptr) [[unlikely]]
+      {
+        string msg = "Failed to get boolean parameter(" + to_string(static_cast<uint32_t>(pname)) + "): timeout.";
+        throw runtime_error(msg);
+      }
+      auto v = resp->value;
       delete resp;
       return v;
     }
