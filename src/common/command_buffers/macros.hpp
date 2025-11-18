@@ -32,6 +32,7 @@
   XX(BIND_FRAMEBUFFER, BindFramebufferCommandBufferRequest, "GL::BindFramebuffer")                                               \
   XX(FRAMEBUFFER_RENDERBUFFER, FramebufferRenderbufferCommandBufferRequest, "GL::FramebufferRenderbuffer")                       \
   XX(FRAMEBUFFER_TEXTURE2D, FramebufferTexture2DCommandBufferRequest, "GL::FramebufferTexture2D")                                \
+  XX(FRAMEBUFFER_TEXTURE_LAYER, FramebufferTextureLayerCommandBufferRequest, "GL::FramebufferTextureLayer")                      \
   XX(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferRequest, "GL::CheckFramebufferStatus")                         \
   XX(CREATE_RENDERBUFFER, CreateRenderbufferCommandBufferRequest, "GL::CreateRenderbuffer")                                      \
   XX(DELETE_RENDERBUFFER, DeleteRenderbufferCommandBufferRequest, "GL::DeleteRenderbuffer")                                      \

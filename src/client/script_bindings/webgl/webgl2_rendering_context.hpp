@@ -100,6 +100,7 @@ namespace endor
         // Enhanced framebuffer operations
         void BlitFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &args);
         void RenderbufferStorageMultisample(const v8::FunctionCallbackInfo<v8::Value> &args);
+        void FramebufferTextureLayer(const v8::FunctionCallbackInfo<v8::Value> &args);
 
         // Enhanced texture operations
         void TexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
