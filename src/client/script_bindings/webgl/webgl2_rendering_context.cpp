@@ -1717,11 +1717,14 @@ namespace endor
           return;
         }
 
-        if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber())
+        for (int i = 0; i < 3; ++i)
         {
-          isolate->ThrowException(Exception::TypeError(
-            MakeMethodError(isolate, "getInternalformatParameter", "Invalid argument types")));
-          return;
+          if (!args[i]->IsNumber())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodArgTypeError(isolate, "getInternalformatParameter", i, "number", args[i])));
+            return;
+          }
         }
 
         uint32_t target = args[0]->Uint32Value(context).ToChecked();
