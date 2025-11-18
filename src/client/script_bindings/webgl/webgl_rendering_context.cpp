@@ -4385,6 +4385,22 @@ namespace endor
           jsValue = String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked();
           break;
         }
+        /**
+       * WebGL object bindings (return null when nothing bound, object when bound)
+       * Currently return null as backend doesn't track all binding states
+       */
+        case WEBGL_ARRAY_BUFFER_BINDING:
+        case WEBGL_ELEMENT_ARRAY_BUFFER_BINDING:
+        case WEBGL_FRAMEBUFFER_BINDING:
+        case WEBGL_RENDERBUFFER_BINDING:
+        case WEBGL_TEXTURE_BINDING_2D:
+        case WEBGL_TEXTURE_BINDING_CUBE_MAP:
+        case WEBGL_CURRENT_PROGRAM:
+        {
+          // TODO: Implement proper object binding retrieval from backend
+          jsValue = Null(isolate);
+          break;
+        }
         default:
           cerr << "WebGLRenderingContext::GetParameter: Unhandled pname " << pname << endl;
           break;
@@ -4427,6 +4443,28 @@ namespace endor
             auto value = handle<client_graphics::WebGL2Context>()
                            ->getParameterV2(static_cast<client_graphics::WebGL2IntegerParameterName>(pname));
             jsValue = Integer::New(isolate, value);
+            break;
+          }
+          /**
+         * WebGL2 object bindings (return null when nothing bound, object when bound)
+         * Currently return null as backend doesn't track all binding states
+         */
+          case WEBGL2_COPY_READ_BUFFER_BINDING:
+          case WEBGL2_COPY_WRITE_BUFFER_BINDING:
+          case WEBGL2_DRAW_FRAMEBUFFER_BINDING:
+          case WEBGL2_READ_FRAMEBUFFER_BINDING:
+          case WEBGL2_PIXEL_PACK_BUFFER_BINDING:
+          case WEBGL2_PIXEL_UNPACK_BUFFER_BINDING:
+          case WEBGL2_UNIFORM_BUFFER_BINDING:
+          case WEBGL2_VERTEX_ARRAY_BINDING:
+          case WEBGL2_SAMPLER_BINDING:
+          case WEBGL2_TRANSFORM_FEEDBACK_BINDING:
+          case WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+          case WEBGL2_TEXTURE_BINDING_2D_ARRAY:
+          case WEBGL2_TEXTURE_BINDING_3D:
+          {
+            // TODO: Implement proper object binding retrieval from backend
+            jsValue = Null(isolate);
             break;
           }
           default:
