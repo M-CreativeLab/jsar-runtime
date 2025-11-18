@@ -1968,6 +1968,39 @@ namespace endor
       return -1;
     }
 
+    vector<int> WebGL2Context::getInternalformatParameter(uint32_t target, uint32_t internalformat, uint32_t pname)
+    {
+      // For GL_SAMPLES, return supported sample counts based on maxSamples
+      // TODO: Extend to support other pnames per WebGL2 spec (e.g., GL_NUM_SAMPLE_COUNTS)
+      if (pname == WEBGL_SAMPLES)
+      {
+        vector<int> samples;
+        // Return sample counts in descending order based on maxSamples
+        // This ensures consistency with the renderer's supported sample levels
+        if (maxSamples >= 8)
+        {
+          samples.push_back(8);
+          samples.push_back(4);
+          samples.push_back(2);
+        }
+        else if (maxSamples >= 4)
+        {
+          samples.push_back(4);
+          samples.push_back(2);
+        }
+        else if (maxSamples >= 2)
+        {
+          samples.push_back(2);
+        }
+        // Always include 1 sample (non-multisampled)
+        samples.push_back(1);
+        return samples;
+      }
+
+      // For unsupported pnames, return empty vector (binding will convert to null)
+      return vector<int>();
+    }
+
     int WebGL2Context::getParameterV2(WebGL2IntegerParameterName pname)
     {
       /**

@@ -917,6 +917,7 @@ namespace endor
         std::optional<int> dstOffset = std::nullopt,
         std::optional<int> length = std::nullopt);
       int getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
+      std::vector<int> getInternalformatParameter(uint32_t target, uint32_t internalformat, uint32_t pname);
       int getParameterV2(WebGL2IntegerParameterName pname);
       std::shared_ptr<WebGLQuery> getQuery(WebGLQueryTarget target, int pname);
       int getUniformBlockIndex(std::shared_ptr<WebGLProgram> program, const std::string &uniformBlockName);

@@ -1731,36 +1731,27 @@ namespace endor
         uint32_t internalformat = args[1]->Uint32Value(context).ToChecked();
         uint32_t pname = args[2]->Uint32Value(context).ToChecked();
 
-        // According to WebGL2 spec, getInternalformatParameter returns an Int32Array
-        // Most common pname is GL_SAMPLES which returns supported sample counts
-        // For now, return a simple implementation based on the pname
+        // Delegate to WebGL2Context for the actual query
+        auto values = handle()->getInternalformatParameter(target, internalformat, pname);
 
-        // For GL_SAMPLES, return an array of supported sample counts
-        // For other queries, return null (as per spec when not supported)
-        if (pname == WEBGL_SAMPLES)
+        // If empty vector returned, it means unsupported pname - return null per spec
+        if (values.empty())
         {
-          // Return common sample counts in descending order: [4, 2, 1]
-          // This is a simplified implementation with default supported sample counts
-          int values[] = {4, 2, 1};
-          int numValues = 3;
-
-          // Create Int32Array to return
-          auto arraybuffer = ArrayBuffer::New(isolate, sizeof(int32_t) * numValues);
-          auto backingStore = arraybuffer->GetBackingStore();
-          int32_t *data = static_cast<int32_t *>(backingStore->Data());
-          for (int i = 0; i < numValues; i++)
-          {
-            data[i] = values[i];
-          }
-
-          Local<Value> result = Int32Array::New(arraybuffer, 0, numValues);
-          args.GetReturnValue().Set(result);
-        }
-        else
-        {
-          // For unsupported pnames, return null as per WebGL2 spec
           args.GetReturnValue().SetNull();
+          return;
         }
+
+        // Create Int32Array to return the values
+        auto arraybuffer = ArrayBuffer::New(isolate, sizeof(int32_t) * values.size());
+        auto backingStore = arraybuffer->GetBackingStore();
+        int32_t *data = static_cast<int32_t *>(backingStore->Data());
+        for (size_t i = 0; i < values.size(); i++)
+        {
+          data[i] = values[i];
+        }
+
+        Local<Value> result = Int32Array::New(arraybuffer, 0, values.size());
+        args.GetReturnValue().Set(result);
       }
 
       void WebGL2RenderingContext::FramebufferTextureLayer(const v8::FunctionCallbackInfo<v8::Value> &args)
