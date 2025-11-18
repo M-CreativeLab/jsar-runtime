@@ -4422,6 +4422,7 @@ namespace endor
           case WEBGL2_MAX_SERVER_WAIT_TIMEOUT:
           case WEBGL2_MAX_UNIFORM_BLOCK_SIZE:
           case WEBGL2_MAX_TEXTURE_LOD_BIAS:
+          case WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
           case WEBGL2_EXT_MAX_VIEWS_OVR:
           {
             auto value = handle<client_graphics::WebGL2Context>()
