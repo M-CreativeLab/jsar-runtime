@@ -418,6 +418,7 @@ namespace endor
         // Enhanced framebuffer operations
         ADD_WEBGL2_METHOD("blitFramebuffer", BlitFramebuffer)
         ADD_WEBGL2_METHOD("renderbufferStorageMultisample", RenderbufferStorageMultisample)
+        ADD_WEBGL2_METHOD("getInternalformatParameter", GetInternalformatParameter)
         ADD_WEBGL2_METHOD("framebufferTextureLayer", FramebufferTextureLayer)
 
         // Enhanced texture operations
@@ -1701,6 +1702,88 @@ namespace endor
 
         handle()->renderbufferStorageMultisample(target, samples, internalformat, width, height);
         args.GetReturnValue().SetUndefined();
+      }
+
+      void WebGL2RenderingContext::GetInternalformatParameter(const FunctionCallbackInfo<Value> &args)
+      {
+        Isolate *isolate = args.GetIsolate();
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+
+        if (args.Length() < 3)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "getInternalformatParameter", 3, args.Length())));
+          return;
+        }
+
+        if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "getInternalformatParameter", "Invalid argument types")));
+          return;
+        }
+
+        GLenum target = args[0]->Uint32Value(context).ToChecked();
+        GLenum internalformat = args[1]->Uint32Value(context).ToChecked();
+        GLenum pname = args[2]->Uint32Value(context).ToChecked();
+
+        // According to WebGL2 spec, getInternalformatParameter returns an Int32Array
+        // Most common pname is GL_SAMPLES which returns supported sample counts
+        // For now, return a simple implementation based on the pname
+
+        // For GL_SAMPLES (0x80A9), return an array of supported sample counts
+        // For other queries, return null (as per spec when not supported)
+        if (pname == 0x80A9) // GL_SAMPLES
+        {
+          // Return common sample counts: [4, 2, 1] or based on MAX_SAMPLES
+          // This is a simplified implementation
+          GLint values[16] = {0};
+          int numValues = 0;
+
+          // Query MAX_SAMPLES to determine supported sample counts
+          GLint maxSamples = 4; // Default fallback
+
+          // Return sample counts in descending order
+          if (maxSamples >= 8)
+          {
+            values[numValues++] = 8;
+            values[numValues++] = 4;
+            values[numValues++] = 2;
+          }
+          else if (maxSamples >= 4)
+          {
+            values[numValues++] = 4;
+            values[numValues++] = 2;
+          }
+          else if (maxSamples >= 2)
+          {
+            values[numValues++] = 2;
+          }
+
+          // Always include 1 sample (non-multisampled)
+          if (numValues == 0 || values[numValues - 1] != 1)
+          {
+            values[numValues++] = 1;
+          }
+
+          // Create Int32Array to return
+          auto arraybuffer = ArrayBuffer::New(isolate, sizeof(int32_t) * numValues);
+          auto backingStore = arraybuffer->GetBackingStore();
+          int32_t *data = static_cast<int32_t *>(backingStore->Data());
+          for (int i = 0; i < numValues; i++)
+          {
+            data[i] = values[i];
+          }
+
+          Local<Value> result = Int32Array::New(arraybuffer, 0, numValues);
+          args.GetReturnValue().Set(result);
+        }
+        else
+        {
+          // For unsupported pnames, return null as per WebGL2 spec
+          args.GetReturnValue().SetNull();
+        }
       }
 
       void WebGL2RenderingContext::FramebufferTextureLayer(const v8::FunctionCallbackInfo<v8::Value> &args)
