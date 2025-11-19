@@ -250,8 +250,36 @@ namespace commandbuffers
     GetInternalformatParameterCommandBufferResponse(const GetInternalformatParameterCommandBufferResponse &that,
                                                     bool clone = false)
         : TrCommandBufferSimpleResponse(that, clone)
-        , values(that.values)
     {
+      if (clone)
+        values = that.values;
+    }
+
+  public:
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(type, size, this);
+      if (values.size() > 0)
+      {
+        // Serialize the vector using addVecSegment
+        message->addVecSegment(values);
+      }
+      return message;
+    }
+
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      auto count = message.getSegmentCount();
+      if (count > 0)
+      {
+        auto segment = message.getSegment(0);
+        if (segment != nullptr && segment->size > 0)
+        {
+          size_t numValues = segment->size / sizeof(int);
+          values.resize(numValues);
+          std::memcpy(values.data(), segment->data, segment->size);
+        }
+      }
     }
 
   public:

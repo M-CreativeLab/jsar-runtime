@@ -1975,7 +1975,12 @@ namespace endor
       sendCommandBufferRequest(req, true);
       auto response = recvResponse<GetInternalformatParameterCommandBufferResponse>(
         COMMAND_BUFFER_GET_INTERNALFORMAT_PARAMETER_RES,
-        req.id);
+        req);
+
+      if (response == nullptr) [[unlikely]]
+      {
+        throw runtime_error("Failed to get internal format parameter: timeout.");
+      }
       return response->values;
     }
 

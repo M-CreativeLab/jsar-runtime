@@ -148,6 +148,7 @@
   XX(SAMPLER_PARAMETERF, SamplerParameterfCommandBufferRequest, "GL::SamplerParameterf")                                         \
   XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferRequest, "GL::GetSamplerParameter")                                  \
   XX(IS_SAMPLER, IsSamplerCommandBufferRequest, "GL::IsSampler")                                                                 \
+  XX(GET_INTERNALFORMAT_PARAMETER, GetInternalformatParameterCommandBufferRequest, "GL::GetInternalformatParameter")             \
   XX(XRFRAME_START, XRFrameStartCommandBufferRequest, "XR::FrameStart")                                                          \
   XX(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest, "XR::FrameFlush")                                                          \
   XX(XRFRAME_END, XRFrameEndCommandBufferRequest, "XR::FrameEnd")                                                                \
@@ -171,4 +172,5 @@
   XX(GET_FLOATV, GetFloatvCommandBufferResponse, "GL::GetFloatv")                                                \
   XX(GET_STRING, GetStringCommandBufferResponse, "GL::GetString")                                                \
   XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferResponse, "GL::GetShaderPrecisionFormat") \
-  XX(GET_ERROR, GetErrorCommandBufferResponse, "GL::GetError")
+  XX(GET_ERROR, GetErrorCommandBufferResponse, "GL::GetError")                                                   \
+  XX(GET_INTERNALFORMAT_PARAMETER, GetInternalformatParameterCommandBufferResponse, "GL::GetInternalformatParameter")

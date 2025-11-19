@@ -2695,38 +2695,66 @@ private:
   {
     std::vector<int> values;
 
-    // WebGL2 spec requires support for GL_SAMPLES and GL_NUM_SAMPLE_COUNTS
+    // support WEBGL_SAMPLES for now, throw for others
     if (req->pname == WEBGL_SAMPLES)
     {
-      // Query the actual supported sample counts from GL
+#ifdef ANDROID
       GLint numSampleCounts = 0;
       glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
-
-      if (numSampleCounts > 0)
+      GLenum error = glGetError();
+      if (error == GL_NO_ERROR && numSampleCounts > 0)
       {
         std::vector<GLint> samples(numSampleCounts);
         glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
-
-        // Convert to int vector and sort in descending order (WebGL2 spec requirement)
-        for (GLint sample : samples)
+        error = glGetError();
+        if (error == GL_NO_ERROR)
         {
-          values.push_back(static_cast<int>(sample));
+          for (GLint sample : samples)
+          {
+            if (sample > 0)
+              values.push_back(static_cast<int>(sample));
+          }
+          std::sort(values.begin(), values.end(), std::greater<int>());
         }
-        std::sort(values.begin(), values.end(), std::greater<int>());
       }
-      else
+      if (values.empty())
       {
-        // Fallback if query fails - return default sample counts
-        values = {4, 2, 1};
+        values = {4, 2};
       }
-    }
-    else if (req->pname == 0x862F) // GL_NUM_SAMPLE_COUNTS
-    {
+#else
       GLint numSampleCounts = 0;
       glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
-      values.push_back(static_cast<int>(numSampleCounts));
+      GLenum error = glGetError();
+      if (error == GL_NO_ERROR && numSampleCounts > 0)
+      {
+        std::vector<GLint> samples(numSampleCounts);
+        glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
+        error = glGetError();
+        DEBUG(DEBUG_TAG, "[GetInternalformatParameter] GL_SAMPLES query: error=0x%x", error);
+        if (error == GL_NO_ERROR)
+        {
+          for (GLint sample : samples)
+          {
+            if (sample > 0)
+              values.push_back(static_cast<int>(sample));
+          }
+          std::sort(values.begin(), values.end(), std::greater<int>());
+        }
+      }
+      if (values.empty())
+      {
+        DEBUG(DEBUG_TAG, "[GetInternalformatParameter] Using fallback values {4, 2}");
+        values = {4, 2};
+      }
+#endif
     }
-    // For other pnames, return empty array (will be converted to null in binding)
+    else
+    {
+      // Not implemented for other pnames
+      DEBUG(LOG_TAG_ERROR,
+            "[GetInternalformatParameter] pname 0x%x is not supported.",
+            req->pname);
+    }
 
     GetInternalformatParameterCommandBufferResponse res(req, values);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
