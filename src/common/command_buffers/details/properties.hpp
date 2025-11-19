@@ -207,4 +207,54 @@ namespace commandbuffers
   public:
     int error;
   };
+
+  class GetInternalformatParameterCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetInternalformatParameterCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_INTERNALFORMAT_PARAMETER_REQ>
+  {
+  public:
+    GetInternalformatParameterCommandBufferRequest() = delete;
+    GetInternalformatParameterCommandBufferRequest(uint32_t target, uint32_t internalformat, uint32_t pname)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , internalformat(internalformat)
+        , pname(pname)
+    {
+    }
+    GetInternalformatParameterCommandBufferRequest(const GetInternalformatParameterCommandBufferRequest &that,
+                                                   bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , internalformat(that.internalformat)
+        , pname(that.pname)
+    {
+    }
+
+  public:
+    uint32_t target;
+    uint32_t internalformat;
+    uint32_t pname;
+  };
+
+  class GetInternalformatParameterCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetInternalformatParameterCommandBufferResponse>
+  {
+  public:
+    GetInternalformatParameterCommandBufferResponse() = delete;
+    GetInternalformatParameterCommandBufferResponse(GetInternalformatParameterCommandBufferRequest *req,
+                                                    const std::vector<int> &values)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_INTERNALFORMAT_PARAMETER_RES, req)
+        , values(values)
+    {
+    }
+    GetInternalformatParameterCommandBufferResponse(const GetInternalformatParameterCommandBufferResponse &that,
+                                                    bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , values(that.values)
+    {
+    }
+
+  public:
+    std::vector<int> values;
+  };
 }

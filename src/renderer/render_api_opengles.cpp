@@ -2689,6 +2689,58 @@ private:
       DEBUG(DEBUG_TAG, "[%d] GL::GetError() => %d", options.isDefaultQueue(), res.error);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
+  TR_OPENGL_FUNC void OnGetInternalformatParameter(GetInternalformatParameterCommandBufferRequest *req,
+                                                   renderer::TrContentRenderer *reqContentRenderer,
+                                                   ApiCallOptions &options)
+  {
+    std::vector<int> values;
+
+    // WebGL2 spec requires support for GL_SAMPLES and GL_NUM_SAMPLE_COUNTS
+    if (req->pname == WEBGL_SAMPLES)
+    {
+      // Query the actual supported sample counts from GL
+      GLint numSampleCounts = 0;
+      glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
+
+      if (numSampleCounts > 0)
+      {
+        std::vector<GLint> samples(numSampleCounts);
+        glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
+
+        // Convert to int vector and sort in descending order (WebGL2 spec requirement)
+        for (GLint sample : samples)
+        {
+          values.push_back(static_cast<int>(sample));
+        }
+        std::sort(values.begin(), values.end(), std::greater<int>());
+      }
+      else
+      {
+        // Fallback if query fails - return default sample counts
+        values = {4, 2, 1};
+      }
+    }
+    else if (req->pname == 0x862F) // GL_NUM_SAMPLE_COUNTS
+    {
+      GLint numSampleCounts = 0;
+      glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
+      values.push_back(static_cast<int>(numSampleCounts));
+    }
+    // For other pnames, return empty array (will be converted to null in binding)
+
+    GetInternalformatParameterCommandBufferResponse res(req, values);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
+      DEBUG(DEBUG_TAG,
+            "[%d] GL::GetInternalformativ(0x%x, 0x%x, 0x%x) => [%zu values]",
+            options.isDefaultQueue(),
+            req->target,
+            req->internalformat,
+            req->pname,
+            values.size());
+    }
+    reqContentRenderer->sendCommandBufferResponse(res);
+  }
 };
 
 void RHI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
@@ -3026,6 +3078,9 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
                                  GetShaderPrecisionFormatCommandBufferRequest,
                                  GetShaderPrecisionFormat)
       ADD_COMMAND_BUFFER_HANDLER(GET_ERROR, GetErrorCommandBufferRequest, GetError)
+      ADD_COMMAND_BUFFER_HANDLER(GET_INTERNALFORMAT_PARAMETER,
+                                 GetInternalformatParameterCommandBufferRequest,
+                                 GetInternalformatParameter)
 #undef ADD_COMMAND_BUFFER_HANDLER
 #undef ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME
 
