@@ -28,5 +28,5 @@ namespace endor
         // WebGLObject is a base class, typically not instantiated directly
       }
     } // namespace webgl
-  } // namespace script_bindings
+  }   // namespace script_bindings
 } // namespace endor
