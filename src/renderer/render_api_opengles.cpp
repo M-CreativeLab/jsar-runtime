@@ -2698,7 +2698,6 @@ private:
     // Support WEBGL_SAMPLES for now, log error for others
     if (req->pname == WEBGL_SAMPLES)
     {
-#ifdef ANDROID
       GLint numSampleCounts = 0;
       glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
       GLenum error = glGetError();
@@ -2707,30 +2706,9 @@ private:
         std::vector<GLint> samples(numSampleCounts);
         glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
         error = glGetError();
-        if (error == GL_NO_ERROR)
-        {
-          for (GLint sample : samples)
-          {
-            if (sample > 0)
-              values.push_back(static_cast<int>(sample));
-          }
-          std::sort(values.begin(), values.end(), std::greater<int>());
-        }
-      }
-      if (values.empty())
-      {
-        values = {4, 2};
-      }
-#else
-      GLint numSampleCounts = 0;
-      glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
-      GLenum error = glGetError();
-      if (error == GL_NO_ERROR && numSampleCounts > 0)
-      {
-        std::vector<GLint> samples(numSampleCounts);
-        glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
-        error = glGetError();
+#ifndef ANDROID
         DEBUG(DEBUG_TAG, "[GetInternalformatParameter] GL_SAMPLES query: error=0x%x", error);
+#endif
         if (error == GL_NO_ERROR)
         {
           for (GLint sample : samples)
@@ -2743,10 +2721,11 @@ private:
       }
       if (values.empty())
       {
-        DEBUG(DEBUG_TAG, "[GetInternalformatParameter] Using fallback values {4, 2}");
-        values = {4, 2};
-      }
+#ifndef ANDROID
+        DEBUG(DEBUG_TAG, "[GetInternalformatParameter] Using fallback values {4, 2, 1}");
 #endif
+        values = {4, 2, 1};
+      }
     }
     else
     {
@@ -2757,6 +2736,8 @@ private:
     }
 
     GetInternalformatParameterCommandBufferResponse res(req, values);
+    // Note: CheckError is called here but won't detect errors from glGetInternalformativ
+    // calls above since those errors are already consumed by explicit glGetError() calls
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       DEBUG(DEBUG_TAG,
