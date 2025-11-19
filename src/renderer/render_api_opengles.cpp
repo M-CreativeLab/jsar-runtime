@@ -2695,7 +2695,7 @@ private:
   {
     std::vector<int> values;
 
-    // support WEBGL_SAMPLES for now, throw for others
+    // Support WEBGL_SAMPLES for now, log error for others
     if (req->pname == WEBGL_SAMPLES)
     {
 #ifdef ANDROID
