@@ -2706,9 +2706,7 @@ private:
         std::vector<GLint> samples(numSampleCounts);
         glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
         error = glGetError();
-#ifndef ANDROID
-        DEBUG(DEBUG_TAG, "[GetInternalformatParameter] GL_SAMPLES query: error=0x%x", error);
-#endif
+
         if (error == GL_NO_ERROR)
         {
           for (GLint sample : samples)
@@ -2721,9 +2719,7 @@ private:
       }
       if (values.empty())
       {
-#ifndef ANDROID
         DEBUG(DEBUG_TAG, "[GetInternalformatParameter] Using fallback values {4, 2, 1}");
-#endif
         values = {4, 2, 1};
       }
     }
