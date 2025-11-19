@@ -269,17 +269,11 @@ namespace commandbuffers
 
     void deserialize(TrCommandBufferMessage &message) override
     {
-      auto count = message.getSegmentCount();
-      if (count > 0)
-      {
-        auto segment = message.getSegment(0);
-        if (segment != nullptr && segment->size > 0)
-        {
-          size_t numValues = segment->size / sizeof(int);
-          values.resize(numValues);
-          std::memcpy(values.data(), segment->data, segment->size);
-        }
-      }
+      auto valuesSegment = message.nextSegment();
+      if (valuesSegment != nullptr)
+        values = valuesSegment->toVec<int>();
+      else
+        values.clear();
     }
 
   public:
