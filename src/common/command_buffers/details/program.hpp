@@ -536,7 +536,7 @@ namespace commandbuffers
       // Serialize the varyings array
       for (const auto &varying : varyings)
       {
-        message->addStringSegment(varying);
+        message->addStringSegment(const_cast<std::string &>(varying));
       }
       return message;
     }
