@@ -1936,7 +1936,12 @@ namespace endor
       int level,
       int layer)
     {
-      NOT_IMPLEMENTED();
+      auto req = FramebufferTextureLayerCommandBufferRequest(static_cast<uint32_t>(target),
+                                                             static_cast<uint32_t>(attachment),
+                                                             texture != nullptr ? texture->id : 0,
+                                                             level,
+                                                             layer);
+      sendCommandBufferRequest(req);
     }
 
     string WebGL2Context::getActiveUniformBlockName(shared_ptr<WebGLProgram> program, int uniformBlockIndex)

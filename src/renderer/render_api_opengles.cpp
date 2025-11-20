@@ -1028,6 +1028,23 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
+
+  TR_OPENGL_FUNC void OnFramebufferTextureLayer(FramebufferTextureLayerCommandBufferRequest *req,
+                                                renderer::TrContentRenderer *reqContentRenderer,
+                                                ApiCallOptions &options)
+  {
+    auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
+    auto target = req->target;
+    auto attachment = req->attachment;
+    auto texture = glObjectManager.FindTexture(req->texture);
+    auto level = req->level;
+    auto layer = req->layer;
+
+    glFramebufferTextureLayer(target, attachment, texture, level, layer);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+
   TR_OPENGL_FUNC void OnCheckFramebufferStatus(CheckFramebufferStatusCommandBufferRequest *req,
                                                renderer::TrContentRenderer *reqContentRenderer,
                                                ApiCallOptions &options)
@@ -2899,6 +2916,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(BIND_FRAMEBUFFER, BindFramebufferCommandBufferRequest, BindFramebuffer)
       ADD_COMMAND_BUFFER_HANDLER(FRAMEBUFFER_RENDERBUFFER, FramebufferRenderbufferCommandBufferRequest, FramebufferRenderbuffer)
       ADD_COMMAND_BUFFER_HANDLER(FRAMEBUFFER_TEXTURE2D, FramebufferTexture2DCommandBufferRequest, FramebufferTexture2D)
+      ADD_COMMAND_BUFFER_HANDLER(FRAMEBUFFER_TEXTURE_LAYER, FramebufferTextureLayerCommandBufferRequest, FramebufferTextureLayer)
       ADD_COMMAND_BUFFER_HANDLER(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferRequest, CheckFramebufferStatus)
       ADD_COMMAND_BUFFER_HANDLER(CREATE_RENDERBUFFER, CreateRenderbufferCommandBufferRequest, CreateRenderbuffer)
       ADD_COMMAND_BUFFER_HANDLER(DELETE_RENDERBUFFER, DeleteRenderbufferCommandBufferRequest, DeleteRenderbuffer)
