@@ -56,6 +56,11 @@ namespace commandbuffers::gpu
     return commands;
   }
 
+  void EncodingContext::handleError(unique_ptr<ErrorData> error)
+  {
+    // TODO
+  }
+
   void EncodingContext::willBeginRenderPass()
   {
     assert(current_encoder_ == top_level_encoder_);

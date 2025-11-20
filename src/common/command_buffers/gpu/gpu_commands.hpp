@@ -11,9 +11,8 @@
 
 namespace commandbuffers
 {
-  class GPUCommand
+  struct GPUCommand
   {
-  public:
     enum CommandType
     {
       kBeginComputePass,
@@ -55,191 +54,105 @@ namespace commandbuffers
       kWriteTimestamp,
     };
     const CommandType type;
-
-    GPUCommand(CommandType type)
-        : type(type)
-    {
-    }
-    virtual ~GPUCommand() = default;
   };
 
-  class GPUInsertDebugMarkerCommand : public GPUCommand
+  struct GPUInsertDebugMarkerCommand
   {
-  public:
     uint32_t length;
   };
 
-  class GPUDrawCommand : public GPUCommand
+
+  struct GPUBeginRenderPassCommand
   {
-  public:
+    // Ref<AttachmentState> attachmentState;
+    // PerColorAttachment<RenderPassColorAttachmentInfo> colorAttachments;
+    // RenderPassDepthStencilAttachmentInfo depthStencilAttachment;
+
+    // std::array<RenderPassStorageAttachmentInfo, kMaxPLSSlots> storageAttachments;
+
+    // Cache the width and height of all attachments for convenience
+    uint32_t width;
+    uint32_t height;
+    // Used for partial resolve
+    // ResolveRect resolveRect;
+
+    // Ref<QuerySetBase> occlusionQuerySet;
+    // TimestampWrites timestampWrites;
+    std::string label;
+  };
+
+  struct GPUDrawCommand
+  {
     const uint32_t vertexCount;
     const uint32_t instanceCount;
     const uint32_t firstVertex;
     const uint32_t firstInstance;
-
-    GPUDrawCommand(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance)
-        : GPUCommand(kDraw)
-        , vertexCount(vertex_count)
-        , instanceCount(instance_count)
-        , firstVertex(first_vertex)
-        , firstInstance(first_instance)
-    {
-    }
   };
 
-  class GPUDrawIndexedCommand : public GPUCommand
+  struct GPUDrawIndexedCommand
   {
-  public:
     const uint32_t indexCount;
     const uint32_t instanceCount;
     const uint32_t firstIndex;
     const int32_t baseVertex;
     const uint32_t firstInstance;
-
-    GPUDrawIndexedCommand(uint32_t index_count,
-                          uint32_t instance_count,
-                          uint32_t first_index,
-                          int32_t base_vertex,
-                          uint32_t first_instance)
-        : GPUCommand(kDrawIndexed)
-        , indexCount(index_count)
-        , instanceCount(instance_count)
-        , firstIndex(first_index)
-        , baseVertex(base_vertex)
-        , firstInstance(first_instance)
-    {
-    }
   };
 
-  class GPUSetViewportCommand : public GPUCommand
+  struct GPUSetViewportCommand
   {
-  public:
     const float x;
     const float y;
     const float width;
     const float height;
     const float minDepth;
     const float maxDepth;
-
-    GPUSetViewportCommand(float x, float y, float width, float height, float min_depth, float max_depth)
-        : GPUCommand(kSetViewport)
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-        , minDepth(min_depth)
-        , maxDepth(max_depth)
-    {
-    }
   };
 
-  class GPUSetScissorCommand : public GPUCommand
+  struct GPUSetScissorCommand
   {
-  public:
     const float x;
     const float y;
     const float width;
     const float height;
-
-    GPUSetScissorCommand(float x, float y, float width, float height)
-        : GPUCommand(kSetScissorRect)
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-    {
-    }
   };
 
-  class GPUSetRenderPipelineCommand : public GPUCommand
+  struct GPUSetRenderPipelineCommand
   {
-  public:
     const GPUIdentifier pipelineId;
-
-    GPUSetRenderPipelineCommand(const GPURenderPipelineBase &pipeline)
-        : GPUCommand(kSetRenderPipeline)
-        , pipelineId(pipeline.id)
-    {
-    }
   };
 
-  class GPUSetIndexBufferCommand : public GPUCommand
+  struct GPUSetIndexBufferCommand
   {
-  public:
     const GPUIdentifier bufferId;
     const GPUIndexFormat indexFormat;
     const uint32_t offset;
     const uint32_t size;
-
-    GPUSetIndexBufferCommand(const GPUBufferBase &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size)
-        : GPUCommand(kSetIndexBuffer)
-        , bufferId(buffer.id)
-        , indexFormat(index_format)
-        , offset(offset)
-        , size(size)
-    {
-    }
   };
 
-  class GPUSetVertexBufferCommand : public GPUCommand
+  struct GPUSetVertexBufferCommand
   {
-  public:
     const uint32_t slot;
     const GPUIdentifier bufferId;
     const uint32_t offset;
     const uint32_t size;
-
-    GPUSetVertexBufferCommand(const uint32_t slot, const GPUBufferBase &buffer, uint64_t offset, uint32_t size)
-        : GPUCommand(kSetVertexBuffer)
-        , slot(slot)
-        , bufferId(buffer.id)
-        , offset(offset)
-        , size(size)
-    {
-    }
   };
 
-  class GPUSetBindGroupCommand : public GPUCommand
+  struct GPUSetBindGroupCommand
   {
-  public:
     const GPUIdentifier bindGroupId;
     const uint32_t index;
-
-    GPUSetBindGroupCommand(const GPUBindGroupBase &bindGroup, uint32_t index)
-        : GPUCommand(kSetBindGroup)
-        , bindGroupId(bindGroup.id)
-        , index(index)
-    {
-    }
   };
 
-  class GPUSetBlendConstantCommand : public GPUCommand
+  struct GPUSetBlendConstantCommand
   {
-  public:
     const float r;
     const float g;
     const float b;
     const float a;
-
-    GPUSetBlendConstantCommand(float r, float g, float b, float a)
-        : GPUCommand(kSetBlendConstant)
-        , r(r)
-        , g(g)
-        , b(b)
-        , a(a)
-    {
-    }
   };
 
-  class GPUSetStencilReferenceCommand : public GPUCommand
+  struct GPUSetStencilReferenceCommand
   {
-  public:
     const uint32_t reference;
-
-    GPUSetStencilReferenceCommand(uint32_t reference)
-        : GPUCommand(kSetStencilReference)
-        , reference(reference)
-    {
-    }
   };
 }

@@ -2,11 +2,44 @@
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include <common/command_buffers/gpu/gpu_commands.hpp>
 #include <common/command_buffers/gpu/command_allocator.hpp>
+#include <common/command_buffers/gpu/error.hpp>
 
 using namespace std;
 
 namespace commandbuffers
 {
+  class RenderPassValidationState final : NonMovable
+  {
+  public:
+    RenderPassValidationState() = default;
+    ~RenderPassValidationState() = default;
+
+
+    uint32_t getRenderWidth() const
+    {
+      return render_width_;
+    }
+    uint32_t getRenderHeight() const
+    {
+      return render_height_;
+    }
+    uint32_t getSampleCount() const
+    {
+      return sample_count_;
+    }
+    uint32_t getImplicitSampleCount() const
+    {
+      return implicit_sample_count_;
+    }
+
+  private:
+    uint32_t render_width_ = 0;
+    uint32_t render_height_ = 0;
+    uint32_t sample_count_ = 0;
+    // The implicit multisample count used by MSAA render to single sampled.
+    uint32_t implicit_sample_count_ = 0;
+  };
+
   Ref<GPUCommandEncoder> GPUCommandEncoder::Create(Ref<GPUDeviceBase> device,
                                                    const GPUCommandEncoderDescriptor &descriptor)
   {
@@ -34,9 +67,44 @@ namespace commandbuffers
   {
   }
 
-  GPURenderPassEncoder GPUCommandEncoder::beginRenderPass(GPURenderPassDescriptor &)
+  Ref<GPURenderPassEncoder> GPUCommandEncoder::beginRenderPass(GPURenderPassDescriptor &descriptor)
   {
-    throw runtime_error("beginRenderPass is not implemented");
+    Ref<GPUDeviceBase> device_ = device();
+    bool depthReadOnly = false;
+    bool stencilReadOnly = false;
+
+    RenderPassValidationState validationState;
+
+    auto MakeError = [&]()
+    {
+      return GPURenderPassEncoder::MakeError(this,
+                                             &encoding_context_,
+                                             descriptor.label.value_or(""));
+    };
+
+    bool success = encoding_context_.tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        GPUBeginRenderPassCommand *cmd = allocator->allocate<GPUBeginRenderPassCommand>(GPUCommand::kBeginRenderPass);
+        return {};
+      });
+
+    if (success)
+    {
+      Ref<GPURenderPassEncoder> passEncoder = GPURenderPassEncoder::Create(descriptor,
+                                                                           this,
+                                                                           &encoding_context_,
+                                                                           validationState.getRenderWidth(),
+                                                                           validationState.getRenderHeight(),
+                                                                           depthReadOnly,
+                                                                           stencilReadOnly);
+
+      encoding_context_.enterPass(passEncoder.get());
+      return passEncoder;
+    }
+
+    return MakeError();
   }
 
   void GPUCommandEncoder::clearBuffer()

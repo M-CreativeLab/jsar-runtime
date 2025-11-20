@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include <common/utility.hpp>
+#include <common/non_movable.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
@@ -36,7 +37,7 @@ namespace commandbuffers
 
   public:
     // TODO(yorkie): begineComputePass
-    GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor &);
+    Ref<GPURenderPassEncoder> beginRenderPass(GPURenderPassDescriptor &);
     void clearBuffer();
     void copyBufferToBuffer();
     void copyBufferToTexture();

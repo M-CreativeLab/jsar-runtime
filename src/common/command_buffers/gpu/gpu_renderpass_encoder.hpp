@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <variant>
+#include <string_view>
 
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
@@ -9,9 +10,12 @@
 #include <common/command_buffers/gpu/gpu_texture_view.hpp>
 #include <common/command_buffers/gpu/gpu_commands.hpp>
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <command_buffers/gpu/encoding_context.hpp>
 
 namespace commandbuffers
 {
+  class GPUCommandEncoder;
+
   class GPURenderPassDescriptor
   {
   public:
@@ -57,10 +61,21 @@ namespace commandbuffers
     std::optional<DepthStencilAttachment> depthStencilAttachment;
   };
 
-  class GPURenderPassEncoder : public GPUPassEncoderBase,
-                               public GPUHandle
+  class GPURenderPassEncoder final : public GPUPassEncoderBase,
+                                     public GPUHandle
   {
   public:
+    static Ref<GPURenderPassEncoder> Create(const GPURenderPassDescriptor &descriptor,
+                                            GPUCommandEncoder *encoder,
+                                            gpu::EncodingContext *context,
+                                            uint32_t renderTargetWidth,
+                                            uint32_t renderTargetHeight,
+                                            bool depthReadOnly,
+                                            bool stencilReadOnly);
+    static Ref<GPURenderPassEncoder> MakeError(GPUCommandEncoder *encoder,
+                                               gpu::EncodingContext *context,
+                                               std::string_view label);
+
     GPUHandleType type() const override final
     {
       return GPUHandleType::kRenderPassEncoder;
@@ -88,5 +103,20 @@ namespace commandbuffers
     void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0);
     void setBlendConstant(float r, float g, float b, float a);
     void setStencilReference(uint32_t ref);
+
+  protected:
+    GPURenderPassEncoder(Ref<GPUDeviceBase> device,
+                         const GPURenderPassDescriptor &descriptor,
+                         GPUCommandEncoder *commandEncoder,
+                         gpu::EncodingContext *encodingContext,
+                         uint32_t renderTargetWidth,
+                         uint32_t renderTargetHeight,
+                         bool depthReadOnly,
+                         bool stencilReadOnly);
+    GPURenderPassEncoder(Ref<GPUDeviceBase> device,
+                         GPUCommandEncoder *commandEncoder,
+                         gpu::EncodingContext *encodingContext,
+                         ErrorTag errorTag,
+                         std::string_view label);
   };
 }
