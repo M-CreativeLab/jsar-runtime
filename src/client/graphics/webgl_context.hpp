@@ -216,6 +216,7 @@ namespace endor
       kMaxServerWaitTimeout = WEBGL2_MAX_SERVER_WAIT_TIMEOUT,
       kMaxUniformBlockSize = WEBGL2_MAX_UNIFORM_BLOCK_SIZE,
       kMaxTextureLodBias = WEBGL2_MAX_TEXTURE_LOD_BIAS,
+      kUniformBufferOffsetAlignment = WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
       kExtMaxViewsOvr = WEBGL2_EXT_MAX_VIEWS_OVR,
     };
 
@@ -1027,6 +1028,7 @@ namespace endor
       int64_t maxServerWaitTimeout;
       int64_t maxUniformBlockSize;
       float maxTextureLODBias;
+      int uniformBufferOffsetAlignment;
 
     public: // Extension properties
       int32_t OVR_maxViews;

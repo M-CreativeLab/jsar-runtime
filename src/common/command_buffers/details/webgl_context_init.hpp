@@ -163,6 +163,7 @@ namespace commandbuffers
         , maxServerWaitTimeout(that.maxServerWaitTimeout)
         , maxUniformBlockSize(that.maxUniformBlockSize)
         , maxTextureLODBias(that.maxTextureLODBias)
+        , uniformBufferOffsetAlignment(that.uniformBufferOffsetAlignment)
         // Extensions
         , OVR_maxViews(that.OVR_maxViews)
         , maxTextureMaxAnisotropy(that.maxTextureMaxAnisotropy)
@@ -217,6 +218,7 @@ namespace commandbuffers
     int64_t maxServerWaitTimeout;
     int64_t maxUniformBlockSize;
     float maxTextureLODBias;
+    int uniformBufferOffsetAlignment;
 
   public: // Extensions
     int32_t OVR_maxViews;

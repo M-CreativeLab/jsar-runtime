@@ -1646,6 +1646,7 @@ namespace endor
       maxServerWaitTimeout = initResp->maxServerWaitTimeout;
       maxUniformBlockSize = initResp->maxUniformBlockSize;
       maxTextureLODBias = initResp->maxTextureLODBias;
+      uniformBufferOffsetAlignment = initResp->uniformBufferOffsetAlignment;
 
       // Extensions
       OVR_maxViews = initResp->OVR_maxViews;
@@ -2028,6 +2029,8 @@ namespace endor
         return maxUniformBlockSize;
       else if (pname == WebGL2IntegerParameterName::kMaxTextureLodBias)
         return maxTextureLODBias;
+      else if (pname == WebGL2IntegerParameterName::kUniformBufferOffsetAlignment)
+        return uniformBufferOffsetAlignment;
       else if (pname == WebGL2IntegerParameterName::kExtMaxViewsOvr)
         return OVR_maxViews;
 
