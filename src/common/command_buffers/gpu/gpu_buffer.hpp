@@ -3,6 +3,7 @@
 #include <atomic>
 #include <string_view>
 #include <common/utility.hpp>
+#include <common/command_buffers/gpu/error.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 
 namespace commandbuffers
@@ -68,6 +69,8 @@ namespace commandbuffers
     GPUBufferUsage usage() const;
     BufferState mapState() const;
     void unmap();
+
+    virtual gpu::MaybeError uploadData(uint64_t bufferOffset, const void *data, size_t size);
 
   protected:
     GPUBufferBase(Ref<GPUDeviceBase> device, const GPUBufferDescriptor &descriptor);

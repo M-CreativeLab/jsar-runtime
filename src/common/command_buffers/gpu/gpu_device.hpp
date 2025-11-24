@@ -2,14 +2,17 @@
 
 #include <cassert>
 #include <memory>
+#include <atomic>
 #include <vector>
 #include <string>
 #include <string_view>
 
 #include <common/utility.hpp>
+#include <common/command_buffers/gpu/error.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_adapter.hpp>
 #include <common/command_buffers/gpu/gpu_instance.hpp>
+#include <common/command_buffers/gpu/gpu_queue.hpp>
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
@@ -72,10 +75,37 @@ namespace commandbuffers
     Ref<GPUShaderModuleBase> createShaderModule(const GPUShaderModuleDescriptor *descriptor = nullptr,
                                                 const std::vector<wgsl::Extension> &internalExtensions = {});
 
+    // The device state which is a combination of creation state and loss state.
+    //
+    //   - BeingCreated: the device didn't finish creation yet and the frontend cannot be used
+    //     (both for the application calling WebGPU, or re-entrant calls). No work exists on
+    //     the GPU timeline.
+    //   - Alive: the device is usable and might have work happening on the GPU timeline.
+    //   - BeingDisconnected: the device is no longer usable because we are waiting for all
+    //     work on the GPU timeline to finish. (this is to make validation prevent the
+    //     application from adding more work during the transition from Available to
+    //     Disconnected)
+    //   - Disconnected: there is no longer work happening on the GPU timeline and the CPU data
+    //     structures can be safely destroyed without additional synchronization.
+    //   - Destroyed: the device is disconnected and resources have been reclaimed.
+    enum class State
+    {
+      BeingCreated,
+      Alive,
+      BeingDisconnected,
+      Disconnected,
+      Destroyed,
+    };
+    State getState() const;
+    bool isLost() const;
+
+    gpu::MaybeError validateIsAlive() const;
     bool isValidationEnabled() const;
     bool isRobustnessEnabled() const;
     bool isCompatibilityMode() const;
     bool isImmediateErrorHandlingEnabled() const;
+
+    gpu::MaybeError tick();
 
     virtual bool mayRequireDuplicationOfIndirectParameters() const;
 
@@ -105,7 +135,9 @@ namespace commandbuffers
     Ref<GPUBindGroupLayoutBase> createEmptyBindGroupLayout();
     Ref<GPUPipelineLayoutBase> createEmptyPipelineLayout();
 
+    std::atomic<State> state_ = State::BeingCreated;
     Ref<GPUAdapterBase> adapter_;
+    Ref<GPUQueueBase> queue_;
 
     Ref<GPUBindGroupLayoutBase> empty_bind_group_layout_;
     Ref<GPUPipelineLayoutBase> empty_pipeline_layout_;

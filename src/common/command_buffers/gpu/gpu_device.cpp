@@ -95,6 +95,24 @@ namespace commandbuffers
     return nullptr;
   }
 
+  GPUDeviceBase::State GPUDeviceBase::getState() const
+  {
+    return state_;
+  }
+
+  bool GPUDeviceBase::isLost() const
+  {
+    assert(state_ != State::BeingCreated);
+    return state_ != State::Alive;
+  }
+
+  gpu::MaybeError GPUDeviceBase::validateIsAlive() const
+  {
+    // TODO(yorkie): implement this.
+    assert(state_ == State::Alive);
+    return {};
+  }
+
   bool GPUDeviceBase::isValidationEnabled() const
   {
     // return !IsToggleEnabled(Toggle::SkipValidation);
@@ -117,6 +135,17 @@ namespace commandbuffers
   {
     // return mIsImmediateErrorHandlingEnabled;
     return false;
+  }
+
+  gpu::MaybeError GPUDeviceBase::tick()
+  {
+    if (isLost() || !queue_->hasScheduledCommands())
+    {
+      return {};
+    }
+
+    tickImpl();
+    return {};
   }
 
   bool GPUDeviceBase::mayRequireDuplicationOfIndirectParameters() const
