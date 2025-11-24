@@ -32,5 +32,5 @@ namespace endor
         WebGLProgram(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
       };
     } // namespace webgl
-  } // namespace script_bindings
+  }   // namespace script_bindings
 } // namespace endor
