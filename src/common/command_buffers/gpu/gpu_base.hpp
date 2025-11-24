@@ -34,6 +34,7 @@
 #include <atomic>
 
 #include <idgen.hpp>
+#include <common/utility.hpp>
 #include <common/command_buffers/gpu/gpu_constants.hpp>
 
 namespace commandbuffers
@@ -773,15 +774,15 @@ namespace commandbuffers
   class GPUObject : public ErrorMonad
   {
   public:
-    explicit GPUObject(std::shared_ptr<GPUDeviceBase> device);
-    GPUObject(std::shared_ptr<GPUDeviceBase> device, ErrorTag tag);
-    GPUObject(std::shared_ptr<GPUDeviceBase> device, DelayedInitializationTag tag);
+    explicit GPUObject(Ref<GPUDeviceBase> device);
+    GPUObject(Ref<GPUDeviceBase> device, ErrorTag tag);
+    GPUObject(Ref<GPUDeviceBase> device, DelayedInitializationTag tag);
 
     GPUInstance *instance() const;
-    std::shared_ptr<GPUDeviceBase> device() const;
+    Ref<GPUDeviceBase> device() const;
 
   private:
-    std::shared_ptr<GPUDeviceBase> device_;
+    Ref<GPUDeviceBase> device_;
   };
 
   typedef uint32_t GPUIdentifier;
@@ -800,10 +801,10 @@ namespace commandbuffers
     };
     static constexpr UntrackedByDeviceTag kUntrackedByDevice = {};
 
-    GPUHandle(std::shared_ptr<GPUDeviceBase> device, std::string_view label);
-    GPUHandle(std::shared_ptr<GPUDeviceBase> device, ErrorTag tag, std::string_view label = {});
-    GPUHandle(std::shared_ptr<GPUDeviceBase> device, DelayedInitializationTag tag, std::string_view label = {});
-    GPUHandle(std::shared_ptr<GPUDeviceBase> device, LabelNotImplementedTag tag);
+    GPUHandle(Ref<GPUDeviceBase> device, std::string_view label);
+    GPUHandle(Ref<GPUDeviceBase> device, ErrorTag tag, std::string_view label = {});
+    GPUHandle(Ref<GPUDeviceBase> device, DelayedInitializationTag tag, std::string_view label = {});
+    GPUHandle(Ref<GPUDeviceBase> device, LabelNotImplementedTag tag);
 
     virtual GPUHandleType type() const = 0;
     void setLabel(std::string label);

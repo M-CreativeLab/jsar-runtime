@@ -70,19 +70,19 @@ namespace commandbuffers
   // GPUObject Implementation
   //
 
-  GPUObject::GPUObject(shared_ptr<GPUDeviceBase> device)
+  GPUObject::GPUObject(Ref<GPUDeviceBase> device)
       : ErrorMonad()
       , device_(device)
   {
   }
 
-  GPUObject::GPUObject(shared_ptr<GPUDeviceBase> device, ErrorTag)
+  GPUObject::GPUObject(Ref<GPUDeviceBase> device, ErrorTag)
       : ErrorMonad(kError)
       , device_(device)
   {
   }
 
-  GPUObject::GPUObject(shared_ptr<GPUDeviceBase> device, DelayedInitializationTag)
+  GPUObject::GPUObject(Ref<GPUDeviceBase> device, DelayedInitializationTag)
       : ErrorMonad(kDelayedInitialization)
       , device_(device)
   {
@@ -93,7 +93,7 @@ namespace commandbuffers
     return device_->getInstance();
   }
 
-  shared_ptr<GPUDeviceBase> GPUObject::device() const
+  Ref<GPUDeviceBase> GPUObject::device() const
   {
     return device_;
   }
@@ -102,14 +102,14 @@ namespace commandbuffers
   // GPUHandle Implementation
   //
 
-  GPUHandle::GPUHandle(shared_ptr<GPUDeviceBase> device, string_view label)
+  GPUHandle::GPUHandle(Ref<GPUDeviceBase> device, string_view label)
       : GPUObject(device)
       , id(Ids.get())
       , label_(string(label))
   {
   }
 
-  GPUHandle::GPUHandle(shared_ptr<GPUDeviceBase> device,
+  GPUHandle::GPUHandle(Ref<GPUDeviceBase> device,
                        ErrorTag tag,
                        string_view label)
       : GPUObject(device, tag)
@@ -118,7 +118,7 @@ namespace commandbuffers
   {
   }
 
-  GPUHandle::GPUHandle(shared_ptr<GPUDeviceBase> device,
+  GPUHandle::GPUHandle(Ref<GPUDeviceBase> device,
                        DelayedInitializationTag tag,
                        string_view label)
       : GPUObject(device, tag)
@@ -127,7 +127,7 @@ namespace commandbuffers
   {
   }
 
-  GPUHandle::GPUHandle(shared_ptr<GPUDeviceBase> device, LabelNotImplementedTag tag)
+  GPUHandle::GPUHandle(Ref<GPUDeviceBase> device, LabelNotImplementedTag tag)
       : GPUObject(device)
       , id(Ids.get())
   {

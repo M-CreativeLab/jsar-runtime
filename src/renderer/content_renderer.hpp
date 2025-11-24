@@ -12,11 +12,11 @@
 #include <common/frame_request/types.hpp>
 #include <common/frame_request/sender.hpp>
 #include <common/xr/types.hpp>
+
 #include <runtime/macros.h>
 #include <xr/device.hpp>
-
-#include "./gles/context_storage.hpp"
-#include "./render_api.hpp"
+#include <renderer/render_api.hpp>
+#include <renderer/gles/context_storage.hpp>
 
 using namespace std;
 using namespace commandbuffers;
