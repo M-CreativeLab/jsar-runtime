@@ -1646,6 +1646,7 @@ namespace endor
       maxServerWaitTimeout = initResp->maxServerWaitTimeout;
       maxUniformBlockSize = initResp->maxUniformBlockSize;
       maxTextureLODBias = initResp->maxTextureLODBias;
+      uniformBufferOffsetAlignment = initResp->uniformBufferOffsetAlignment;
 
       // Extensions
       OVR_maxViews = initResp->OVR_maxViews;
@@ -1936,7 +1937,12 @@ namespace endor
       int level,
       int layer)
     {
-      NOT_IMPLEMENTED();
+      auto req = FramebufferTextureLayerCommandBufferRequest(static_cast<uint32_t>(target),
+                                                             static_cast<uint32_t>(attachment),
+                                                             texture != nullptr ? texture->id : 0,
+                                                             level,
+                                                             layer);
+      sendCommandBufferRequest(req);
     }
 
     string WebGL2Context::getActiveUniformBlockName(shared_ptr<WebGLProgram> program, int uniformBlockIndex)
@@ -2023,6 +2029,8 @@ namespace endor
         return maxUniformBlockSize;
       else if (pname == WebGL2IntegerParameterName::kMaxTextureLodBias)
         return maxTextureLODBias;
+      else if (pname == WebGL2IntegerParameterName::kUniformBufferOffsetAlignment)
+        return uniformBufferOffsetAlignment;
       else if (pname == WebGL2IntegerParameterName::kExtMaxViewsOvr)
         return OVR_maxViews;
 

@@ -3,6 +3,7 @@
 #include "./buffer.hpp"
 #include "./program.hpp"
 #include "./vertex_array.hpp"
+#include "./texture.hpp"
 
 namespace endor
 {
@@ -417,6 +418,7 @@ namespace endor
         // Enhanced framebuffer operations
         ADD_WEBGL2_METHOD("blitFramebuffer", BlitFramebuffer)
         ADD_WEBGL2_METHOD("renderbufferStorageMultisample", RenderbufferStorageMultisample)
+        ADD_WEBGL2_METHOD("framebufferTextureLayer", FramebufferTextureLayer)
 
         // Enhanced texture operations
         ADD_WEBGL2_METHOD("texImage3D", TexImage3D)
@@ -1698,6 +1700,81 @@ namespace endor
         int height = args[4]->Int32Value(context).ToChecked();
 
         handle()->renderbufferStorageMultisample(target, samples, internalformat, width, height);
+        args.GetReturnValue().SetUndefined();
+      }
+
+      void WebGL2RenderingContext::FramebufferTextureLayer(const v8::FunctionCallbackInfo<v8::Value> &args)
+      {
+        Isolate *isolate = args.GetIsolate();
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+
+        if (args.Length() < 5)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "framebufferTextureLayer", 5, args.Length())));
+          return;
+        }
+        if (!args[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "framebufferTextureLayer", 0, "number", args[0])));
+          return;
+        }
+        if (!args[1]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "framebufferTextureLayer", 1, "number", args[1])));
+          return;
+        }
+        if (!args[2]->IsNull() && !WebGLTexture::IsInstanceOf(isolate, args[2]))
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "framebufferTextureLayer", 2, "WebGLTexture or null", args[2])));
+          return;
+        }
+        if (!args[3]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "framebufferTextureLayer", 3, "number", args[3])));
+          return;
+        }
+        if (!args[4]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "framebufferTextureLayer", 4, "number", args[4])));
+          return;
+        }
+
+        client_graphics::WebGLFramebufferBindingTarget target;
+        {
+          int value = args[0]->Int32Value(context).ToChecked();
+          target = static_cast<client_graphics::WebGLFramebufferBindingTarget>(value);
+        }
+        client_graphics::WebGLFramebufferAttachment attachment;
+        {
+          int value = args[1]->Int32Value(context).ToChecked();
+          attachment = static_cast<client_graphics::WebGLFramebufferAttachment>(value);
+        }
+        int level = args[3]->Int32Value(context).ToChecked();
+        int layer = args[4]->Int32Value(context).ToChecked();
+
+        if (args[2]->IsNull())
+        {
+          handle()->framebufferTextureLayer(target, attachment, nullptr, level, layer);
+        }
+        else
+        {
+          auto textureObj = args[2].As<Object>();
+          auto textureBinding = WebGLTexture::Unwrap(isolate, textureObj);
+          if (textureBinding == nullptr || !textureBinding->hasData())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "framebufferTextureLayer", "Invalid WebGLTexture object")));
+            return;
+          }
+          handle()->framebufferTextureLayer(target, attachment, textureBinding->handle(), level, layer);
+        }
         args.GetReturnValue().SetUndefined();
       }
 

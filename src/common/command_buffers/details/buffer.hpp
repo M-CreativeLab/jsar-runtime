@@ -557,6 +557,52 @@ namespace commandbuffers
     uint32_t level;
   };
 
+  class FramebufferTextureLayerCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<FramebufferTextureLayerCommandBufferRequest,
+                                            COMMAND_BUFFER_FRAMEBUFFER_TEXTURE_LAYER_REQ>
+  {
+  public:
+    FramebufferTextureLayerCommandBufferRequest() = delete;
+    FramebufferTextureLayerCommandBufferRequest(uint32_t target, uint32_t attachment, uint32_t texture, uint32_t level, uint32_t layer)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , attachment(attachment)
+        , texture(texture)
+        , level(level)
+        , layer(layer)
+    {
+    }
+    FramebufferTextureLayerCommandBufferRequest(const FramebufferTextureLayerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , attachment(that.attachment)
+        , texture(that.texture)
+        , level(that.level)
+        , layer(that.layer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "attachment=" << WebGLHelper::WebGLFramebufferAttachmentToString(attachment) << ", "
+         << "texture=" << texture << ", "
+         << "level=" << level << ", "
+         << "layer=" << layer
+         << ")";
+      return ss.str();
+    }
+
+  public:
+    uint32_t target;
+    uint32_t attachment;
+    uint32_t texture;
+    uint32_t level;
+    uint32_t layer;
+  };
+
   class CheckFramebufferStatusCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<CheckFramebufferStatusCommandBufferRequest,
                                             COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ>
