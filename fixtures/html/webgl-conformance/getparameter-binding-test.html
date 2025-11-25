@@ -41,26 +41,9 @@
       }
     }
 
-    // Create WebGL1 context
-    const canvas1 = document.createElement('canvas');
-    const gl1 = canvas1.getContext('webgl');
-    
-    if (gl1) {
-      results.innerHTML += '<h2>WebGL 1.0 Binding Parameters</h2>';
-      testParameter(gl1, 'ARRAY_BUFFER_BINDING', gl1.ARRAY_BUFFER_BINDING);
-      testParameter(gl1, 'ELEMENT_ARRAY_BUFFER_BINDING', gl1.ELEMENT_ARRAY_BUFFER_BINDING);
-      testParameter(gl1, 'FRAMEBUFFER_BINDING', gl1.FRAMEBUFFER_BINDING);
-      testParameter(gl1, 'RENDERBUFFER_BINDING', gl1.RENDERBUFFER_BINDING);
-      testParameter(gl1, 'TEXTURE_BINDING_2D', gl1.TEXTURE_BINDING_2D);
-      testParameter(gl1, 'TEXTURE_BINDING_CUBE_MAP', gl1.TEXTURE_BINDING_CUBE_MAP);
-      testParameter(gl1, 'CURRENT_PROGRAM', gl1.CURRENT_PROGRAM);
-    } else {
-      log('WebGL 1.0 not supported', false);
-    }
-
     // Create WebGL2 context
     const canvas2 = document.createElement('canvas');
-    const gl2 = canvas2.getContext('webgl2');
+    const gl2 = navigator.gl || canvas2.getContext('webgl2');
     
     if (gl2) {
       results.innerHTML += '<h2>WebGL 2.0 Binding Parameters</h2>';
