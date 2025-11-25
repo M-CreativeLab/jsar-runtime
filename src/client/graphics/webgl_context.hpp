@@ -765,6 +765,14 @@ namespace endor
 
     private:
       /**
+       * @returns the client state of the WebGL context.
+       */
+      // Read-only accessor
+      const WebGLState &clientState() const
+      {
+        return clientState_;
+      }
+      /**
        * an XR-compatible WebGL context could be configured as an `XRWebGLLayer` object and be connected to a specific WebXR
        * session. At the same time, each WebXR session could own 1 base layer, thus the XR-compatible WebGL context to a WebXR
        * session is a one-to-one relationship.
@@ -803,14 +811,6 @@ namespace endor
       std::string renderer;
       // The default handedness of the coordinate system to use.
       commandbuffers::MatrixHandedness defaultCoordHandedness = commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
-      /**
-       * @returns the client state of the WebGL context.
-       */
-      // Read-only accessor
-      const WebGLState &clientState() const
-      {
-        return clientState_;
-      }
 
     protected:
       TrClientContextPerProcess *clientContext_;
