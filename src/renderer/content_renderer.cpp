@@ -4,6 +4,10 @@
 #include <xr/device.hpp>
 #include <xr/session.hpp>
 
+#include <common/command_buffers/details/buffer.hpp>
+#include <common/command_buffers/details/states.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+
 #include "./content_renderer.hpp"
 #include "./render_api.hpp"
 
@@ -160,6 +164,84 @@ namespace renderer
     if (req == nullptr) [[unlikely]]
       return;
     commandBuffersOnOffscreenPass.push_back(req);
+  }
+
+  RenderPassType TrContentRenderer::determineRenderPassType(TrCommandBufferBase *req) const
+  {
+    if (req == nullptr) [[unlikely]]
+    {
+      return RenderPassType::kOpaque;
+    }
+
+    auto commandType = req->type;
+
+    // Track state changes for blending
+    if (commandType == COMMAND_BUFFER_ENABLE_REQ)
+    {
+      auto enableReq = dynamic_cast<const commandbuffers::EnableCommandBufferRequest *>(req);
+      if (enableReq != nullptr && enableReq->cap == GL_BLEND)
+      {
+        // Blending will be enabled, but for now we just return based on current state
+        // The actual state update happens during execution
+      }
+    }
+    else if (commandType == COMMAND_BUFFER_DISABLE_REQ)
+    {
+      auto disableReq = dynamic_cast<const commandbuffers::DisableCommandBufferRequest *>(req);
+      if (disableReq != nullptr && disableReq->cap == GL_BLEND)
+      {
+        // Blending will be disabled
+      }
+    }
+
+    // Check if this is a framebuffer bind operation
+    if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
+    {
+      auto bindFbReq = dynamic_cast<const commandbuffers::BindFramebufferCommandBufferRequest *>(req);
+      if (bindFbReq != nullptr)
+      {
+        // If binding to a non-default framebuffer, route to offscreen pass
+        if (!bindFbReq->isBindToDefault())
+        {
+          return RenderPassType::kOffscreen;
+        }
+      }
+    }
+
+    // Check if the current framebuffer binding is not the default render target
+    if (currentBoundFramebuffer_.has_value())
+    {
+      auto glContext = getContextGL();
+      if (glContext != nullptr)
+      {
+        GLuint currentDefault = glContext->currentDefaultRenderTarget();
+        if (currentBoundFramebuffer_.value() != currentDefault && currentBoundFramebuffer_.value() != 0)
+        {
+          // Currently bound to a non-default framebuffer, route to offscreen
+          return RenderPassType::kOffscreen;
+        }
+      }
+    }
+
+    // If blending is enabled and this is a draw call, route to transparent pass
+    if (isBlendingEnabled_ && commandbuffers::CommandTypes::IsFramebufferDependentCommand(commandType))
+    {
+      // Check if this is a draw command
+      switch (commandType)
+      {
+      case COMMAND_BUFFER_DRAW_ARRAYS_REQ:
+      case COMMAND_BUFFER_DRAW_ELEMENTS_REQ:
+      case COMMAND_BUFFER_DRAW_ARRAYS_INSTANCED_REQ:
+      case COMMAND_BUFFER_DRAW_ELEMENTS_INSTANCED_REQ:
+      case COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ:
+        return RenderPassType::kTransparent;
+      default:
+        break;
+      }
+    }
+
+    // Default to opaque pass
+    return RenderPassType::kOpaque;
   }
 
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
