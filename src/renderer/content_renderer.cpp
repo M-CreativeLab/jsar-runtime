@@ -422,17 +422,40 @@ namespace renderer
 
   void TrContentRenderer::onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
-    // TODO(yorkie): implement the transparents render pass.
+    // Execute command buffers that have been routed to the transparent render pass.
+    // These are typically draw calls that have blending enabled.
+    auto *transparentPass = renderPassCollection_.getTransparentPass();
+    if (transparentPass != nullptr && transparentPass->hasCommandBuffers())
+    {
+      currentPass = ExecutingPassType::kXRFrame; // Use XR frame pass type for transparent rendering
+
+      transparentPass->begin();
+      {
+        auto &commandBuffers = transparentPass->getCommandBuffers();
+        constellation->renderer->executeCommandBuffers(commandBuffers,
+                                                       this,
+                                                       ExecutingPassType::kXRFrame);
+      }
+      transparentPass->end();
+      transparentPass->clearCommandBuffers();
+    }
   }
 
   void TrContentRenderer::onOffscreenRenderPass()
   {
     currentPass = ExecutingPassType::kOffscreenPass;
+
+    // Get the offscreen render pass from the collection
+    auto *offscreenPass = renderPassCollection_.getOffscreenPass();
+
+    // Execute command buffers from both the legacy storage and the new render pass collection
+    // This maintains backward compatibility while transitioning to the new system
     if (commandBuffersOnOffscreenPass.size() > 0)
     {
       assert(glContextOnOffscreenPass.has_value() &&
              "The offscreen pass context is not initialized, please call `initializeGraphicsContextsOnce()` first.");
 
+      offscreenPass->begin();
       glContextOnOffscreenPass->restore();
       constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
                                                      this,
@@ -445,7 +468,23 @@ namespace renderer
 
       commandBuffersOnOffscreenPass.clear();
       glContextOnOffscreenPass = nullopt;
+      offscreenPass->end();
     }
+
+    // Also check the render pass collection for any additional offscreen commands
+    if (offscreenPass->hasCommandBuffers())
+    {
+      offscreenPass->begin();
+      {
+        auto &commandBuffers = offscreenPass->getCommandBuffers();
+        constellation->renderer->executeCommandBuffers(commandBuffers,
+                                                       this,
+                                                       ExecutingPassType::kOffscreenPass);
+      }
+      offscreenPass->end();
+      offscreenPass->clearCommandBuffers();
+    }
+
     currentPass = ExecutingPassType::kDefaultFrame;
   }
 
@@ -453,6 +492,13 @@ namespace renderer
   {
     frameStartTime = chrono::system_clock::now();
     currentPass = ExecutingPassType::kDefaultFrame;
+
+    // Reset the render pass collection for a new frame
+    renderPassCollection_.resetForNewFrame();
+
+    // Reset blending and framebuffer state tracking
+    isBlendingEnabled_ = false;
+    currentBoundFramebuffer_ = std::nullopt;
 
     // Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
     if (xrDevice->enabled()) [[likely]]

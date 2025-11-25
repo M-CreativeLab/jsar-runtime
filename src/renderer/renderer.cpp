@@ -140,7 +140,22 @@ namespace renderer
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
-    // TODO(yorkie): support the transparents render pass.
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
+
+    glHostContext->recordFromHost();
+    {
+      for (auto contentRenderer : contentRenderers)
+      {
+        shared_ptr<TrContentRuntime> content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering)
+          continue;
+
+        contentRenderer->onTransparentsRenderPass(tickingTimepoint);
+      }
+    }
+    glHostContext->restore();
   }
 
   void TrRenderer::onBeforeRendering()
