@@ -142,6 +142,48 @@ namespace renderer
       return renderPassCollection_;
     }
 
+    /**
+     * Update the blending state.
+     * Call this when the GL_BLEND capability is enabled/disabled.
+     *
+     * @param enabled Whether blending is enabled.
+     */
+    inline void setBlendingEnabled(bool enabled)
+    {
+      isBlendingEnabled_ = enabled;
+    }
+
+    /**
+     * Check if blending is currently enabled.
+     *
+     * @returns `true` if blending is enabled, `false` otherwise.
+     */
+    inline bool isBlendingEnabled() const
+    {
+      return isBlendingEnabled_;
+    }
+
+    /**
+     * Update the current bound framebuffer.
+     * Call this when a framebuffer is bound.
+     *
+     * @param framebuffer The framebuffer ID, or nullopt for default.
+     */
+    inline void setCurrentBoundFramebuffer(std::optional<GLuint> framebuffer)
+    {
+      currentBoundFramebuffer_ = framebuffer;
+    }
+
+    /**
+     * Get the current bound framebuffer.
+     *
+     * @returns The current framebuffer ID, or nullopt if using default.
+     */
+    inline std::optional<GLuint> getCurrentBoundFramebuffer() const
+    {
+      return currentBoundFramebuffer_;
+    }
+
   private: // private lifecycle
     /**
      * The callback function to handle the command buffer request received.

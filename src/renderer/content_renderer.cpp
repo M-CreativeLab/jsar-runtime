@@ -175,25 +175,6 @@ namespace renderer
 
     auto commandType = req->type;
 
-    // Track state changes for blending
-    if (commandType == COMMAND_BUFFER_ENABLE_REQ)
-    {
-      auto enableReq = dynamic_cast<const commandbuffers::EnableCommandBufferRequest *>(req);
-      if (enableReq != nullptr && enableReq->cap == GL_BLEND)
-      {
-        // Blending will be enabled, but for now we just return based on current state
-        // The actual state update happens during execution
-      }
-    }
-    else if (commandType == COMMAND_BUFFER_DISABLE_REQ)
-    {
-      auto disableReq = dynamic_cast<const commandbuffers::DisableCommandBufferRequest *>(req);
-      if (disableReq != nullptr && disableReq->cap == GL_BLEND)
-      {
-        // Blending will be disabled
-      }
-    }
-
     // Check if this is a framebuffer bind operation
     if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
     {
@@ -224,9 +205,9 @@ namespace renderer
     }
 
     // If blending is enabled and this is a draw call, route to transparent pass
-    if (isBlendingEnabled_ && commandbuffers::CommandTypes::IsFramebufferDependentCommand(commandType))
+    // Only check for actual draw commands, not all framebuffer-dependent commands
+    if (isBlendingEnabled_)
     {
-      // Check if this is a draw command
       switch (commandType)
       {
       case COMMAND_BUFFER_DRAW_ARRAYS_REQ:

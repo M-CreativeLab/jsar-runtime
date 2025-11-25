@@ -991,6 +991,16 @@ private:
     app_context->bindFramebuffer(req->target,
                                  req->isBindToDefault() ? nullopt : make_optional<uint32_t>(req->framebuffer),
                                  framebuffer);
+
+    // Track the current bound framebuffer for render pass routing
+    if (req->target == GL_FRAMEBUFFER || req->target == GL_DRAW_FRAMEBUFFER)
+    {
+      if (req->isBindToDefault())
+        reqContentRenderer->setCurrentBoundFramebuffer(std::nullopt);
+      else
+        reqContentRenderer->setCurrentBoundFramebuffer(framebuffer);
+    }
+
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, to_string(framebuffer).c_str(), nullptr, options);
   }
@@ -2512,6 +2522,11 @@ private:
     auto cap = req->cap;
     glEnable(cap);
     reqContentRenderer->getContextGL()->onCapabilityEnabled(cap, true);
+
+    // Track blending state for render pass routing
+    if (cap == GL_BLEND)
+      reqContentRenderer->setBlendingEnabled(true);
+
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -2520,6 +2535,11 @@ private:
     auto cap = req->cap;
     glDisable(cap);
     reqContentRenderer->getContextGL()->onCapabilityEnabled(cap, false);
+
+    // Track blending state for render pass routing
+    if (cap == GL_BLEND)
+      reqContentRenderer->setBlendingEnabled(false);
+
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
