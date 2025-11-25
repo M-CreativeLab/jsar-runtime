@@ -87,6 +87,11 @@ namespace renderer
     /**
      * Add a command buffer to this render pass.
      *
+     * Note: This class does NOT take ownership of the command buffer.
+     * The caller is responsible for managing the command buffer's lifecycle.
+     * Use `clearAndDeleteCommandBuffers()` if the render pass should delete
+     * the command buffers when clearing.
+     *
      * @param commandBuffer The command buffer to add.
      */
     void addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer);

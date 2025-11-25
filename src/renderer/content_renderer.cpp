@@ -408,7 +408,11 @@ namespace renderer
     auto *transparentPass = renderPassCollection_.getTransparentPass();
     if (transparentPass != nullptr && transparentPass->hasCommandBuffers())
     {
-      currentPass = ExecutingPassType::kXRFrame; // Use XR frame pass type for transparent rendering
+      // Note: We use kXRFrame pass type for transparent rendering because it indicates
+      // a regular rendering frame (as opposed to initialization or offscreen). The
+      // transparent pass executes draw calls with blending, which are still part of
+      // the main XR/rendering frame.
+      currentPass = ExecutingPassType::kXRFrame;
 
       transparentPass->begin();
       {
