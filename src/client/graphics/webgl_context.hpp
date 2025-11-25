@@ -219,6 +219,41 @@ namespace endor
       kExtMaxViewsOvr = WEBGL2_EXT_MAX_VIEWS_OVR,
     };
 
+    /**
+   * Enum for buffer/object binding parameters that return WebGL objects.
+   */
+    enum class WebGLBufferBindingParameterName
+    {
+      kArrayBufferBinding = WEBGL_ARRAY_BUFFER_BINDING,
+      kElementArrayBufferBinding = WEBGL_ELEMENT_ARRAY_BUFFER_BINDING,
+    };
+
+    enum class WebGLObjectBindingParameterName
+    {
+      kCurrentProgram = WEBGL_CURRENT_PROGRAM,
+      kFramebufferBinding = WEBGL_FRAMEBUFFER_BINDING,
+      kRenderbufferBinding = WEBGL_RENDERBUFFER_BINDING,
+    };
+
+    enum class WebGL2BufferBindingParameterName
+    {
+      kCopyReadBufferBinding = WEBGL2_COPY_READ_BUFFER_BINDING,
+      kCopyWriteBufferBinding = WEBGL2_COPY_WRITE_BUFFER_BINDING,
+      kPixelPackBufferBinding = WEBGL2_PIXEL_PACK_BUFFER_BINDING,
+      kPixelUnpackBufferBinding = WEBGL2_PIXEL_UNPACK_BUFFER_BINDING,
+      kTransformFeedbackBufferBinding = WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING,
+      kUniformBufferBinding = WEBGL2_UNIFORM_BUFFER_BINDING,
+    };
+
+    enum class WebGL2ObjectBindingParameterName
+    {
+      kDrawFramebufferBinding = WEBGL2_DRAW_FRAMEBUFFER_BINDING,
+      kReadFramebufferBinding = WEBGL2_READ_FRAMEBUFFER_BINDING,
+      kVertexArrayBinding = WEBGL2_VERTEX_ARRAY_BINDING,
+      kSamplerBinding = WEBGL2_SAMPLER_BINDING,
+      kTransformFeedbackBinding = WEBGL2_TRANSFORM_FEEDBACK_BINDING,
+    };
+
     class ContextAttributes final
     {
     public:
@@ -464,6 +499,10 @@ namespace endor
       bool getParameter(WebGLBooleanIndexedParameterName pname, int index);
       float getParameter(WebGLFloatArrayParameterName pname, int index);
       std::string getParameter(WebGLStringParameterName pname);
+      std::shared_ptr<WebGLBuffer> getParameter(WebGLBufferBindingParameterName pname);
+      std::shared_ptr<WebGLProgram> getParameterProgram(WebGLObjectBindingParameterName pname);
+      std::shared_ptr<WebGLFramebuffer> getParameterFramebuffer(WebGLObjectBindingParameterName pname);
+      std::shared_ptr<WebGLRenderbuffer> getParameterRenderbuffer(WebGLObjectBindingParameterName pname);
       WebGLShaderPrecisionFormat getShaderPrecisionFormat(int shadertype, int precisiontype);
       int getError();
       std::vector<std::string> &getSupportedExtensions();
@@ -918,6 +957,9 @@ namespace endor
         std::optional<int> length = std::nullopt);
       int getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
       int getParameterV2(WebGL2IntegerParameterName pname);
+      std::shared_ptr<WebGLBuffer> getParameterV2(WebGL2BufferBindingParameterName pname);
+      std::shared_ptr<WebGLFramebuffer> getParameterFramebufferV2(WebGL2ObjectBindingParameterName pname);
+      std::shared_ptr<WebGLVertexArray> getParameterVertexArrayV2(WebGL2ObjectBindingParameterName pname);
       std::shared_ptr<WebGLQuery> getQuery(WebGLQueryTarget target, int pname);
       int getUniformBlockIndex(std::shared_ptr<WebGLProgram> program, const std::string &uniformBlockName);
 

@@ -45,5 +45,5 @@ namespace endor
       };
 
     } // namespace webgl
-  }   // namespace script_bindings
+  } // namespace script_bindings
 } // namespace endor

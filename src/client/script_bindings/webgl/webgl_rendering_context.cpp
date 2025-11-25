@@ -4390,67 +4390,47 @@ namespace endor
        */
         case WEBGL_ARRAY_BUFFER_BINDING:
         {
-          auto &state = handle()->clientState();
-          if (state.vertexBuffer.has_value() && state.vertexBuffer.value() != nullptr)
-          {
-            jsValue = WebGLBuffer::NewInstance(isolate, state.vertexBuffer.value());
-          }
+          auto value = handle()->getParameter(static_cast<client_graphics::WebGLBufferBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLBuffer::NewInstance(isolate, value);
           else
-          {
             jsValue = Null(isolate);
-          }
           break;
         }
         case WEBGL_ELEMENT_ARRAY_BUFFER_BINDING:
         {
-          auto &state = handle()->clientState();
-          if (state.elementBuffer.has_value() && state.elementBuffer.value() != nullptr)
-          {
-            jsValue = WebGLBuffer::NewInstance(isolate, state.elementBuffer.value());
-          }
+          auto value = handle()->getParameter(static_cast<client_graphics::WebGLBufferBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLBuffer::NewInstance(isolate, value);
           else
-          {
             jsValue = Null(isolate);
-          }
           break;
         }
         case WEBGL_FRAMEBUFFER_BINDING:
         {
-          auto &state = handle()->clientState();
-          if (state.framebuffer.has_value() && state.framebuffer.value() != nullptr)
-          {
-            jsValue = WebGLFramebuffer::NewInstance(isolate, state.framebuffer.value());
-          }
+          auto value = handle()->getParameterFramebuffer(static_cast<client_graphics::WebGLObjectBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLFramebuffer::NewInstance(isolate, value);
           else
-          {
             jsValue = Null(isolate);
-          }
           break;
         }
         case WEBGL_RENDERBUFFER_BINDING:
         {
-          auto &state = handle()->clientState();
-          if (state.renderbuffer.has_value() && state.renderbuffer.value() != nullptr)
-          {
-            jsValue = WebGLRenderbuffer::NewInstance(isolate, state.renderbuffer.value());
-          }
+          auto value = handle()->getParameterRenderbuffer(static_cast<client_graphics::WebGLObjectBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLRenderbuffer::NewInstance(isolate, value);
           else
-          {
             jsValue = Null(isolate);
-          }
           break;
         }
         case WEBGL_CURRENT_PROGRAM:
         {
-          auto &state = handle()->clientState();
-          if (state.program.has_value() && state.program.value() != nullptr)
-          {
-            jsValue = WebGLProgram::NewInstance(isolate, state.program.value());
-          }
+          auto value = handle()->getParameterProgram(static_cast<client_graphics::WebGLObjectBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLProgram::NewInstance(isolate, value);
           else
-          {
             jsValue = Null(isolate);
-          }
           break;
         }
         case WEBGL_TEXTURE_BINDING_2D:
@@ -4509,30 +4489,23 @@ namespace endor
          */
           case WEBGL2_VERTEX_ARRAY_BINDING:
           {
-            auto &state = handle()->clientState();
-            if (state.vertexArray.has_value() && state.vertexArray.value() != nullptr)
-            {
-              jsValue = WebGLVertexArray::NewInstance(isolate, state.vertexArray.value());
-            }
+            auto value = handle<client_graphics::WebGL2Context>()
+                           ->getParameterVertexArrayV2(static_cast<client_graphics::WebGL2ObjectBindingParameterName>(pname));
+            if (value != nullptr)
+              jsValue = WebGLVertexArray::NewInstance(isolate, value);
             else
-            {
               jsValue = Null(isolate);
-            }
             break;
           }
           case WEBGL2_DRAW_FRAMEBUFFER_BINDING:
           case WEBGL2_READ_FRAMEBUFFER_BINDING:
           {
-            // Both draw and read framebuffer binding return the same framebuffer in WebGL2
-            auto &state = handle()->clientState();
-            if (state.framebuffer.has_value() && state.framebuffer.value() != nullptr)
-            {
-              jsValue = WebGLFramebuffer::NewInstance(isolate, state.framebuffer.value());
-            }
+            auto value = handle<client_graphics::WebGL2Context>()
+                           ->getParameterFramebufferV2(static_cast<client_graphics::WebGL2ObjectBindingParameterName>(pname));
+            if (value != nullptr)
+              jsValue = WebGLFramebuffer::NewInstance(isolate, value);
             else
-            {
               jsValue = Null(isolate);
-            }
             break;
           }
           case WEBGL2_COPY_READ_BUFFER_BINDING:
@@ -4542,9 +4515,12 @@ namespace endor
           case WEBGL2_UNIFORM_BUFFER_BINDING:
           case WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING:
           {
-            // TODO: These buffer bindings are not yet tracked in clientState
-            // Would require extending WebGLState to track additional buffer binding points
-            jsValue = Null(isolate);
+            auto value = handle<client_graphics::WebGL2Context>()
+                           ->getParameterV2(static_cast<client_graphics::WebGL2BufferBindingParameterName>(pname));
+            if (value != nullptr)
+              jsValue = WebGLBuffer::NewInstance(isolate, value);
+            else
+              jsValue = Null(isolate);
             break;
           }
           case WEBGL2_SAMPLER_BINDING:
