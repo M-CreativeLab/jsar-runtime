@@ -4,6 +4,10 @@
 #include <xr/device.hpp>
 #include <xr/session.hpp>
 
+#include <common/command_buffers/details/buffer.hpp>
+#include <common/command_buffers/details/states.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+
 #include "./content_renderer.hpp"
 #include "./render_api.hpp"
 
@@ -160,6 +164,65 @@ namespace renderer
     if (req == nullptr) [[unlikely]]
       return;
     commandBuffersOnOffscreenPass.push_back(req);
+  }
+
+  RenderPassType TrContentRenderer::determineRenderPassType(TrCommandBufferBase *req) const
+  {
+    if (req == nullptr) [[unlikely]]
+    {
+      return RenderPassType::kOpaque;
+    }
+
+    auto commandType = req->type;
+
+    // Check if this is a framebuffer bind operation
+    if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
+    {
+      auto bindFbReq = dynamic_cast<const commandbuffers::BindFramebufferCommandBufferRequest *>(req);
+      if (bindFbReq != nullptr)
+      {
+        // If binding to a non-default framebuffer, route to offscreen pass
+        if (!bindFbReq->isBindToDefault())
+        {
+          return RenderPassType::kOffscreen;
+        }
+      }
+    }
+
+    // Check if the current framebuffer binding is not the default render target
+    if (currentBoundFramebuffer_.has_value())
+    {
+      auto glContext = getContextGL();
+      if (glContext != nullptr)
+      {
+        GLuint currentDefault = glContext->currentDefaultRenderTarget();
+        if (currentBoundFramebuffer_.value() != currentDefault && currentBoundFramebuffer_.value() != 0)
+        {
+          // Currently bound to a non-default framebuffer, route to offscreen
+          return RenderPassType::kOffscreen;
+        }
+      }
+    }
+
+    // If blending is enabled and this is a draw call, route to transparent pass
+    // Only check for actual draw commands, not all framebuffer-dependent commands
+    if (isBlendingEnabled_)
+    {
+      switch (commandType)
+      {
+      case COMMAND_BUFFER_DRAW_ARRAYS_REQ:
+      case COMMAND_BUFFER_DRAW_ELEMENTS_REQ:
+      case COMMAND_BUFFER_DRAW_ARRAYS_INSTANCED_REQ:
+      case COMMAND_BUFFER_DRAW_ELEMENTS_INSTANCED_REQ:
+      case COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ:
+        return RenderPassType::kTransparent;
+      default:
+        break;
+      }
+    }
+
+    // Default to opaque pass
+    return RenderPassType::kOpaque;
   }
 
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
@@ -340,17 +403,44 @@ namespace renderer
 
   void TrContentRenderer::onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
-    // TODO(yorkie): implement the transparents render pass.
+    // Execute command buffers that have been routed to the transparent render pass.
+    // These are typically draw calls that have blending enabled.
+    auto *transparentPass = renderPassCollection_.getTransparentPass();
+    if (transparentPass != nullptr && transparentPass->hasCommandBuffers())
+    {
+      // Note: We use kXRFrame pass type for transparent rendering because it indicates
+      // a regular rendering frame (as opposed to initialization or offscreen). The
+      // transparent pass executes draw calls with blending, which are still part of
+      // the main XR/rendering frame.
+      currentPass = ExecutingPassType::kXRFrame;
+
+      transparentPass->begin();
+      {
+        auto &commandBuffers = transparentPass->getCommandBuffers();
+        constellation->renderer->executeCommandBuffers(commandBuffers,
+                                                       this,
+                                                       ExecutingPassType::kXRFrame);
+      }
+      transparentPass->end();
+      transparentPass->clearCommandBuffers();
+    }
   }
 
   void TrContentRenderer::onOffscreenRenderPass()
   {
     currentPass = ExecutingPassType::kOffscreenPass;
+
+    // Get the offscreen render pass from the collection
+    auto *offscreenPass = renderPassCollection_.getOffscreenPass();
+
+    // Execute command buffers from both the legacy storage and the new render pass collection
+    // This maintains backward compatibility while transitioning to the new system
     if (commandBuffersOnOffscreenPass.size() > 0)
     {
       assert(glContextOnOffscreenPass.has_value() &&
              "The offscreen pass context is not initialized, please call `initializeGraphicsContextsOnce()` first.");
 
+      offscreenPass->begin();
       glContextOnOffscreenPass->restore();
       constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
                                                      this,
@@ -363,7 +453,23 @@ namespace renderer
 
       commandBuffersOnOffscreenPass.clear();
       glContextOnOffscreenPass = nullopt;
+      offscreenPass->end();
     }
+
+    // Also check the render pass collection for any additional offscreen commands
+    if (offscreenPass->hasCommandBuffers())
+    {
+      offscreenPass->begin();
+      {
+        auto &commandBuffers = offscreenPass->getCommandBuffers();
+        constellation->renderer->executeCommandBuffers(commandBuffers,
+                                                       this,
+                                                       ExecutingPassType::kOffscreenPass);
+      }
+      offscreenPass->end();
+      offscreenPass->clearCommandBuffers();
+    }
+
     currentPass = ExecutingPassType::kDefaultFrame;
   }
 
@@ -371,6 +477,13 @@ namespace renderer
   {
     frameStartTime = chrono::system_clock::now();
     currentPass = ExecutingPassType::kDefaultFrame;
+
+    // Reset the render pass collection for a new frame
+    renderPassCollection_.resetForNewFrame();
+
+    // Reset blending and framebuffer state tracking
+    isBlendingEnabled_ = false;
+    currentBoundFramebuffer_ = std::nullopt;
 
     // Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
     if (xrDevice->enabled()) [[likely]]

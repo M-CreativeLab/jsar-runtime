@@ -16,6 +16,7 @@
 #include <runtime/macros.h>
 #include <xr/device.hpp>
 #include <renderer/render_api.hpp>
+#include <renderer/render_pass.hpp>
 #include <renderer/gles/context_storage.hpp>
 
 using namespace std;
@@ -25,6 +26,7 @@ namespace renderer
 {
   class TrRenderer;
   class TrContentRenderer;
+  class TrRenderPass;
 
   /**
    * A scope class for backup GL context, using this class will automatically restore the gl context after the scope:
@@ -122,6 +124,66 @@ namespace renderer
     void resetOffscreenPassGLContext(std::optional<GLuint> framebuffer);
     void scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req);
 
+    /**
+     * Determine which render pass a command buffer should be routed to.
+     *
+     * @param req The command buffer request to evaluate.
+     * @returns The appropriate render pass type for this command buffer.
+     */
+    RenderPassType determineRenderPassType(TrCommandBufferBase *req) const;
+
+    /**
+     * Get the render pass collection for this content renderer.
+     *
+     * @returns A reference to the render pass collection.
+     */
+    inline TrRenderPassCollection &getRenderPassCollection()
+    {
+      return renderPassCollection_;
+    }
+
+    /**
+     * Update the blending state.
+     * Call this when the GL_BLEND capability is enabled/disabled.
+     *
+     * @param enabled Whether blending is enabled.
+     */
+    inline void setBlendingEnabled(bool enabled)
+    {
+      isBlendingEnabled_ = enabled;
+    }
+
+    /**
+     * Check if blending is currently enabled.
+     *
+     * @returns `true` if blending is enabled, `false` otherwise.
+     */
+    inline bool isBlendingEnabled() const
+    {
+      return isBlendingEnabled_;
+    }
+
+    /**
+     * Update the current bound framebuffer.
+     * Call this when a framebuffer is bound.
+     *
+     * @param framebuffer The framebuffer ID, or nullopt for default.
+     */
+    inline void setCurrentBoundFramebuffer(std::optional<GLuint> framebuffer)
+    {
+      currentBoundFramebuffer_ = framebuffer;
+    }
+
+    /**
+     * Get the current bound framebuffer.
+     *
+     * @returns The current framebuffer ID, or nullopt if using default.
+     */
+    inline std::optional<GLuint> getCurrentBoundFramebuffer() const
+    {
+      return currentBoundFramebuffer_;
+    }
+
   private: // private lifecycle
     /**
      * The callback function to handle the command buffer request received.
@@ -208,5 +270,24 @@ namespace renderer
 
   private: // frame rate control
     uint32_t targetFrameRate;
+
+  private: // render pass management
+    /**
+     * The collection of render passes for this content renderer.
+     * Contains opaque, transparent, and offscreen render passes.
+     */
+    TrRenderPassCollection renderPassCollection_;
+
+    /**
+     * The current framebuffer binding state.
+     * Used to determine if a command buffer should be routed to offscreen pass.
+     */
+    std::optional<GLuint> currentBoundFramebuffer_;
+
+    /**
+     * Whether blending is currently enabled.
+     * Used to determine if draw calls should be routed to the transparent pass.
+     */
+    bool isBlendingEnabled_ = false;
   };
 }
