@@ -2,13 +2,15 @@
 #include <command_buffers/details/texture.hpp>
 #include <command_buffers/shared.hpp>
 #include <command_buffers/webgl_constants.hpp>
+#include <renderer/content_renderer.hpp>
 
 namespace renderer
 {
   using namespace std;
   using namespace commandbuffers;
 
-  TrContextWebGL::TrContextWebGL()
+  TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer)
+      : content_renderer_(content_renderer)
   {
   }
 
@@ -862,7 +864,20 @@ namespace renderer
   // --- Buffer Objects ---
   void TrContextWebGL::glBindBuffer(WebGLenum target, WebGLuint buffer)
   {
-    /* TODO(yorkie): implement */
+    if (!glIsBuffer(buffer)) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+
+    for (auto &binding : buffer_bindings_)
+    {
+      if (binding.buffer == buffer)
+      {
+        binding.target = target;
+        break;
+      }
+    }
   }
 
   void TrContextWebGL::glBindBufferBase(WebGLenum target,
@@ -956,7 +971,17 @@ namespace renderer
 
   void TrContextWebGL::glGenBuffers(WebGLsizei n, WebGLuint *buffers)
   {
-    /* TODO(yorkie): implement */
+    static WebGLuint next_buffer_id = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+      const BufferBinding binding = {
+        .target = nullopt,
+        .buffer = next_buffer_id++,
+      };
+      buffer_bindings_.push_back(binding);
+      buffers[i] = binding.buffer;
+    }
   }
 
   void TrContextWebGL::glGetBufferParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
@@ -984,9 +1009,16 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glIsBuffer(WebGLuint buffer)
+  WebGLboolean TrContextWebGL::glIsBuffer(WebGLuint buffer)
   {
-    /* TODO(yorkie): implement */
+    for (const auto &binding : buffer_bindings_)
+    {
+      if (binding.buffer == buffer)
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   void TrContextWebGL::glMapBufferRange(WebGLenum target, WebGLintptr offset, WebGLsizeiptr length, WebGLbitfield access)

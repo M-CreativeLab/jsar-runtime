@@ -97,6 +97,19 @@ namespace renderer
     TrRenderer &getRendererRef() const;
 
   public:
+    Ref<TrRenderResource> renderResource() const
+    {
+      return render_resource_;
+    }
+    Ref<TrRenderPass> opaqueRenderPass() const
+    {
+      return opaque_renderpass_;
+    }
+    Ref<TrRenderPass> transparentRenderPass() const
+    {
+      return transparent_renderpass_;
+    }
+
     /**
      * Dispatch a command buffer request.
      * 

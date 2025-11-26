@@ -6,13 +6,45 @@
 
 namespace renderer
 {
+  class TrContentRenderer;
+
   class TrContextWebGL
   {
   public:
-    TrContextWebGL();
+    TrContextWebGL(Ref<TrContentRenderer> content_renderer);
     ~TrContextWebGL();
 
-    class TextureTarget
+    class ObjectTarget
+    {
+    public:
+      ObjectTarget(WebGLenum target)
+          : target_(target)
+      {
+      }
+
+      inline WebGLenum value() const
+      {
+        return target_;
+      }
+
+      inline bool operator==(const ObjectTarget &rhs) const
+      {
+        return target_ == rhs.target_;
+      }
+
+      struct HashKey
+      {
+        size_t operator()(const ObjectTarget &t) const noexcept
+        {
+          return std::hash<WebGLenum>{}(t.value());
+        }
+      };
+
+    protected:
+      WebGLenum target_;
+    };
+
+    class TextureTarget : public ObjectTarget
     {
     public:
       enum
@@ -23,31 +55,29 @@ namespace renderer
       };
 
       TextureTarget(WebGLenum target)
-          : target_(target)
+          : ObjectTarget(target)
       {
-        assert(target_ == k2D || target_ == k3D || target_ == k2DArray);
+        assert(target_ == k2D ||
+               target_ == k3D ||
+               target_ == k2DArray);
       }
+    };
 
-      inline WebGLenum value() const
+    class BufferTarget : public ObjectTarget
+    {
+    public:
+      enum
       {
-        return target_;
-      }
-
-      inline bool operator==(const TextureTarget &rhs) const
-      {
-        return target_ == rhs.target_;
-      }
-
-      struct HashKey
-      {
-        size_t operator()(const TextureTarget &t) const noexcept
-        {
-          return std::hash<WebGLenum>{}(t.value());
-        }
+        kArrayBuffer = WEBGL_ARRAY_BUFFER,
+        kElementArrayBuffer = WEBGL_ELEMENT_ARRAY_BUFFER,
       };
 
-    private:
-      WebGLenum target_;
+      BufferTarget(WebGLenum target)
+          : ObjectTarget(target)
+      {
+        assert(target_ == kArrayBuffer ||
+               target_ == kElementArrayBuffer);
+      }
     };
 
     struct TextureBinding
@@ -90,6 +120,13 @@ namespace renderer
 
     private:
       Map caps_;
+    };
+
+
+    struct BufferBinding
+    {
+      std::optional<BufferTarget> target;
+      WebGLuint buffer;
     };
 
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
@@ -408,7 +445,7 @@ namespace renderer
     void glGetBufferPointerv(WebGLenum target, WebGLenum pname, WebGLvoid **params);
     void glGetVertexAttrib(WebGLuint index, WebGLenum pname, WebGLint *params);
     void glGetVertexAttribPointerv(WebGLuint index, WebGLenum pname, WebGLvoid **pointer);
-    void glIsBuffer(WebGLuint buffer);
+    WebGLboolean glIsBuffer(WebGLuint buffer);
     void glMapBufferRange(WebGLenum target, WebGLintptr offset, WebGLsizeiptr length, WebGLbitfield access);
     void glUnmapBuffer(WebGLenum target);
     void glVertexAttrib(WebGLuint index, WebGLfloat x);
@@ -521,10 +558,13 @@ namespace renderer
     void glIsSampler(WebGLuint sampler);
     void glSamplerParameter(WebGLuint sampler, WebGLenum pname, WebGLint param);
 
+    Ref<TrContentRenderer> content_renderer_;
+    std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
+    std::vector<BufferBinding> buffer_bindings_;
+
     WebGLenum last_error_ = WEBGL_NO_ERROR;
     Capabilities caps_;
     WebGLenum active_texture_;
-    std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
 
     WebGLfloat blend_color_[4];
     WebGLenum blend_equation_rgb_;

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
-
 #include <common/utility.hpp>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
@@ -16,6 +14,11 @@ namespace renderer
   {
   public:
     TrRenderResource(Ref<commandbuffers::GPUDeviceBase> device);
+
+    Ref<commandbuffers::GPUPipelineBase> createPipeline();
+    Ref<commandbuffers::GPUBufferBase> createBuffer(
+      const commandbuffers::GPUBufferDescriptor *descriptor);
+    Ref<commandbuffers::GPUTextureBase> createTexture();
 
     Ref<commandbuffers::GPUPipelineBase> getPipeline(int id);
     Ref<commandbuffers::GPUBufferBase> getBuffer(int id);

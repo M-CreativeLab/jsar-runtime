@@ -4,7 +4,6 @@
 #include <memory>
 #include <atomic>
 #include <vector>
-#include <string>
 #include <string_view>
 
 #include <common/utility.hpp>

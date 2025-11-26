@@ -13,6 +13,24 @@ namespace renderer
   {
   }
 
+  Ref<GPUPipelineBase> TrRenderResource::createPipeline()
+  {
+    return nullptr;
+  }
+
+  Ref<GPUBufferBase> TrRenderResource::createBuffer(
+    const GPUBufferDescriptor *descriptor)
+  {
+    auto buffer = device_->createBuffer(descriptor);
+    buffers_.emplace(buffer->id, buffer);
+    return buffer;
+  }
+
+  Ref<GPUTextureBase> TrRenderResource::createTexture()
+  {
+    return nullptr;
+  }
+
   Ref<GPUPipelineBase> TrRenderResource::getPipeline(int id)
   {
     return pipelines_.at(id);
