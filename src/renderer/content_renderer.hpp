@@ -19,6 +19,7 @@
 #include <renderer/render_api.hpp>
 #include <renderer/render_pass.hpp>
 #include <renderer/render_resource.hpp>
+#include <renderer/context_webgl.hpp>
 #include <renderer/gles/context_storage.hpp>
 
 using namespace std;
@@ -210,6 +211,7 @@ namespace renderer
     std::chrono::milliseconds maxFrameDuration = std::chrono::milliseconds(0);
 
   private:
+    Ref<TrContextWebGL> context_;
     Ref<TrRenderResource> render_resource_;
     Ref<TrRenderPass> opaque_renderpass_;
     Ref<TrRenderPass> transparent_renderpass_;

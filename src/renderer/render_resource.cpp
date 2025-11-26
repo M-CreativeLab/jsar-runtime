@@ -13,10 +13,6 @@ namespace renderer
   {
   }
 
-  void TrRenderResource::receiveIncomingRequest(const TrCommandBufferRequest &request)
-  {
-  }
-
   Ref<GPUPipelineBase> TrRenderResource::getPipeline(int id)
   {
     return pipelines_.at(id);

@@ -17,7 +17,6 @@ namespace renderer
   public:
     TrRenderResource(Ref<commandbuffers::GPUDeviceBase> device);
 
-    void receiveIncomingRequest(const commandbuffers::TrCommandBufferRequest &request);
     Ref<commandbuffers::GPUPipelineBase> getPipeline(int id);
     Ref<commandbuffers::GPUBufferBase> getBuffer(int id);
     Ref<commandbuffers::GPUTextureBase> getTexture(int id);

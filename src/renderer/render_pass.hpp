@@ -64,7 +64,8 @@ namespace renderer
     void receiveIncomingRequest(const commandbuffers::TrCommandBufferRequest &request);
     void begin();
     void end();
-    std::unique_ptr<commandbuffers::GPUCommandBufferBase> finish(std::optional<std::string> label = std::nullopt);
+    std::unique_ptr<commandbuffers::GPUCommandBufferBase> finish(
+      std::optional<std::string> label = std::nullopt);
 
   private:
     RenderPassType type_;
