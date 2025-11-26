@@ -80,21 +80,61 @@ namespace renderer
       }
     };
 
+    class FramebufferTarget : public ObjectTarget
+    {
+    public:
+      enum
+      {
+        kFramebuffer = WEBGL_FRAMEBUFFER,
+        kReadFramebuffer = WEBGL2_READ_FRAMEBUFFER,
+        kDrawFramebuffer = WEBGL2_DRAW_FRAMEBUFFER,
+      };
+
+      FramebufferTarget(WebGLenum target)
+          : ObjectTarget(target)
+      {
+        assert(target_ == kFramebuffer ||
+               target_ == kReadFramebuffer ||
+               target_ == kDrawFramebuffer);
+      }
+    };
+
+    class RenderbufferTarget : public ObjectTarget
+    {
+    public:
+      enum
+      {
+        kRenderbuffer = WEBGL_RENDERBUFFER,
+      };
+
+      RenderbufferTarget(WebGLenum target)
+          : ObjectTarget(target)
+      {
+        assert(target_ == kRenderbuffer);
+      }
+    };
+
     struct TextureBinding
     {
       WebGLenum target;
       WebGLuint texture;
     };
 
+    struct BufferBinding
+    {
+      std::optional<BufferTarget> target;
+      WebGLuint buffer;
+    };
+
     struct FramebufferBinding
     {
-      WebGLenum target;
+      std::optional<FramebufferTarget> target;
       WebGLuint framebuffer;
     };
 
     struct RenderbufferBinding
     {
-      WebGLenum target;
+      std::optional<RenderbufferTarget> target;
       WebGLuint renderbuffer;
     };
 
@@ -120,13 +160,6 @@ namespace renderer
 
     private:
       Map caps_;
-    };
-
-
-    struct BufferBinding
-    {
-      std::optional<BufferTarget> target;
-      WebGLuint buffer;
     };
 
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
@@ -307,8 +340,8 @@ namespace renderer
                                     WebGLint y,
                                     WebGLsizei width,
                                     WebGLsizei height);
-    void glIsFramebuffer(WebGLuint framebuffer);
-    void glIsRenderbuffer(WebGLuint renderbuffer);
+    WebGLboolean glIsFramebuffer(WebGLuint framebuffer);
+    WebGLboolean glIsRenderbuffer(WebGLuint renderbuffer);
     void glRenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height);
     void glRenderbufferStorageMultisample(WebGLenum target,
                                           WebGLsizei samples,
@@ -561,6 +594,8 @@ namespace renderer
     Ref<TrContentRenderer> content_renderer_;
     std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
     std::vector<BufferBinding> buffer_bindings_;
+    std::vector<FramebufferBinding> framebuffer_bindings_;
+    std::vector<RenderbufferBinding> renderbuffer_bindings_;
 
     WebGLenum last_error_ = WEBGL_NO_ERROR;
     Capabilities caps_;

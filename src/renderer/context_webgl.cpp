@@ -347,12 +347,52 @@ namespace renderer
   // --- Framebuffers ---
   void TrContextWebGL::glBindFramebuffer(WebGLenum target, WebGLuint framebuffer)
   {
-    /* TODO(yorkie): implement */
+    if (!glIsFramebuffer(framebuffer)) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
+      return;
+    }
+
+    if (target != WEBGL_FRAMEBUFFER &&
+        target != WEBGL2_DRAW_FRAMEBUFFER &&
+        target != WEBGL2_READ_FRAMEBUFFER) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+
+    for (auto &binding : framebuffer_bindings_)
+    {
+      if (binding.framebuffer == framebuffer)
+      {
+        binding.target = target;
+        break;
+      }
+    }
   }
 
   void TrContextWebGL::glBindRenderbuffer(WebGLenum target, WebGLuint renderbuffer)
   {
-    /* TODO(yorkie): implement */
+    if (!glIsRenderbuffer(renderbuffer)) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
+      return;
+    }
+
+    if (target != WEBGL_RENDERBUFFER) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+
+    for (auto &binding : renderbuffer_bindings_)
+    {
+      if (binding.renderbuffer == renderbuffer)
+      {
+        binding.target = target;
+        break;
+      }
+    }
   }
 
   void TrContextWebGL::glBlitFramebuffer(WebGLint srcX0,
@@ -406,12 +446,30 @@ namespace renderer
 
   void TrContextWebGL::glGenFramebuffers(WebGLsizei n, WebGLuint *framebuffers)
   {
-    /* TODO(yorkie): implement */
+    static WebGLuint next_framebuffer_id_ = 1;
+    for (WebGLsizei i = 0; i < n; i++)
+    {
+      const FramebufferBinding binding = {
+        .target = nullopt,
+        .framebuffer = next_framebuffer_id_++,
+      };
+      framebuffer_bindings_.push_back(binding);
+      framebuffers[i] = binding.framebuffer;
+    }
   }
 
   void TrContextWebGL::glGenRenderbuffers(WebGLsizei n, WebGLuint *renderbuffers)
   {
-    /* TODO(yorkie): implement */
+    static WebGLuint next_renderbuffer_id_ = 1;
+    for (WebGLsizei i = 0; i < n; i++)
+    {
+      const RenderbufferBinding binding = {
+        .target = nullopt,
+        .renderbuffer = next_renderbuffer_id_++,
+      };
+      renderbuffer_bindings_.push_back(binding);
+      renderbuffers[i] = binding.renderbuffer;
+    }
   }
 
   void TrContextWebGL::glGenerateMipmap(WebGLenum target)
@@ -445,14 +503,28 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glIsFramebuffer(WebGLuint framebuffer)
+  WebGLboolean TrContextWebGL::glIsFramebuffer(WebGLuint framebuffer)
   {
-    /* TODO(yorkie): implement */
+    for (const auto &binding : framebuffer_bindings_)
+    {
+      if (binding.framebuffer == framebuffer)
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
-  void TrContextWebGL::glIsRenderbuffer(WebGLuint renderbuffer)
+  WebGLboolean TrContextWebGL::glIsRenderbuffer(WebGLuint renderbuffer)
   {
-    /* TODO(yorkie): implement */
+    for (const auto &binding : renderbuffer_bindings_)
+    {
+      if (binding.renderbuffer == renderbuffer)
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   void TrContextWebGL::glRenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
