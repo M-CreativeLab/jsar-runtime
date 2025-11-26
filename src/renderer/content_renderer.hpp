@@ -69,8 +69,8 @@ namespace renderer
      * @return The created content renderer.
      */
     static inline Ref<TrContentRenderer> Make(Ref<TrContentRuntime> content,
-                                                          uint8_t contextId,
-                                                          TrConstellation *constellation)
+                                              uint8_t contextId,
+                                              TrConstellation *constellation)
     {
       assert(content != nullptr);
       assert(contextId >= commandbuffers::MinimumContextId);
