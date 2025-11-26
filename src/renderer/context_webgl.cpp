@@ -299,29 +299,40 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glClearBufferfv(WebGLenum buffer, WebGLint drawbuffer, const WebGLfloat *value)
+  void TrContextWebGL::glClearBufferfv(WebGLenum buffer,
+                                       WebGLint drawbuffer,
+                                       const WebGLfloat *value)
   {
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glClearBufferfi(WebGLenum buffer, WebGLint drawbuffer, WebGLfloat depth, WebGLint stencil)
+  void TrContextWebGL::glClearBufferfi(WebGLenum buffer,
+                                       WebGLint drawbuffer,
+                                       WebGLfloat depth,
+                                       WebGLint stencil)
   {
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glClearColor(WebGLfloat red, WebGLfloat green, WebGLfloat blue, WebGLfloat alpha)
+  void TrContextWebGL::glClearColor(WebGLfloat red,
+                                    WebGLfloat green,
+                                    WebGLfloat blue,
+                                    WebGLfloat alpha)
   {
-    /* TODO(yorkie): implement */
+    clear_color_[0] = red;
+    clear_color_[1] = green;
+    clear_color_[2] = blue;
+    clear_color_[3] = alpha;
   }
 
   void TrContextWebGL::glClearDepthf(WebGLfloat depth)
   {
-    /* TODO(yorkie): implement */
+    clear_depth_ = depth;
   }
 
   void TrContextWebGL::glClearStencil(WebGLint s)
   {
-    /* TODO(yorkie): implement */
+    clear_stencil_ = s;
   }
 
   void TrContextWebGL::glFinish()

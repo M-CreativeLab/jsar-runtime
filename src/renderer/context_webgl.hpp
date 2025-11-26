@@ -14,10 +14,10 @@ namespace renderer
     TrContextWebGL(Ref<TrContentRenderer> content_renderer);
     ~TrContextWebGL();
 
-    class ObjectTarget
+    class ObjectTargetBase
     {
     public:
-      ObjectTarget(WebGLenum target)
+      ObjectTargetBase(WebGLenum target)
           : target_(target)
       {
       }
@@ -27,14 +27,14 @@ namespace renderer
         return target_;
       }
 
-      inline bool operator==(const ObjectTarget &rhs) const
+      inline bool operator==(const ObjectTargetBase &rhs) const
       {
         return target_ == rhs.target_;
       }
 
       struct HashKey
       {
-        size_t operator()(const ObjectTarget &t) const noexcept
+        size_t operator()(const ObjectTargetBase &t) const noexcept
         {
           return std::hash<WebGLenum>{}(t.value());
         }
@@ -44,7 +44,7 @@ namespace renderer
       WebGLenum target_;
     };
 
-    class TextureTarget : public ObjectTarget
+    class TextureTarget final : public ObjectTargetBase
     {
     public:
       enum
@@ -55,7 +55,7 @@ namespace renderer
       };
 
       TextureTarget(WebGLenum target)
-          : ObjectTarget(target)
+          : ObjectTargetBase(target)
       {
         assert(target_ == k2D ||
                target_ == k3D ||
@@ -63,7 +63,7 @@ namespace renderer
       }
     };
 
-    class BufferTarget : public ObjectTarget
+    class BufferTarget final : public ObjectTargetBase
     {
     public:
       enum
@@ -73,14 +73,14 @@ namespace renderer
       };
 
       BufferTarget(WebGLenum target)
-          : ObjectTarget(target)
+          : ObjectTargetBase(target)
       {
         assert(target_ == kArrayBuffer ||
                target_ == kElementArrayBuffer);
       }
     };
 
-    class FramebufferTarget : public ObjectTarget
+    class FramebufferTarget final : public ObjectTargetBase
     {
     public:
       enum
@@ -91,7 +91,7 @@ namespace renderer
       };
 
       FramebufferTarget(WebGLenum target)
-          : ObjectTarget(target)
+          : ObjectTargetBase(target)
       {
         assert(target_ == kFramebuffer ||
                target_ == kReadFramebuffer ||
@@ -99,7 +99,7 @@ namespace renderer
       }
     };
 
-    class RenderbufferTarget : public ObjectTarget
+    class RenderbufferTarget final : public ObjectTargetBase
     {
     public:
       enum
@@ -108,7 +108,7 @@ namespace renderer
       };
 
       RenderbufferTarget(WebGLenum target)
-          : ObjectTarget(target)
+          : ObjectTargetBase(target)
       {
         assert(target_ == kRenderbuffer);
       }
@@ -600,6 +600,10 @@ namespace renderer
     WebGLenum last_error_ = WEBGL_NO_ERROR;
     Capabilities caps_;
     WebGLenum active_texture_;
+
+    WebGLfloat clear_color_[4];
+    WebGLfloat clear_depth_;
+    WebGLint clear_stencil_;
 
     WebGLfloat blend_color_[4];
     WebGLenum blend_equation_rgb_;
