@@ -56,6 +56,42 @@ namespace renderer
       WebGLuint texture;
     };
 
+    struct FramebufferBinding
+    {
+      WebGLenum target;
+      WebGLuint framebuffer;
+    };
+
+    struct RenderbufferBinding
+    {
+      WebGLenum target;
+      WebGLuint renderbuffer;
+    };
+
+    struct Capabilities
+    {
+      using Map = std::unordered_map<WebGLenum, WebGLboolean>;
+
+      inline void enable(WebGLenum cap)
+      {
+        caps_[cap] = true;
+      }
+
+      inline void disable(WebGLenum cap)
+      {
+        caps_[cap] = false;
+      }
+
+      inline WebGLboolean isEnabled(WebGLenum cap) const
+      {
+        auto it = caps_.find(cap);
+        return it != caps_.end() ? it->second : false;
+      }
+
+    private:
+      Map caps_;
+    };
+
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
 
   private:
@@ -412,9 +448,9 @@ namespace renderer
     void glEnable(WebGLenum cap);
     void glFrontFace(WebGLenum mode);
     void glGet(WebGLenum pname, WebGLint *params);
-    void glGetError();
+    WebGLenum glGetError();
     void glHint(WebGLenum target, WebGLenum mode);
-    void glIsEnabled(WebGLenum cap);
+    WebGLboolean glIsEnabled(WebGLenum cap);
     void glLineWidth(WebGLfloat width);
     void glPixelStorei(WebGLenum pname, WebGLint param);
     void glPolygonOffset(WebGLfloat factor, WebGLfloat units);
@@ -485,8 +521,37 @@ namespace renderer
     void glIsSampler(WebGLuint sampler);
     void glSamplerParameter(WebGLuint sampler, WebGLenum pname, WebGLint param);
 
+    WebGLenum last_error_ = WEBGL_NO_ERROR;
+    Capabilities caps_;
     WebGLenum active_texture_;
     std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
+
+    WebGLfloat blend_color_[4];
+    WebGLenum blend_equation_rgb_;
+    WebGLenum blend_equation_alpha_;
+    WebGLenum blend_sfactor_rgb_;
+    WebGLenum blend_dfactor_rgb_;
+    WebGLenum blend_sfactor_alpha_;
+    WebGLenum blend_dfactor_alpha_;
+    WebGLboolean color_mask_[4];
+
+    WebGLenum cull_face_;
+    WebGLenum front_face_;
+    WebGLenum depth_func_;
+    WebGLboolean depth_mask_;
+    WebGLfloat depth_range_[2];
+
+    WebGLenum stencil_func_;
+    WebGLint stencil_ref_;
+    WebGLuint stencil_mask_;
+
+    WebGLfloat line_width_;
+    WebGLfloat polygon_offset_factor_;
+    WebGLfloat polygon_offset_units_;
+    WebGLfloat sample_coverage_value_;
+    WebGLboolean sample_coverage_invert_;
+    WebGLint scissor_box_[4];
+    WebGLint viewport_[4];
   };
 }
 
