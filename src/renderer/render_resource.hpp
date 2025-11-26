@@ -4,6 +4,7 @@
 #include <common/utility.hpp>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
+#include <common/command_buffers/gpu/gpu_shader_module.hpp>
 #include <common/command_buffers/gpu/gpu_pipeline.hpp>
 #include <common/command_buffers/gpu/gpu_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_texture.hpp>
@@ -15,17 +16,22 @@ namespace renderer
   public:
     TrRenderResource(Ref<commandbuffers::GPUDeviceBase> device);
 
+    Ref<commandbuffers::GPUShaderModuleBase> createShaderModule(
+      const commandbuffers::GPUShaderModuleDescriptor *descriptor);
     Ref<commandbuffers::GPUPipelineBase> createPipeline();
     Ref<commandbuffers::GPUBufferBase> createBuffer(
       const commandbuffers::GPUBufferDescriptor *descriptor);
-    Ref<commandbuffers::GPUTextureBase> createTexture();
+    Ref<commandbuffers::GPUTextureBase> createTexture(
+      const commandbuffers::GPUTextureDescriptor *descriptor);
 
+    Ref<commandbuffers::GPUShaderModuleBase> getShaderModule(int id);
     Ref<commandbuffers::GPUPipelineBase> getPipeline(int id);
     Ref<commandbuffers::GPUBufferBase> getBuffer(int id);
     Ref<commandbuffers::GPUTextureBase> getTexture(int id);
 
   private:
     Ref<commandbuffers::GPUDeviceBase> device_;
+    std::unordered_map<int, Ref<commandbuffers::GPUShaderModuleBase>> shader_modules_;
     std::unordered_map<int, Ref<commandbuffers::GPUPipelineBase>> pipelines_;
     std::unordered_map<int, Ref<commandbuffers::GPUBufferBase>> buffers_;
     std::unordered_map<int, Ref<commandbuffers::GPUTextureBase>> textures_;

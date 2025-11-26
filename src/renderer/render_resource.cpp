@@ -13,6 +13,14 @@ namespace renderer
   {
   }
 
+  Ref<GPUShaderModuleBase> TrRenderResource::createShaderModule(
+    const GPUShaderModuleDescriptor *descriptor)
+  {
+    auto shader_module = device_->createShaderModule(descriptor);
+    shader_modules_.emplace(shader_module->id, shader_module);
+    return shader_module;
+  }
+
   Ref<GPUPipelineBase> TrRenderResource::createPipeline()
   {
     return nullptr;
@@ -26,9 +34,15 @@ namespace renderer
     return buffer;
   }
 
-  Ref<GPUTextureBase> TrRenderResource::createTexture()
+  Ref<GPUTextureBase> TrRenderResource::createTexture(
+    const GPUTextureDescriptor *descriptor)
   {
     return nullptr;
+  }
+
+  Ref<GPUShaderModuleBase> TrRenderResource::getShaderModule(int id)
+  {
+    return shader_modules_.at(id);
   }
 
   Ref<GPUPipelineBase> TrRenderResource::getPipeline(int id)
