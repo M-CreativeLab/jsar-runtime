@@ -4,6 +4,7 @@
 #include <vector>
 #include <shared_mutex>
 #include <common/classes.hpp>
+#include <common/utility.hpp>
 #include <common/ipc.hpp>
 #include <common/scoped_thread.hpp>
 #include <common/command_buffers/shared.hpp>
@@ -16,6 +17,8 @@
 #include <runtime/macros.h>
 #include <xr/device.hpp>
 #include <renderer/render_api.hpp>
+#include <renderer/render_pass.hpp>
+#include <renderer/render_resource.hpp>
 #include <renderer/gles/context_storage.hpp>
 
 using namespace std;
@@ -64,7 +67,7 @@ namespace renderer
      * @param constellation The constellation that the content belongs to.
      * @return The created content renderer.
      */
-    static inline std::shared_ptr<TrContentRenderer> Make(std::shared_ptr<TrContentRuntime> content,
+    static inline Ref<TrContentRenderer> Make(Ref<TrContentRuntime> content,
                                                           uint8_t contextId,
                                                           TrConstellation *constellation)
     {
@@ -74,7 +77,7 @@ namespace renderer
     }
 
   public:
-    TrContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation);
+    TrContentRenderer(Ref<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation);
     ~TrContentRenderer();
 
   public: // public lifecycle
@@ -85,7 +88,7 @@ namespace renderer
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
     // Returns the current using GL context.
     ContextGLApp *getContextGL() const;
-    inline shared_ptr<TrContentRuntime> getContent() const
+    inline Ref<TrContentRuntime> getContent() const
     {
       return content.lock();
     }
@@ -205,6 +208,12 @@ namespace renderer
     std::chrono::time_point<std::chrono::system_clock> frameEndTime;
     std::chrono::milliseconds frameDuration = std::chrono::milliseconds(0);
     std::chrono::milliseconds maxFrameDuration = std::chrono::milliseconds(0);
+
+  private:
+    Ref<TrRenderResource> render_resource_;
+    Ref<TrRenderPass> opaque_renderpass_;
+    Ref<TrRenderPass> transparent_renderpass_;
+    Ref<TrRenderPass> offscreen_renderpass_;
 
   private: // frame rate control
     uint32_t targetFrameRate;
