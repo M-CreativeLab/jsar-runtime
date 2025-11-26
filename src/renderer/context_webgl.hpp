@@ -59,6 +59,13 @@ namespace renderer
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
 
   private:
+    /**
+     * @brief Convert the request to the given type.
+     * 
+     * @tparam T The type to convert.
+     * @param req The request to convert.
+     * @return const T& The converted request.
+     */
     template <typename T>
     static const T &To(const commandbuffers::TrCommandBufferRequest &req)
     {
@@ -124,7 +131,7 @@ namespace renderer
     void glDeleteTextures(WebGLsizei n, const WebGLuint *textures);
     void glGenTextures(WebGLsizei n, WebGLuint *textures);
     void glGetTexParameter(WebGLenum target, WebGLenum pname, WebGLint *params);
-    void glIsTexture(WebGLuint texture);
+    WebGLboolean glIsTexture(WebGLuint texture);
     void glTexImage2D(WebGLenum target,
                       WebGLint level,
                       WebGLenum internalformat,

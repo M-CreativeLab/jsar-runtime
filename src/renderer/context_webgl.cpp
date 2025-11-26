@@ -1,6 +1,7 @@
 #include <renderer/context_webgl.hpp>
 #include "command_buffers/details/texture.hpp"
 #include "command_buffers/shared.hpp"
+#include "command_buffers/webgl_constants.hpp"
 
 namespace renderer
 {
@@ -117,6 +118,44 @@ namespace renderer
   }
 
   void TrContextWebGL::glGenTextures(WebGLsizei n, WebGLuint *textures)
+  {
+    // TODO(yorkie): implement
+  }
+
+  void TrContextWebGL::glGetTexParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
+  {
+    // TODO(yorkie): implement
+  }
+
+  WebGLboolean TrContextWebGL::glIsTexture(WebGLuint texture)
+  {
+    // TODO(yorkie): implement
+    return true;
+  }
+
+  void TrContextWebGL::glTexImage2D(WebGLenum target,
+                                    WebGLint level,
+                                    WebGLenum internalformat,
+                                    WebGLsizei width,
+                                    WebGLsizei height,
+                                    WebGLsizei border,
+                                    WebGLenum format,
+                                    WebGLenum type,
+                                    const WebGLvoid *data)
+  {
+    // TODO(yorkie): implement
+  }
+
+  void TrContextWebGL::glTexImage3D(WebGLenum target,
+                                    WebGLint level,
+                                    WebGLenum internalformat,
+                                    WebGLsizei width,
+                                    WebGLsizei height,
+                                    WebGLsizei depth,
+                                    WebGLsizei border,
+                                    WebGLenum format,
+                                    WebGLenum type,
+                                    const WebGLvoid *data)
   {
     // TODO(yorkie): implement
   }
