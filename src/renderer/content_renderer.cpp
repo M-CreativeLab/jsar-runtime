@@ -6,6 +6,9 @@
 
 #include "./content_renderer.hpp"
 #include "./render_api.hpp"
+#include "command_buffers/base.hpp"
+#include "renderer/gles/context_app.hpp"
+#include "utility.hpp"
 
 namespace renderer
 {
@@ -47,6 +50,7 @@ namespace renderer
       , targetFrameRate(constellation->renderer->clientDefaultFrameRate)
       , glContext(nullptr)
       , glContextForBackup(nullptr)
+      , context_webgl_(nullptr)
   {
     assert(xrDevice != nullptr);
     stereoFrameForBackup = make_unique<xr::StereoRenderingFrame>(true, 0xf);
@@ -76,6 +80,12 @@ namespace renderer
         delete frame;
       }
     }
+  }
+
+  void TrContentRenderer::initialize()
+  {
+    Ref<TrContentRenderer> self = shared_from_this();
+    context_webgl_ = AcquireRef(new TrContextWebGL(self));
   }
 
   void TrContentRenderer::onCommandBuffersExecuting()
@@ -166,6 +176,12 @@ namespace renderer
   // such as `defaultCommandBufferRequests` or `stereoFramesList`, otherwise it will be deleted in this function.
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
   {
+    // Send the command buffer to ContextWebGL if it is the WebGL-specific command buffer.
+    if (!commandbuffers::CommandTypes::IsXRFrameControl(req->type))
+    {
+      context_webgl_->receiveIncomingCall(dynamic_cast<const TrCommandBufferRequest &>(*req));
+    }
+
     if (!req->renderingInfo.isValid() && !commandbuffers::CommandTypes::IsXRFrameControl(req->type))
     {
       unique_lock<shared_mutex> lock(commandBufferRequestsMutex);

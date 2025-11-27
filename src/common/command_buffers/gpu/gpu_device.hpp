@@ -17,6 +17,8 @@
 #include <common/command_buffers/gpu/gpu_bind_group.hpp>
 #include <common/command_buffers/gpu/gpu_buffer.hpp>
 #include <common/command_buffers/gpu/gpu_shader_module.hpp>
+#include <common/command_buffers/gpu/gpu_texture.hpp>
+#include <common/command_buffers/gpu/gpu_texture_view.hpp>
 #include <common/command_buffers/gpu/gpu_pipeline.hpp>
 #include <common/command_buffers/gpu/gpu_render_pipeline.hpp>
 #include <common/command_buffers/gpu/gpu_compute_pipeline.hpp>
@@ -64,15 +66,17 @@ namespace commandbuffers
     GPUPipelineLayoutBase *getEmptyPipelineLayout();
 
     // Object creation methods that be used in a reentrant manner.
-    Ref<GPUBindGroupBase> createBindGroup(const GPUBindGroupDescriptor *descriptor,
+    Ref<GPUBindGroupBase> createBindGroup(const GPUBindGroupDescriptor *,
                                           GPUUsageValidationMode mode = GPUUsageValidationMode::kDefault);
-    Ref<GPUBindGroupLayoutBase> createBindGroupLayout(const GPUBindGroupLayoutDescriptor *descriptor,
-                                                      bool allowInternalBinding = false);
-    Ref<GPUBufferBase> createBuffer(const GPUBufferDescriptor *rawDescriptor);
-    Ref<GPUCommandEncoder> createCommandEncoder(const GPUCommandEncoderDescriptor *descriptor = nullptr);
-    Ref<GPUComputePipelineBase> createComputePipeline(const GPUComputePipelineDescriptor *descriptor);
-    Ref<GPUShaderModuleBase> createShaderModule(const GPUShaderModuleDescriptor *descriptor = nullptr,
-                                                const std::vector<wgsl::Extension> &internalExtensions = {});
+    Ref<GPUBindGroupLayoutBase> createBindGroupLayout(const GPUBindGroupLayoutDescriptor *,
+                                                      bool allow_internal_binding = false);
+    Ref<GPUBufferBase> createBuffer(const GPUBufferDescriptor *);
+    Ref<GPUCommandEncoder> createCommandEncoder(const GPUCommandEncoderDescriptor *);
+    Ref<GPUComputePipelineBase> createComputePipeline(const GPUComputePipelineDescriptor *);
+    Ref<GPUShaderModuleBase> createShaderModule(const GPUShaderModuleDescriptor *,
+                                                const std::vector<wgsl::Extension> &internal_extensions = {});
+    Ref<GPUTextureBase> createTexture(const GPUTextureDescriptor *);
+    Ref<GPUTextureViewBase> createTextureView(const GPUTextureViewDescriptor *);
 
     // The device state which is a combination of creation state and loss state.
     //

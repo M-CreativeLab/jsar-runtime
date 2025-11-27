@@ -74,12 +74,20 @@ namespace renderer
     {
       assert(content != nullptr);
       assert(contextId >= commandbuffers::MinimumContextId);
-      return std::make_shared<TrContentRenderer>(content, contextId, constellation);
+
+      auto renderer = std::make_shared<TrContentRenderer>(content, contextId, constellation);
+      renderer->initialize();
+      return renderer;
     }
 
   public:
     TrContentRenderer(Ref<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation);
     ~TrContentRenderer();
+
+    /**
+     * Initialize the content renderer, create the ContextWebGL, and initialize the render passes.
+     */
+    void initialize();
 
   public: // public lifecycle
     void onCommandBuffersExecuting();
@@ -224,7 +232,7 @@ namespace renderer
     std::chrono::milliseconds maxFrameDuration = std::chrono::milliseconds(0);
 
   private:
-    Ref<TrContextWebGL> context_;
+    Ref<TrContextWebGL> context_webgl_;
     Ref<TrRenderResource> render_resource_;
     Ref<TrRenderPass> opaque_renderpass_;
     Ref<TrRenderPass> transparent_renderpass_;

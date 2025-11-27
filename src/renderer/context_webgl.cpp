@@ -1,3 +1,6 @@
+#include <optional>
+#include <vector>
+
 #include <renderer/context_webgl.hpp>
 #include <command_buffers/details/texture.hpp>
 #include <command_buffers/shared.hpp>
@@ -8,6 +11,16 @@ namespace renderer
 {
   using namespace std;
   using namespace commandbuffers;
+
+  string TrContextWebGL::ShaderModule::toString() const
+  {
+    string type_str = "Unknown";
+    if (type == WEBGL_VERTEX_SHADER)
+      type_str = "Vertex";
+    else if (type == WEBGL_FRAGMENT_SHADER)
+      type_str = "Fragment";
+    return "ShaderModule(" + type_str + " id=" + to_string(id) + ")";
+  }
 
   TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer)
       : content_renderer_(content_renderer)
@@ -22,6 +35,7 @@ namespace renderer
   {
     switch (req.type)
     {
+    // Textures
     case COMMAND_BUFFER_ACTIVE_TEXTURE_REQ:
     {
       const auto &typed_req = To<ActiveTextureCommandBufferRequest>(req);
@@ -70,11 +84,879 @@ namespace renderer
     }
     case COMMAND_BUFFER_CREATE_TEXTURE_REQ:
     {
-      const auto &typed_req = To<CreateTextureCommandBufferRequest>(req);
-      WebGLint texture;
-      glGenTextures(1, (WebGLuint *)&texture);
+      glCreateTypedObject<CreateTextureCommandBufferRequest>(textures_, req);
       break;
     }
+    case COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ:
+    {
+      const auto &typed_req = To<TextureImage2DCommandBufferRequest>(req);
+      glTexImage2D(
+        typed_req.target,
+        typed_req.level,
+        typed_req.internalformat,
+        typed_req.width,
+        typed_req.height,
+        typed_req.border,
+        typed_req.format,
+        typed_req.type,
+        typed_req.pixels);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_IMAGE_3D_REQ:
+    {
+      const auto &typed_req = To<TextureImage3DCommandBufferRequest>(req);
+      glTexImage3D(
+        typed_req.target,
+        typed_req.level,
+        typed_req.internalformat,
+        typed_req.width,
+        typed_req.height,
+        typed_req.depth,
+        typed_req.border,
+        typed_req.format,
+        typed_req.type,
+        typed_req.pixels);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_PARAMETERI_REQ:
+    {
+      const auto &typed_req = To<TextureParameteriCommandBufferRequest>(req);
+      glTexParameteri(typed_req.target, typed_req.pname, typed_req.param);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_PARAMETERF_REQ:
+    {
+      const auto &typed_req = To<TextureParameterfCommandBufferRequest>(req);
+      glTexParameterf(typed_req.target, typed_req.pname, typed_req.param);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_STORAGE_2D_REQ:
+    {
+      const auto &typed_req = To<TextureStorage2DCommandBufferRequest>(req);
+      glTexStorage2D(
+        typed_req.target,
+        typed_req.levels,
+        typed_req.internalformat,
+        typed_req.width,
+        typed_req.height);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_STORAGE_3D_REQ:
+    {
+      const auto &typed_req = To<TextureStorage3DCommandBufferRequest>(req);
+      glTexStorage3D(
+        typed_req.target,
+        typed_req.levels,
+        typed_req.internalformat,
+        typed_req.width,
+        typed_req.height,
+        typed_req.depth);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_SUB_IMAGE_2D_REQ:
+    {
+      const auto &typed_req = To<TextureSubImage2DCommandBufferRequest>(req);
+      glTexSubImage2D(
+        typed_req.target,
+        typed_req.level,
+        typed_req.xoffset,
+        typed_req.yoffset,
+        typed_req.width,
+        typed_req.height,
+        typed_req.format,
+        typed_req.type,
+        typed_req.pixels);
+      break;
+    }
+    case COMMAND_BUFFER_TEXTURE_SUB_IMAGE_3D_REQ:
+    {
+      const auto &typed_req = To<TextureSubImage3DCommandBufferRequest>(req);
+      glTexSubImage3D(
+        typed_req.target,
+        typed_req.level,
+        typed_req.xoffset,
+        typed_req.yoffset,
+        typed_req.zoffset,
+        typed_req.width,
+        typed_req.height,
+        typed_req.depth,
+        typed_req.format,
+        typed_req.type,
+        typed_req.pixels);
+      break;
+    }
+
+    // Rendering
+    case COMMAND_BUFFER_CLEAR_REQ:
+    {
+      const auto &typed_req = To<ClearCommandBufferRequest>(req);
+      glClear(typed_req.mask);
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_BUFFERIV_REQ:
+    {
+      const auto &typed_req = To<ClearBufferivCommandBufferRequest>(req);
+      glClearBufferiv(typed_req.buffer,
+                      typed_req.drawbuffer,
+                      typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ:
+    {
+      const auto &typed_req = To<ClearBufferuivCommandBufferRequest>(req);
+      glClearBufferuiv(typed_req.buffer,
+                       typed_req.drawbuffer,
+                       typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_BUFFERFI_REQ:
+    {
+      const auto &typed_req = To<ClearBufferfiCommandBufferRequest>(req);
+      glClearBufferfi(typed_req.buffer,
+                      typed_req.drawbuffer,
+                      typed_req.depth,
+                      typed_req.stencil);
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_BUFFERFV_REQ:
+    {
+      const auto &typed_req = To<ClearBufferfvCommandBufferRequest>(req);
+      glClearBufferfv(typed_req.buffer,
+                      typed_req.drawbuffer,
+                      typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_COLOR_REQ:
+    {
+      const auto &typed_req = To<ClearColorCommandBufferRequest>(req);
+      glClearColor(typed_req.r, typed_req.g, typed_req.b, typed_req.a);
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_DEPTH_REQ:
+    {
+      const auto &typed_req = To<ClearDepthCommandBufferRequest>(req);
+      glClearDepth(typed_req.depth);
+      break;
+    }
+    case COMMAND_BUFFER_CLEAR_STENCIL_REQ:
+    {
+      const auto &typed_req = To<ClearStencilCommandBufferRequest>(req);
+      glClearStencil(typed_req.stencil);
+      break;
+    }
+
+    // Frame Buffers
+    case COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ:
+    {
+      const auto &typed_req = To<BindFramebufferCommandBufferRequest>(req);
+      glBindFramebuffer(typed_req.target, typed_req.framebuffer);
+      break;
+    }
+    case COMMAND_BUFFER_BIND_RENDERBUFFER_REQ:
+    {
+      const auto &typed_req = To<BindRenderbufferCommandBufferRequest>(req);
+      glBindRenderbuffer(typed_req.target, typed_req.renderbuffer);
+      break;
+    }
+    case COMMAND_BUFFER_BLIT_FRAMEBUFFER_REQ:
+    {
+      const auto &typed_req = To<BlitFramebufferCommandBufferRequest>(req);
+      glBlitFramebuffer(
+        typed_req.srcX0,
+        typed_req.srcY0,
+        typed_req.srcX1,
+        typed_req.srcY1,
+        typed_req.dstX0,
+        typed_req.dstY0,
+        typed_req.dstX1,
+        typed_req.dstY1,
+        typed_req.mask,
+        typed_req.filter);
+      break;
+    }
+    case COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ:
+    {
+      const auto &typed_req = To<CheckFramebufferStatusCommandBufferRequest>(req);
+      glCheckFramebufferStatus(typed_req.target);
+      break;
+    }
+    case COMMAND_BUFFER_DELETE_FRAMEBUFFER_REQ:
+    {
+      const auto &typed_req = To<DeleteFramebufferCommandBufferRequest>(req);
+      glDeleteFramebuffers(1, &typed_req.framebuffer);
+      break;
+    }
+    case COMMAND_BUFFER_DELETE_RENDERBUFFER_REQ:
+    {
+      const auto &typed_req = To<DeleteRenderbufferCommandBufferRequest>(req);
+      glDeleteRenderbuffers(1, &typed_req.renderbuffer);
+      break;
+    }
+    case COMMAND_BUFFER_DRAW_BUFFERS_REQ:
+    {
+      const auto &typed_req = To<DrawBuffersCommandBufferRequest>(req);
+      glDrawBuffers(typed_req.n, typed_req.bufs);
+      break;
+    }
+    case COMMAND_BUFFER_FRAMEBUFFER_RENDERBUFFER_REQ:
+    {
+      const auto &typed_req = To<FramebufferRenderbufferCommandBufferRequest>(req);
+      glFramebufferRenderbuffer(typed_req.target,
+                                typed_req.attachment,
+                                typed_req.renderbufferTarget,
+                                typed_req.renderbuffer);
+      break;
+    }
+    case COMMAND_BUFFER_FRAMEBUFFER_TEXTURE2D_REQ:
+    {
+      const auto &typed_req = To<FramebufferTexture2DCommandBufferRequest>(req);
+      glFramebufferTexture2D(typed_req.target,
+                             typed_req.attachment,
+                             typed_req.textarget,
+                             typed_req.texture,
+                             typed_req.level);
+      break;
+    }
+    case COMMAND_BUFFER_FRAMEBUFFER_TEXTURE_LAYER_REQ:
+    {
+      const auto &typed_req = To<FramebufferTextureLayerCommandBufferRequest>(req);
+      glFramebufferTextureLayer(typed_req.target,
+                                typed_req.attachment,
+                                typed_req.texture,
+                                typed_req.level,
+                                typed_req.layer);
+      break;
+    }
+    case COMMAND_BUFFER_CREATE_FRAMEBUFFER_REQ:
+    {
+      glCreateTypedObject<CreateFramebufferCommandBufferRequest>(framebuffers_, req);
+      break;
+    }
+    case COMMAND_BUFFER_CREATE_RENDERBUFFER_REQ:
+    {
+      glCreateTypedObject<CreateRenderbufferCommandBufferRequest>(renderbuffers_, req);
+      break;
+    }
+    case COMMAND_BUFFER_GENERATE_MIPMAP_REQ:
+    {
+      const auto &typed_req = To<GenerateMipmapCommandBufferRequest>(req);
+      glGenerateMipmap(typed_req.target);
+      break;
+    }
+    case COMMAND_BUFFER_RENDERBUFFER_STORAGE_REQ:
+    {
+      const auto &typed_req = To<RenderbufferStorageCommandBufferRequest>(req);
+      glRenderbufferStorage(typed_req.target,
+                            typed_req.internalformat,
+                            typed_req.width,
+                            typed_req.height);
+      break;
+    }
+    case COMMAND_BUFFER_RENDERBUFFER_STORAGE_MULTISAMPLE_REQ:
+    {
+      const auto &typed_req = To<RenderbufferStorageMultisampleCommandBufferRequest>(req);
+      glRenderbufferStorageMultisample(typed_req.target,
+                                       typed_req.samples,
+                                       typed_req.internalformat,
+                                       typed_req.width,
+                                       typed_req.height);
+      break;
+    }
+
+    // Shaders
+    case COMMAND_BUFFER_BIND_ATTRIB_LOCATION_REQ:
+    {
+      const auto &typed_req = To<BindAttribLocationCommandBufferRequest>(req);
+      glBindAttribLocation(typed_req.program,
+                           typed_req.attribIndex,
+                           typed_req.attribName.c_str());
+      break;
+    }
+    case COMMAND_BUFFER_COMPILE_SHADER_REQ:
+    {
+      const auto &typed_req = To<CompileShaderCommandBufferRequest>(req);
+      glCompileShader(typed_req.shader);
+      break;
+    }
+    case COMMAND_BUFFER_CREATE_PROGRAM_REQ:
+    {
+      const auto &typed_req = To<CreateProgramCommandBufferRequest>(req);
+      auto index = glCreateProgram();
+      programs_[index].id = req.id; // Modify the id to the request id.
+      break;
+    }
+    case COMMAND_BUFFER_CREATE_SHADER_REQ:
+    {
+      const auto &typed_req = To<CreateShaderCommandBufferRequest>(req);
+      auto index = glCreateShader(typed_req.shaderType);
+      shader_modules_[index].id = req.id; // Modify the id to the request id.
+      break;
+    }
+    case COMMAND_BUFFER_DELETE_PROGRAM_REQ:
+    {
+      const auto &typed_req = To<DeleteProgramCommandBufferRequest>(req);
+      glDeleteProgram(typed_req.clientId);
+      break;
+    }
+    case COMMAND_BUFFER_DELETE_SHADER_REQ:
+    {
+      const auto &typed_req = To<DeleteShaderCommandBufferRequest>(req);
+      glDeleteShader(typed_req.shader);
+      break;
+    }
+    case COMMAND_BUFFER_ATTACH_SHADER_REQ:
+    {
+      const auto &typed_req = To<AttachShaderCommandBufferRequest>(req);
+      glAttachShader(typed_req.program, typed_req.shader);
+      break;
+    }
+    case COMMAND_BUFFER_DETACH_SHADER_REQ:
+    {
+      const auto &typed_req = To<DetachShaderCommandBufferRequest>(req);
+      glDetachShader(typed_req.program, typed_req.shader);
+      break;
+    }
+    case COMMAND_BUFFER_LINK_PROGRAM_REQ:
+    {
+      const auto &typed_req = To<LinkProgramCommandBufferRequest>(req);
+      glLinkProgram(typed_req.clientId);
+      break;
+    }
+    case COMMAND_BUFFER_SHADER_SOURCE_REQ:
+    {
+      const auto &typed_req = To<ShaderSourceCommandBufferRequest>(req);
+      glShaderSource(typed_req.shader,
+                     1,
+                     (const WebGLchar **)&typed_req.sourceStr,
+                     reinterpret_cast<const WebGLint *>(&typed_req.sourceSize));
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM1F_REQ:
+    {
+      const auto &typed_req = To<Uniform1fCommandBufferRequest>(req);
+      glUniform1f(typed_req.location, typed_req.v0);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM2F_REQ:
+    {
+      const auto &typed_req = To<Uniform2fCommandBufferRequest>(req);
+      glUniform2f(typed_req.location, typed_req.v0, typed_req.v1);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM3F_REQ:
+    {
+      const auto &typed_req = To<Uniform3fCommandBufferRequest>(req);
+      glUniform3f(typed_req.location, typed_req.v0, typed_req.v1, typed_req.v2);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM4F_REQ:
+    {
+      const auto &typed_req = To<Uniform4fCommandBufferRequest>(req);
+      glUniform4f(typed_req.location, typed_req.v0, typed_req.v1, typed_req.v2, typed_req.v3);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM1I_REQ:
+    {
+      const auto &typed_req = To<Uniform1iCommandBufferRequest>(req);
+      glUniform1i(typed_req.location, typed_req.v0);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM2I_REQ:
+    {
+      const auto &typed_req = To<Uniform2iCommandBufferRequest>(req);
+      glUniform2i(typed_req.location, typed_req.v0, typed_req.v1);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM3I_REQ:
+    {
+      const auto &typed_req = To<Uniform3iCommandBufferRequest>(req);
+      glUniform3i(typed_req.location, typed_req.v0, typed_req.v1, typed_req.v2);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM4I_REQ:
+    {
+      const auto &typed_req = To<Uniform4iCommandBufferRequest>(req);
+      glUniform4i(typed_req.location, typed_req.v0, typed_req.v1, typed_req.v2, typed_req.v3);
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM1FV_REQ:
+    {
+      const auto &typed_req = To<Uniform1fvCommandBufferRequest>(req);
+      glUniform1fv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM2FV_REQ:
+    {
+      const auto &typed_req = To<Uniform2fvCommandBufferRequest>(req);
+      glUniform2fv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM3FV_REQ:
+    {
+      const auto &typed_req = To<Uniform3fvCommandBufferRequest>(req);
+      glUniform3fv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM4FV_REQ:
+    {
+      const auto &typed_req = To<Uniform4fvCommandBufferRequest>(req);
+      glUniform4fv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM1IV_REQ:
+    {
+      const auto &typed_req = To<Uniform1ivCommandBufferRequest>(req);
+      glUniform1iv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM2IV_REQ:
+    {
+      const auto &typed_req = To<Uniform2ivCommandBufferRequest>(req);
+      glUniform2iv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM3IV_REQ:
+    {
+      const auto &typed_req = To<Uniform3ivCommandBufferRequest>(req);
+      glUniform3iv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM4IV_REQ:
+    {
+      const auto &typed_req = To<Uniform4ivCommandBufferRequest>(req);
+      glUniform4iv(typed_req.location,
+                   typed_req.values.size(),
+                   typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ:
+    {
+      const auto &typed_req = To<UniformMatrix2fvCommandBufferRequest>(req);
+      glUniformMatrix2fv(typed_req.location,
+                         typed_req.values.size(),
+                         typed_req.transpose,
+                         typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ:
+    {
+      const auto &typed_req = To<UniformMatrix3fvCommandBufferRequest>(req);
+      glUniformMatrix3fv(typed_req.location,
+                         typed_req.values.size(),
+                         typed_req.transpose,
+                         typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ:
+    {
+      const auto &typed_req = To<UniformMatrix4fvCommandBufferRequest>(req);
+      glUniformMatrix4fv(typed_req.location,
+                         typed_req.values.size(),
+                         typed_req.transpose,
+                         typed_req.values.data());
+      break;
+    }
+    case COMMAND_BUFFER_UNIFORM_BLOCK_BINDING_REQ:
+    {
+      const auto &typed_req = To<UniformBlockBindingCommandBufferRequest>(req);
+      glUniformBlockBinding(typed_req.program,
+                            typed_req.uniformBlockIndex,
+                            typed_req.uniformBlockBinding);
+      break;
+    }
+    case COMMAND_BUFFER_USE_PROGRAM_REQ:
+    {
+      const auto &typed_req = To<UseProgramCommandBufferRequest>(req);
+      glUseProgram(typed_req.clientId);
+      break;
+    }
+    case COMMAND_BUFFER_VALIDATE_PROGRAM_REQ:
+    {
+      const auto &typed_req = To<ValidateProgramCommandBufferRequest>(req);
+      glValidateProgram(typed_req.clientId);
+      break;
+    }
+
+    // Buffer Objects
+    case COMMAND_BUFFER_BIND_BUFFER_REQ:
+    {
+      const auto &typed_req = To<BindBufferCommandBufferRequest>(req);
+      glBindBuffer(typed_req.target, typed_req.buffer);
+      break;
+    }
+    case COMMAND_BUFFER_BIND_BUFFER_BASE_REQ:
+    {
+      const auto &typed_req = To<BindBufferBaseCommandBufferRequest>(req);
+      glBindBufferBase(typed_req.target,
+                       typed_req.index,
+                       typed_req.buffer);
+      break;
+    }
+    case COMMAND_BUFFER_BIND_BUFFER_RANGE_REQ:
+    {
+      const auto &typed_req = To<BindBufferRangeCommandBufferRequest>(req);
+      glBindBufferRange(typed_req.target,
+                        typed_req.index,
+                        typed_req.buffer,
+                        typed_req.offset,
+                        typed_req.size);
+      break;
+    }
+    case COMMAND_BUFFER_BUFFER_DATA_REQ:
+    {
+      const auto &typed_req = To<BufferDataCommandBufferRequest>(req);
+      glBufferData(typed_req.target,
+                   typed_req.size,
+                   typed_req.data,
+                   typed_req.usage);
+      break;
+    }
+    case COMMAND_BUFFER_BUFFER_SUB_DATA_REQ:
+    {
+      const auto &typed_req = To<BufferSubDataCommandBufferRequest>(req);
+      glBufferSubData(typed_req.target,
+                      typed_req.offset,
+                      typed_req.size,
+                      typed_req.data);
+      break;
+    }
+    case COMMAND_BUFFER_DELETE_BUFFER_REQ:
+    {
+      const auto &typed_req = To<DeleteBufferCommandBufferRequest>(req);
+      glDeleteBuffers(1, &typed_req.buffer);
+      break;
+    }
+    case COMMAND_BUFFER_DISABLE_VERTEX_ATTRIB_ARRAY_REQ:
+    {
+      const auto &typed_req = To<DisableVertexAttribArrayCommandBufferRequest>(req);
+      glDisableVertexAttribArray(typed_req.location);
+      break;
+    }
+    case COMMAND_BUFFER_DRAW_ARRAYS_REQ:
+    {
+      const auto &typed_req = To<DrawArraysCommandBufferRequest>(req);
+      glDrawArrays(typed_req.mode,
+                   typed_req.first,
+                   typed_req.count);
+      break;
+    }
+    case COMMAND_BUFFER_DRAW_ARRAYS_INSTANCED_REQ:
+    {
+      const auto &typed_req = To<DrawArraysInstancedCommandBufferRequest>(req);
+      glDrawArraysInstanced(typed_req.mode,
+                            typed_req.first,
+                            typed_req.count,
+                            typed_req.instanceCount);
+      break;
+    }
+    case COMMAND_BUFFER_DRAW_ELEMENTS_REQ:
+    {
+      const auto &typed_req = To<DrawElementsCommandBufferRequest>(req);
+      glDrawElements(typed_req.mode,
+                     typed_req.count,
+                     typed_req.indicesType,
+                     nullptr);
+      break;
+    }
+    case COMMAND_BUFFER_DRAW_ELEMENTS_INSTANCED_REQ:
+    {
+      const auto &typed_req = To<DrawElementsInstancedCommandBufferRequest>(req);
+      glDrawElementsInstanced(typed_req.mode,
+                              typed_req.count,
+                              typed_req.indicesType,
+                              nullptr,
+                              typed_req.instanceCount);
+      break;
+    }
+    case COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ:
+    {
+      const auto &typed_req = To<DrawRangeElementsCommandBufferRequest>(req);
+      glDrawRangeElements(typed_req.mode,
+                          typed_req.start,
+                          typed_req.end,
+                          typed_req.count,
+                          typed_req.indicesType,
+                          nullptr);
+      break;
+    }
+    case COMMAND_BUFFER_ENABLE_VERTEX_ATTRIB_ARRAY_REQ:
+    {
+      const auto &typed_req = To<EnableVertexAttribArrayCommandBufferRequest>(req);
+      glEnableVertexAttribArray(typed_req.location);
+      break;
+    }
+    case COMMAND_BUFFER_CREATE_BUFFER_REQ:
+    {
+      glCreateTypedObject<CreateBufferCommandBufferRequest>(buffers_, req);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_1F_REQ:
+    {
+      const auto &typed_req = To<VertexAttrib1fCommandBufferRequest>(req);
+      glVertexAttrib1f(typed_req.location,
+                       typed_req.v0);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_2F_REQ:
+    {
+      const auto &typed_req = To<VertexAttrib2fCommandBufferRequest>(req);
+      glVertexAttrib2f(typed_req.location,
+                       typed_req.v0,
+                       typed_req.v1);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_3F_REQ:
+    {
+      const auto &typed_req = To<VertexAttrib3fCommandBufferRequest>(req);
+      glVertexAttrib3f(typed_req.location,
+                       typed_req.v0,
+                       typed_req.v1,
+                       typed_req.v2);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_4F_REQ:
+    {
+      const auto &typed_req = To<VertexAttrib4fCommandBufferRequest>(req);
+      glVertexAttrib4f(typed_req.location,
+                       typed_req.v0,
+                       typed_req.v1,
+                       typed_req.v2,
+                       typed_req.v3);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_DIVISOR_REQ:
+    {
+      const auto &typed_req = To<VertexAttribDivisorCommandBufferRequest>(req);
+      glVertexAttribDivisor(typed_req.location,
+                            typed_req.divisor);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_POINTER_REQ:
+    {
+      const auto &typed_req = To<VertexAttribPointerCommandBufferRequest>(req);
+      glVertexAttribPointer(typed_req.location,
+                            typed_req.size,
+                            typed_req.type,
+                            typed_req.normalized,
+                            typed_req.stride,
+                            typed_req.offset);
+      break;
+    }
+    case COMMAND_BUFFER_VERTEX_ATTRIB_IPOINTER_REQ:
+    {
+      const auto &typed_req = To<VertexAttribIPointerCommandBufferRequest>(req);
+      glVertexAttribIPointer(typed_req.location,
+                             typed_req.size,
+                             typed_req.type,
+                             typed_req.stride,
+                             typed_req.offset);
+      break;
+    }
+
+    // State Management
+    case COMMAND_BUFFER_BLEND_COLOR_REQ:
+    {
+      const auto &typed_req = To<BlendColorCommandBufferRequest>(req);
+      glBlendColor(typed_req.red,
+                   typed_req.green,
+                   typed_req.blue,
+                   typed_req.alpha);
+      break;
+    }
+    case COMMAND_BUFFER_BLEND_EQUATION_REQ:
+    {
+      const auto &typed_req = To<BlendEquationCommandBufferRequest>(req);
+      glBlendEquation(typed_req.mode);
+      break;
+    }
+    case COMMAND_BUFFER_BLEND_EQUATION_SEPARATE_REQ:
+    {
+      const auto &typed_req = To<BlendEquationSeparateCommandBufferRequest>(req);
+      glBlendEquationSeparate(typed_req.modeRGB,
+                              typed_req.modeAlpha);
+      break;
+    }
+    case COMMAND_BUFFER_BLEND_FUNC_REQ:
+    {
+      const auto &typed_req = To<BlendFuncCommandBufferRequest>(req);
+      glBlendFunc(typed_req.sfactor,
+                  typed_req.dfactor);
+      break;
+    }
+    case COMMAND_BUFFER_BLEND_FUNC_SEPARATE_REQ:
+    {
+      const auto &typed_req = To<BlendFuncSeparateCommandBufferRequest>(req);
+      glBlendFuncSeparate(typed_req.srcRGB,
+                          typed_req.dstRGB,
+                          typed_req.srcAlpha,
+                          typed_req.dstAlpha);
+      break;
+    }
+    case COMMAND_BUFFER_COLOR_MASK_REQ:
+    {
+      const auto &typed_req = To<ColorMaskCommandBufferRequest>(req);
+      glColorMask(typed_req.red,
+                  typed_req.green,
+                  typed_req.blue,
+                  typed_req.alpha);
+      break;
+    }
+    case COMMAND_BUFFER_CULL_FACE_REQ:
+    {
+      const auto &typed_req = To<CullFaceCommandBufferRequest>(req);
+      glCullFace(typed_req.mode);
+      break;
+    }
+    case COMMAND_BUFFER_DEPTH_FUNC_REQ:
+    {
+      const auto &typed_req = To<DepthFuncCommandBufferRequest>(req);
+      glDepthFunc(typed_req.func);
+      break;
+    }
+    case COMMAND_BUFFER_DEPTH_MASK_REQ:
+    {
+      const auto &typed_req = To<DepthMaskCommandBufferRequest>(req);
+      glDepthMask(typed_req.flag);
+      break;
+    }
+    case COMMAND_BUFFER_DEPTH_RANGE_REQ:
+    {
+      const auto &typed_req = To<DepthRangeCommandBufferRequest>(req);
+      glDepthRange(typed_req.n, typed_req.f);
+      break;
+    }
+    case COMMAND_BUFFER_DISABLE_REQ:
+    {
+      const auto &typed_req = To<DisableCommandBufferRequest>(req);
+      glDisable(typed_req.cap);
+      break;
+    }
+    case COMMAND_BUFFER_ENABLE_REQ:
+    {
+      const auto &typed_req = To<EnableCommandBufferRequest>(req);
+      glEnable(typed_req.cap);
+      break;
+    }
+    case COMMAND_BUFFER_FRONT_FACE_REQ:
+    {
+      const auto &typed_req = To<FrontFaceCommandBufferRequest>(req);
+      glFrontFace(typed_req.mode);
+      break;
+    }
+    case COMMAND_BUFFER_HINT_REQ:
+    {
+      const auto &typed_req = To<HintCommandBufferRequest>(req);
+      glHint(typed_req.target, typed_req.mode);
+      break;
+    }
+    case COMMAND_BUFFER_LINE_WIDTH_REQ:
+    {
+      const auto &typed_req = To<LineWidthCommandBufferRequest>(req);
+      glLineWidth(typed_req.width);
+      break;
+    }
+    case COMMAND_BUFFER_PIXEL_STOREI_REQ:
+    {
+      const auto &typed_req = To<PixelStoreiCommandBufferRequest>(req);
+      glPixelStorei(typed_req.pname, typed_req.param);
+      break;
+    }
+    case COMMAND_BUFFER_POLYGON_OFFSET_REQ:
+    {
+      const auto &typed_req = To<PolygonOffsetCommandBufferRequest>(req);
+      glPolygonOffset(typed_req.factor, typed_req.units);
+      break;
+    }
+    case COMMAND_BUFFER_SET_SCISSOR_REQ:
+    {
+      const auto &typed_req = To<SetScissorCommandBufferRequest>(req);
+      glScissor(typed_req.x, typed_req.y, typed_req.width, typed_req.height);
+      break;
+    }
+    case COMMAND_BUFFER_STENCIL_FUNC_REQ:
+    {
+      const auto &typed_req = To<StencilFuncCommandBufferRequest>(req);
+      glStencilFunc(typed_req.func, typed_req.ref, typed_req.mask);
+      break;
+    }
+    case COMMAND_BUFFER_STENCIL_FUNC_SEPARATE_REQ:
+    {
+      const auto &typed_req = To<StencilFuncSeparateCommandBufferRequest>(req);
+      glStencilFuncSeparate(typed_req.face,
+                            typed_req.func,
+                            typed_req.ref,
+                            typed_req.mask);
+      break;
+    }
+    case COMMAND_BUFFER_STENCIL_MASK_REQ:
+    {
+      const auto &typed_req = To<StencilMaskCommandBufferRequest>(req);
+      glStencilMask(typed_req.mask);
+      break;
+    }
+    case COMMAND_BUFFER_STENCIL_MASK_SEPARATE_REQ:
+    {
+      const auto &typed_req = To<StencilMaskSeparateCommandBufferRequest>(req);
+      glStencilMaskSeparate(typed_req.face, typed_req.mask);
+      break;
+    }
+    case COMMAND_BUFFER_STENCIL_OP_REQ:
+    {
+      const auto &typed_req = To<StencilOpCommandBufferRequest>(req);
+      glStencilOp(typed_req.fail, typed_req.zfail, typed_req.zpass);
+      break;
+    }
+    case COMMAND_BUFFER_STENCIL_OP_SEPARATE_REQ:
+    {
+      const auto &typed_req = To<StencilOpSeparateCommandBufferRequest>(req);
+      glStencilOpSeparate(typed_req.face,
+                          typed_req.fail,
+                          typed_req.zfail,
+                          typed_req.zpass);
+      break;
+    }
+    case COMMAND_BUFFER_SET_VIEWPORT_REQ:
+    {
+      const auto &typed_req = To<SetViewportCommandBufferRequest>(req);
+      glViewport(typed_req.x, typed_req.y, typed_req.width, typed_req.height);
+      break;
+    }
+
+    // Vertex Array Objects
+    case COMMAND_BUFFER_BIND_VERTEX_ARRAY_REQ:
+    {
+      const auto &typed_req = To<BindVertexArrayCommandBufferRequest>(req);
+      glBindVertexArray(typed_req.vertexArray);
+      break;
+    }
+    case COMMAND_BUFFER_DELETE_VERTEX_ARRAY_REQ:
+    {
+      const auto &typed_req = To<DeleteVertexArrayCommandBufferRequest>(req);
+      glDeleteVertexArrays(1, &typed_req.vertexArray);
+      break;
+    }
+    case COMMAND_BUFFER_CREATE_VERTEX_ARRAY_REQ:
+    {
+      const auto &typed_req = To<CreateVertexArrayCommandBufferRequest>(req);
+      WebGLuint vao;
+      glGenVertexArrays(1, &vao);
+      break;
+    }
+
     default:
       break;
     }
@@ -121,7 +1003,7 @@ namespace renderer
 
   void TrContextWebGL::glGenTextures(WebGLsizei n, WebGLuint *textures)
   {
-    // TODO(yorkie): implement
+    glGenObjects(textures_, n, textures);
   }
 
   void TrContextWebGL::glGetTexParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
@@ -457,30 +1339,12 @@ namespace renderer
 
   void TrContextWebGL::glGenFramebuffers(WebGLsizei n, WebGLuint *framebuffers)
   {
-    static WebGLuint next_framebuffer_id_ = 1;
-    for (WebGLsizei i = 0; i < n; i++)
-    {
-      const FramebufferBinding binding = {
-        .target = nullopt,
-        .framebuffer = next_framebuffer_id_++,
-      };
-      framebuffer_bindings_.push_back(binding);
-      framebuffers[i] = binding.framebuffer;
-    }
+    glGenObjects(framebuffers_, n, framebuffers);
   }
 
   void TrContextWebGL::glGenRenderbuffers(WebGLsizei n, WebGLuint *renderbuffers)
   {
-    static WebGLuint next_renderbuffer_id_ = 1;
-    for (WebGLsizei i = 0; i < n; i++)
-    {
-      const RenderbufferBinding binding = {
-        .target = nullopt,
-        .renderbuffer = next_renderbuffer_id_++,
-      };
-      renderbuffer_bindings_.push_back(binding);
-      renderbuffers[i] = binding.renderbuffer;
-    }
+    glGenObjects(renderbuffers_, n, renderbuffers);
   }
 
   void TrContextWebGL::glGenerateMipmap(WebGLenum target)
@@ -553,11 +1417,6 @@ namespace renderer
   }
 
   // --- Shaders ---
-  void TrContextWebGL::glAttachShader(WebGLuint program, WebGLuint shader)
-  {
-    /* TODO(yorkie): implement */
-  }
-
   void TrContextWebGL::glBindAttribLocation(WebGLuint program, WebGLuint index, const WebGLchar *name)
   {
     /* TODO(yorkie): implement */
@@ -568,29 +1427,121 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glCreateProgram()
+  WebGLuint TrContextWebGL::glCreateProgram()
   {
-    /* TODO(yorkie): implement */
+    WebGLuint id = programs_.size();
+    const Program program = {
+      .id = id, // Use the index as the default id.
+      .vertex_shader = nullopt,
+      .fragment_shader = nullopt,
+    };
+    programs_.push_back(program);
+    return program.id;
   }
 
-  void TrContextWebGL::glCreateShader(WebGLenum type)
+  WebGLuint TrContextWebGL::glCreateShader(WebGLenum type)
   {
-    /* TODO(yorkie): implement */
+    WebGLuint id = shader_modules_.size();
+    const ShaderModule shader_module = {
+      .id = id, // Use the index as the default id.
+      .type = type,
+    };
+    shader_modules_.push_back(shader_module);
+    return shader_module.id;
   }
 
   void TrContextWebGL::glDeleteProgram(WebGLuint program)
   {
-    /* TODO(yorkie): implement */
+    for (auto it = programs_.begin(); it != programs_.end(); it++)
+    {
+      if (it->id == program)
+      {
+        programs_.erase(it);
+        return;
+      }
+    }
   }
 
   void TrContextWebGL::glDeleteShader(WebGLuint shader)
   {
-    /* TODO(yorkie): implement */
+    for (auto it = shader_modules_.begin(); it != shader_modules_.end(); it++)
+    {
+      if (it->id == shader)
+      {
+        shader_modules_.erase(it);
+        return;
+      }
+    }
+  }
+
+  void TrContextWebGL::glAttachShader(WebGLuint program, WebGLuint shader)
+  {
+    ShaderModule *shader_module = nullptr;
+    for (auto it = shader_modules_.begin(); it != shader_modules_.end(); it++)
+    {
+      if (it->id == shader)
+      {
+        shader_module = &*it;
+        break;
+      }
+    }
+
+    if (shader_module == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+
+    for (auto it = programs_.begin(); it != programs_.end(); it++)
+    {
+      if (it->id == program)
+      {
+        if (shader_module->type == WEBGL_VERTEX_SHADER)
+          it->vertex_shader = make_optional(*shader_module);
+        else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
+          it->fragment_shader = make_optional(*shader_module);
+        else [[unlikely]]
+        {
+          last_error_ = WEBGL_INVALID_OPERATION;
+        }
+        return;
+      }
+    }
   }
 
   void TrContextWebGL::glDetachShader(WebGLuint program, WebGLuint shader)
   {
-    /* TODO(yorkie): implement */
+    ShaderModule *shader_module = nullptr;
+    for (auto it = shader_modules_.begin(); it != shader_modules_.end(); it++)
+    {
+      if (it->id == shader)
+      {
+        shader_module = &*it;
+        break;
+      }
+    }
+
+    if (shader_module == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+
+    for (auto it = programs_.begin(); it != programs_.end(); it++)
+    {
+      if (it->id == program)
+      {
+        if (shader_module->type == WEBGL_VERTEX_SHADER)
+          it->vertex_shader = nullopt;
+        else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
+          it->fragment_shader = nullopt;
+        else [[unlikely]]
+        {
+          last_error_ = WEBGL_INVALID_OPERATION;
+        }
+        return;
+      }
+    }
   }
 
   void TrContextWebGL::glGetActiveAttrib(WebGLuint program,
@@ -1054,17 +2005,7 @@ namespace renderer
 
   void TrContextWebGL::glGenBuffers(WebGLsizei n, WebGLuint *buffers)
   {
-    static WebGLuint next_buffer_id = 0;
-
-    for (int i = 0; i < n; i++)
-    {
-      const BufferBinding binding = {
-        .target = nullopt,
-        .buffer = next_buffer_id++,
-      };
-      buffer_bindings_.push_back(binding);
-      buffers[i] = binding.buffer;
-    }
+    glGenObjects(buffers_, n, buffers);
   }
 
   void TrContextWebGL::glGetBufferParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
@@ -1109,11 +2050,6 @@ namespace renderer
   }
 
   void TrContextWebGL::glUnmapBuffer(WebGLenum target)
-  {
-    /* TODO(yorkie): implement */
-  }
-
-  void TrContextWebGL::glVertexAttrib(WebGLuint index, WebGLfloat x)
   {
     /* TODO(yorkie): implement */
   }
@@ -1559,5 +2495,76 @@ namespace renderer
   void TrContextWebGL::glSamplerParameter(WebGLuint sampler, WebGLenum pname, WebGLint param)
   {
     /* TODO(yorkie): implement */
+  }
+
+  void TrContextWebGL::glGenObjects(std::vector<WebGLuint> &source_list,
+                                    WebGLsizei n,
+                                    WebGLuint *generated_list)
+  {
+    if (n <= 0 || generated_list == nullptr)
+      return;
+
+    size_t old_size = source_list.size();
+    WebGLuint initial_value = 0x0;
+    source_list.resize(old_size + static_cast<size_t>(n));
+    std::fill(source_list.begin() + old_size,
+              source_list.end(),
+              initial_value);
+
+    for (size_t i = 0; i < n; i++)
+    {
+      generated_list[i] = source_list[old_size + i];
+    }
+  }
+
+  void TrContextWebGL::debugPrintPrograms(int depth)
+  {
+    debugPrintObjects<Program>("Programs",
+                               programs_,
+                               depth,
+                               [](const Program &program)
+                               { return std::to_string(program.id); });
+  }
+
+  void TrContextWebGL::debugPrintShaderModules(int depth)
+  {
+    auto print_shader = [](const ShaderModule &module)
+    {
+      return module.toString();
+    };
+    debugPrintObjects<ShaderModule>("Shader Modules", shader_modules_, depth, print_shader);
+  }
+
+  void TrContextWebGL::debugPrintBuffers(int depth)
+  {
+    debugPrintObjects("Buffers", buffers_, depth);
+  }
+
+  void TrContextWebGL::debugPrintTextures(int depth)
+  {
+    debugPrintObjects("Textures", textures_, depth);
+  }
+
+  void TrContextWebGL::debugPrintFramebuffers(int depth)
+  {
+    debugPrintObjects("Framebuffers", framebuffers_, depth);
+  }
+
+  void TrContextWebGL::debugPrintRenderbuffers(int depth)
+  {
+    debugPrintObjects("Renderbuffers", renderbuffers_, depth);
+  }
+
+  void TrContextWebGL::debugPrint()
+  {
+    cerr << "[WebGL] Objects Summary:" << endl;
+    {
+      debugPrintPrograms(2);
+      debugPrintShaderModules(2);
+      debugPrintBuffers(2);
+      debugPrintTextures(2);
+      debugPrintFramebuffers(2);
+      debugPrintRenderbuffers(2);
+    }
   }
 }

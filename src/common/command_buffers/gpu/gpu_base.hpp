@@ -343,6 +343,13 @@ namespace commandbuffers
 #undef XX
   }
 
+  enum class GPUCompilationMessageType : uint32_t
+  {
+    kError = 1,
+    kWarning = 2,
+    kInfo = 3,
+  };
+
   enum class GPUShaderStage : uint64_t
   {
     kNone = 0x0000000000000000,

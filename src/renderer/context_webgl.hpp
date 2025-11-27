@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+#include <optional>
 #include <unordered_map>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
@@ -350,13 +352,13 @@ namespace renderer
                                           WebGLsizei height);
 
     // Shaders
-    void glAttachShader(WebGLuint program, WebGLuint shader);
     void glBindAttribLocation(WebGLuint program, WebGLuint index, const WebGLchar *name);
     void glCompileShader(WebGLuint shader);
-    void glCreateProgram();
-    void glCreateShader(WebGLenum type);
+    WebGLuint glCreateProgram();
+    WebGLuint glCreateShader(WebGLenum type);
     void glDeleteProgram(WebGLuint program);
     void glDeleteShader(WebGLuint shader);
+    void glAttachShader(WebGLuint program, WebGLuint shader);
     void glDetachShader(WebGLuint program, WebGLuint shader);
     void glGetActiveAttrib(WebGLuint program,
                            WebGLuint index,
@@ -481,7 +483,6 @@ namespace renderer
     WebGLboolean glIsBuffer(WebGLuint buffer);
     void glMapBufferRange(WebGLenum target, WebGLintptr offset, WebGLsizeiptr length, WebGLbitfield access);
     void glUnmapBuffer(WebGLenum target);
-    void glVertexAttrib(WebGLuint index, WebGLfloat x);
     void glVertexAttrib1f(WebGLuint index, WebGLfloat x);
     void glVertexAttrib2f(WebGLuint index, WebGLfloat x, WebGLfloat y);
     void glVertexAttrib3f(WebGLuint index, WebGLfloat x, WebGLfloat y, WebGLfloat z);
@@ -591,11 +592,97 @@ namespace renderer
     void glIsSampler(WebGLuint sampler);
     void glSamplerParameter(WebGLuint sampler, WebGLenum pname, WebGLint param);
 
+    // Internal Utilities
+    void glGenObjects(std::vector<WebGLuint> &source_list,
+                      WebGLsizei n,
+                      WebGLuint *generated_list);
+
+    /**
+     * A convenience function to create a WebGL object such as buffer, texture, framebuffer, renderbuffer in this context implementation.
+     * 
+     * @tparam ReqType 
+     * @param source_list A list of WebGL objects to store the created object.
+     * @param req A request to create a WebGL object.
+     */
+    template <typename ReqType>
+    void glCreateTypedObject(std::vector<WebGLuint> &source_list, const commandbuffers::TrCommandBufferRequest &req)
+    {
+      const auto &typed_req = To<ReqType>(req);
+      size_t size_before = source_list.size();
+      {
+        WebGLint obj;
+        glGenObjects(source_list, 1, (WebGLuint *)&obj);
+        assert(obj == 0 && "object must be the initial object");
+      }
+      source_list[size_before] = req.id;
+      debugPrint();
+    }
+
+    // Debug Utilities
+    template <typename ObjectType>
+    void debugPrintObjects(
+      const string &label,
+      const vector<ObjectType> &list,
+      int depth = 0,
+      std::function<string(const ObjectType &)> print_func = [](const ObjectType &obj)
+      { return std::to_string(obj); })
+    {
+      const std::string prefix = std::string(depth, ' ');
+
+      if (depth > 0) // Not printing [WebGL] prefix for nested.
+        cerr << prefix;
+      else
+        cerr << "[WebGL] ";
+      cerr << label << ": {";
+
+      if (list.empty())
+      {
+        cerr << " (empty) ";
+      }
+      else
+      {
+        cerr << endl;
+        int n = 0;
+        for (const auto &obj : list)
+          cerr << prefix << "  ." << n++ << " = " << print_func(obj) << endl;
+      }
+      cerr << prefix << "}" << endl;
+    }
+
+    void debugPrintPrograms(int depth = 0);
+    void debugPrintShaderModules(int depth = 0);
+    void debugPrintBuffers(int depth = 0);
+    void debugPrintTextures(int depth = 0);
+    void debugPrintFramebuffers(int depth = 0);
+    void debugPrintRenderbuffers(int depth = 0);
+    void debugPrint();
+
     Ref<TrContentRenderer> content_renderer_;
-    std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
+
+    std::vector<WebGLuint> buffers_;
+    std::vector<WebGLuint> textures_;
+    std::vector<WebGLuint> framebuffers_;
+    std::vector<WebGLuint> renderbuffers_;
+
     std::vector<BufferBinding> buffer_bindings_;
     std::vector<FramebufferBinding> framebuffer_bindings_;
     std::vector<RenderbufferBinding> renderbuffer_bindings_;
+    std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
+    struct ShaderModule
+    {
+      WebGLuint id;
+      WebGLenum type;
+
+      std::string toString() const;
+    };
+    std::vector<ShaderModule> shader_modules_;
+    struct Program
+    {
+      WebGLuint id;
+      std::optional<ShaderModule> vertex_shader;
+      std::optional<ShaderModule> fragment_shader;
+    };
+    std::vector<Program> programs_;
 
     WebGLenum last_error_ = WEBGL_NO_ERROR;
     Capabilities caps_;

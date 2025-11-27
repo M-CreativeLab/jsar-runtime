@@ -74,7 +74,7 @@ namespace commandbuffers
     return nullptr;
   }
 
-  Ref<GPUBufferBase> GPUDeviceBase::createBuffer(const GPUBufferDescriptor *rawDescriptor)
+  Ref<GPUBufferBase> GPUDeviceBase::createBuffer(const GPUBufferDescriptor *descriptor)
   {
     return nullptr;
   }
@@ -91,6 +91,16 @@ namespace commandbuffers
 
   Ref<GPUShaderModuleBase> GPUDeviceBase::createShaderModule(const GPUShaderModuleDescriptor *descriptor,
                                                              const std::vector<wgsl::Extension> &internalExtensions)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUTextureBase> GPUDeviceBase::createTexture(const GPUTextureDescriptor *descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUTextureViewBase> GPUDeviceBase::createTextureView(const GPUTextureViewDescriptor *descriptor)
   {
     return nullptr;
   }
