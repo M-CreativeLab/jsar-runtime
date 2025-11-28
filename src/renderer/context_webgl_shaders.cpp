@@ -2,6 +2,7 @@
 #include <command_buffers/webgl_constants.hpp>
 #include <renderer/context_webgl.hpp>
 #include <renderer/content_renderer.hpp>
+#include "utility.hpp"
 
 namespace renderer
 {
@@ -21,118 +22,63 @@ namespace renderer
   WebGLuint TrContextWebGL::glCreateProgram()
   {
     WebGLuint id = programs_.size();
-    const Program program = {
-      .id = id, // Use the index as the default id.
-      .vertex_shader = nullopt,
-      .fragment_shader = nullopt,
-    };
+    auto program = AcquireRef(new details::Program(id));
     programs_.push_back(program);
-    return program.id;
+    return program->id;
   }
 
   WebGLuint TrContextWebGL::glCreateShader(WebGLenum type)
   {
     WebGLuint id = shader_modules_.size();
-    const ShaderModule shader_module = {
-      .id = id, // Use the index as the default id.
-      .type = type,
-    };
-    shader_modules_.push_back(shader_module);
-    return shader_module.id;
+    auto shader = AcquireRef(new details::ShaderModule(id, type));
+    shader_modules_.push_back(shader);
+    return shader->id;
   }
 
   void TrContextWebGL::glDeleteProgram(WebGLuint program)
   {
-    for (auto it = programs_.begin(); it != programs_.end(); it++)
-    {
-      if (it->id == program)
-      {
-        programs_.erase(it);
-        return;
-      }
-    }
+    programs_.remove(program);
   }
 
   void TrContextWebGL::glDeleteShader(WebGLuint shader)
   {
-    for (auto it = shader_modules_.begin(); it != shader_modules_.end(); it++)
-    {
-      if (it->id == shader)
-      {
-        shader_modules_.erase(it);
-        return;
-      }
-    }
+    shader_modules_.remove(shader);
   }
 
-  void TrContextWebGL::glAttachShader(WebGLuint program, WebGLuint shader)
+  void TrContextWebGL::glAttachShader(WebGLuint program_id, WebGLuint shader_id)
   {
-    ShaderModule *shader_module = nullptr;
-    for (auto it = shader_modules_.begin(); it != shader_modules_.end(); it++)
-    {
-      if (it->id == shader)
-      {
-        shader_module = &*it;
-        break;
-      }
-    }
-
-    if (shader_module == nullptr) [[unlikely]]
+    auto program = programs_.get(program_id);
+    auto shader_module = shader_modules_.get(shader_id);
+    if (program == nullptr || shader_module == nullptr) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
 
-    for (auto it = programs_.begin(); it != programs_.end(); it++)
-    {
-      if (it->id == program)
-      {
-        if (shader_module->type == WEBGL_VERTEX_SHADER)
-          it->vertex_shader = make_optional(*shader_module);
-        else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
-          it->fragment_shader = make_optional(*shader_module);
-        else [[unlikely]]
-        {
-          last_error_ = WEBGL_INVALID_OPERATION;
-        }
-        return;
-      }
-    }
+    if (shader_module->type == WEBGL_VERTEX_SHADER)
+      program->vertexShader = shader_module;
+    else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
+      program->fragmentShader = shader_module;
+    else [[unlikely]]
+      last_error_ = WEBGL_INVALID_OPERATION;
   }
 
-  void TrContextWebGL::glDetachShader(WebGLuint program, WebGLuint shader)
+  void TrContextWebGL::glDetachShader(WebGLuint program_id, WebGLuint shader_id)
   {
-    ShaderModule *shader_module = nullptr;
-    for (auto it = shader_modules_.begin(); it != shader_modules_.end(); it++)
-    {
-      if (it->id == shader)
-      {
-        shader_module = &*it;
-        break;
-      }
-    }
-
-    if (shader_module == nullptr) [[unlikely]]
+    auto program = programs_.get(program_id);
+    auto shader_module = shader_modules_.get(shader_id);
+    if (program == nullptr || shader_module == nullptr) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
 
-    for (auto it = programs_.begin(); it != programs_.end(); it++)
-    {
-      if (it->id == program)
-      {
-        if (shader_module->type == WEBGL_VERTEX_SHADER)
-          it->vertex_shader = nullopt;
-        else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
-          it->fragment_shader = nullopt;
-        else [[unlikely]]
-        {
-          last_error_ = WEBGL_INVALID_OPERATION;
-        }
-        return;
-      }
-    }
+    if (shader_module->type == WEBGL_VERTEX_SHADER)
+      program->vertexShader = nullptr;
+    else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
+      program->fragmentShader = nullptr;
+    else [[unlikely]]
+      last_error_ = WEBGL_INVALID_OPERATION;
   }
 
   void TrContextWebGL::glGetActiveAttrib(WebGLuint program,

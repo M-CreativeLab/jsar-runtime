@@ -8,22 +8,17 @@ namespace renderer
   using namespace std;
   using namespace commandbuffers;
 
-  void TrContextWebGL::glBindBuffer(WebGLenum target, WebGLuint buffer)
+  void TrContextWebGL::glBindBuffer(WebGLenum target, WebGLuint id)
   {
-    if (!glIsBuffer(buffer)) [[unlikely]]
+    auto buffer = buffers_.get(id);
+    if (!buffer) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
 
-    for (auto &binding : buffer_bindings_)
-    {
-      if (binding.buffer == buffer)
-      {
-        binding.target = target;
-        break;
-      }
-    }
+    auto buffer_target = details::BufferTarget(target);
+    buffer_bindings_[buffer_target] = buffer;
   }
 
   void TrContextWebGL::glBindBufferBase(WebGLenum target,
@@ -73,7 +68,8 @@ namespace renderer
     {
       for (auto it = buffers_.begin(); it != buffers_.end(); ++it)
       {
-        if (*it == buffers[i])
+        Ref<details::Buffer> buffer = *it;
+        if (buffer->id == buffers[i])
         {
           buffers_.erase(it);
           break;
@@ -130,7 +126,7 @@ namespace renderer
 
   void TrContextWebGL::glGenBuffers(WebGLsizei n, WebGLuint *buffers)
   {
-    glGenObjects(buffers_, n, buffers);
+    glGenTypedObjects(buffers_, n, buffers);
   }
 
   void TrContextWebGL::glGetBufferParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
@@ -160,14 +156,7 @@ namespace renderer
 
   WebGLboolean TrContextWebGL::glIsBuffer(WebGLuint buffer)
   {
-    for (const auto &binding : buffer_bindings_)
-    {
-      if (binding.buffer == buffer)
-      {
-        return true;
-      }
-    }
-    return false;
+    return buffers_.has(buffer);
   }
 
   void TrContextWebGL::glMapBufferRange(WebGLenum target, WebGLintptr offset, WebGLsizeiptr length, WebGLbitfield access)

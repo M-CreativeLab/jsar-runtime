@@ -8,6 +8,15 @@ namespace commandbuffers
 
   struct GPUTextureDescriptor
   {
+    std::string_view label;
+    GPUTextureUsage usage = GPUTextureUsage::kNone;
+    GPUTextureDimension dimension = GPUTextureDimension::k2D;
+    GPUExtent3D size;
+    GPUTextureFormat format = GPUTextureFormat::kUndefined;
+    uint32_t mipLevelCount = 1;
+    uint32_t sampleCount = 1;
+    size_t viewFormatCount = 0;
+    GPUTextureFormat const *viewFormats = nullptr;
   };
 
   class GPUTextureBase : public GPUHandle

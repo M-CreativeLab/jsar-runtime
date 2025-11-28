@@ -1,21 +1,21 @@
 #pragma once
 
+#include <cassert>
 #include <functional>
-#include <optional>
+#include <vector>
 #include <unordered_map>
+
+#include <common/utility.hpp>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
+#include <common/command_buffers/gpu/gpu_base.hpp>
 
 namespace renderer
 {
   class TrContentRenderer;
 
-  class TrContextWebGL
+  namespace details
   {
-  public:
-    TrContextWebGL(Ref<TrContentRenderer> content_renderer);
-    ~TrContextWebGL();
-
     class ObjectTargetBase
     {
     public:
@@ -46,6 +46,23 @@ namespace renderer
       WebGLenum target_;
     };
 
+    class BufferTarget final : public ObjectTargetBase
+    {
+    public:
+      enum
+      {
+        kArrayBuffer = WEBGL_ARRAY_BUFFER,
+        kElementArrayBuffer = WEBGL_ELEMENT_ARRAY_BUFFER,
+      };
+
+      BufferTarget(WebGLenum target)
+          : ObjectTargetBase(target)
+      {
+        assert(target_ == kArrayBuffer ||
+               target_ == kElementArrayBuffer);
+      }
+    };
+
     class TextureTarget final : public ObjectTargetBase
     {
     public:
@@ -62,23 +79,6 @@ namespace renderer
         assert(target_ == k2D ||
                target_ == k3D ||
                target_ == k2DArray);
-      }
-    };
-
-    class BufferTarget final : public ObjectTargetBase
-    {
-    public:
-      enum
-      {
-        kArrayBuffer = WEBGL_ARRAY_BUFFER,
-        kElementArrayBuffer = WEBGL_ELEMENT_ARRAY_BUFFER,
-      };
-
-      BufferTarget(WebGLenum target)
-          : ObjectTargetBase(target)
-      {
-        assert(target_ == kArrayBuffer ||
-               target_ == kElementArrayBuffer);
       }
     };
 
@@ -116,28 +116,97 @@ namespace renderer
       }
     };
 
-    struct TextureBinding
+    class ObjectBase
     {
+    public:
+      ObjectBase() = default;
+      ObjectBase(WebGLuint id);
+      virtual ~ObjectBase() = default;
+
+      virtual bool isTexture() const;
+      virtual bool isBuffer() const;
+      virtual bool isFramebuffer() const;
+      virtual bool isRenderbuffer() const;
+      virtual std::string toString() const;
+
+      void set(WebGLuint id);
+      WebGLuint id;
+    };
+
+    struct BindableObject : public ObjectBase
+    {
+      using ObjectBase::ObjectBase;
+
+    public:
+      void setTarget(const ObjectTargetBase &);
+
       WebGLenum target;
-      WebGLuint texture;
     };
 
-    struct BufferBinding
+    struct ShaderModule final : public ObjectBase
     {
-      std::optional<BufferTarget> target;
-      WebGLuint buffer;
+    public:
+      ShaderModule(WebGLuint id, WebGLenum type);
+      std::string toString() const;
+
+      WebGLenum type;
     };
 
-    struct FramebufferBinding
+    struct Program final : public ObjectBase
     {
-      std::optional<FramebufferTarget> target;
-      WebGLuint framebuffer;
+    public:
+      Program(WebGLuint id);
+
+      Ref<ShaderModule> vertexShader;
+      Ref<ShaderModule> fragmentShader;
     };
 
-    struct RenderbufferBinding
+    struct Texture final : public BindableObject
     {
-      std::optional<RenderbufferTarget> target;
-      WebGLuint renderbuffer;
+      using BindableObject::BindableObject;
+
+    public:
+      bool isTexture() const override
+      {
+        return true;
+      }
+      std::string toString() const override;
+      void setSize(WebGLsizei width, WebGLsizei height, WebGLsizei depth = 0);
+
+      WebGLsizei size[3];
+      WebGLsizei mipLevels;
+      WebGLenum internalformat;
+      WebGLenum compressedInternalformat;
+    };
+
+    struct Buffer final : public BindableObject
+    {
+      using BindableObject::BindableObject;
+
+      bool isBuffer() const override
+      {
+        return true;
+      }
+    };
+
+    struct Framebuffer final : public BindableObject
+    {
+      using BindableObject::BindableObject;
+
+      bool isFramebuffer() const override
+      {
+        return true;
+      }
+    };
+
+    struct Renderbuffer final : public BindableObject
+    {
+      using BindableObject::BindableObject;
+
+      bool isRenderbuffer() const override
+      {
+        return true;
+      }
     };
 
     struct Capabilities
@@ -163,6 +232,13 @@ namespace renderer
     private:
       Map caps_;
     };
+  }
+
+  class TrContextWebGL
+  {
+  public:
+    TrContextWebGL(Ref<TrContentRenderer> content_renderer);
+    ~TrContextWebGL();
 
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
 
@@ -593,9 +669,25 @@ namespace renderer
     void glSamplerParameter(WebGLuint sampler, WebGLenum pname, WebGLint param);
 
     // Internal Utilities
-    void glGenObjects(std::vector<WebGLuint> &source_list,
-                      WebGLsizei n,
-                      WebGLuint *generated_list);
+    template <typename ObjectType>
+      requires std::is_base_of_v<details::ObjectBase, ObjectType>
+    void glGenTypedObjects(std::vector<Ref<ObjectType>> &source_list,
+                           WebGLsizei n,
+                           WebGLuint *generated_list)
+    {
+      if (n <= 0 || generated_list == nullptr)
+        return;
+
+      size_t old_size = source_list.size();
+      source_list.resize(old_size + static_cast<size_t>(n));
+
+      for (size_t i = 0; i < n; i++)
+      {
+        Ref<ObjectType> object = AcquireRef(new ObjectType());
+        source_list[old_size + i] = object;
+        generated_list[i] = object->id;
+      }
+    }
 
     /**
      * A convenience function to create a WebGL object such as buffer, texture, framebuffer, renderbuffer in this context implementation.
@@ -604,28 +696,31 @@ namespace renderer
      * @param source_list A list of WebGL objects to store the created object.
      * @param req A request to create a WebGL object.
      */
-    template <typename ReqType>
-    void glCreateTypedObject(std::vector<WebGLuint> &source_list, const commandbuffers::TrCommandBufferRequest &req)
+    template <typename ObjectType, typename ReqType>
+      requires std::is_base_of_v<details::ObjectBase, ObjectType>
+    void glCreateTypedObject(std::vector<Ref<ObjectType>> &source_list,
+                             const commandbuffers::TrCommandBufferRequest &req)
     {
       const auto &typed_req = To<ReqType>(req);
       size_t size_before = source_list.size();
       {
         WebGLint obj;
-        glGenObjects(source_list, 1, (WebGLuint *)&obj);
+        glGenTypedObjects<ObjectType>(source_list, 1, (WebGLuint *)&obj);
         assert(obj == 0 && "object must be the initial object");
       }
-      source_list[size_before] = req.id;
+
+      Ref<ObjectType> created_object = source_list[size_before];
+      assert(created_object != nullptr && "object must be created");
+      created_object->set(req.id);
       debugPrint();
     }
 
     // Debug Utilities
     template <typename ObjectType>
-    void debugPrintObjects(
-      const string &label,
-      const vector<ObjectType> &list,
-      int depth = 0,
-      std::function<string(const ObjectType &)> print_func = [](const ObjectType &obj)
-      { return std::to_string(obj); })
+      requires std::is_base_of_v<details::ObjectBase, ObjectType>
+    void debugPrintObjects(const std::string &label,
+                           const std::vector<Ref<ObjectType>> &list,
+                           int depth = 0)
     {
       const std::string prefix = std::string(depth, ' ');
 
@@ -644,7 +739,7 @@ namespace renderer
         cerr << endl;
         int n = 0;
         for (const auto &obj : list)
-          cerr << prefix << "  ." << n++ << " = " << print_func(obj) << endl;
+          cerr << prefix << "  ." << n++ << " = " << obj->toString() << endl;
         cerr << prefix << "}";
       }
       cerr << endl;
@@ -660,34 +755,69 @@ namespace renderer
 
     Ref<TrContentRenderer> content_renderer_;
 
-    std::vector<WebGLuint> buffers_;
-    std::vector<WebGLuint> textures_;
-    std::vector<WebGLuint> framebuffers_;
-    std::vector<WebGLuint> renderbuffers_;
-
-    std::vector<BufferBinding> buffer_bindings_;
-    std::vector<FramebufferBinding> framebuffer_bindings_;
-    std::vector<RenderbufferBinding> renderbuffer_bindings_;
-    std::unordered_map<TextureTarget, TextureBinding, TextureTarget::HashKey> texture_bindings_;
-    struct ShaderModule
+    template <typename ObjectType>
+    class ObjectList : public std::vector<Ref<ObjectType>>
     {
-      WebGLuint id;
-      WebGLenum type;
+      using Base = std::vector<Ref<ObjectType>>;
+      using Base::Base;
 
-      std::string toString() const;
+    public:
+      Ref<ObjectType> get(WebGLuint id)
+      {
+        for (const auto &obj : *this)
+        {
+          if (obj->id == id)
+            return obj;
+        }
+        return nullptr;
+      }
+
+      bool has(WebGLuint id)
+      {
+        return get(id) != nullptr;
+      }
+
+      bool remove(WebGLuint id)
+      {
+        for (auto it = this->begin(); it != this->end(); it++)
+        {
+          if ((*it)->id == id)
+          {
+            this->erase(it);
+            return true;
+          }
+        }
+        return false;
+      }
     };
-    std::vector<ShaderModule> shader_modules_;
-    struct Program
+
+    ObjectList<details::ShaderModule> shader_modules_;
+    ObjectList<details::Program> programs_;
+
+    ObjectList<details::Buffer> buffers_;
+    ObjectList<details::Texture> textures_;
+    ObjectList<details::Framebuffer> framebuffers_;
+    ObjectList<details::Renderbuffer> renderbuffers_;
+
+    template <typename Target, typename Type>
+    class BindingMap : public std::unordered_map<Target, Ref<Type>, typename Target::HashKey>
     {
-      WebGLuint id;
-      std::optional<ShaderModule> vertex_shader;
-      std::optional<ShaderModule> fragment_shader;
+      using Base = std::unordered_map<Target, Ref<Type>, typename Target::HashKey>;
+      using Base::Base;
     };
-    std::vector<Program> programs_;
+    using BufferBindingMap = BindingMap<details::BufferTarget, details::Buffer>;
+    using TextureBindingMap = BindingMap<details::TextureTarget, details::Texture>;
+    using FramebufferBindingMap = BindingMap<details::FramebufferTarget, details::Framebuffer>;
+    using RenderbufferBindingMap = BindingMap<details::RenderbufferTarget, details::Renderbuffer>;
+
+    BufferBindingMap buffer_bindings_;
+    TextureBindingMap texture_bindings_;
+    FramebufferBindingMap framebuffer_bindings_;
+    RenderbufferBindingMap renderbuffer_bindings_;
 
     WebGLenum last_error_ = WEBGL_NO_ERROR;
-    Capabilities caps_;
-    WebGLenum active_texture_;
+    details::Capabilities caps_;
+    WebGLenum active_texture_unit_ = WEBGL_TEXTURE0;
 
     WebGLfloat clear_color_[4];
     WebGLfloat clear_depth_;
@@ -719,17 +849,5 @@ namespace renderer
     WebGLboolean sample_coverage_invert_;
     WebGLint scissor_box_[4];
     WebGLint viewport_[4];
-  };
-}
-
-namespace std
-{
-  template <>
-  struct hash<renderer::TrContextWebGL::TextureTarget>
-  {
-    size_t operator()(const renderer::TrContextWebGL::TextureTarget &t) const noexcept
-    {
-      return std::hash<WebGLenum>{}(t.value());
-    }
   };
 }

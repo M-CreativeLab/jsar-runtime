@@ -1,4 +1,3 @@
-#include <optional>
 #include <vector>
 
 #include <renderer/context_webgl.hpp>
@@ -12,14 +11,94 @@ namespace renderer
   using namespace std;
   using namespace commandbuffers;
 
-  string TrContextWebGL::ShaderModule::toString() const
+  namespace details
   {
-    string type_str = "Unknown";
-    if (type == WEBGL_VERTEX_SHADER)
-      type_str = "Vertex";
-    else if (type == WEBGL_FRAGMENT_SHADER)
-      type_str = "Fragment";
-    return "ShaderModule(" + type_str + " id=" + to_string(id) + ")";
+    ObjectBase::ObjectBase(WebGLuint id)
+        : id(id)
+    {
+    }
+
+    bool ObjectBase::isTexture() const
+    {
+      return false;
+    }
+
+    bool ObjectBase::isBuffer() const
+    {
+      return false;
+    }
+
+    bool ObjectBase::isFramebuffer() const
+    {
+      return false;
+    }
+
+    bool ObjectBase::isRenderbuffer() const
+    {
+      return false;
+    }
+
+    string ObjectBase::toString() const
+    {
+      return to_string(id);
+    }
+
+    void ObjectBase::set(WebGLuint id)
+    {
+      this->id = id;
+    }
+
+    void BindableObject::setTarget(const ObjectTargetBase &target)
+    {
+      this->target = target.value();
+    }
+
+    ShaderModule::ShaderModule(WebGLuint id, WebGLenum type)
+        : ObjectBase(id)
+        , type(type)
+    {
+      assert(type == WEBGL_VERTEX_SHADER ||
+             type == WEBGL_FRAGMENT_SHADER);
+    }
+
+    string ShaderModule::toString() const
+    {
+      string type_str = "Unknown";
+      if (type == WEBGL_VERTEX_SHADER)
+        type_str = "Vertex";
+      else if (type == WEBGL_FRAGMENT_SHADER)
+        type_str = "Fragment";
+      return "ShaderModule(" + type_str + " id=" + to_string(id) + ")";
+    }
+
+    Program::Program(WebGLuint id)
+        : ObjectBase(id)
+        , vertexShader(nullptr)
+        , fragmentShader(nullptr)
+    {
+    }
+
+    string Texture::toString() const
+    {
+      string target_str = "Unknown";
+      if (target == WEBGL_TEXTURE_2D)
+        target_str = "2D";
+      else if (target == WEBGL2_TEXTURE_2D_ARRAY)
+        target_str = "2D[]";
+      else if (target == WEBGL2_TEXTURE_3D)
+        target_str = "3D";
+      else if (target == WEBGL_TEXTURE_CUBE_MAP)
+        target_str = "CubeMap";
+
+      return "Texture(" + target_str + " id=" + to_string(id) + ")";
+    }
+
+    void Texture::setSize(WebGLsizei width, WebGLsizei height, WebGLsizei depth)
+    {
+      size[0] = width;
+      size[1] = height;
+      size[2] = depth;
+    }
   }
 
   TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer)
@@ -84,7 +163,7 @@ namespace renderer
     }
     case COMMAND_BUFFER_CREATE_TEXTURE_REQ:
     {
-      glCreateTypedObject<CreateTextureCommandBufferRequest>(textures_, req);
+      glCreateTypedObject<details::Texture, CreateTextureCommandBufferRequest>(textures_, req);
       break;
     }
     case COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ:
@@ -329,12 +408,14 @@ namespace renderer
     }
     case COMMAND_BUFFER_CREATE_FRAMEBUFFER_REQ:
     {
-      glCreateTypedObject<CreateFramebufferCommandBufferRequest>(framebuffers_, req);
+      glCreateTypedObject<details::Framebuffer,
+                          CreateFramebufferCommandBufferRequest>(framebuffers_, req);
       break;
     }
     case COMMAND_BUFFER_CREATE_RENDERBUFFER_REQ:
     {
-      glCreateTypedObject<CreateRenderbufferCommandBufferRequest>(renderbuffers_, req);
+      glCreateTypedObject<details::Renderbuffer,
+                          CreateRenderbufferCommandBufferRequest>(renderbuffers_, req);
       break;
     }
     case COMMAND_BUFFER_GENERATE_MIPMAP_REQ:
@@ -382,14 +463,14 @@ namespace renderer
     {
       const auto &typed_req = To<CreateProgramCommandBufferRequest>(req);
       auto index = glCreateProgram();
-      programs_[index].id = req.id; // Modify the id to the request id.
+      programs_[index]->set(req.id);
       break;
     }
     case COMMAND_BUFFER_CREATE_SHADER_REQ:
     {
       const auto &typed_req = To<CreateShaderCommandBufferRequest>(req);
       auto index = glCreateShader(typed_req.shaderType);
-      shader_modules_[index].id = req.id; // Modify the id to the request id.
+      shader_modules_[index]->set(req.id);
       break;
     }
     case COMMAND_BUFFER_DELETE_PROGRAM_REQ:
@@ -701,7 +782,8 @@ namespace renderer
     }
     case COMMAND_BUFFER_CREATE_BUFFER_REQ:
     {
-      glCreateTypedObject<CreateBufferCommandBufferRequest>(buffers_, req);
+      glCreateTypedObject<details::Buffer,
+                          CreateBufferCommandBufferRequest>(buffers_, req);
       break;
     }
     case COMMAND_BUFFER_VERTEX_ATTRIB_1F_REQ:
@@ -962,42 +1044,14 @@ namespace renderer
     }
   }
 
-  void TrContextWebGL::glGenObjects(std::vector<WebGLuint> &source_list,
-                                    WebGLsizei n,
-                                    WebGLuint *generated_list)
-  {
-    if (n <= 0 || generated_list == nullptr)
-      return;
-
-    size_t old_size = source_list.size();
-    WebGLuint initial_value = 0x0;
-    source_list.resize(old_size + static_cast<size_t>(n));
-    std::fill(source_list.begin() + old_size,
-              source_list.end(),
-              initial_value);
-
-    for (size_t i = 0; i < n; i++)
-    {
-      generated_list[i] = source_list[old_size + i];
-    }
-  }
-
   void TrContextWebGL::debugPrintPrograms(int depth)
   {
-    debugPrintObjects<Program>("Programs",
-                               programs_,
-                               depth,
-                               [](const Program &program)
-                               { return to_string(program.id); });
+    debugPrintObjects("Programs", programs_, depth);
   }
 
   void TrContextWebGL::debugPrintShaderModules(int depth)
   {
-    auto print_shader = [](const ShaderModule &module)
-    {
-      return module.toString();
-    };
-    debugPrintObjects<ShaderModule>("Shader Modules", shader_modules_, depth, print_shader);
+    debugPrintObjects("Shader Modules", shader_modules_, depth);
   }
 
   void TrContextWebGL::debugPrintBuffers(int depth)
