@@ -143,7 +143,7 @@ namespace renderer
       WebGLenum target;
     };
 
-    struct ShaderModule final : public ObjectBase
+    class ShaderModule final : public ObjectBase
     {
     public:
       ShaderModule(WebGLuint id, WebGLenum type);
@@ -152,7 +152,7 @@ namespace renderer
       WebGLenum type;
     };
 
-    struct Program final : public ObjectBase
+    class Program final : public ObjectBase
     {
     public:
       Program(WebGLuint id);
@@ -161,7 +161,7 @@ namespace renderer
       Ref<ShaderModule> fragmentShader;
     };
 
-    struct Texture final : public BindableObject
+    class Texture final : public BindableObject
     {
       using BindableObject::BindableObject;
 
@@ -179,30 +179,35 @@ namespace renderer
       WebGLenum compressedInternalformat;
     };
 
-    struct Buffer final : public BindableObject
+    class Buffer final : public BindableObject
     {
       using BindableObject::BindableObject;
 
+    public:
       bool isBuffer() const override
       {
         return true;
       }
+
+      WebGLsizei size;
     };
 
-    struct Framebuffer final : public BindableObject
+    class Framebuffer final : public BindableObject
     {
       using BindableObject::BindableObject;
 
+    public:
       bool isFramebuffer() const override
       {
         return true;
       }
     };
 
-    struct Renderbuffer final : public BindableObject
+    class Renderbuffer final : public BindableObject
     {
       using BindableObject::BindableObject;
 
+    public:
       bool isRenderbuffer() const override
       {
         return true;
