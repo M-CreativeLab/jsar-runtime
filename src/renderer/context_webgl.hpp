@@ -637,7 +637,7 @@ namespace renderer
 
       if (list.empty())
       {
-        cerr << " (empty) ";
+        cerr << " (empty) }";
       }
       else
       {
@@ -645,8 +645,9 @@ namespace renderer
         int n = 0;
         for (const auto &obj : list)
           cerr << prefix << "  ." << n++ << " = " << print_func(obj) << endl;
+        cerr << prefix << "}";
       }
-      cerr << prefix << "}" << endl;
+      cerr << endl;
     }
 
     void debugPrintPrograms(int depth = 0);
