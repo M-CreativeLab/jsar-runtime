@@ -10,21 +10,21 @@ namespace renderer
 
   void TrContextWebGL::glBindVertexArray(WebGLuint array)
   {
-    /* TODO(yorkie): implement */
+    current_vertex_array_object_ = vertex_array_objects_.get(array);
   }
 
   void TrContextWebGL::glDeleteVertexArrays(WebGLsizei n, const WebGLuint *arrays)
   {
-    /* TODO(yorkie): implement */
+    // vertex_array_objects_.remove(arrays, n);
   }
 
   void TrContextWebGL::glGenVertexArrays(WebGLsizei n, WebGLuint *arrays)
   {
-    /* TODO(yorkie): implement */
+    glGenTypedObjects(vertex_array_objects_, n, arrays);
   }
 
-  void TrContextWebGL::glIsVertexArray(WebGLuint array)
+  WebGLboolean TrContextWebGL::glIsVertexArray(WebGLuint array)
   {
-    /* TODO(yorkie): implement */
+    return vertex_array_objects_.has(array);
   }
 }

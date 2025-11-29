@@ -1,7 +1,9 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <functional>
+#include <variant>
 #include <vector>
 #include <unordered_map>
 
@@ -127,6 +129,7 @@ namespace renderer
       virtual bool isBuffer() const;
       virtual bool isFramebuffer() const;
       virtual bool isRenderbuffer() const;
+      virtual bool isVertexArrayObject() const;
       virtual std::string toString() const;
 
       void set(WebGLuint id);
@@ -143,13 +146,54 @@ namespace renderer
       WebGLenum target;
     };
 
-    class ShaderModule final : public ObjectBase
+    class Shader final : public ObjectBase
     {
     public:
-      ShaderModule(WebGLuint id, WebGLenum type);
+      Shader(WebGLuint id, WebGLenum type);
       std::string toString() const;
 
       WebGLenum type;
+      std::string source;
+    };
+
+    using SingleFloatValue = std::array<WebGLfloat, 1>;
+    using TwoFloatValue = std::array<WebGLfloat, 2>;
+    using ThreeFloatValue = std::array<WebGLfloat, 3>;
+    using FourFloatValue = std::array<WebGLfloat, 4>;
+    using FloatValues = std::vector<WebGLfloat>;
+
+    using SingleIntValue = std::array<WebGLint, 1>;
+    using TwoIntValue = std::array<WebGLint, 2>;
+    using ThreeIntValue = std::array<WebGLint, 3>;
+    using FourIntValue = std::array<WebGLint, 4>;
+    using IntValues = std::vector<WebGLint>;
+
+    using UniformValue = std::variant<SingleFloatValue,
+                                      TwoFloatValue,
+                                      ThreeFloatValue,
+                                      FourFloatValue,
+                                      FloatValues,
+                                      SingleIntValue,
+                                      TwoIntValue,
+                                      ThreeIntValue,
+                                      FourIntValue,
+                                      IntValues>;
+    class Uniforms : public std::unordered_map<WebGLint, UniformValue>
+    {
+      using std::unordered_map<WebGLint, UniformValue>::unordered_map;
+
+    public:
+      void set(WebGLint loc, WebGLfloat v0);
+      void set(WebGLint loc, WebGLfloat v0, WebGLfloat v1);
+      void set(WebGLint loc, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2);
+      void set(WebGLint loc, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2, WebGLfloat v3);
+      void set(WebGLint loc, const FloatValues &values);
+
+      void set(WebGLint loc, WebGLint v0);
+      void set(WebGLint loc, WebGLint v0, WebGLint v1);
+      void set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2);
+      void set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2, WebGLint v3);
+      void set(WebGLint loc, const IntValues &values);
     };
 
     class Program final : public ObjectBase
@@ -157,8 +201,9 @@ namespace renderer
     public:
       Program(WebGLuint id);
 
-      Ref<ShaderModule> vertexShader;
-      Ref<ShaderModule> fragmentShader;
+      Ref<Shader> vertexShader;
+      Ref<Shader> fragmentShader;
+      Uniforms uniforms;
     };
 
     class Texture final : public BindableObject
@@ -209,6 +254,17 @@ namespace renderer
 
     public:
       bool isRenderbuffer() const override
+      {
+        return true;
+      }
+    };
+
+    class VertexArrayObject final : public BindableObject
+    {
+      using BindableObject::BindableObject;
+
+    public:
+      bool isVertexArrayObject() const override
       {
         return true;
       }
@@ -490,8 +546,8 @@ namespace renderer
     void glGetUniformBlockIndex(WebGLuint program, const WebGLchar *name);
     void glGetUniformIndices(WebGLuint program, WebGLsizei count, const WebGLchar **names, WebGLuint *indices);
     void glGetUniformLocation(WebGLuint program, const WebGLchar *name);
-    void glIsProgram(WebGLuint program);
-    void glIsShader(WebGLuint shader);
+    WebGLboolean glIsProgram(WebGLuint program);
+    WebGLboolean glIsShader(WebGLuint shader);
     void glLinkProgram(WebGLuint program);
     void glProgramBinary(WebGLuint program, WebGLenum binaryFormat, const WebGLbyte *binary, WebGLsizei binaryLength);
     void glProgramParameteri(WebGLuint program, WebGLenum pname, WebGLint param);
@@ -663,7 +719,7 @@ namespace renderer
     void glBindVertexArray(WebGLuint array);
     void glDeleteVertexArrays(WebGLsizei n, const WebGLuint *arrays);
     void glGenVertexArrays(WebGLsizei n, WebGLuint *arrays);
-    void glIsVertexArray(WebGLuint array);
+    WebGLboolean glIsVertexArray(WebGLuint array);
 
     // Samplers
     void glBindSampler(WebGLuint unit, WebGLuint sampler);
@@ -796,13 +852,14 @@ namespace renderer
       }
     };
 
-    ObjectList<details::ShaderModule> shader_modules_;
+    ObjectList<details::Shader> shaders_;
     ObjectList<details::Program> programs_;
 
     ObjectList<details::Buffer> buffers_;
     ObjectList<details::Texture> textures_;
     ObjectList<details::Framebuffer> framebuffers_;
     ObjectList<details::Renderbuffer> renderbuffers_;
+    ObjectList<details::VertexArrayObject> vertex_array_objects_;
 
     template <typename Target, typename Type>
     class BindingMap : public std::unordered_map<Target, Ref<Type>, typename Target::HashKey>
@@ -819,6 +876,9 @@ namespace renderer
     TextureBindingMap texture_bindings_;
     FramebufferBindingMap framebuffer_bindings_;
     RenderbufferBindingMap renderbuffer_bindings_;
+
+    Ref<details::VertexArrayObject> current_vertex_array_object_;
+    Ref<details::Program> current_program_;
 
     WebGLenum last_error_ = WEBGL_NO_ERROR;
     details::Capabilities caps_;

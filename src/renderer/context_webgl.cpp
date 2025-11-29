@@ -1,3 +1,4 @@
+#include <utility>
 #include <vector>
 
 #include <renderer/context_webgl.hpp>
@@ -38,6 +39,11 @@ namespace renderer
       return false;
     }
 
+    bool ObjectBase::isVertexArrayObject() const
+    {
+      return false;
+    }
+
     string ObjectBase::toString() const
     {
       return to_string(id);
@@ -53,7 +59,7 @@ namespace renderer
       this->target = target.value();
     }
 
-    ShaderModule::ShaderModule(WebGLuint id, WebGLenum type)
+    Shader::Shader(WebGLuint id, WebGLenum type)
         : ObjectBase(id)
         , type(type)
     {
@@ -61,14 +67,64 @@ namespace renderer
              type == WEBGL_FRAGMENT_SHADER);
     }
 
-    string ShaderModule::toString() const
+    string Shader::toString() const
     {
       string type_str = "Unknown";
       if (type == WEBGL_VERTEX_SHADER)
         type_str = "Vertex";
       else if (type == WEBGL_FRAGMENT_SHADER)
         type_str = "Fragment";
-      return "ShaderModule(" + type_str + " id=" + to_string(id) + ")";
+      return "Shader(" + type_str + " id=" + to_string(id) + ")";
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLfloat v0)
+    {
+      (*this)[loc] = SingleFloatValue{ { v0 } };
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLfloat v0, WebGLfloat v1)
+    {
+      (*this)[loc] = TwoFloatValue{ { v0, v1 } };
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2)
+    {
+      (*this)[loc] = ThreeFloatValue{ { v0, v1, v2 } };
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2, WebGLfloat v3)
+    {
+      (*this)[loc] = FourFloatValue{ { v0, v1, v2, v3 } };
+    }
+
+    void Uniforms::set(WebGLint loc, const FloatValues &values)
+    {
+      (*this)[loc] = values;
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLint v0)
+    {
+      (*this)[loc] = SingleIntValue{ { v0 } };
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLint v0, WebGLint v1)
+    {
+      (*this)[loc] = TwoIntValue{ { v0, v1 } };
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2)
+    {
+      (*this)[loc] = ThreeIntValue{ { v0, v1, v2 } };
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2, WebGLint v3)
+    {
+      (*this)[loc] = FourIntValue{ { v0, v1, v2, v3 } };
+    }
+
+    void Uniforms::set(WebGLint loc, const IntValues &values)
+    {
+      (*this)[loc] = values;
     }
 
     Program::Program(WebGLuint id)
@@ -470,7 +526,7 @@ namespace renderer
     {
       const auto &typed_req = To<CreateShaderCommandBufferRequest>(req);
       auto index = glCreateShader(typed_req.shaderType);
-      shader_modules_[index]->set(req.id);
+      shaders_[index]->set(req.id);
       break;
     }
     case COMMAND_BUFFER_DELETE_PROGRAM_REQ:
@@ -1051,7 +1107,7 @@ namespace renderer
 
   void TrContextWebGL::debugPrintShaderModules(int depth)
   {
-    debugPrintObjects("Shader Modules", shader_modules_, depth);
+    debugPrintObjects("Shaders", shaders_, depth);
   }
 
   void TrContextWebGL::debugPrintBuffers(int depth)

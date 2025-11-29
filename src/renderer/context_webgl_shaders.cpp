@@ -29,9 +29,9 @@ namespace renderer
 
   WebGLuint TrContextWebGL::glCreateShader(WebGLenum type)
   {
-    WebGLuint id = shader_modules_.size();
-    auto shader = AcquireRef(new details::ShaderModule(id, type));
-    shader_modules_.push_back(shader);
+    WebGLuint id = shaders_.size();
+    auto shader = AcquireRef(new details::Shader(id, type));
+    shaders_.push_back(shader);
     return shader->id;
   }
 
@@ -42,23 +42,23 @@ namespace renderer
 
   void TrContextWebGL::glDeleteShader(WebGLuint shader)
   {
-    shader_modules_.remove(shader);
+    shaders_.remove(shader);
   }
 
   void TrContextWebGL::glAttachShader(WebGLuint program_id, WebGLuint shader_id)
   {
     auto program = programs_.get(program_id);
-    auto shader_module = shader_modules_.get(shader_id);
-    if (program == nullptr || shader_module == nullptr) [[unlikely]]
+    auto shader = shaders_.get(shader_id);
+    if (program == nullptr || shader == nullptr) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
 
-    if (shader_module->type == WEBGL_VERTEX_SHADER)
-      program->vertexShader = shader_module;
-    else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
-      program->fragmentShader = shader_module;
+    if (shader->type == WEBGL_VERTEX_SHADER)
+      program->vertexShader = shader;
+    else if (shader->type == WEBGL_FRAGMENT_SHADER)
+      program->fragmentShader = shader;
     else [[unlikely]]
       last_error_ = WEBGL_INVALID_OPERATION;
   }
@@ -66,16 +66,16 @@ namespace renderer
   void TrContextWebGL::glDetachShader(WebGLuint program_id, WebGLuint shader_id)
   {
     auto program = programs_.get(program_id);
-    auto shader_module = shader_modules_.get(shader_id);
-    if (program == nullptr || shader_module == nullptr) [[unlikely]]
+    auto shader = shaders_.get(shader_id);
+    if (program == nullptr || shader == nullptr) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
 
-    if (shader_module->type == WEBGL_VERTEX_SHADER)
+    if (shader->type == WEBGL_VERTEX_SHADER)
       program->vertexShader = nullptr;
-    else if (shader_module->type == WEBGL_FRAGMENT_SHADER)
+    else if (shader->type == WEBGL_FRAGMENT_SHADER)
       program->fragmentShader = nullptr;
     else [[unlikely]]
       last_error_ = WEBGL_INVALID_OPERATION;
@@ -174,9 +174,38 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glGetShaderSource(WebGLuint shader, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *source)
+  void TrContextWebGL::glGetShaderSource(WebGLuint shader_id, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *source)
   {
-    /* TODO(yorkie): implement */
+    auto shader = shaders_.get(shader_id);
+    if (shader == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      if (length)
+        *length = 0;
+      if (source && maxLength > 0)
+        source[0] = '\0';
+      return;
+    }
+
+    const string &src = shader->source;
+
+    if (maxLength <= 0 || source == nullptr)
+    {
+      if (length)
+        *length = 0;
+      return;
+    }
+
+    // Reserve one byte for null-terminator.
+    size_t total_len = src.size();
+    size_t copy_len = std::min(total_len, static_cast<size_t>(std::max<WebGLsizei>(0, maxLength - 1)));
+
+    if (copy_len > 0)
+      src.copy(source, copy_len);
+    source[copy_len] = '\0';
+
+    if (length)
+      *length = static_cast<WebGLsizei>(copy_len);
   }
 
   void TrContextWebGL::glGetShaderiv(WebGLuint shader, WebGLenum pname, WebGLint *params)
@@ -214,14 +243,14 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glIsProgram(WebGLuint program)
+  WebGLboolean TrContextWebGL::glIsProgram(WebGLuint program)
   {
-    /* TODO(yorkie): implement */
+    return programs_.has(program);
   }
 
-  void TrContextWebGL::glIsShader(WebGLuint shader)
+  WebGLboolean TrContextWebGL::glIsShader(WebGLuint shader)
   {
-    /* TODO(yorkie): implement */
+    return shaders_.has(shader);
   }
 
   void TrContextWebGL::glLinkProgram(WebGLuint program)
@@ -244,59 +273,137 @@ namespace renderer
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glShaderBinary(WebGLuint shader, WebGLenum binaryFormat, const WebGLbyte *binary, WebGLsizei binaryLength)
+  void TrContextWebGL::glShaderBinary(WebGLuint shader,
+                                      WebGLenum binaryFormat,
+                                      const WebGLbyte *binary,
+                                      WebGLsizei binaryLength)
   {
     /* TODO(yorkie): implement */
   }
 
-  void TrContextWebGL::glShaderSource(WebGLuint shader, WebGLsizei count, const WebGLchar **string, const WebGLint *length)
+  void TrContextWebGL::glShaderSource(WebGLuint shader_id,
+                                      WebGLsizei count,
+                                      const WebGLchar **string,
+                                      const WebGLint *length)
   {
-    /* TODO(yorkie): implement */
+    auto shader = shaders_.get(shader_id);
+    if (shader == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+
+    // Concatenate provided strings into a single source, honoring optional lengths.
+    std::string src;
+    if (string != nullptr && count > 0)
+    {
+      for (WebGLsizei i = 0; i < count; ++i)
+      {
+        const WebGLchar *s = string[i];
+        if (s == nullptr)
+          continue;
+
+        if (length != nullptr)
+        {
+          WebGLint n = length[i];
+          if (n < 0)
+            src.append(s); // Use full C-string when length is negative
+          else
+            src.append(s, static_cast<size_t>(n));
+        }
+        else
+        {
+          src.append(s);
+        }
+      }
+    }
+
+    shader->source = std::move(src);
   }
 
   void TrContextWebGL::glUniform1f(WebGLuint location, WebGLfloat v0)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0);
   }
 
   void TrContextWebGL::glUniform2f(WebGLuint location, WebGLfloat v0, WebGLfloat v1)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0, v1);
   }
 
   void TrContextWebGL::glUniform3f(WebGLuint location, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0, v1, v2);
   }
 
   void TrContextWebGL::glUniform4f(WebGLuint location, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2, WebGLfloat v3)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0, v1, v2, v3);
   }
 
   void TrContextWebGL::glUniform1i(WebGLuint location, WebGLint v0)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0);
   }
 
   void TrContextWebGL::glUniform2i(WebGLuint location, WebGLint v0, WebGLint v1)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0, v1);
   }
 
   void TrContextWebGL::glUniform3i(WebGLuint location, WebGLint v0, WebGLint v1, WebGLint v2)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0, v1, v2);
   }
 
   void TrContextWebGL::glUniform4i(WebGLuint location, WebGLint v0, WebGLint v1, WebGLint v2, WebGLint v3)
   {
-    /* TODO(yorkie): implement */
+    if (current_program_ == nullptr) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    current_program_->uniforms.set(location, v0, v1, v2, v3);
   }
 
   void TrContextWebGL::glUniform1ui(WebGLuint location, WebGLuint v0)
   {
-    /* TODO(yorkie): implement */
+    // TODO
   }
 
   void TrContextWebGL::glUniform2ui(WebGLuint location, WebGLuint v0, WebGLuint v1)
@@ -424,7 +531,14 @@ namespace renderer
 
   void TrContextWebGL::glUseProgram(WebGLuint program)
   {
-    /* TODO(yorkie): implement */
+    if (program == 0)
+    {
+      current_program_ = nullptr;
+    }
+    else
+    {
+      current_program_ = programs_.get(program);
+    }
   }
 
   void TrContextWebGL::glValidateProgram(WebGLuint program)
