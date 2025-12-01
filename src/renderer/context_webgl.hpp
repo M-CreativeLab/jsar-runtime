@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <functional>
+#include <type_traits>
 #include <variant>
 #include <vector>
 #include <unordered_map>
@@ -168,16 +169,28 @@ namespace renderer
     using FourIntValue = std::array<WebGLint, 4>;
     using IntValues = std::vector<WebGLint>;
 
-    using UniformValue = std::variant<SingleFloatValue,
-                                      TwoFloatValue,
-                                      ThreeFloatValue,
-                                      FourFloatValue,
-                                      FloatValues,
-                                      SingleIntValue,
-                                      TwoIntValue,
-                                      ThreeIntValue,
-                                      FourIntValue,
-                                      IntValues>;
+    using SingleUintValue = std::array<WebGLuint, 1>;
+    using TwoUintValue = std::array<WebGLuint, 2>;
+    using ThreeUintValue = std::array<WebGLuint, 3>;
+    using FourUintValue = std::array<WebGLuint, 4>;
+    using UintValues = std::vector<WebGLuint>;
+
+    using UniformValue = std::variant<
+      SingleFloatValue,
+      TwoFloatValue,
+      ThreeFloatValue,
+      FourFloatValue,
+      FloatValues,
+      SingleIntValue,
+      TwoIntValue,
+      ThreeIntValue,
+      FourIntValue,
+      IntValues,
+      SingleUintValue,
+      TwoUintValue,
+      ThreeUintValue,
+      FourUintValue,
+      UintValues>;
     class Uniforms : public std::unordered_map<WebGLint, UniformValue>
     {
       using std::unordered_map<WebGLint, UniformValue>::unordered_map;
@@ -194,6 +207,12 @@ namespace renderer
       void set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2);
       void set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2, WebGLint v3);
       void set(WebGLint loc, const IntValues &values);
+
+      void set(WebGLint loc, WebGLuint v0);
+      void set(WebGLint loc, WebGLuint v0, WebGLuint v1);
+      void set(WebGLint loc, WebGLuint v0, WebGLuint v1, WebGLuint v2);
+      void set(WebGLint loc, WebGLuint v0, WebGLuint v1, WebGLuint v2, WebGLuint v3);
+      void set(WebGLint loc, const UintValues &values);
     };
 
     class Program final : public ObjectBase
@@ -237,17 +256,6 @@ namespace renderer
       WebGLsizei size;
     };
 
-    class Framebuffer final : public BindableObject
-    {
-      using BindableObject::BindableObject;
-
-    public:
-      bool isFramebuffer() const override
-      {
-        return true;
-      }
-    };
-
     class Renderbuffer final : public BindableObject
     {
       using BindableObject::BindableObject;
@@ -257,6 +265,27 @@ namespace renderer
       {
         return true;
       }
+    };
+
+    class FramebufferAttachment
+    {
+      Ref<Texture> texture;
+      Ref<Renderbuffer> renderbuffer;
+    };
+
+    class Framebuffer final : public BindableObject
+    {
+      using BindableObject::BindableObject;
+
+    public:
+      bool isFramebuffer() const override
+      {
+        return true;
+      }
+
+      Ref<FramebufferAttachment> colorAttachment;
+      Ref<FramebufferAttachment> depthAttachment;
+      Ref<FramebufferAttachment> stencilAttachment;
     };
 
     class VertexArrayObject final : public BindableObject
@@ -774,6 +803,20 @@ namespace renderer
       assert(created_object != nullptr && "object must be created");
       created_object->set(req.id);
       debugPrint();
+    }
+
+    template <typename... Args>
+      requires((sizeof...(Args) > 0) && (((std::is_same_v<Args, WebGLfloat>) && ...) ||
+                                         ((std::is_same_v<Args, WebGLint>) && ...) ||
+                                         ((std::is_same_v<Args, WebGLuint>) && ...)))
+    void glSetUniform(WebGLuint location, Args... args)
+    {
+      if (current_program_ == nullptr) [[unlikely]]
+      {
+        last_error_ = WEBGL_INVALID_OPERATION;
+        return;
+      }
+      current_program_->uniforms.set(location, args...);
     }
 
     // Debug Utilities

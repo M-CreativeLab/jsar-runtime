@@ -1,4 +1,3 @@
-#include <utility>
 #include <vector>
 
 #include <renderer/context_webgl.hpp>
@@ -79,22 +78,22 @@ namespace renderer
 
     void Uniforms::set(WebGLint loc, WebGLfloat v0)
     {
-      (*this)[loc] = SingleFloatValue{ { v0 } };
+      (*this)[loc] = SingleFloatValue{{v0}};
     }
 
     void Uniforms::set(WebGLint loc, WebGLfloat v0, WebGLfloat v1)
     {
-      (*this)[loc] = TwoFloatValue{ { v0, v1 } };
+      (*this)[loc] = TwoFloatValue{{v0, v1}};
     }
 
     void Uniforms::set(WebGLint loc, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2)
     {
-      (*this)[loc] = ThreeFloatValue{ { v0, v1, v2 } };
+      (*this)[loc] = ThreeFloatValue{{v0, v1, v2}};
     }
 
     void Uniforms::set(WebGLint loc, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2, WebGLfloat v3)
     {
-      (*this)[loc] = FourFloatValue{ { v0, v1, v2, v3 } };
+      (*this)[loc] = FourFloatValue{{v0, v1, v2, v3}};
     }
 
     void Uniforms::set(WebGLint loc, const FloatValues &values)
@@ -104,25 +103,50 @@ namespace renderer
 
     void Uniforms::set(WebGLint loc, WebGLint v0)
     {
-      (*this)[loc] = SingleIntValue{ { v0 } };
+      (*this)[loc] = SingleIntValue{{v0}};
     }
 
     void Uniforms::set(WebGLint loc, WebGLint v0, WebGLint v1)
     {
-      (*this)[loc] = TwoIntValue{ { v0, v1 } };
+      (*this)[loc] = TwoIntValue{{v0, v1}};
     }
 
     void Uniforms::set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2)
     {
-      (*this)[loc] = ThreeIntValue{ { v0, v1, v2 } };
+      (*this)[loc] = ThreeIntValue{{v0, v1, v2}};
     }
 
     void Uniforms::set(WebGLint loc, WebGLint v0, WebGLint v1, WebGLint v2, WebGLint v3)
     {
-      (*this)[loc] = FourIntValue{ { v0, v1, v2, v3 } };
+      (*this)[loc] = FourIntValue{{v0, v1, v2, v3}};
     }
 
     void Uniforms::set(WebGLint loc, const IntValues &values)
+    {
+      (*this)[loc] = values;
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLuint v0)
+    {
+      (*this)[loc] = SingleUintValue{{v0}};
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLuint v0, WebGLuint v1)
+    {
+      (*this)[loc] = TwoUintValue{{v0, v1}};
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLuint v0, WebGLuint v1, WebGLuint v2)
+    {
+      (*this)[loc] = ThreeUintValue{{v0, v1, v2}};
+    }
+
+    void Uniforms::set(WebGLint loc, WebGLuint v0, WebGLuint v1, WebGLuint v2, WebGLuint v3)
+    {
+      (*this)[loc] = FourUintValue{{v0, v1, v2, v3}};
+    }
+
+    void Uniforms::set(WebGLint loc, const UintValues &values)
     {
       (*this)[loc] = values;
     }

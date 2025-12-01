@@ -323,82 +323,42 @@ namespace renderer
 
   void TrContextWebGL::glUniform1f(WebGLuint location, WebGLfloat v0)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0);
+    glSetUniform(location, v0);
   }
 
   void TrContextWebGL::glUniform2f(WebGLuint location, WebGLfloat v0, WebGLfloat v1)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0, v1);
+    glSetUniform(location, v0, v1);
   }
 
   void TrContextWebGL::glUniform3f(WebGLuint location, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0, v1, v2);
+    glSetUniform(location, v0, v1, v2);
   }
 
   void TrContextWebGL::glUniform4f(WebGLuint location, WebGLfloat v0, WebGLfloat v1, WebGLfloat v2, WebGLfloat v3)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0, v1, v2, v3);
+    glSetUniform(location, v0, v1, v2, v3);
   }
 
   void TrContextWebGL::glUniform1i(WebGLuint location, WebGLint v0)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0);
+    glSetUniform(location, v0);
   }
 
   void TrContextWebGL::glUniform2i(WebGLuint location, WebGLint v0, WebGLint v1)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0, v1);
+    glSetUniform(location, v0, v1);
   }
 
   void TrContextWebGL::glUniform3i(WebGLuint location, WebGLint v0, WebGLint v1, WebGLint v2)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0, v1, v2);
+    glSetUniform(location, v0, v1, v2);
   }
 
   void TrContextWebGL::glUniform4i(WebGLuint location, WebGLint v0, WebGLint v1, WebGLint v2, WebGLint v3)
   {
-    if (current_program_ == nullptr) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_OPERATION;
-      return;
-    }
-    current_program_->uniforms.set(location, v0, v1, v2, v3);
+    glSetUniform(location, v0, v1, v2, v3);
   }
 
   void TrContextWebGL::glUniform1ui(WebGLuint location, WebGLuint v0)
@@ -408,21 +368,21 @@ namespace renderer
 
   void TrContextWebGL::glUniform2ui(WebGLuint location, WebGLuint v0, WebGLuint v1)
   {
-    /* TODO(yorkie): implement */
+    glSetUniform(location, v0, v1);
   }
 
   void TrContextWebGL::glUniform3ui(WebGLuint location, WebGLuint v0, WebGLuint v1, WebGLuint v2)
   {
-    /* TODO(yorkie): implement */
+    glSetUniform(location, v0, v1, v2);
   }
 
   void TrContextWebGL::glUniform4ui(WebGLuint location, WebGLuint v0, WebGLuint v1, WebGLuint v2, WebGLuint v3)
-  { /* TODO(yorkie): implement */
+  {
+    glSetUniform(location, v0, v1, v2, v3);
   }
 
   void TrContextWebGL::glUniform1fv(WebGLuint location, WebGLsizei count, const WebGLfloat *value)
   {
-    /* TODO(yorkie): implement */
   }
 
   void TrContextWebGL::glUniform2fv(WebGLuint location, WebGLsizei count, const WebGLfloat *value)
