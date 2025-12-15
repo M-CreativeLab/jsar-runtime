@@ -76,8 +76,6 @@ jsbundle:
 darwin:
 	@echo "Building for darwin(JOBS=${JOBS})..."
 	@$(call build_crates,aarch64-apple-darwin)
-	@$(call build_crates,x86_64-apple-darwin)
-	@$(call create_universal_apple_binary)
 ifeq ($(CRATES_ONLY), no)
 	$(MAKE) -C ./build darwin -j$(JOBS)
 endif
