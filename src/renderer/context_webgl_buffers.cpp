@@ -2,6 +2,7 @@
 #include <command_buffers/webgl_constants.hpp>
 #include <renderer/context_webgl.hpp>
 #include <renderer/content_renderer.hpp>
+#include "command_buffers/gpu/gpu_buffer.hpp"
 
 namespace renderer
 {
@@ -127,6 +128,21 @@ namespace renderer
   void TrContextWebGL::glGenBuffers(WebGLsizei n, WebGLuint *buffers)
   {
     glGenTypedObjects(buffers_, n, buffers);
+
+    {
+      GPUBufferDescriptor desc = {
+        .label = "TrContextWebGL::glGenBuffers",
+        .size = 0,
+        .usage = GPUBufferUsage::kMapRead |
+                 GPUBufferUsage::kMapWrite |
+                 GPUBufferUsage::kCopySrc |
+                 GPUBufferUsage::kCopyDst |
+                 GPUBufferUsage::kVertex |
+                 GPUBufferUsage::kIndex |
+                 GPUBufferUsage::kUniform,
+      };
+      getRenderResource()->createBuffer(&desc);
+    }
   }
 
   void TrContextWebGL::glGetBufferParameter(WebGLenum target, WebGLenum pname, WebGLint *params)

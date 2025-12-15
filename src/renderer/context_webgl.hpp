@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 #include <unordered_map>
+#include <cmath>
 
 #include <common/utility.hpp>
 #include <common/command_buffers/base.hpp>
@@ -16,6 +17,8 @@
 namespace renderer
 {
   class TrContentRenderer;
+  class TrRenderResource;
+  class TrContextWebGL;
 
   namespace details
   {
@@ -297,20 +300,32 @@ namespace renderer
       {
         return true;
       }
+
+      commandbuffers::GPUVertexState vertex_state{};
+      std::vector<commandbuffers::GPUVertexBufferLayout> buffer_layouts{};
+      std::vector<commandbuffers::GPUVertexAttribute> attributes{};
     };
 
-    struct Capabilities
+    class Capabilities
     {
+    public:
       using Map = std::unordered_map<WebGLenum, WebGLboolean>;
+
+      inline void attach(class TrContextWebGL *owner)
+      {
+        owner_ = owner;
+      }
 
       inline void enable(WebGLenum cap)
       {
         caps_[cap] = true;
+        applyEnable(cap);
       }
 
       inline void disable(WebGLenum cap)
       {
         caps_[cap] = false;
+        applyDisable(cap);
       }
 
       inline WebGLboolean isEnabled(WebGLenum cap) const
@@ -319,13 +334,129 @@ namespace renderer
         return it != caps_.end() ? it->second : false;
       }
 
+      // Accessors for mirrored WebGPU states if needed externally
+      inline const commandbuffers::GPUPrimitiveState &primitive() const { return primitive_state_; }
+      inline const commandbuffers::GPUDepthStencilState &depthStencil() const { return depth_stencil_state_; }
+      inline const commandbuffers::GPUMultisampleState &multisample() const { return multisample_state_; }
+      inline const commandbuffers::GPUBlendState &blendState() const { return blend_state_; }
+      inline const commandbuffers::GPUColorTargetState &colorTarget() const { return color_target_state_; }
+
+      // Explicit apply methods for state changes not gated by a capability
+      void applyColorMask();
+      void refresh(WebGLenum cap);
+
     private:
+      // Helpers to map WebGL enums to WebGPU
+      static inline commandbuffers::GPUBlendFactor MapBlendFactor(WebGLenum f)
+      {
+        using namespace commandbuffers;
+        switch (f)
+        {
+        case WEBGL_ZERO: return GPUBlendFactor::kZero;
+        case WEBGL_ONE: return GPUBlendFactor::kOne;
+        case WEBGL_SRC_COLOR: return GPUBlendFactor::kSrc;
+        case WEBGL_ONE_MINUS_SRC_COLOR: return GPUBlendFactor::kOneMinusSrc;
+        case WEBGL_SRC_ALPHA: return GPUBlendFactor::kSrcAlpha;
+        case WEBGL_ONE_MINUS_SRC_ALPHA: return GPUBlendFactor::kOneMinusSrcAlpha;
+        case WEBGL_DST_COLOR: return GPUBlendFactor::kDst;
+        case WEBGL_ONE_MINUS_DST_COLOR: return GPUBlendFactor::kOneMinusDst;
+        case WEBGL_DST_ALPHA: return GPUBlendFactor::kDstAlpha;
+        case WEBGL_ONE_MINUS_DST_ALPHA: return GPUBlendFactor::kOneMinusDstAlpha;
+        case WEBGL_SRC_ALPHA_SATURATE: return GPUBlendFactor::kSrcAlphaSaturated;
+        case WEBGL_CONSTANT_COLOR: return GPUBlendFactor::kConstant;
+        case WEBGL_ONE_MINUS_CONSTANT_COLOR: return GPUBlendFactor::kOneMinusConstant;
+        case WEBGL_CONSTANT_ALPHA: return GPUBlendFactor::kConstant;
+        case WEBGL_ONE_MINUS_CONSTANT_ALPHA: return GPUBlendFactor::kOneMinusConstant;
+        default: return GPUBlendFactor::kUndefined;
+        }
+      }
+
+      static inline commandbuffers::GPUBlendOperation MapBlendOp(WebGLenum op)
+      {
+        using namespace commandbuffers;
+        switch (op)
+        {
+        case WEBGL_FUNC_ADD: return GPUBlendOperation::kAdd;
+        case WEBGL_FUNC_SUBTRACT: return GPUBlendOperation::kSubtract;
+        case WEBGL_FUNC_REVERSE_SUBTRACT: return GPUBlendOperation::kReverseSubtract;
+        default: return GPUBlendOperation::kUndefined;
+        }
+      }
+
+      static inline commandbuffers::GPUCompareFunction MapCompare(WebGLenum func)
+      {
+        using namespace commandbuffers;
+        switch (func)
+        {
+        case WEBGL_NEVER: return GPUCompareFunction::kNever;
+        case WEBGL_LESS: return GPUCompareFunction::kLess;
+        case WEBGL_EQUAL: return GPUCompareFunction::kEqual;
+        case WEBGL_LEQUAL: return GPUCompareFunction::kLessEqual;
+        case WEBGL_GREATER: return GPUCompareFunction::kGreater;
+        case WEBGL_NOTEQUAL: return GPUCompareFunction::kNotEqual;
+        case WEBGL_GEQUAL: return GPUCompareFunction::kGreaterEqual;
+        case WEBGL_ALWAYS: return GPUCompareFunction::kAlways;
+        default: return GPUCompareFunction::kUndefined;
+        }
+      }
+
+      static inline commandbuffers::GPUCullMode MapCull(WebGLenum mode)
+      {
+        using namespace commandbuffers;
+        switch (mode)
+        {
+        case WEBGL_FRONT: return GPUCullMode::kFront;
+        case WEBGL_BACK: return GPUCullMode::kBack;
+        case WEBGL_FRONT_AND_BACK: return GPUCullMode::kBack;
+        default: return GPUCullMode::kNone;
+        }
+      }
+
+      static inline commandbuffers::GPUFrontFace MapFrontFace(WebGLenum mode)
+      {
+        using namespace commandbuffers;
+        switch (mode)
+        {
+        case WEBGL_CW: return GPUFrontFace::kCW;
+        case WEBGL_CCW: return GPUFrontFace::kCCW;
+        default: return GPUFrontFace::kUndefined;
+        }
+      }
+
+      static inline commandbuffers::GPUStencilOperation MapStencilOp(WebGLenum op)
+      {
+        using namespace commandbuffers;
+        switch (op)
+        {
+        case WEBGL_KEEP: return GPUStencilOperation::kKeep;
+        case WEBGL_ZERO: return GPUStencilOperation::kZero;
+        case WEBGL_REPLACE: return GPUStencilOperation::kReplace;
+        case WEBGL_INCR: return GPUStencilOperation::kIncrementClamp;
+        case WEBGL_INCR_WRAP: return GPUStencilOperation::kIncrementWrap;
+        case WEBGL_DECR: return GPUStencilOperation::kDecrementClamp;
+        case WEBGL_DECR_WRAP: return GPUStencilOperation::kDecrementWrap;
+        case WEBGL_INVERT: return GPUStencilOperation::kInvert;
+        default: return GPUStencilOperation::kUndefined;
+        }
+      }
+
+      void applyDisable(WebGLenum cap);
+      void applyEnable(WebGLenum cap);
+
       Map caps_;
+      class TrContextWebGL *owner_ = nullptr;
+
+      // WebGPU pipeline-related states mirrored from WebGL
+      commandbuffers::GPUPrimitiveState primitive_state_{};
+      commandbuffers::GPUDepthStencilState depth_stencil_state_{};
+      commandbuffers::GPUMultisampleState multisample_state_{};
+      commandbuffers::GPUBlendState blend_state_{};
+      commandbuffers::GPUColorTargetState color_target_state_{};
     };
   }
 
-  class TrContextWebGL
-  {
+    class TrContextWebGL
+    {
   public:
     TrContextWebGL(Ref<TrContentRenderer> content_renderer);
     ~TrContextWebGL();
@@ -333,6 +464,7 @@ namespace renderer
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
 
   private:
+    friend class details::Capabilities;
     /**
      * @brief Convert the request to the given type.
      * 
@@ -858,6 +990,7 @@ namespace renderer
     void debugPrint();
 
     Ref<TrContentRenderer> content_renderer_;
+    Ref<TrRenderResource> getRenderResource();
 
     template <typename ObjectType>
     class ObjectList : public std::vector<Ref<ObjectType>>
@@ -949,6 +1082,12 @@ namespace renderer
     WebGLenum stencil_func_;
     WebGLint stencil_ref_;
     WebGLuint stencil_mask_;
+    WebGLenum stencil_fail_op_front_;
+    WebGLenum stencil_zfail_op_front_;
+    WebGLenum stencil_zpass_op_front_;
+    WebGLenum stencil_fail_op_back_;
+    WebGLenum stencil_zfail_op_back_;
+    WebGLenum stencil_zpass_op_back_;
 
     WebGLfloat line_width_;
     WebGLfloat polygon_offset_factor_;
@@ -957,5 +1096,7 @@ namespace renderer
     WebGLboolean sample_coverage_invert_;
     WebGLint scissor_box_[4];
     WebGLint viewport_[4];
+
+    // WebGPU pipeline-related states are maintained inside caps_
   };
 }

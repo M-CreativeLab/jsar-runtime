@@ -19,18 +19,23 @@ namespace renderer
     blend_color_[1] = green;
     blend_color_[2] = blue;
     blend_color_[3] = alpha;
+    // Blend constant affects blending when constant factors are used
   }
 
   void TrContextWebGL::glBlendEquation(WebGLenum mode)
   {
     blend_equation_rgb_ = mode;
     blend_equation_alpha_ = mode;
+    if (caps_.isEnabled(WEBGL_BLEND))
+      caps_.refresh(WEBGL_BLEND);
   }
 
   void TrContextWebGL::glBlendEquationSeparate(WebGLenum mode_rgb, WebGLenum mode_alpha)
   {
     blend_equation_rgb_ = mode_rgb;
     blend_equation_alpha_ = mode_alpha;
+    if (caps_.isEnabled(WEBGL_BLEND))
+      caps_.refresh(WEBGL_BLEND);
   }
 
   void TrContextWebGL::glBlendFunc(WebGLenum sfactor, WebGLenum dfactor)
@@ -39,6 +44,8 @@ namespace renderer
     blend_dfactor_rgb_ = dfactor;
     blend_sfactor_alpha_ = sfactor;
     blend_dfactor_alpha_ = dfactor;
+    if (caps_.isEnabled(WEBGL_BLEND))
+      caps_.refresh(WEBGL_BLEND);
   }
 
   void TrContextWebGL::glBlendFuncSeparate(WebGLenum src_rgb,
@@ -50,6 +57,8 @@ namespace renderer
     blend_dfactor_rgb_ = dst_rgb;
     blend_sfactor_alpha_ = src_alpha;
     blend_dfactor_alpha_ = dst_alpha;
+    if (caps_.isEnabled(WEBGL_BLEND))
+      caps_.refresh(WEBGL_BLEND);
   }
 
   void TrContextWebGL::glColorMask(WebGLboolean red,
@@ -61,21 +70,28 @@ namespace renderer
     color_mask_[1] = green;
     color_mask_[2] = blue;
     color_mask_[3] = alpha;
+    caps_.applyColorMask();
   }
 
   void TrContextWebGL::glCullFace(WebGLenum mode)
   {
     cull_face_ = mode;
+    if (caps_.isEnabled(WEBGL_CULL_FACE))
+      caps_.refresh(WEBGL_CULL_FACE);
   }
 
   void TrContextWebGL::glDepthFunc(WebGLenum func)
   {
     depth_func_ = func;
+    if (caps_.isEnabled(WEBGL_DEPTH_TEST))
+      caps_.refresh(WEBGL_DEPTH_TEST);
   }
 
   void TrContextWebGL::glDepthMask(WebGLboolean flag)
   {
     depth_mask_ = flag;
+    if (caps_.isEnabled(WEBGL_DEPTH_TEST))
+      caps_.refresh(WEBGL_DEPTH_TEST);
   }
 
   void TrContextWebGL::glDepthRangef(WebGLfloat near, WebGLfloat far)
@@ -97,6 +113,8 @@ namespace renderer
   void TrContextWebGL::glFrontFace(WebGLenum mode)
   {
     front_face_ = mode;
+    if (caps_.isEnabled(WEBGL_CULL_FACE))
+      caps_.refresh(WEBGL_CULL_FACE);
   }
 
   void TrContextWebGL::glGet(WebGLenum pname, WebGLint *params)
@@ -133,12 +151,16 @@ namespace renderer
   {
     polygon_offset_factor_ = factor;
     polygon_offset_units_ = units;
+    if (caps_.isEnabled(WEBGL_POLYGON_OFFSET_FILL))
+      caps_.refresh(WEBGL_POLYGON_OFFSET_FILL);
   }
 
   void TrContextWebGL::glSampleCoverage(WebGLfloat value, WebGLboolean invert)
   {
     sample_coverage_value_ = value;
     sample_coverage_invert_ = invert;
+    if (caps_.isEnabled(WEBGL_SAMPLE_COVERAGE))
+      caps_.refresh(WEBGL_SAMPLE_COVERAGE);
   }
 
   void TrContextWebGL::glScissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
@@ -154,6 +176,8 @@ namespace renderer
     stencil_func_ = func;
     stencil_ref_ = ref;
     stencil_mask_ = mask;
+    if (caps_.isEnabled(WEBGL_STENCIL_TEST))
+      caps_.refresh(WEBGL_STENCIL_TEST);
   }
 
   void TrContextWebGL::glStencilFuncSeparate(WebGLenum face,
@@ -164,23 +188,61 @@ namespace renderer
     stencil_func_ = func;
     stencil_ref_ = ref;
     stencil_mask_ = mask;
+    if (caps_.isEnabled(WEBGL_STENCIL_TEST))
+      caps_.refresh(WEBGL_STENCIL_TEST);
   }
 
   void TrContextWebGL::glStencilMask(WebGLuint mask)
   {
     stencil_mask_ = mask;
+    if (caps_.isEnabled(WEBGL_STENCIL_TEST))
+      caps_.refresh(WEBGL_STENCIL_TEST);
   }
 
   void TrContextWebGL::glStencilMaskSeparate(WebGLenum face, WebGLuint mask)
-  { /* TODO(yorkie): implement */
+  {
+    stencil_mask_ = mask;
+    if (caps_.isEnabled(WEBGL_STENCIL_TEST))
+      caps_.refresh(WEBGL_STENCIL_TEST);
   }
 
   void TrContextWebGL::glStencilOp(WebGLenum fail, WebGLenum zfail, WebGLenum zpass)
-  { /* TODO(yorkie): implement */
+  {
+    stencil_fail_op_front_ = fail;
+    stencil_zfail_op_front_ = zfail;
+    stencil_zpass_op_front_ = zpass;
+    stencil_fail_op_back_ = fail;
+    stencil_zfail_op_back_ = zfail;
+    stencil_zpass_op_back_ = zpass;
+    if (caps_.isEnabled(WEBGL_STENCIL_TEST))
+      caps_.refresh(WEBGL_STENCIL_TEST);
   }
 
   void TrContextWebGL::glStencilOpSeparate(WebGLenum face, WebGLenum fail, WebGLenum zfail, WebGLenum zpass)
-  { /* TODO(yorkie): implement */
+  {
+    if (face == WEBGL_FRONT)
+    {
+      stencil_fail_op_front_ = fail;
+      stencil_zfail_op_front_ = zfail;
+      stencil_zpass_op_front_ = zpass;
+    }
+    else if (face == WEBGL_BACK)
+    {
+      stencil_fail_op_back_ = fail;
+      stencil_zfail_op_back_ = zfail;
+      stencil_zpass_op_back_ = zpass;
+    }
+    else
+    {
+      stencil_fail_op_front_ = fail;
+      stencil_zfail_op_front_ = zfail;
+      stencil_zpass_op_front_ = zpass;
+      stencil_fail_op_back_ = fail;
+      stencil_zfail_op_back_ = zfail;
+      stencil_zpass_op_back_ = zpass;
+    }
+    if (caps_.isEnabled(WEBGL_STENCIL_TEST))
+      caps_.refresh(WEBGL_STENCIL_TEST);
   }
 
   void TrContextWebGL::glViewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
@@ -191,3 +253,4 @@ namespace renderer
     viewport_[3] = height;
   }
 }
+  // moved to renderer/context_webgl.cpp

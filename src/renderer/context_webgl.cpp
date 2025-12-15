@@ -4,7 +4,9 @@
 #include <command_buffers/details/texture.hpp>
 #include <command_buffers/shared.hpp>
 #include <command_buffers/webgl_constants.hpp>
+#include <common/debug.hpp>
 #include <renderer/content_renderer.hpp>
+#include <renderer/render_resource.hpp>
 
 namespace renderer
 {
@@ -184,14 +186,21 @@ namespace renderer
   TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer)
       : content_renderer_(content_renderer)
   {
+    caps_.attach(this);
   }
 
   TrContextWebGL::~TrContextWebGL()
   {
   }
 
+  static inline void DebugPrintCommandType(const TrCommandBufferRequest &req)
+  {
+    DEBUG(LOG_TAG_RENDERER, "WebGL::%s", req.toString().c_str());
+  }
+
   void TrContextWebGL::receiveIncomingCall(const TrCommandBufferRequest &req)
   {
+    DebugPrintCommandType(req);
     switch (req.type)
     {
     // Textures
@@ -1124,6 +1133,163 @@ namespace renderer
     }
   }
 
+  // Capabilities implementations moved from header and placed under renderer
+  void details::Capabilities::applyDisable(WebGLenum cap)
+  {
+    using namespace commandbuffers;
+    switch (cap)
+    {
+    case WEBGL_BLEND:
+      color_target_state_.blend = nullptr;
+      break;
+    case WEBGL_DEPTH_TEST:
+      depth_stencil_state_.depthCompare = GPUCompareFunction::kAlways;
+      break;
+    case WEBGL_STENCIL_TEST:
+      depth_stencil_state_.stencilFront.compare = GPUCompareFunction::kAlways;
+      depth_stencil_state_.stencilBack.compare = GPUCompareFunction::kAlways;
+      depth_stencil_state_.stencilFront.failOp = GPUStencilOperation::kKeep;
+      depth_stencil_state_.stencilFront.depthFailOp = GPUStencilOperation::kKeep;
+      depth_stencil_state_.stencilFront.passOp = GPUStencilOperation::kKeep;
+      depth_stencil_state_.stencilBack.failOp = GPUStencilOperation::kKeep;
+      depth_stencil_state_.stencilBack.depthFailOp = GPUStencilOperation::kKeep;
+      depth_stencil_state_.stencilBack.passOp = GPUStencilOperation::kKeep;
+      break;
+    case WEBGL_CULL_FACE:
+      primitive_state_.cullMode = GPUCullMode::kNone;
+      break;
+    case WEBGL_SAMPLE_ALPHA_TO_COVERAGE:
+      multisample_state_.alphaToCoverageEnabled = false;
+      break;
+    case WEBGL_SAMPLE_COVERAGE:
+      multisample_state_.mask = 0xFFFFFFFFu;
+      break;
+    case WEBGL_POLYGON_OFFSET_FILL:
+      depth_stencil_state_.depthBias = 0;
+      depth_stencil_state_.depthBiasSlopeScale = 0.f;
+      depth_stencil_state_.depthBiasClamp = 0.f;
+      break;
+    default:
+      break;
+    }
+  }
+
+  void details::Capabilities::applyEnable(WebGLenum cap)
+  {
+    using namespace commandbuffers;
+    if (!owner_) return;
+    switch (cap)
+    {
+    case WEBGL_BLEND:
+      blend_state_.color.operation = MapBlendOp(owner_->blend_equation_rgb_);
+      blend_state_.color.srcFactor = MapBlendFactor(owner_->blend_sfactor_rgb_);
+      blend_state_.color.dstFactor = MapBlendFactor(owner_->blend_dfactor_rgb_);
+      blend_state_.alpha.operation = MapBlendOp(owner_->blend_equation_alpha_);
+      blend_state_.alpha.srcFactor = MapBlendFactor(owner_->blend_sfactor_alpha_);
+      blend_state_.alpha.dstFactor = MapBlendFactor(owner_->blend_dfactor_alpha_);
+      color_target_state_.blend = &blend_state_;
+      break;
+    case WEBGL_DEPTH_TEST:
+      depth_stencil_state_.depthCompare = MapCompare(owner_->depth_func_);
+      depth_stencil_state_.depthWriteEnabled = owner_->depth_mask_;
+      break;
+    case WEBGL_STENCIL_TEST:
+      depth_stencil_state_.stencilFront.compare = MapCompare(owner_->stencil_func_);
+      depth_stencil_state_.stencilBack.compare = MapCompare(owner_->stencil_func_);
+      depth_stencil_state_.stencilWriteMask = owner_->stencil_mask_;
+      depth_stencil_state_.stencilFront.failOp = MapStencilOp(owner_->stencil_fail_op_front_);
+      depth_stencil_state_.stencilFront.depthFailOp = MapStencilOp(owner_->stencil_zfail_op_front_);
+      depth_stencil_state_.stencilFront.passOp = MapStencilOp(owner_->stencil_zpass_op_front_);
+      depth_stencil_state_.stencilBack.failOp = MapStencilOp(owner_->stencil_fail_op_back_);
+      depth_stencil_state_.stencilBack.depthFailOp = MapStencilOp(owner_->stencil_zfail_op_back_);
+      depth_stencil_state_.stencilBack.passOp = MapStencilOp(owner_->stencil_zpass_op_back_);
+      break;
+    case WEBGL_CULL_FACE:
+      primitive_state_.frontFace = MapFrontFace(owner_->front_face_);
+      primitive_state_.cullMode = MapCull(owner_->cull_face_);
+      break;
+    case WEBGL_SAMPLE_ALPHA_TO_COVERAGE:
+      multisample_state_.alphaToCoverageEnabled = true;
+      break;
+    case WEBGL_SAMPLE_COVERAGE:
+    {
+      uint32_t samples = multisample_state_.count;
+      float v = owner_->sample_coverage_value_;
+      if (owner_->sample_coverage_invert_)
+        v = 1.f - v;
+      if (samples == 0)
+      {
+        multisample_state_.mask = 0xFFFFFFFFu;
+      }
+      else
+      {
+        uint32_t enabled = static_cast<uint32_t>(std::round(v * static_cast<float>(samples)));
+        if (enabled >= samples)
+        {
+          multisample_state_.mask = (samples >= 32) ? 0xFFFFFFFFu : ((1u << samples) - 1u);
+        }
+        else
+        {
+          multisample_state_.mask = (enabled == 0) ? 0u : ((1u << enabled) - 1u);
+        }
+      }
+      break;
+    }
+    case WEBGL_POLYGON_OFFSET_FILL:
+      depth_stencil_state_.depthBias = static_cast<int32_t>(owner_->polygon_offset_units_);
+      depth_stencil_state_.depthBiasSlopeScale = owner_->polygon_offset_factor_;
+      break;
+    default:
+      break;
+    }
+  }
+
+  void details::Capabilities::applyColorMask()
+  {
+    using namespace commandbuffers;
+    if (!owner_) return;
+    const bool r = owner_->color_mask_[0] != 0;
+    const bool g = owner_->color_mask_[1] != 0;
+    const bool b = owner_->color_mask_[2] != 0;
+    const bool a = owner_->color_mask_[3] != 0;
+
+    GPUColorWriteMask mask = GPUColorWriteMask::kNone;
+    const int count = static_cast<int>(r) + static_cast<int>(g) + static_cast<int>(b) + static_cast<int>(a);
+    if (count == 0)
+    {
+      mask = GPUColorWriteMask::kNone;
+    }
+    else if (count == 4)
+    {
+      mask = GPUColorWriteMask::kAll;
+    }
+    else if (count == 1)
+    {
+      mask = r ? GPUColorWriteMask::kRed
+               : g ? GPUColorWriteMask::kGreen
+               : b ? GPUColorWriteMask::kBlue
+                    : GPUColorWriteMask::kAlpha;
+    }
+    else
+    {
+      // Fallback: engine does not support combined masks; use All
+      mask = GPUColorWriteMask::kAll;
+    }
+    color_target_state_.writeMask = mask;
+  }
+
+  void details::Capabilities::refresh(WebGLenum cap)
+  {
+    if (isEnabled(cap))
+    {
+      applyEnable(cap);
+    }
+    else
+    {
+      applyDisable(cap);
+    }
+  }
+
   void TrContextWebGL::debugPrintPrograms(int depth)
   {
     debugPrintObjects("Programs", programs_, depth);
@@ -1165,5 +1331,10 @@ namespace renderer
       debugPrintFramebuffers(2);
       debugPrintRenderbuffers(2);
     }
+  }
+
+  Ref<TrRenderResource> TrContextWebGL::getRenderResource()
+  {
+    return content_renderer_->renderResource();
   }
 }

@@ -10,19 +10,41 @@ namespace commandbuffers
 {
   enum class GPUBufferUsage : uint64_t
   {
-    kNone,
-    kMapRead,
-    kMapWrite,
-    kCopySrc,
-    kCopyDst,
-    kIndex,
-    kVertex,
-    kUniform,
-    kStorage,
-    kIndirect,
-    kQueryResolve,
-    kTexelBuffer,
+    kNone = 0x0000000000000000,
+    kMapRead = 0x0000000000000001,
+    kMapWrite = 0x0000000000000002,
+    kCopySrc = 0x0000000000000004,
+    kCopyDst = 0x0000000000000008,
+    kIndex = 0x0000000000000010,
+    kVertex = 0x0000000000000020,
+    kUniform = 0x0000000000000040,
+    kStorage = 0x0000000000000080,
+    kIndirect = 0x0000000000000100,
+    kQueryResolve = 0x0000000000000200,
+    kTexelBuffer = 0x0000000000000400,
   };
+
+  inline constexpr GPUBufferUsage operator|(GPUBufferUsage a, GPUBufferUsage b)
+  {
+    return static_cast<GPUBufferUsage>(static_cast<uint64_t>(a) | static_cast<uint64_t>(b));
+  }
+
+  inline constexpr GPUBufferUsage operator&(GPUBufferUsage a, GPUBufferUsage b)
+  {
+    return static_cast<GPUBufferUsage>(static_cast<uint64_t>(a) & static_cast<uint64_t>(b));
+  }
+
+  inline GPUBufferUsage &operator|=(GPUBufferUsage &a, GPUBufferUsage b)
+  {
+    a = a | b;
+    return a;
+  }
+
+  inline GPUBufferUsage &operator&=(GPUBufferUsage &a, GPUBufferUsage b)
+  {
+    a = a & b;
+    return a;
+  }
 
   struct GPUBufferDescriptor
   {
