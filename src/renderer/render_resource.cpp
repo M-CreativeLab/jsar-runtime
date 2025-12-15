@@ -37,7 +37,12 @@ namespace renderer
   Ref<GPUTextureBase> TrRenderResource::createTexture(
     const GPUTextureDescriptor *descriptor)
   {
-    return nullptr;
+    auto texture = device_->createTexture(descriptor);
+    if (texture != nullptr)
+    {
+      textures_.emplace(texture->id, texture);
+    }
+    return texture;
   }
 
   Ref<GPUShaderModuleBase> TrRenderResource::getShaderModule(int id)

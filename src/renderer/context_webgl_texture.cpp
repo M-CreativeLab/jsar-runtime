@@ -1,5 +1,6 @@
 #include <command_buffers/shared.hpp>
 #include <command_buffers/webgl_constants.hpp>
+#include <command_buffers/gpu/gpu_texture.hpp>
 #include <renderer/context_webgl.hpp>
 #include <renderer/content_renderer.hpp>
 
@@ -36,7 +37,15 @@ namespace renderer
                                         WebGLsizei height,
                                         WebGLint border)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    texture->mipLevels = level + 1;
+    texture->internalformat = internalformat;
+    texture->setSize(width, height);
   }
 
   void TrContextWebGL::glCopyTexSubImage2D(WebGLenum target,
@@ -48,12 +57,28 @@ namespace renderer
                                            WebGLsizei width,
                                            WebGLsizei height)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
   }
 
   void TrContextWebGL::glDeleteTextures(WebGLsizei n, const WebGLuint *textures)
   {
-    // TODO(yorkie): implement
+    for (WebGLsizei i = 0; i < n; i++)
+    {
+      for (auto it = textures_.begin(); it != textures_.end(); ++it)
+      {
+        Ref<details::Texture> texture = *it;
+        if (texture->id == textures[i])
+        {
+          textures_.erase(it);
+          break;
+        }
+      }
+    }
   }
 
   void TrContextWebGL::glGenTextures(WebGLsizei n, WebGLuint *textures)
@@ -63,7 +88,12 @@ namespace renderer
 
   void TrContextWebGL::glGetTexParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture || !params) [[unlikely]]
+      return;
+    auto it = texture->params_i.find(pname);
+    if (it != texture->params_i.end())
+      *params = it->second;
   }
 
   WebGLboolean TrContextWebGL::glIsTexture(WebGLuint texture)
@@ -87,10 +117,21 @@ namespace renderer
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
-
-    texture->mipLevels = level;
+    texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height);
+
+    auto rr = getRenderResource();
+    GPUTextureDescriptor desc = {};
+    desc.label = "WebGLTexture";
+    desc.usage = GPUTextureUsage::kTextureBinding;
+    desc.dimension = commandbuffers::GPUTextureDimension::k2D;
+    desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u };
+    desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
+    desc.format = GPUTextureFormat::kRGBA8Unorm;
+    auto gpu_tex = rr->createTexture(&desc);
+    if (gpu_tex != nullptr)
+      texture->gpu_id = gpu_tex->id;
   }
 
   void TrContextWebGL::glTexImage3D(WebGLenum target,
@@ -110,10 +151,29 @@ namespace renderer
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
-
-    texture->mipLevels = level;
+    texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height, depth);
+
+    auto rr = getRenderResource();
+    GPUTextureDescriptor desc = {};
+    desc.label = "WebGLTexture";
+    desc.usage = GPUTextureUsage::kTextureBinding;
+    if (target == WEBGL2_TEXTURE_3D)
+    {
+      desc.dimension = commandbuffers::GPUTextureDimension::k3D;
+      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+    }
+    else
+    {
+      desc.dimension = commandbuffers::GPUTextureDimension::k2D;
+      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+    }
+    desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
+    desc.format = GPUTextureFormat::kRGBA8Unorm;
+    auto gpu_tex = rr->createTexture(&desc);
+    if (gpu_tex != nullptr)
+      texture->gpu_id = gpu_tex->id;
   }
 
   // --- Additional texture APIs ---
@@ -132,8 +192,7 @@ namespace renderer
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
-
-    texture->mipLevels = level;
+    texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height);
   }
@@ -154,8 +213,7 @@ namespace renderer
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
-
-    texture->mipLevels = level;
+    texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height, depth);
   }
@@ -190,22 +248,34 @@ namespace renderer
 
   void TrContextWebGL::glTexParameterf(WebGLenum target, WebGLenum pname, WebGLfloat param)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+      return;
+    texture->params_f[pname] = param;
   }
 
   void TrContextWebGL::glTexParameteri(WebGLenum target, WebGLenum pname, WebGLint param)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+      return;
+    texture->params_i[pname] = param;
   }
 
   void TrContextWebGL::glTexParameterfv(WebGLenum target, WebGLenum pname, const WebGLfloat *params)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture || !params) [[unlikely]]
+      return;
+    texture->params_f[pname] = *params;
   }
 
   void TrContextWebGL::glTexParameteriv(WebGLenum target, WebGLenum pname, const WebGLint *params)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture || !params) [[unlikely]]
+      return;
+    texture->params_i[pname] = *params;
   }
 
   void TrContextWebGL::glTexStorage2D(WebGLenum target,
@@ -214,7 +284,26 @@ namespace renderer
                                       WebGLsizei width,
                                       WebGLsizei height)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    texture->mipLevels = std::max(1, levels);
+    texture->internalformat = internalformat;
+    texture->setSize(width, height);
+    auto rr = getRenderResource();
+    GPUTextureDescriptor desc = {};
+    desc.label = "WebGLTexture";
+    desc.usage = GPUTextureUsage::kTextureBinding;
+    desc.dimension = commandbuffers::GPUTextureDimension::k2D;
+    desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u };
+    desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
+    desc.format = GPUTextureFormat::kRGBA8Unorm;
+    auto gpu_tex = rr->createTexture(&desc);
+    if (gpu_tex != nullptr)
+      texture->gpu_id = gpu_tex->id;
   }
 
   void TrContextWebGL::glTexStorage3D(WebGLenum target,
@@ -224,7 +313,34 @@ namespace renderer
                                       WebGLsizei height,
                                       WebGLsizei depth)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    texture->mipLevels = std::max(1, levels);
+    texture->internalformat = internalformat;
+    texture->setSize(width, height, depth);
+    auto rr = getRenderResource();
+    GPUTextureDescriptor desc = {};
+    desc.label = "WebGLTexture";
+    desc.usage = GPUTextureUsage::kTextureBinding;
+    if (target == WEBGL2_TEXTURE_3D)
+    {
+      desc.dimension = commandbuffers::GPUTextureDimension::k3D;
+      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+    }
+    else
+    {
+      desc.dimension = commandbuffers::GPUTextureDimension::k2D;
+      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+    }
+    desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
+    desc.format = GPUTextureFormat::kRGBA8Unorm;
+    auto gpu_tex = rr->createTexture(&desc);
+    if (gpu_tex != nullptr)
+      texture->gpu_id = gpu_tex->id;
   }
 
   void TrContextWebGL::glTexSubImage2D(WebGLenum target,
@@ -237,7 +353,12 @@ namespace renderer
                                        WebGLenum type,
                                        const WebGLvoid *data)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
   }
 
   void TrContextWebGL::glTexSubImage3D(WebGLenum target,
@@ -252,6 +373,11 @@ namespace renderer
                                        WebGLenum type,
                                        const WebGLvoid *data)
   {
-    // TODO(yorkie): implement
+    auto texture = texture_bindings_.at(target);
+    if (!texture) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
   }
 }

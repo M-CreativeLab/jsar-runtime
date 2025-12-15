@@ -240,10 +240,13 @@ namespace renderer
       std::string toString() const override;
       void setSize(WebGLsizei width, WebGLsizei height, WebGLsizei depth = 0);
 
+      int gpu_id = -1;
       WebGLsizei size[3];
       WebGLsizei mipLevels;
       WebGLenum internalformat;
       WebGLenum compressedInternalformat;
+      std::unordered_map<WebGLenum, WebGLint> params_i;
+      std::unordered_map<WebGLenum, WebGLfloat> params_f;
     };
 
     class Buffer final : public BindableObject
