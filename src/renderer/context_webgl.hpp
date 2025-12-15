@@ -256,6 +256,8 @@ namespace renderer
         return true;
       }
 
+      int gpu_id = -1;
+      WebGLenum usage_hint = 0;
       WebGLsizei size;
     };
 

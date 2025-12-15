@@ -26,7 +26,14 @@ namespace renderer
                                         WebGLuint bindingPoint,
                                         WebGLuint buffer)
   {
-    /* TODO(yorkie): implement */
+    auto buf = buffers_.get(buffer);
+    if (!buf) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    auto buffer_target = details::BufferTarget(target);
+    buffer_bindings_[buffer_target] = buf;
   }
 
   void TrContextWebGL::glBindBufferRange(WebGLenum target,
@@ -35,7 +42,14 @@ namespace renderer
                                          WebGLintptr offset,
                                          WebGLsizeiptr size)
   {
-    /* TODO(yorkie): implement */
+    auto buf = buffers_.get(buffer);
+    if (!buf) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    auto buffer_target = details::BufferTarget(target);
+    buffer_bindings_[buffer_target] = buf;
   }
 
   void TrContextWebGL::glBufferData(WebGLenum target,
@@ -43,7 +57,36 @@ namespace renderer
                                     const WebGLvoid *data,
                                     WebGLenum usage)
   {
-    /* TODO(yorkie): implement */
+    auto target_key = details::BufferTarget(target);
+    auto it = buffer_bindings_.find(target_key);
+    if (it == buffer_bindings_.end() || !it->second)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+
+    auto &buffer = it->second;
+    GPUBufferUsage gpu_usage = GPUBufferUsage::kCopyDst | GPUBufferUsage::kMapWrite;
+    if (target == WEBGL_ARRAY_BUFFER)
+      gpu_usage |= GPUBufferUsage::kVertex;
+    else if (target == WEBGL_ELEMENT_ARRAY_BUFFER)
+      gpu_usage |= GPUBufferUsage::kIndex;
+
+    GPUBufferDescriptor desc = {
+      .label = "WebGLBuffer",
+      .usage = gpu_usage,
+      .size = static_cast<uint64_t>(size),
+      .mappedAtCreation = false,
+    };
+    auto gpu_buffer = getRenderResource()->createBuffer(&desc);
+    buffer->gpu_id = gpu_buffer->id;
+    buffer->size = static_cast<WebGLsizei>(size);
+    buffer->usage_hint = usage;
+
+    if (data && size > 0)
+    {
+      [[maybe_unused]] auto _ = gpu_buffer->uploadData(0, data, static_cast<size_t>(size));
+    }
   }
 
   void TrContextWebGL::glBufferSubData(WebGLenum target,
@@ -51,7 +94,21 @@ namespace renderer
                                        WebGLsizeiptr size,
                                        const WebGLvoid *data)
   {
-    /* TODO(yorkie): implement */
+    auto target_key = details::BufferTarget(target);
+    auto it = buffer_bindings_.find(target_key);
+    if (it == buffer_bindings_.end() || !it->second)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    auto &buffer = it->second;
+    if (buffer->gpu_id < 0)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    auto gpu_buffer = getRenderResource()->getBuffer(buffer->gpu_id);
+    [[maybe_unused]] auto _ = gpu_buffer->uploadData(static_cast<uint64_t>(offset), data, static_cast<size_t>(size));
   }
 
   void TrContextWebGL::glCopyBufferSubData(WebGLenum readTarget,
@@ -60,7 +117,21 @@ namespace renderer
                                            WebGLintptr writeOffset,
                                            WebGLsizeiptr size)
   {
-    /* TODO(yorkie): implement */
+    auto read_it = buffer_bindings_.find(details::BufferTarget(readTarget));
+    auto write_it = buffer_bindings_.find(details::BufferTarget(writeTarget));
+    if (read_it == buffer_bindings_.end() || write_it == buffer_bindings_.end())
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    auto src = read_it->second;
+    auto dst = write_it->second;
+    if (!src || !dst || src->gpu_id < 0 || dst->gpu_id < 0)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    // Not implemented: issue GPU copy command; fallback no-op
   }
 
   void TrContextWebGL::glDeleteBuffers(WebGLsizei count, const WebGLuint *buffers)
@@ -81,7 +152,8 @@ namespace renderer
 
   void TrContextWebGL::glDisableVertexAttribArray(WebGLuint index)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_)
+      return;
   }
 
   void TrContextWebGL::glDrawArrays(WebGLenum mode, WebGLint first, WebGLsizei count)
@@ -117,7 +189,8 @@ namespace renderer
 
   void TrContextWebGL::glEnableVertexAttribArray(WebGLuint index)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_)
+      return;
   }
 
   void TrContextWebGL::glFlushMappedBufferRange(WebGLenum target, WebGLintptr offset, WebGLsizeiptr size)
@@ -128,36 +201,29 @@ namespace renderer
   void TrContextWebGL::glGenBuffers(WebGLsizei n, WebGLuint *buffers)
   {
     glGenTypedObjects(buffers_, n, buffers);
-
-    {
-      GPUBufferDescriptor desc = {
-        .label = "TrContextWebGL::glGenBuffers",
-        .size = 0,
-        .usage = GPUBufferUsage::kMapRead |
-                 GPUBufferUsage::kMapWrite |
-                 GPUBufferUsage::kCopySrc |
-                 GPUBufferUsage::kCopyDst |
-                 GPUBufferUsage::kVertex |
-                 GPUBufferUsage::kIndex |
-                 GPUBufferUsage::kUniform,
-      };
-      getRenderResource()->createBuffer(&desc);
-    }
   }
 
   void TrContextWebGL::glGetBufferParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    auto it = buffer_bindings_.find(details::BufferTarget(target));
+    if (it == buffer_bindings_.end() || !it->second || !params)
+      return;
+    auto &buffer = it->second;
+    if (pname == WEBGL_BUFFER_SIZE)
+      *params = buffer->size;
+    else if (pname == WEBGL_BUFFER_USAGE)
+      *params = buffer->usage_hint;
   }
 
   void TrContextWebGL::glGetBufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    glGetBufferParameter(target, pname, params);
   }
 
   void TrContextWebGL::glGetBufferPointerv(WebGLenum target, WebGLenum pname, WebGLvoid **params)
   {
-    /* TODO(yorkie): implement */
+    if (params)
+      *params = nullptr;
   }
 
   void TrContextWebGL::glGetVertexAttrib(WebGLuint index, WebGLenum pname, WebGLint *params)
@@ -181,7 +247,14 @@ namespace renderer
 
   void TrContextWebGL::glUnmapBuffer(WebGLenum target)
   {
-    /* TODO(yorkie): implement */
+    auto it = buffer_bindings_.find(details::BufferTarget(target));
+    if (it == buffer_bindings_.end() || !it->second)
+      return;
+    auto &buffer = it->second;
+    if (buffer->gpu_id < 0)
+      return;
+    auto gpu_buffer = getRenderResource()->getBuffer(buffer->gpu_id);
+    gpu_buffer->unmap();
   }
 
   void TrContextWebGL::glVertexAttrib1f(WebGLuint index, WebGLfloat x)
@@ -226,7 +299,14 @@ namespace renderer
 
   void TrContextWebGL::glVertexAttribDivisor(WebGLuint index, WebGLuint divisor)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_)
+      return;
+    if (current_vertex_array_object_->buffer_layouts.size() <= index)
+      current_vertex_array_object_->buffer_layouts.resize(index + 1);
+    auto &layout = current_vertex_array_object_->buffer_layouts[index];
+    layout.stepMode = divisor > 0 ? GPUVertexStepMode::kInstance : GPUVertexStepMode::kVertex;
+    current_vertex_array_object_->vertex_state.bufferCount = current_vertex_array_object_->buffer_layouts.size();
+    current_vertex_array_object_->vertex_state.buffers = current_vertex_array_object_->buffer_layouts.data();
   }
 
   void TrContextWebGL::glVertexAttribPointer(WebGLuint index,
@@ -236,7 +316,71 @@ namespace renderer
                                              WebGLsizei stride,
                                              WebGLintptr offset)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_)
+      return;
+    auto bound_array = buffer_bindings_.find(details::BufferTarget(WEBGL_ARRAY_BUFFER));
+    if (bound_array == buffer_bindings_.end() || !bound_array->second)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    if (current_vertex_array_object_->buffer_layouts.size() <= index)
+      current_vertex_array_object_->buffer_layouts.resize(index + 1);
+    auto &layout = current_vertex_array_object_->buffer_layouts[index];
+    layout.arrayStride = stride;
+    layout.stepMode = GPUVertexStepMode::kVertex;
+
+    GPUVertexAttribute attr{};
+    attr.shaderLocation = index;
+    attr.offset = static_cast<uint64_t>(offset);
+    switch (type)
+    {
+    case WEBGL_FLOAT:
+      attr.format = size == 1 ? GPUVertexFormat::kFloat32 :
+                    size == 2 ? GPUVertexFormat::kFloat32x2 :
+                    size == 3 ? GPUVertexFormat::kFloat32x3 : GPUVertexFormat::kFloat32x4;
+      break;
+    case WEBGL_UNSIGNED_BYTE:
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kUnorm8 :
+                                  size == 2 ? GPUVertexFormat::kUnorm8x2 : GPUVertexFormat::kUnorm8x4)
+                               : (size == 1 ? GPUVertexFormat::kUint8 :
+                                  size == 2 ? GPUVertexFormat::kUint8x2 : GPUVertexFormat::kUint8x4);
+      break;
+    case WEBGL_BYTE:
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kSnorm8 :
+                                  size == 2 ? GPUVertexFormat::kSnorm8x2 : GPUVertexFormat::kSnorm8x4)
+                               : (size == 1 ? GPUVertexFormat::kSint8 :
+                                  size == 2 ? GPUVertexFormat::kSint8x2 : GPUVertexFormat::kSint8x4);
+      break;
+    case WEBGL_UNSIGNED_SHORT:
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kUnorm16 :
+                                  size == 2 ? GPUVertexFormat::kUnorm16x2 : GPUVertexFormat::kUnorm16x4)
+                               : (size == 1 ? GPUVertexFormat::kUint16 :
+                                  size == 2 ? GPUVertexFormat::kUint16x2 : GPUVertexFormat::kUint16x4);
+      break;
+    case WEBGL_SHORT:
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kSnorm16 :
+                                  size == 2 ? GPUVertexFormat::kSnorm16x2 : GPUVertexFormat::kSnorm16x4)
+                               : (size == 1 ? GPUVertexFormat::kSint16 :
+                                  size == 2 ? GPUVertexFormat::kSint16x2 : GPUVertexFormat::kSint16x4);
+      break;
+    case WEBGL_INT:
+      attr.format = size == 1 ? GPUVertexFormat::kSint32 :
+                    size == 2 ? GPUVertexFormat::kSint32x2 :
+                    size == 3 ? GPUVertexFormat::kSint32x3 : GPUVertexFormat::kSint32x4;
+      break;
+    case WEBGL_UNSIGNED_INT:
+      attr.format = size == 1 ? GPUVertexFormat::kUint32 :
+                    size == 2 ? GPUVertexFormat::kUint32x2 :
+                    size == 3 ? GPUVertexFormat::kUint32x3 : GPUVertexFormat::kUint32x4;
+      break;
+    default:
+      attr.format = GPUVertexFormat::kFloat32;
+      break;
+    }
+    current_vertex_array_object_->attributes.push_back(attr);
+    current_vertex_array_object_->vertex_state.bufferCount = current_vertex_array_object_->buffer_layouts.size();
+    current_vertex_array_object_->vertex_state.buffers = current_vertex_array_object_->buffer_layouts.data();
   }
 
   void TrContextWebGL::glVertexAttribIPointer(WebGLuint index,
@@ -245,6 +389,35 @@ namespace renderer
                                               WebGLsizei stride,
                                               WebGLintptr offset)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_)
+      return;
+    if (current_vertex_array_object_->buffer_layouts.size() <= index)
+      current_vertex_array_object_->buffer_layouts.resize(index + 1);
+    auto &layout = current_vertex_array_object_->buffer_layouts[index];
+    layout.arrayStride = stride;
+    layout.stepMode = GPUVertexStepMode::kVertex;
+
+    GPUVertexAttribute attr{};
+    attr.shaderLocation = index;
+    attr.offset = static_cast<uint64_t>(offset);
+    switch (type)
+    {
+    case WEBGL_INT:
+      attr.format = size == 1 ? GPUVertexFormat::kSint32 :
+                    size == 2 ? GPUVertexFormat::kSint32x2 :
+                    size == 3 ? GPUVertexFormat::kSint32x3 : GPUVertexFormat::kSint32x4;
+      break;
+    case WEBGL_UNSIGNED_INT:
+      attr.format = size == 1 ? GPUVertexFormat::kUint32 :
+                    size == 2 ? GPUVertexFormat::kUint32x2 :
+                    size == 3 ? GPUVertexFormat::kUint32x3 : GPUVertexFormat::kUint32x4;
+      break;
+    default:
+      attr.format = GPUVertexFormat::kSint32;
+      break;
+    }
+    current_vertex_array_object_->attributes.push_back(attr);
+    current_vertex_array_object_->vertex_state.bufferCount = current_vertex_array_object_->buffer_layouts.size();
+    current_vertex_array_object_->vertex_state.buffers = current_vertex_array_object_->buffer_layouts.data();
   }
 }
