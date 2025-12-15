@@ -29,6 +29,7 @@ namespace renderer
   Ref<GPUBufferBase> TrRenderResource::createBuffer(
     const GPUBufferDescriptor *descriptor)
   {
+    assert(device_ != nullptr && "device_ must not be null");
     auto buffer = device_->createBuffer(descriptor);
     buffers_.emplace(buffer->id, buffer);
     return buffer;
@@ -37,6 +38,7 @@ namespace renderer
   Ref<GPUTextureBase> TrRenderResource::createTexture(
     const GPUTextureDescriptor *descriptor)
   {
+    assert(device_ != nullptr && "device_ must not be null");
     auto texture = device_->createTexture(descriptor);
     if (texture != nullptr)
     {

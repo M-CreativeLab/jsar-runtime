@@ -38,7 +38,7 @@ namespace commandbuffers
     GPUSupportedLimits *requiredLimits = nullptr;
   };
 
-  class GPUDeviceBase
+  class GPUDeviceBase : public std::enable_shared_from_this<GPUDeviceBase>
   {
   public:
     GPUDeviceBase(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor);

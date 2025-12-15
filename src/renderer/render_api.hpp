@@ -187,6 +187,11 @@ public:
     return backendType;
   }
 
+  inline Ref<commandbuffers::GPUDeviceBase> GetGPUDevice()
+  {
+    return gpuDevice;
+  }
+
   /**
    * Enables the loggings for the application.
    */

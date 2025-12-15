@@ -76,7 +76,8 @@ namespace commandbuffers
 
   Ref<GPUBufferBase> GPUDeviceBase::createBuffer(const GPUBufferDescriptor *descriptor)
   {
-    return nullptr;
+    assert(descriptor != nullptr);
+    return createBufferImpl(*descriptor);
   }
 
   Ref<GPUCommandEncoder> GPUDeviceBase::createCommandEncoder(const GPUCommandEncoderDescriptor *descriptor)

@@ -4,6 +4,7 @@
 
 #include <renderer/gles/common.hpp>
 #include <renderer/gles/gpu_device_impl.hpp>
+#include <renderer/gles/gpu_buffer_impl.hpp>
 
 namespace gles
 {
@@ -83,7 +84,8 @@ namespace gles
   Ref<GPUBufferBase> GPUDeviceImpl::createBufferImpl(
     const GPUBufferDescriptor &descriptor)
   {
-    return nullptr;
+    auto dev = this->shared_from_this();
+    return AcquireRef(new GPUBufferImpl(dev, descriptor));
   }
 
   Ref<GPUPipelineLayoutBase> GPUDeviceImpl::createPipelineLayoutImpl(
