@@ -1343,8 +1343,8 @@ namespace renderer
   {
     if (!current_render_pass_)
     {
-      current_render_pass_ = AcquireRef(new TrRenderPass(RenderPassType::kOpaque, "Opaque"));
+      current_render_pass_ = content_renderer_->opaqueRenderPass();
     }
     return current_render_pass_;
   }
-} 
+}

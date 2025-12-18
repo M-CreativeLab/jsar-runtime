@@ -69,6 +69,9 @@ namespace renderer
                           float depthValue,
                           int stencilValue);
 
+    void setColorAttachmentCount(size_t n);
+    void ensureDepthStencilAttachment();
+
     void receiveIncomingRequest(const commandbuffers::TrCommandBufferRequest &request);
     void begin();
     void end();

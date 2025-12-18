@@ -78,6 +78,17 @@ namespace renderer
     }
   }
 
+  void TrRenderPass::setColorAttachmentCount(size_t n)
+  {
+    renderpass_descriptor_.colorAttachments.resize(n);
+  }
+
+  void TrRenderPass::ensureDepthStencilAttachment()
+  {
+    if (!renderpass_descriptor_.depthStencilAttachment.has_value())
+      renderpass_descriptor_.depthStencilAttachment = GPURenderPassDescriptor::DepthStencilAttachment{};
+  }
+
   void TrRenderPass::receiveIncomingRequest(const TrCommandBufferRequest &request)
   {
   }

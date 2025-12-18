@@ -10,13 +10,6 @@ namespace renderer
 
   void TrContextWebGL::glBindFramebuffer(WebGLenum target, WebGLuint id)
   {
-    auto framebuffer = framebuffers_.get(id);
-    if (!framebuffer) [[unlikely]]
-    {
-      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
-      return;
-    }
-
     if (target != WEBGL_FRAMEBUFFER &&
         target != WEBGL2_DRAW_FRAMEBUFFER &&
         target != WEBGL2_READ_FRAMEBUFFER) [[unlikely]]
@@ -26,7 +19,35 @@ namespace renderer
     }
 
     auto framebuffer_target = details::FramebufferTarget(target);
+    if (id == 0)
+    {
+      framebuffer_bindings_[framebuffer_target] = nullptr;
+
+      if (target == WEBGL_FRAMEBUFFER || target == WEBGL2_DRAW_FRAMEBUFFER)
+        current_render_pass_ = content_renderer_->opaqueRenderPass();
+      return;
+    }
+
+    auto framebuffer = framebuffers_.get(id);
+    if (!framebuffer) [[unlikely]]
+    {
+      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
+      return;
+    }
+
     framebuffer_bindings_[framebuffer_target] = framebuffer;
+
+    if (target == WEBGL_FRAMEBUFFER || target == WEBGL2_DRAW_FRAMEBUFFER)
+    {
+      if (framebuffer_renderpasses_.find(id) == framebuffer_renderpasses_.end())
+      {
+        auto pass = AcquireRef(new TrRenderPass(RenderPassType::kOffscreen, "OffscreenFramebuffer"));
+        pass->setColorAttachmentCount(1);
+        pass->ensureDepthStencilAttachment();
+        framebuffer_renderpasses_[id] = pass;
+      }
+      current_render_pass_ = framebuffer_renderpasses_[id];
+    }
   }
 
   void TrContextWebGL::glBindRenderbuffer(WebGLenum target, WebGLuint id)
@@ -74,7 +95,10 @@ namespace renderer
     if (n <= 0 || framebuffers == nullptr)
       return;
     for (WebGLsizei i = 0; i < n; i++)
+    {
+      framebuffer_renderpasses_.erase(framebuffers[i]);
       framebuffers_.remove(framebuffers[i]);
+    }
   }
 
   void TrContextWebGL::glDeleteRenderbuffers(WebGLsizei n, const WebGLuint *renderbuffers)
@@ -87,7 +111,12 @@ namespace renderer
 
   void TrContextWebGL::glDrawBuffers(WebGLsizei n, const WebGLenum *buffers)
   {
-    (void)n; (void)buffers;
+    (void)buffers;
+    if (n < 0)
+      return;
+    auto pass = getCurrentRenderPass();
+    if (pass)
+      pass->setColorAttachmentCount(static_cast<size_t>(n));
   }
 
   void TrContextWebGL::glFramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, WebGLenum renderbuffertarget, WebGLuint renderbuffer)
@@ -119,8 +148,33 @@ namespace renderer
         last_error_ = WEBGL_INVALID_OPERATION;
         return;
       }
+      if (attachment == WEBGL_DEPTH_ATTACHMENT || attachment == WEBGL_DEPTH_STENCIL_ATTACHMENT)
+      {
+        if (!framebuffer->depthAttachment)
+          framebuffer->depthAttachment = AcquireRef(new details::FramebufferAttachment());
+        framebuffer->depthAttachment->renderbuffer = rb;
+      }
+      if (attachment == WEBGL_STENCIL_ATTACHMENT || attachment == WEBGL_DEPTH_STENCIL_ATTACHMENT)
+      {
+        if (!framebuffer->stencilAttachment)
+          framebuffer->stencilAttachment = AcquireRef(new details::FramebufferAttachment());
+        framebuffer->stencilAttachment->renderbuffer = rb;
+      }
+      auto pass = (framebuffer_renderpasses_.find(framebuffer->id) != framebuffer_renderpasses_.end())
+                      ? framebuffer_renderpasses_[framebuffer->id]
+                      : current_render_pass_;
+      if (pass)
+        pass->ensureDepthStencilAttachment();
     }
-    (void)attachment;
+    else
+    {
+      if (attachment == WEBGL_DEPTH_ATTACHMENT)
+        framebuffer->depthAttachment = nullptr;
+      else if (attachment == WEBGL_STENCIL_ATTACHMENT)
+        framebuffer->stencilAttachment = nullptr;
+      else if (attachment == WEBGL_DEPTH_STENCIL_ATTACHMENT)
+        framebuffer->depthAttachment = framebuffer->stencilAttachment = nullptr;
+    }
   }
 
   void TrContextWebGL::glFramebufferTexture2D(WebGLenum target, WebGLenum attachment, WebGLenum textarget, WebGLuint texture, WebGLint level)
@@ -154,11 +208,16 @@ namespace renderer
         last_error_ = WEBGL_INVALID_OPERATION;
         return;
       }
+
+      if (!framebuffer->colorAttachment)
+        framebuffer->colorAttachment = AcquireRef(new details::FramebufferAttachment());
+      framebuffer->colorAttachment->texture = tex;
       (void)level;
       (void)attachment;
     }
     else
     {
+      framebuffer->colorAttachment = nullptr;
       (void)attachment;
       (void)level;
     }
@@ -188,6 +247,13 @@ namespace renderer
         last_error_ = WEBGL_INVALID_OPERATION;
         return;
       }
+      if (!framebuffer->colorAttachment)
+        framebuffer->colorAttachment = AcquireRef(new details::FramebufferAttachment());
+      framebuffer->colorAttachment->texture = tex;
+    }
+    else
+    {
+      framebuffer->colorAttachment = nullptr;
     }
     (void)attachment;
     (void)level;
