@@ -29,8 +29,22 @@ namespace renderer
       caps_.applyColorMask();
     }
 
-    (void)clearDepth;
-    (void)clearStencil;
+    auto pass = getCurrentRenderPass();
+    if (pass)
+    {
+      const float rgba[4] = {
+        clear_color_[0],
+        clear_color_[1],
+        clear_color_[2],
+        clear_color_[3],
+      };
+      pass->clearAttachments(clearColor,
+                             clearDepth,
+                             clearStencil,
+                             rgba,
+                             clear_depth_,
+                             clear_stencil_);
+    }
   }
 
   void TrContextWebGL::glClearBufferiv(WebGLenum buffer,
@@ -51,14 +65,32 @@ namespace renderer
       clear_color_[1] = static_cast<WebGLfloat>(value[1]);
       clear_color_[2] = static_cast<WebGLfloat>(value[2]);
       clear_color_[3] = static_cast<WebGLfloat>(value[3]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(true, false, false, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else if (buffer == WEBGL2_DEPTH)
     {
       clear_depth_ = static_cast<WebGLfloat>(value[0]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(false, true, false, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else if (buffer == WEBGL2_STENCIL)
     {
       clear_stencil_ = static_cast<WebGLint>(value[0]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(false, false, true, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else
     {
@@ -84,14 +116,32 @@ namespace renderer
       clear_color_[1] = static_cast<WebGLfloat>(value[1]);
       clear_color_[2] = static_cast<WebGLfloat>(value[2]);
       clear_color_[3] = static_cast<WebGLfloat>(value[3]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(true, false, false, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else if (buffer == WEBGL2_DEPTH)
     {
       clear_depth_ = static_cast<WebGLfloat>(value[0]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(false, true, false, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else if (buffer == WEBGL2_STENCIL)
     {
       clear_stencil_ = static_cast<WebGLint>(value[0]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(false, false, true, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else
     {
@@ -117,14 +167,32 @@ namespace renderer
       clear_color_[1] = value[1];
       clear_color_[2] = value[2];
       clear_color_[3] = value[3];
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(true, false, false, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else if (buffer == WEBGL2_DEPTH)
     {
       clear_depth_ = value[0];
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(false, true, false, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else if (buffer == WEBGL2_STENCIL)
     {
       clear_stencil_ = static_cast<WebGLint>(value[0]);
+      auto pass = getCurrentRenderPass();
+      if (pass)
+      {
+        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        pass->clearAttachments(false, false, true, rgba, clear_depth_, clear_stencil_);
+      }
     }
     else
     {
@@ -149,6 +217,12 @@ namespace renderer
     }
     clear_depth_ = depth;
     clear_stencil_ = stencil;
+    auto pass = getCurrentRenderPass();
+    if (pass)
+    {
+      const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+      pass->clearAttachments(false, true, true, rgba, clear_depth_, clear_stencil_);
+    }
   }
 
   void TrContextWebGL::glClearColor(WebGLfloat red,

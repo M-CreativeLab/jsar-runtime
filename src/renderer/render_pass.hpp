@@ -62,6 +62,13 @@ namespace renderer
     bool isActive() const;
     Ref<commandbuffers::GPURenderPassEncoder> encoder() const;
 
+    void clearAttachments(bool clearColor,
+                          bool clearDepth,
+                          bool clearStencil,
+                          const float rgba[4],
+                          float depthValue,
+                          int stencilValue);
+
     void receiveIncomingRequest(const commandbuffers::TrCommandBufferRequest &request);
     void begin();
     void end();

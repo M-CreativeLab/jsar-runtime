@@ -38,6 +38,46 @@ namespace renderer
     return renderpass_encoder_;
   }
 
+  void TrRenderPass::clearAttachments(bool clearColor,
+                                      bool clearDepth,
+                                      bool clearStencil,
+                                      const float rgba[4],
+                                      float depthValue,
+                                      int stencilValue)
+  {
+    (void)clearColor;
+    (void)clearDepth;
+    (void)clearStencil;
+    (void)rgba;
+    (void)depthValue;
+    (void)stencilValue;
+
+    if (!renderpass_descriptor_.colorAttachments.empty())
+    {
+      auto &color = renderpass_descriptor_.colorAttachments[0];
+      color.clearColor[0] = rgba[0];
+      color.clearColor[1] = rgba[1];
+      color.clearColor[2] = rgba[2];
+      color.clearColor[3] = rgba[3];
+      color.loadOp = GPURenderPassDescriptor::LoadOp::Clear;
+    }
+
+    if (renderpass_descriptor_.depthStencilAttachment.has_value())
+    {
+      auto &ds = *renderpass_descriptor_.depthStencilAttachment;
+      if (clearDepth)
+      {
+        ds.depthClearValue = depthValue;
+        ds.depthLoadOp = GPURenderPassDescriptor::LoadOp::Clear;
+      }
+      if (clearStencil)
+      {
+        ds.stencilClearValue = static_cast<float>(stencilValue);
+        ds.stencilLoadOp = GPURenderPassDescriptor::LoadOp::Clear;
+      }
+    }
+  }
+
   void TrRenderPass::receiveIncomingRequest(const TrCommandBufferRequest &request)
   {
   }
