@@ -7,6 +7,7 @@
 #include <common/debug.hpp>
 #include <renderer/content_renderer.hpp>
 #include <renderer/render_resource.hpp>
+#include <renderer/render_pass.hpp>
 
 namespace renderer
 {
@@ -1337,4 +1338,13 @@ namespace renderer
   {
     return content_renderer_->renderResource();
   }
-}
+
+  Ref<TrRenderPass> TrContextWebGL::getCurrentRenderPass()
+  {
+    if (!current_render_pass_)
+    {
+      current_render_pass_ = AcquireRef(new TrRenderPass(RenderPassType::kOpaque, "Opaque"));
+    }
+    return current_render_pass_;
+  }
+} 

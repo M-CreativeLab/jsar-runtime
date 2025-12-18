@@ -60,6 +60,7 @@ namespace renderer
     RenderPassType type() const;
     const std::string &name() const;
     bool isActive() const;
+    Ref<commandbuffers::GPURenderPassEncoder> encoder() const;
 
     void receiveIncomingRequest(const commandbuffers::TrCommandBufferRequest &request);
     void begin();

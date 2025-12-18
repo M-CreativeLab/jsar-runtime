@@ -33,6 +33,11 @@ namespace renderer
     return active_;
   }
 
+  Ref<GPURenderPassEncoder> TrRenderPass::encoder() const
+  {
+    return renderpass_encoder_;
+  }
+
   void TrRenderPass::receiveIncomingRequest(const TrCommandBufferRequest &request)
   {
   }

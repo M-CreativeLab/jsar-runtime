@@ -2,6 +2,7 @@
 #include <command_buffers/webgl_constants.hpp>
 #include <renderer/context_webgl.hpp>
 #include <renderer/content_renderer.hpp>
+#include <renderer/render_pass.hpp>
 #include "command_buffers/gpu/gpu_buffer.hpp"
 
 namespace renderer
@@ -159,10 +160,13 @@ namespace renderer
 
   void TrContextWebGL::glDrawArrays(WebGLenum mode, WebGLint first, WebGLsizei count)
   {
-    (void)mode; (void)first;
+    (void)mode;
     if (count <= 0)
       return;
-    content_renderer_->increaseDrawCallsCount(static_cast<int>(count));
+    auto pass = getCurrentRenderPass();
+    Ref<GPURenderPassEncoder> enc = pass ? pass->encoder() : nullptr;
+    if (enc)
+      enc->draw(static_cast<uint32_t>(count), 1, static_cast<uint32_t>(first), 0);
   }
 
   void TrContextWebGL::glDrawArraysInstanced(WebGLenum mode,
@@ -170,10 +174,13 @@ namespace renderer
                                              WebGLsizei count,
                                              WebGLsizei instanceCount)
   {
-    (void)mode; (void)first;
+    (void)mode;
     if (count <= 0 || instanceCount <= 0)
       return;
-    content_renderer_->increaseDrawCallsCount(static_cast<int>(count * instanceCount));
+    auto pass = getCurrentRenderPass();
+    Ref<GPURenderPassEncoder> enc = pass ? pass->encoder() : nullptr;
+    if (enc)
+      enc->draw(static_cast<uint32_t>(count), static_cast<uint32_t>(instanceCount), static_cast<uint32_t>(first), 0);
   }
 
   void TrContextWebGL::glDrawElements(WebGLenum mode,
@@ -184,7 +191,10 @@ namespace renderer
     (void)mode; (void)type; (void)indices;
     if (count <= 0)
       return;
-    content_renderer_->increaseDrawCallsCount(static_cast<int>(count));
+    auto pass = getCurrentRenderPass();
+    Ref<GPURenderPassEncoder> enc = pass ? pass->encoder() : nullptr;
+    if (enc)
+      enc->drawIndexed(static_cast<uint32_t>(count), 1, 0, 0, 0);
   }
 
   void TrContextWebGL::glDrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type, const WebGLvoid *indices, WebGLsizei instanceCount)
@@ -192,7 +202,10 @@ namespace renderer
     (void)mode; (void)type; (void)indices;
     if (count <= 0 || instanceCount <= 0)
       return;
-    content_renderer_->increaseDrawCallsCount(static_cast<int>(count * instanceCount));
+    auto pass = getCurrentRenderPass();
+    Ref<GPURenderPassEncoder> enc = pass ? pass->encoder() : nullptr;
+    if (enc)
+      enc->drawIndexed(static_cast<uint32_t>(count), static_cast<uint32_t>(instanceCount), 0, 0, 0);
   }
 
   void TrContextWebGL::glDrawRangeElements(WebGLenum mode, WebGLuint start, WebGLuint end, WebGLsizei count, WebGLenum type, const WebGLvoid *indices)
@@ -200,7 +213,10 @@ namespace renderer
     (void)mode; (void)start; (void)end; (void)type; (void)indices;
     if (count <= 0)
       return;
-    content_renderer_->increaseDrawCallsCount(static_cast<int>(count));
+    auto pass = getCurrentRenderPass();
+    Ref<GPURenderPassEncoder> enc = pass ? pass->encoder() : nullptr;
+    if (enc)
+      enc->drawIndexed(static_cast<uint32_t>(count), 1, 0, 0, 0);
   }
 
   void TrContextWebGL::glEnableVertexAttribArray(WebGLuint index)

@@ -19,6 +19,7 @@ namespace renderer
   class TrContentRenderer;
   class TrRenderResource;
   class TrContextWebGL;
+  class TrRenderPass;
 
   namespace details
   {
@@ -1002,6 +1003,7 @@ namespace renderer
 
     Ref<TrContentRenderer> content_renderer_;
     Ref<TrRenderResource> getRenderResource();
+    Ref<TrRenderPass> getCurrentRenderPass();
 
     template <typename ObjectType>
     class ObjectList : public std::vector<Ref<ObjectType>>
@@ -1109,5 +1111,6 @@ namespace renderer
     WebGLint viewport_[4];
 
     // WebGPU pipeline-related states are maintained inside caps_
+    Ref<TrRenderPass> current_render_pass_;
   };
-}
+} 
