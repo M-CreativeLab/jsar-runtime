@@ -154,11 +154,15 @@ namespace renderer
   {
     if (!current_vertex_array_object_)
       return;
+    current_vertex_array_object_->attrib_enabled[index] = false;
   }
 
   void TrContextWebGL::glDrawArrays(WebGLenum mode, WebGLint first, WebGLsizei count)
   {
-    /* TODO(yorkie): implement */
+    (void)mode; (void)first;
+    if (count <= 0)
+      return;
+    content_renderer_->increaseDrawCallsCount(static_cast<int>(count));
   }
 
   void TrContextWebGL::glDrawArraysInstanced(WebGLenum mode,
@@ -166,7 +170,10 @@ namespace renderer
                                              WebGLsizei count,
                                              WebGLsizei instanceCount)
   {
-    /* TODO(yorkie): implement */
+    (void)mode; (void)first;
+    if (count <= 0 || instanceCount <= 0)
+      return;
+    content_renderer_->increaseDrawCallsCount(static_cast<int>(count * instanceCount));
   }
 
   void TrContextWebGL::glDrawElements(WebGLenum mode,
@@ -174,23 +181,33 @@ namespace renderer
                                       WebGLenum type,
                                       const WebGLvoid *indices)
   {
-    /* TODO(yorkie): implement */
+    (void)mode; (void)type; (void)indices;
+    if (count <= 0)
+      return;
+    content_renderer_->increaseDrawCallsCount(static_cast<int>(count));
   }
 
   void TrContextWebGL::glDrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type, const WebGLvoid *indices, WebGLsizei instanceCount)
   {
-    /* TODO(yorkie): implement */
+    (void)mode; (void)type; (void)indices;
+    if (count <= 0 || instanceCount <= 0)
+      return;
+    content_renderer_->increaseDrawCallsCount(static_cast<int>(count * instanceCount));
   }
 
   void TrContextWebGL::glDrawRangeElements(WebGLenum mode, WebGLuint start, WebGLuint end, WebGLsizei count, WebGLenum type, const WebGLvoid *indices)
   {
-    /* TODO(yorkie): implement */
+    (void)mode; (void)start; (void)end; (void)type; (void)indices;
+    if (count <= 0)
+      return;
+    content_renderer_->increaseDrawCallsCount(static_cast<int>(count));
   }
 
   void TrContextWebGL::glEnableVertexAttribArray(WebGLuint index)
   {
     if (!current_vertex_array_object_)
       return;
+    current_vertex_array_object_->attrib_enabled[index] = true;
   }
 
   void TrContextWebGL::glFlushMappedBufferRange(WebGLenum target, WebGLintptr offset, WebGLsizeiptr size)
@@ -228,12 +245,41 @@ namespace renderer
 
   void TrContextWebGL::glGetVertexAttrib(WebGLuint index, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_ || !params)
+      return;
+    auto &vao = current_vertex_array_object_;
+    switch (pname)
+    {
+    case WEBGL_VERTEX_ATTRIB_ARRAY_ENABLED:
+      *params = vao->attrib_enabled[index] ? 1 : 0;
+      break;
+    case WEBGL_VERTEX_ATTRIB_ARRAY_STRIDE:
+      if (vao->buffer_layouts.size() > index)
+        *params = static_cast<WebGLint>(vao->buffer_layouts[index].arrayStride);
+      else
+        *params = 0;
+      break;
+    case WEBGL2_VERTEX_ATTRIB_ARRAY_DIVISOR:
+      *params = vao->attrib_divisor[index];
+      break;
+    default:
+      *params = 0;
+      break;
+    }
   }
 
   void TrContextWebGL::glGetVertexAttribPointerv(WebGLuint index, WebGLenum pname, WebGLvoid **pointer)
   {
-    /* TODO(yorkie): implement */
+    if (!current_vertex_array_object_ || !pointer)
+      return;
+    (void)pname;
+    if (current_vertex_array_object_->attributes.size() <= index)
+    {
+      *pointer = nullptr;
+      return;
+    }
+    auto &attr = current_vertex_array_object_->attributes[index];
+    *pointer = reinterpret_cast<WebGLvoid *>(attr.offset);
   }
 
   WebGLboolean TrContextWebGL::glIsBuffer(WebGLuint buffer)
@@ -259,42 +305,42 @@ namespace renderer
 
   void TrContextWebGL::glVertexAttrib1f(WebGLuint index, WebGLfloat x)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)x;
   }
 
   void TrContextWebGL::glVertexAttrib2f(WebGLuint index, WebGLfloat x, WebGLfloat y)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)x; (void)y;
   }
 
   void TrContextWebGL::glVertexAttrib3f(WebGLuint index, WebGLfloat x, WebGLfloat y, WebGLfloat z)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)x; (void)y; (void)z;
   }
 
   void TrContextWebGL::glVertexAttrib4f(WebGLuint index, WebGLfloat x, WebGLfloat y, WebGLfloat z, WebGLfloat w)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)x; (void)y; (void)z; (void)w;
   }
 
   void TrContextWebGL::glVertexAttrib1fv(WebGLuint index, const WebGLfloat *v)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)v;
   }
 
   void TrContextWebGL::glVertexAttrib2fv(WebGLuint index, const WebGLfloat *v)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)v;
   }
 
   void TrContextWebGL::glVertexAttrib3fv(WebGLuint index, const WebGLfloat *v)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)v;
   }
 
   void TrContextWebGL::glVertexAttrib4fv(WebGLuint index, const WebGLfloat *v)
   {
-    /* TODO(yorkie): implement */
+    (void)index; (void)v;
   }
 
   void TrContextWebGL::glVertexAttribDivisor(WebGLuint index, WebGLuint divisor)
@@ -305,6 +351,7 @@ namespace renderer
       current_vertex_array_object_->buffer_layouts.resize(index + 1);
     auto &layout = current_vertex_array_object_->buffer_layouts[index];
     layout.stepMode = divisor > 0 ? GPUVertexStepMode::kInstance : GPUVertexStepMode::kVertex;
+    current_vertex_array_object_->attrib_divisor[index] = static_cast<WebGLint>(divisor);
     current_vertex_array_object_->vertex_state.bufferCount = current_vertex_array_object_->buffer_layouts.size();
     current_vertex_array_object_->vertex_state.buffers = current_vertex_array_object_->buffer_layouts.data();
   }

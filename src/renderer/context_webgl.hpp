@@ -226,6 +226,9 @@ namespace renderer
       Ref<Shader> vertexShader;
       Ref<Shader> fragmentShader;
       Uniforms uniforms;
+      bool linked = false;
+      std::unordered_map<std::string, WebGLuint> attrib_locations;
+      std::unordered_map<std::string, WebGLuint> uniform_locations;
     };
 
     class Texture final : public BindableObject
@@ -309,6 +312,9 @@ namespace renderer
       commandbuffers::GPUVertexState vertex_state{};
       std::vector<commandbuffers::GPUVertexBufferLayout> buffer_layouts{};
       std::vector<commandbuffers::GPUVertexAttribute> attributes{};
+      std::unordered_map<WebGLuint, bool> attrib_enabled;
+      std::unordered_map<WebGLuint, bool> attrib_integer;
+      std::unordered_map<WebGLuint, WebGLint> attrib_divisor;
     };
 
     class Capabilities

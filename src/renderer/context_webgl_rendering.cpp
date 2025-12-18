@@ -11,28 +11,125 @@ namespace renderer
   // --- Rendering ---
   void TrContextWebGL::glClear(WebGLbitfield mask)
   {
-    /* TODO(yorkie): implement */
+    if (mask == 0)
+      return;
+
+    const bool clearColor = (mask & WEBGL_COLOR_BUFFER_BIT) != 0;
+    const bool clearDepth = (mask & WEBGL_DEPTH_BUFFER_BIT) != 0;
+    const bool clearStencil = (mask & WEBGL_STENCIL_BUFFER_BIT) != 0;
+
+    if (!clearColor && !clearDepth && !clearStencil)
+    {
+      last_error_ = WEBGL_INVALID_VALUE;
+      return;
+    }
+
+    if (clearColor)
+    {
+      caps_.applyColorMask();
+    }
+
+    (void)clearDepth;
+    (void)clearStencil;
   }
 
   void TrContextWebGL::glClearBufferiv(WebGLenum buffer,
                                        WebGLint drawbuffer,
                                        const WebGLint *value)
   {
-    /* TODO(yorkie): implement */
+    if (value == nullptr)
+      return;
+    if (drawbuffer != 0)
+    {
+      last_error_ = WEBGL_INVALID_VALUE;
+      return;
+    }
+
+    if (buffer == WEBGL2_COLOR)
+    {
+      clear_color_[0] = static_cast<WebGLfloat>(value[0]);
+      clear_color_[1] = static_cast<WebGLfloat>(value[1]);
+      clear_color_[2] = static_cast<WebGLfloat>(value[2]);
+      clear_color_[3] = static_cast<WebGLfloat>(value[3]);
+    }
+    else if (buffer == WEBGL2_DEPTH)
+    {
+      clear_depth_ = static_cast<WebGLfloat>(value[0]);
+    }
+    else if (buffer == WEBGL2_STENCIL)
+    {
+      clear_stencil_ = static_cast<WebGLint>(value[0]);
+    }
+    else
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+    }
   }
 
   void TrContextWebGL::glClearBufferuiv(WebGLenum buffer,
                                         WebGLint drawbuffer,
                                         const WebGLuint *value)
   {
-    /* TODO(yorkie): implement */
+    if (value == nullptr)
+      return;
+    if (drawbuffer != 0)
+    {
+      last_error_ = WEBGL_INVALID_VALUE;
+      return;
+    }
+
+    if (buffer == WEBGL2_COLOR)
+    {
+      clear_color_[0] = static_cast<WebGLfloat>(value[0]);
+      clear_color_[1] = static_cast<WebGLfloat>(value[1]);
+      clear_color_[2] = static_cast<WebGLfloat>(value[2]);
+      clear_color_[3] = static_cast<WebGLfloat>(value[3]);
+    }
+    else if (buffer == WEBGL2_DEPTH)
+    {
+      clear_depth_ = static_cast<WebGLfloat>(value[0]);
+    }
+    else if (buffer == WEBGL2_STENCIL)
+    {
+      clear_stencil_ = static_cast<WebGLint>(value[0]);
+    }
+    else
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+    }
   }
 
   void TrContextWebGL::glClearBufferfv(WebGLenum buffer,
                                        WebGLint drawbuffer,
                                        const WebGLfloat *value)
   {
-    /* TODO(yorkie): implement */
+    if (value == nullptr)
+      return;
+    if (drawbuffer != 0)
+    {
+      last_error_ = WEBGL_INVALID_VALUE;
+      return;
+    }
+
+    if (buffer == WEBGL2_COLOR)
+    {
+      clear_color_[0] = value[0];
+      clear_color_[1] = value[1];
+      clear_color_[2] = value[2];
+      clear_color_[3] = value[3];
+    }
+    else if (buffer == WEBGL2_DEPTH)
+    {
+      clear_depth_ = value[0];
+    }
+    else if (buffer == WEBGL2_STENCIL)
+    {
+      clear_stencil_ = static_cast<WebGLint>(value[0]);
+    }
+    else
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+    }
   }
 
   void TrContextWebGL::glClearBufferfi(WebGLenum buffer,
@@ -40,7 +137,18 @@ namespace renderer
                                        WebGLfloat depth,
                                        WebGLint stencil)
   {
-    /* TODO(yorkie): implement */
+    if (drawbuffer != 0)
+    {
+      last_error_ = WEBGL_INVALID_VALUE;
+      return;
+    }
+    if (buffer != WEBGL_DEPTH_STENCIL)
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+    clear_depth_ = depth;
+    clear_stencil_ = stencil;
   }
 
   void TrContextWebGL::glClearColor(WebGLfloat red,
@@ -66,17 +174,17 @@ namespace renderer
 
   void TrContextWebGL::glFinish()
   {
-    /* TODO(yorkie): implement */
+    (void)0;
   }
 
   void TrContextWebGL::glFlush()
   {
-    /* TODO(yorkie): implement */
+    (void)0;
   }
 
   void TrContextWebGL::glReadBuffer(WebGLenum buffer)
   {
-    /* TODO(yorkie): implement */
+    (void)buffer;
   }
 
   void TrContextWebGL::glReadPixels(WebGLint x,
@@ -87,6 +195,6 @@ namespace renderer
                                     WebGLenum type,
                                     WebGLvoid *pixels)
   {
-    /* TODO(yorkie): implement */
+    (void)x; (void)y; (void)width; (void)height; (void)format; (void)type; (void)pixels;
   }
 }

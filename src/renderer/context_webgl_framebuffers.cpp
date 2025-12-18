@@ -59,42 +59,139 @@ namespace renderer
                                          WebGLbitfield mask,
                                          WebGLenum filter)
   {
-    /* TODO(yorkie): implement */
+    (void)srcX0; (void)srcY0; (void)srcX1; (void)srcY1;
+    (void)dstX0; (void)dstY0; (void)dstX1; (void)dstY1;
+    (void)mask; (void)filter;
   }
 
   void TrContextWebGL::glCheckFramebufferStatus(WebGLenum target)
   {
-    /* TODO(yorkie): implement */
+    (void)target;
   }
 
   void TrContextWebGL::glDeleteFramebuffers(WebGLsizei n, const WebGLuint *framebuffers)
   {
-    /* TODO(yorkie): implement */
+    if (n <= 0 || framebuffers == nullptr)
+      return;
+    for (WebGLsizei i = 0; i < n; i++)
+      framebuffers_.remove(framebuffers[i]);
   }
 
   void TrContextWebGL::glDeleteRenderbuffers(WebGLsizei n, const WebGLuint *renderbuffers)
   {
-    /* TODO(yorkie): implement */
+    if (n <= 0 || renderbuffers == nullptr)
+      return;
+    for (WebGLsizei i = 0; i < n; i++)
+      renderbuffers_.remove(renderbuffers[i]);
   }
 
   void TrContextWebGL::glDrawBuffers(WebGLsizei n, const WebGLenum *buffers)
   {
-    /* TODO(yorkie): implement */
+    (void)n; (void)buffers;
   }
 
   void TrContextWebGL::glFramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, WebGLenum renderbuffertarget, WebGLuint renderbuffer)
   {
-    /* TODO(yorkie): implement */
+    if (target != WEBGL_FRAMEBUFFER &&
+        target != WEBGL2_DRAW_FRAMEBUFFER &&
+        target != WEBGL2_READ_FRAMEBUFFER)
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+    if (renderbuffertarget != WEBGL_RENDERBUFFER)
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+    auto fb_target = details::FramebufferTarget(target);
+    auto framebuffer = framebuffer_bindings_[fb_target];
+    if (!framebuffer)
+    {
+      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
+      return;
+    }
+    if (renderbuffer != 0)
+    {
+      auto rb = renderbuffers_.get(renderbuffer);
+      if (!rb)
+      {
+        last_error_ = WEBGL_INVALID_OPERATION;
+        return;
+      }
+    }
+    (void)attachment;
   }
 
   void TrContextWebGL::glFramebufferTexture2D(WebGLenum target, WebGLenum attachment, WebGLenum textarget, WebGLuint texture, WebGLint level)
   {
-    /* TODO(yorkie): implement */
+    if (target != WEBGL_FRAMEBUFFER &&
+        target != WEBGL2_DRAW_FRAMEBUFFER &&
+        target != WEBGL2_READ_FRAMEBUFFER)
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+    if (textarget != WEBGL_TEXTURE_2D &&
+        textarget != WEBGL2_TEXTURE_3D &&
+        textarget != WEBGL2_TEXTURE_2D_ARRAY)
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+    auto fb_target = details::FramebufferTarget(target);
+    auto framebuffer = framebuffer_bindings_[fb_target];
+    if (!framebuffer)
+    {
+      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
+      return;
+    }
+    if (texture != 0)
+    {
+      auto tex = textures_.get(texture);
+      if (!tex)
+      {
+        last_error_ = WEBGL_INVALID_OPERATION;
+        return;
+      }
+      (void)level;
+      (void)attachment;
+    }
+    else
+    {
+      (void)attachment;
+      (void)level;
+    }
   }
 
   void TrContextWebGL::glFramebufferTextureLayer(WebGLenum target, WebGLenum attachment, WebGLuint texture, WebGLint level, WebGLint layer)
   {
-    /* TODO(yorkie): implement */
+    if (target != WEBGL_FRAMEBUFFER &&
+        target != WEBGL2_DRAW_FRAMEBUFFER &&
+        target != WEBGL2_READ_FRAMEBUFFER)
+    {
+      last_error_ = WEBGL_INVALID_ENUM;
+      return;
+    }
+    auto fb_target = details::FramebufferTarget(target);
+    auto framebuffer = framebuffer_bindings_[fb_target];
+    if (!framebuffer)
+    {
+      last_error_ = WEBGL_INVALID_FRAMEBUFFER_OPERATION;
+      return;
+    }
+    if (texture != 0)
+    {
+      auto tex = textures_.get(texture);
+      if (!tex)
+      {
+        last_error_ = WEBGL_INVALID_OPERATION;
+        return;
+      }
+    }
+    (void)attachment;
+    (void)level;
+    (void)layer;
   }
 
   void TrContextWebGL::glGenFramebuffers(WebGLsizei n, WebGLuint *framebuffers)
@@ -109,22 +206,28 @@ namespace renderer
 
   void TrContextWebGL::glGenerateMipmap(WebGLenum target)
   {
-    /* TODO(yorkie): implement */
+    (void)target;
   }
 
   void TrContextWebGL::glGetFramebufferAttachmentParameteriv(WebGLenum target, WebGLenum attachment, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    if (params == nullptr)
+      return;
+    *params = 0;
+    (void)target; (void)attachment; (void)pname;
   }
 
   void TrContextWebGL::glGetRenderbufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    if (params == nullptr)
+      return;
+    *params = 0;
+    (void)target; (void)pname;
   }
 
   void TrContextWebGL::glInvalidateFramebuffer(WebGLenum target, WebGLsizei n, const WebGLenum *attachments)
   {
-    /* TODO(yorkie): implement */
+    (void)target; (void)n; (void)attachments;
   }
 
   void TrContextWebGL::glInvalidateSubFramebuffer(WebGLenum target,
@@ -135,7 +238,8 @@ namespace renderer
                                                   WebGLsizei width,
                                                   WebGLsizei height)
   {
-    /* TODO(yorkie): implement */
+    (void)target; (void)n; (void)attachments;
+    (void)x; (void)y; (void)width; (void)height;
   }
 
   WebGLboolean TrContextWebGL::glIsFramebuffer(WebGLuint framebuffer)
@@ -150,7 +254,7 @@ namespace renderer
 
   void TrContextWebGL::glRenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
   {
-    /* TODO(yorkie): implement */
+    (void)target; (void)internalformat; (void)width; (void)height;
   }
 
   void TrContextWebGL::glRenderbufferStorageMultisample(WebGLenum target,
@@ -159,6 +263,6 @@ namespace renderer
                                                         WebGLsizei width,
                                                         WebGLsizei height)
   {
-    /* TODO(yorkie): implement */
+    (void)target; (void)samples; (void)internalformat; (void)width; (void)height;
   }
 }

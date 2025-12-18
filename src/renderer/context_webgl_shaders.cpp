@@ -11,12 +11,24 @@ namespace renderer
 
   void TrContextWebGL::glBindAttribLocation(WebGLuint program, WebGLuint index, const WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (prog == nullptr || name == nullptr)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    prog->attrib_locations[string(name)] = index;
   }
 
   void TrContextWebGL::glCompileShader(WebGLuint shader)
   {
-    /* TODO(yorkie): implement */
+    auto sh = shaders_.get(shader);
+    if (sh == nullptr)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    (void)sh;
   }
 
   WebGLuint TrContextWebGL::glCreateProgram()
@@ -89,7 +101,7 @@ namespace renderer
                                          WebGLenum *type,
                                          WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)index; (void)maxLength; (void)length; (void)size; (void)type; (void)name;
   }
 
   void TrContextWebGL::glGetActiveUniform(WebGLuint program,
@@ -100,7 +112,7 @@ namespace renderer
                                           WebGLenum *type,
                                           WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)index; (void)maxLength; (void)length; (void)size; (void)type; (void)name;
   }
 
   void TrContextWebGL::glGetActiveUniformBlockName(WebGLuint program,
@@ -109,7 +121,7 @@ namespace renderer
                                                    WebGLsizei *length,
                                                    WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)index; (void)maxLength; (void)length; (void)name;
   }
 
   void TrContextWebGL::glGetActiveUniformBlockiv(WebGLuint program,
@@ -117,7 +129,7 @@ namespace renderer
                                                  WebGLenum pname,
                                                  WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)index; (void)pname; (void)params;
   }
 
   void TrContextWebGL::glGetActiveUniformsiv(WebGLuint program,
@@ -126,22 +138,43 @@ namespace renderer
                                              WebGLenum pname,
                                              WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)count; (void)uniforms; (void)pname; (void)params;
   }
 
   void TrContextWebGL::glGetAttachedShaders(WebGLuint program, WebGLsizei maxCount, WebGLsizei *count, WebGLuint *shaders)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || maxCount <= 0 || !shaders)
+    {
+      if (count) *count = 0;
+      return;
+    }
+    WebGLsizei written = 0;
+    if (prog->vertexShader)
+    {
+      shaders[written++] = prog->vertexShader->id;
+    }
+    if (written < maxCount && prog->fragmentShader)
+    {
+      shaders[written++] = prog->fragmentShader->id;
+    }
+    if (count) *count = written;
   }
 
   void TrContextWebGL::glGetAttribLocation(WebGLuint program, const WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !name)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    (void)prog;
   }
 
   void TrContextWebGL::glGetFragDataLocation(WebGLuint program, const WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)name;
   }
 
   void TrContextWebGL::glGetProgramBinary(WebGLuint program,
@@ -151,27 +184,57 @@ namespace renderer
                                           WebGLsizei *binaryLength,
                                           WebGLbyte *binary)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)maxLength; (void)length; (void)binaryFormat; (void)binaryLength; (void)binary;
   }
 
   void TrContextWebGL::glGetProgramInfoLog(WebGLuint program, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *infoLog)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog)
+    {
+      if (length) *length = 0;
+      if (infoLog && maxLength > 0) infoLog[0] = '\0';
+      return;
+    }
+    const std::string &log = prog->linked ? std::string("") : std::string("");
+    WebGLsizei copy = static_cast<WebGLsizei>(std::min<size_t>(log.size(), maxLength > 0 ? maxLength - 1 : 0));
+    if (infoLog && copy > 0) log.copy(infoLog, copy);
+    if (infoLog && maxLength > 0) infoLog[copy] = '\0';
+    if (length) *length = copy;
   }
 
   void TrContextWebGL::glGetProgramiv(WebGLuint program, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !params)
+      return;
+    switch (pname)
+    {
+    case WEBGL_LINK_STATUS:
+      *params = (prog->vertexShader && prog->fragmentShader) ? 1 : 0;
+      break;
+    case WEBGL_ACTIVE_UNIFORMS:
+      *params = static_cast<WebGLint>(prog->uniforms.size());
+      break;
+    case WEBGL_ACTIVE_ATTRIBUTES:
+      *params = static_cast<WebGLint>(prog->attrib_locations.size());
+      break;
+    default:
+      *params = 0;
+      break;
+    }
   }
 
   void TrContextWebGL::glGetShaderInfoLog(WebGLuint shader, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *infoLog)
   {
-    /* TODO(yorkie): implement */
+    if (length) *length = 0;
+    if (infoLog && maxLength > 0) infoLog[0] = '\0';
   }
 
   void TrContextWebGL::glGetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, WebGLint *range, WebGLint *precision)
   {
-    /* TODO(yorkie): implement */
+    if (range) { range[0] = 0; range[1] = 0; }
+    if (precision) *precision = 0;
   }
 
   void TrContextWebGL::glGetShaderSource(WebGLuint shader_id, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *source)
@@ -210,37 +273,91 @@ namespace renderer
 
   void TrContextWebGL::glGetShaderiv(WebGLuint shader, WebGLenum pname, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    auto sh = shaders_.get(shader);
+    if (!sh || !params)
+      return;
+    switch (pname)
+    {
+    case WEBGL_SHADER_TYPE:
+      *params = sh->type;
+      break;
+    case WEBGL_COMPILE_STATUS:
+      *params = sh->source.empty() ? 0 : 1;
+      break;
+    default:
+      *params = 0;
+      break;
+    }
   }
 
   void TrContextWebGL::glGetUniformfv(WebGLuint program, WebGLuint location, WebGLsizei count, WebGLfloat *params)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !params || count <= 0)
+      return;
+    auto it = prog->uniforms.find(static_cast<WebGLint>(location));
+    if (it == prog->uniforms.end())
+      return;
+    if (auto *v = std::get_if<details::FloatValues>(&it->second))
+    {
+      WebGLsizei n = std::min<WebGLsizei>(count, static_cast<WebGLsizei>(v->size()));
+      for (WebGLsizei i = 0; i < n; ++i) params[i] = (*v)[i];
+    }
   }
 
   void TrContextWebGL::glGetUniformiv(WebGLuint program, WebGLuint location, WebGLsizei count, WebGLint *params)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !params || count <= 0)
+      return;
+    auto it = prog->uniforms.find(static_cast<WebGLint>(location));
+    if (it == prog->uniforms.end())
+      return;
+    if (auto *v = std::get_if<details::IntValues>(&it->second))
+    {
+      WebGLsizei n = std::min<WebGLsizei>(count, static_cast<WebGLsizei>(v->size()));
+      for (WebGLsizei i = 0; i < n; ++i) params[i] = (*v)[i];
+    }
   }
 
   void TrContextWebGL::glGetUniformuiv(WebGLuint program, WebGLuint location, WebGLsizei count, WebGLuint *params)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !params || count <= 0)
+      return;
+    auto it = prog->uniforms.find(static_cast<WebGLint>(location));
+    if (it == prog->uniforms.end())
+      return;
+    if (auto *v = std::get_if<details::UintValues>(&it->second))
+    {
+      WebGLsizei n = std::min<WebGLsizei>(count, static_cast<WebGLsizei>(v->size()));
+      for (WebGLsizei i = 0; i < n; ++i) params[i] = (*v)[i];
+    }
   }
 
   void TrContextWebGL::glGetUniformBlockIndex(WebGLuint program, const WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)name;
   }
 
   void TrContextWebGL::glGetUniformIndices(WebGLuint program, WebGLsizei count, const WebGLchar **names, WebGLuint *indices)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !indices || !names || count <= 0)
+      return;
+    for (WebGLsizei i = 0; i < count; ++i)
+      indices[i] = 0;
   }
 
   void TrContextWebGL::glGetUniformLocation(WebGLuint program, const WebGLchar *name)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog || !name)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    (void)prog;
   }
 
   WebGLboolean TrContextWebGL::glIsProgram(WebGLuint program)
@@ -255,22 +372,28 @@ namespace renderer
 
   void TrContextWebGL::glLinkProgram(WebGLuint program)
   {
-    /* TODO(yorkie): implement */
+    auto prog = programs_.get(program);
+    if (!prog)
+    {
+      last_error_ = WEBGL_INVALID_OPERATION;
+      return;
+    }
+    prog->linked = (prog->vertexShader != nullptr && prog->fragmentShader != nullptr);
   }
 
   void TrContextWebGL::glProgramBinary(WebGLuint program, WebGLenum binaryFormat, const WebGLbyte *binary, WebGLsizei binaryLength)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)binaryFormat; (void)binary; (void)binaryLength;
   }
 
   void TrContextWebGL::glProgramParameteri(WebGLuint program, WebGLenum pname, WebGLint param)
   {
-    /* TODO(yorkie): implement */
+    (void)program; (void)pname; (void)param;
   }
 
   void TrContextWebGL::glReleaseShaderCompiler()
   {
-    /* TODO(yorkie): implement */
+    (void)0;
   }
 
   void TrContextWebGL::glShaderBinary(WebGLuint shader,
@@ -278,7 +401,7 @@ namespace renderer
                                       const WebGLbyte *binary,
                                       WebGLsizei binaryLength)
   {
-    /* TODO(yorkie): implement */
+    (void)shader; (void)binaryFormat; (void)binary; (void)binaryLength;
   }
 
   void TrContextWebGL::glShaderSource(WebGLuint shader_id,
@@ -503,6 +626,6 @@ namespace renderer
 
   void TrContextWebGL::glValidateProgram(WebGLuint program)
   {
-    /* TODO(yorkie): implement */
+    (void)program;
   }
 }
