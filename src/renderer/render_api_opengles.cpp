@@ -2695,7 +2695,7 @@ private:
   {
     std::vector<int> values;
 
-    // Support WEBGL_SAMPLES for now, log error for others
+    // Support WEBGL_SAMPLES and GL_NUM_SAMPLE_COUNTS, log error for others
     if (req->pname == WEBGL_SAMPLES)
     {
       GLint numSampleCounts = 0;
@@ -2721,6 +2721,16 @@ private:
       {
         DEBUG(DEBUG_TAG, "[GetInternalformatParameter] Using fallback values {4, 2, 1}");
         values = {4, 2, 1};
+      }
+    }
+    else if (req->pname == GL_NUM_SAMPLE_COUNTS)
+    {
+      GLint numSampleCounts = 0;
+      glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
+      GLenum error = glGetError();
+      if (error == GL_NO_ERROR)
+      {
+        values.push_back(static_cast<int>(numSampleCounts));
       }
     }
     else
