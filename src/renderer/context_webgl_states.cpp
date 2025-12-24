@@ -253,4 +253,4 @@ namespace renderer
     viewport_[3] = height;
   }
 }
-  // moved to renderer/context_webgl.cpp
+// moved to renderer/context_webgl.cpp

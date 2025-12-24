@@ -85,6 +85,22 @@ namespace commandbuffers::gpu
     current_encoder_ = passEncoder;
   }
 
+  bool EncodingContext::exitRenderPass(const GPUHandle *passEncoder,
+                                       RenderPassResourceUsageTracker usageTracker,
+                                       GPUCommandEncoder *commandEncoder,
+                                       gpu::IndirectDrawMetadata indirectDrawMetadata)
+  {
+    assert(current_encoder_ != top_level_encoder_);
+    assert(current_encoder_ == passEncoder);
+
+    (void)usageTracker;
+    (void)commandEncoder;
+    (void)indirectDrawMetadata;
+
+    current_encoder_ = top_level_encoder_;
+    return true;
+  }
+
   void EncodingContext::exitComputePass(const GPUHandle *passEncoder,
                                         ComputePassResourceUsage usages)
   {

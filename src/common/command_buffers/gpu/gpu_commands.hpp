@@ -81,78 +81,82 @@ namespace commandbuffers
     std::string label;
   };
 
+  struct GPUEndRenderPassCommand
+  {
+  };
+
   struct GPUDrawCommand
   {
-    const uint32_t vertexCount;
-    const uint32_t instanceCount;
-    const uint32_t firstVertex;
-    const uint32_t firstInstance;
+    uint32_t vertexCount;
+    uint32_t instanceCount;
+    uint32_t firstVertex;
+    uint32_t firstInstance;
   };
 
   struct GPUDrawIndexedCommand
   {
-    const uint32_t indexCount;
-    const uint32_t instanceCount;
-    const uint32_t firstIndex;
-    const int32_t baseVertex;
-    const uint32_t firstInstance;
+    uint32_t indexCount;
+    uint32_t instanceCount;
+    uint32_t firstIndex;
+    int32_t baseVertex;
+    uint32_t firstInstance;
   };
 
   struct GPUSetViewportCommand
   {
-    const float x;
-    const float y;
-    const float width;
-    const float height;
-    const float minDepth;
-    const float maxDepth;
+    float x;
+    float y;
+    float width;
+    float height;
+    float minDepth;
+    float maxDepth;
   };
 
   struct GPUSetScissorCommand
   {
-    const float x;
-    const float y;
-    const float width;
-    const float height;
+    float x;
+    float y;
+    float width;
+    float height;
   };
 
   struct GPUSetRenderPipelineCommand
   {
-    const GPUIdentifier pipelineId;
+    GPUIdentifier pipelineId;
   };
 
   struct GPUSetIndexBufferCommand
   {
-    const GPUIdentifier bufferId;
-    const GPUIndexFormat indexFormat;
-    const uint32_t offset;
-    const uint32_t size;
+    GPUIdentifier bufferId;
+    GPUIndexFormat indexFormat;
+    uint32_t offset;
+    uint32_t size;
   };
 
   struct GPUSetVertexBufferCommand
   {
-    const uint32_t slot;
-    const GPUIdentifier bufferId;
-    const uint32_t offset;
-    const uint32_t size;
+    uint32_t slot;
+    GPUIdentifier bufferId;
+    uint32_t offset;
+    uint32_t size;
   };
 
   struct GPUSetBindGroupCommand
   {
-    const GPUIdentifier bindGroupId;
-    const uint32_t index;
+    GPUIdentifier bindGroupId;
+    uint32_t index;
   };
 
   struct GPUSetBlendConstantCommand
   {
-    const float r;
-    const float g;
-    const float b;
-    const float a;
+    float r;
+    float g;
+    float b;
+    float a;
   };
 
   struct GPUSetStencilReferenceCommand
   {
-    const uint32_t reference;
+    uint32_t reference;
   };
 }

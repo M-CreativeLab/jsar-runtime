@@ -101,7 +101,13 @@ namespace renderer
                                          WebGLenum *type,
                                          WebGLchar *name)
   {
-    (void)program; (void)index; (void)maxLength; (void)length; (void)size; (void)type; (void)name;
+    (void)program;
+    (void)index;
+    (void)maxLength;
+    (void)length;
+    (void)size;
+    (void)type;
+    (void)name;
   }
 
   void TrContextWebGL::glGetActiveUniform(WebGLuint program,
@@ -112,7 +118,13 @@ namespace renderer
                                           WebGLenum *type,
                                           WebGLchar *name)
   {
-    (void)program; (void)index; (void)maxLength; (void)length; (void)size; (void)type; (void)name;
+    (void)program;
+    (void)index;
+    (void)maxLength;
+    (void)length;
+    (void)size;
+    (void)type;
+    (void)name;
   }
 
   void TrContextWebGL::glGetActiveUniformBlockName(WebGLuint program,
@@ -121,7 +133,11 @@ namespace renderer
                                                    WebGLsizei *length,
                                                    WebGLchar *name)
   {
-    (void)program; (void)index; (void)maxLength; (void)length; (void)name;
+    (void)program;
+    (void)index;
+    (void)maxLength;
+    (void)length;
+    (void)name;
   }
 
   void TrContextWebGL::glGetActiveUniformBlockiv(WebGLuint program,
@@ -129,7 +145,10 @@ namespace renderer
                                                  WebGLenum pname,
                                                  WebGLint *params)
   {
-    (void)program; (void)index; (void)pname; (void)params;
+    (void)program;
+    (void)index;
+    (void)pname;
+    (void)params;
   }
 
   void TrContextWebGL::glGetActiveUniformsiv(WebGLuint program,
@@ -138,7 +157,11 @@ namespace renderer
                                              WebGLenum pname,
                                              WebGLint *params)
   {
-    (void)program; (void)count; (void)uniforms; (void)pname; (void)params;
+    (void)program;
+    (void)count;
+    (void)uniforms;
+    (void)pname;
+    (void)params;
   }
 
   void TrContextWebGL::glGetAttachedShaders(WebGLuint program, WebGLsizei maxCount, WebGLsizei *count, WebGLuint *shaders)
@@ -146,7 +169,8 @@ namespace renderer
     auto prog = programs_.get(program);
     if (!prog || maxCount <= 0 || !shaders)
     {
-      if (count) *count = 0;
+      if (count)
+        *count = 0;
       return;
     }
     WebGLsizei written = 0;
@@ -158,7 +182,8 @@ namespace renderer
     {
       shaders[written++] = prog->fragmentShader->id;
     }
-    if (count) *count = written;
+    if (count)
+      *count = written;
   }
 
   void TrContextWebGL::glGetAttribLocation(WebGLuint program, const WebGLchar *name)
@@ -174,7 +199,8 @@ namespace renderer
 
   void TrContextWebGL::glGetFragDataLocation(WebGLuint program, const WebGLchar *name)
   {
-    (void)program; (void)name;
+    (void)program;
+    (void)name;
   }
 
   void TrContextWebGL::glGetProgramBinary(WebGLuint program,
@@ -184,7 +210,12 @@ namespace renderer
                                           WebGLsizei *binaryLength,
                                           WebGLbyte *binary)
   {
-    (void)program; (void)maxLength; (void)length; (void)binaryFormat; (void)binaryLength; (void)binary;
+    (void)program;
+    (void)maxLength;
+    (void)length;
+    (void)binaryFormat;
+    (void)binaryLength;
+    (void)binary;
   }
 
   void TrContextWebGL::glGetProgramInfoLog(WebGLuint program, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *infoLog)
@@ -192,15 +223,20 @@ namespace renderer
     auto prog = programs_.get(program);
     if (!prog)
     {
-      if (length) *length = 0;
-      if (infoLog && maxLength > 0) infoLog[0] = '\0';
+      if (length)
+        *length = 0;
+      if (infoLog && maxLength > 0)
+        infoLog[0] = '\0';
       return;
     }
     const std::string &log = prog->linked ? std::string("") : std::string("");
     WebGLsizei copy = static_cast<WebGLsizei>(std::min<size_t>(log.size(), maxLength > 0 ? maxLength - 1 : 0));
-    if (infoLog && copy > 0) log.copy(infoLog, copy);
-    if (infoLog && maxLength > 0) infoLog[copy] = '\0';
-    if (length) *length = copy;
+    if (infoLog && copy > 0)
+      log.copy(infoLog, copy);
+    if (infoLog && maxLength > 0)
+      infoLog[copy] = '\0';
+    if (length)
+      *length = copy;
   }
 
   void TrContextWebGL::glGetProgramiv(WebGLuint program, WebGLenum pname, WebGLint *params)
@@ -227,14 +263,21 @@ namespace renderer
 
   void TrContextWebGL::glGetShaderInfoLog(WebGLuint shader, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *infoLog)
   {
-    if (length) *length = 0;
-    if (infoLog && maxLength > 0) infoLog[0] = '\0';
+    if (length)
+      *length = 0;
+    if (infoLog && maxLength > 0)
+      infoLog[0] = '\0';
   }
 
   void TrContextWebGL::glGetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, WebGLint *range, WebGLint *precision)
   {
-    if (range) { range[0] = 0; range[1] = 0; }
-    if (precision) *precision = 0;
+    if (range)
+    {
+      range[0] = 0;
+      range[1] = 0;
+    }
+    if (precision)
+      *precision = 0;
   }
 
   void TrContextWebGL::glGetShaderSource(WebGLuint shader_id, WebGLsizei maxLength, WebGLsizei *length, WebGLchar *source)
@@ -301,7 +344,8 @@ namespace renderer
     if (auto *v = std::get_if<details::FloatValues>(&it->second))
     {
       WebGLsizei n = std::min<WebGLsizei>(count, static_cast<WebGLsizei>(v->size()));
-      for (WebGLsizei i = 0; i < n; ++i) params[i] = (*v)[i];
+      for (WebGLsizei i = 0; i < n; ++i)
+        params[i] = (*v)[i];
     }
   }
 
@@ -316,7 +360,8 @@ namespace renderer
     if (auto *v = std::get_if<details::IntValues>(&it->second))
     {
       WebGLsizei n = std::min<WebGLsizei>(count, static_cast<WebGLsizei>(v->size()));
-      for (WebGLsizei i = 0; i < n; ++i) params[i] = (*v)[i];
+      for (WebGLsizei i = 0; i < n; ++i)
+        params[i] = (*v)[i];
     }
   }
 
@@ -331,13 +376,15 @@ namespace renderer
     if (auto *v = std::get_if<details::UintValues>(&it->second))
     {
       WebGLsizei n = std::min<WebGLsizei>(count, static_cast<WebGLsizei>(v->size()));
-      for (WebGLsizei i = 0; i < n; ++i) params[i] = (*v)[i];
+      for (WebGLsizei i = 0; i < n; ++i)
+        params[i] = (*v)[i];
     }
   }
 
   void TrContextWebGL::glGetUniformBlockIndex(WebGLuint program, const WebGLchar *name)
   {
-    (void)program; (void)name;
+    (void)program;
+    (void)name;
   }
 
   void TrContextWebGL::glGetUniformIndices(WebGLuint program, WebGLsizei count, const WebGLchar **names, WebGLuint *indices)
@@ -383,12 +430,17 @@ namespace renderer
 
   void TrContextWebGL::glProgramBinary(WebGLuint program, WebGLenum binaryFormat, const WebGLbyte *binary, WebGLsizei binaryLength)
   {
-    (void)program; (void)binaryFormat; (void)binary; (void)binaryLength;
+    (void)program;
+    (void)binaryFormat;
+    (void)binary;
+    (void)binaryLength;
   }
 
   void TrContextWebGL::glProgramParameteri(WebGLuint program, WebGLenum pname, WebGLint param)
   {
-    (void)program; (void)pname; (void)param;
+    (void)program;
+    (void)pname;
+    (void)param;
   }
 
   void TrContextWebGL::glReleaseShaderCompiler()
@@ -401,7 +453,10 @@ namespace renderer
                                       const WebGLbyte *binary,
                                       WebGLsizei binaryLength)
   {
-    (void)shader; (void)binaryFormat; (void)binary; (void)binaryLength;
+    (void)shader;
+    (void)binaryFormat;
+    (void)binary;
+    (void)binaryLength;
   }
 
   void TrContextWebGL::glShaderSource(WebGLuint shader_id,

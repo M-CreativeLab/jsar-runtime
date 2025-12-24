@@ -133,7 +133,7 @@ namespace renderer
     desc.label = "WebGLTexture";
     desc.usage = GPUTextureUsage::kTextureBinding;
     desc.dimension = commandbuffers::GPUTextureDimension::k2D;
-    desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u };
+    desc.size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u};
     desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
     desc.format = GPUTextureFormat::kRGBA8Unorm;
     auto gpu_tex = rr->createTexture(&desc);
@@ -171,12 +171,12 @@ namespace renderer
     if (target == WEBGL2_TEXTURE_3D)
     {
       desc.dimension = commandbuffers::GPUTextureDimension::k3D;
-      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+      desc.size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth)};
     }
     else
     {
       desc.dimension = commandbuffers::GPUTextureDimension::k2D;
-      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+      desc.size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth)};
     }
     desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
     desc.format = GPUTextureFormat::kRGBA8Unorm;
@@ -321,7 +321,7 @@ namespace renderer
     desc.label = "WebGLTexture";
     desc.usage = GPUTextureUsage::kTextureBinding;
     desc.dimension = commandbuffers::GPUTextureDimension::k2D;
-    desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u };
+    desc.size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u};
     desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
     desc.format = GPUTextureFormat::kRGBA8Unorm;
     auto gpu_tex = rr->createTexture(&desc);
@@ -354,12 +354,12 @@ namespace renderer
     if (target == WEBGL2_TEXTURE_3D)
     {
       desc.dimension = commandbuffers::GPUTextureDimension::k3D;
-      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+      desc.size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth)};
     }
     else
     {
       desc.dimension = commandbuffers::GPUTextureDimension::k2D;
-      desc.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth) };
+      desc.size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), static_cast<uint32_t>(depth)};
     }
     desc.mipLevelCount = static_cast<uint32_t>(texture->mipLevels);
     desc.format = GPUTextureFormat::kRGBA8Unorm;

@@ -43,8 +43,16 @@ namespace commandbuffers
                                              uint32_t renderTargetHeight,
                                              bool depthReadOnly,
                                              bool stencilReadOnly)
-      : GPUHandle(device, descriptor.label.value_or("GPURenderPassEncoder"))
+      : gpu::RenderEncoderBase(device,
+                               descriptor.label.value_or("GPURenderPassEncoder"),
+                               encodingContext,
+                               nullptr,
+                               depthReadOnly,
+                               stencilReadOnly)
   {
+    command_encoder_ = commandEncoder;
+    render_target_width_ = renderTargetWidth;
+    render_target_height_ = renderTargetHeight;
   }
 
   GPURenderPassEncoder::GPURenderPassEncoder(Ref<GPUDeviceBase> device,
@@ -52,32 +60,9 @@ namespace commandbuffers
                                              gpu::EncodingContext *encodingContext,
                                              ErrorTag errorTag,
                                              std::string_view label)
-      : GPUHandle(device, errorTag, label)
+      : gpu::RenderEncoderBase(device, encodingContext, errorTag, label)
   {
-  }
-
-  void GPURenderPassEncoder::draw(uint32_t vertex_count,
-                                  uint32_t instance_count,
-                                  uint32_t first_vertex,
-                                  uint32_t first_instance)
-  {
-    (void)vertex_count;
-    (void)instance_count;
-    (void)first_vertex;
-    (void)first_instance;
-  }
-
-  void GPURenderPassEncoder::drawIndexed(uint32_t index_count,
-                                         uint32_t instance_count,
-                                         uint32_t first_index,
-                                         int32_t base_vertex,
-                                         uint32_t first_instance)
-  {
-    (void)index_count;
-    (void)instance_count;
-    (void)first_index;
-    (void)base_vertex;
-    (void)first_instance;
+    command_encoder_ = commandEncoder;
   }
 
   void GPURenderPassEncoder::setViewport(float x,
@@ -87,25 +72,39 @@ namespace commandbuffers
                                          float min_depth,
                                          float max_depth)
   {
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)min_depth;
-    (void)max_depth;
+    encoding_context_->tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        GPUSetViewportCommand *cmd = allocator->allocate<GPUSetViewportCommand>(GPUCommand::kSetViewport);
+        cmd->x = x;
+        cmd->y = y;
+        cmd->width = width;
+        cmd->height = height;
+        cmd->minDepth = min_depth;
+        cmd->maxDepth = max_depth;
+        return {};
+      });
   }
 
   void GPURenderPassEncoder::setScissorRect(float x, float y, float width, float height)
   {
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
+    encoding_context_->tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        GPUSetScissorCommand *cmd = allocator->allocate<GPUSetScissorCommand>(GPUCommand::kSetScissorRect);
+        cmd->x = x;
+        cmd->y = y;
+        cmd->width = width;
+        cmd->height = height;
+        return {};
+      });
   }
 
   void GPURenderPassEncoder::setPipeline(const GPURenderPipelineBase &pipeline)
   {
-    (void)pipeline;
+    gpu::RenderEncoderBase::setPipeline(const_cast<GPURenderPipelineBase *>(&pipeline));
   }
 
   void GPURenderPassEncoder::setIndexBuffer(const GPUBufferBase &buffer,
@@ -113,10 +112,10 @@ namespace commandbuffers
                                             uint32_t offset,
                                             uint32_t size)
   {
-    (void)buffer;
-    (void)index_format;
-    (void)offset;
-    (void)size;
+    gpu::RenderEncoderBase::setIndexBuffer(const_cast<GPUBufferBase *>(&buffer),
+                                           index_format,
+                                           static_cast<uint64_t>(offset),
+                                           static_cast<uint64_t>(size));
   }
 
   void GPURenderPassEncoder::setVertexBuffer(uint32_t slot,
@@ -124,22 +123,79 @@ namespace commandbuffers
                                              uint32_t offset,
                                              uint32_t size)
   {
-    (void)slot;
-    (void)buffer;
-    (void)offset;
-    (void)size;
+    gpu::RenderEncoderBase::setVertexBuffer(slot,
+                                            const_cast<GPUBufferBase *>(&buffer),
+                                            static_cast<uint64_t>(offset),
+                                            static_cast<uint64_t>(size));
   }
 
   void GPURenderPassEncoder::setBlendConstant(float r, float g, float b, float a)
   {
-    (void)r;
-    (void)g;
-    (void)b;
-    (void)a;
+    encoding_context_->tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        GPUSetBlendConstantCommand *cmd = allocator->allocate<GPUSetBlendConstantCommand>(GPUCommand::kSetBlendConstant);
+        cmd->r = r;
+        cmd->g = g;
+        cmd->b = b;
+        cmd->a = a;
+        return {};
+      });
   }
 
   void GPURenderPassEncoder::setStencilReference(uint32_t ref)
   {
-    (void)ref;
+    encoding_context_->tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        GPUSetStencilReferenceCommand *cmd = allocator->allocate<GPUSetStencilReferenceCommand>(GPUCommand::kSetStencilReference);
+        cmd->reference = ref;
+        return {};
+      });
   }
- }
+
+  void GPURenderPassEncoder::end()
+  {
+    if (this->gpu::ProgrammableEncoder::ended_ && isValidationEnabled())
+    {
+      if (encoding_context_ != nullptr)
+      {
+        encoding_context_->handleError(gpu::ErrorData::Create(
+          gpu::InternalErrorType::kValidation,
+          "GPURenderPassEncoder was already ended.",
+          __FILE__,
+          __func__,
+          __LINE__));
+      }
+      return;
+    }
+
+    this->gpu::ProgrammableEncoder::ended_ = true;
+    GPUPassEncoderBase::end();
+
+    encoding_context_->tryEncode(
+      this,
+      [&](gpu::CommandAllocator *allocator) -> gpu::MaybeError
+      {
+        if (isValidationEnabled())
+        {
+          gpu::MaybeError validation = validateProgrammableEncoderEnd();
+          if (validation.IsError())
+          {
+            return validation;
+          }
+        }
+
+        allocator->allocate<GPUEndRenderPassCommand>(GPUCommand::kEndRenderPass);
+
+        gpu::RenderPassResourceUsageTracker usage_tracker;
+        encoding_context_->exitRenderPass(this,
+                                          std::move(usage_tracker),
+                                          command_encoder_,
+                                          std::move(indirect_draw_metadata_));
+        return {};
+      });
+  }
+}

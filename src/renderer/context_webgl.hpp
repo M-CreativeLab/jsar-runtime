@@ -347,11 +347,26 @@ namespace renderer
       }
 
       // Accessors for mirrored WebGPU states if needed externally
-      inline const commandbuffers::GPUPrimitiveState &primitive() const { return primitive_state_; }
-      inline const commandbuffers::GPUDepthStencilState &depthStencil() const { return depth_stencil_state_; }
-      inline const commandbuffers::GPUMultisampleState &multisample() const { return multisample_state_; }
-      inline const commandbuffers::GPUBlendState &blendState() const { return blend_state_; }
-      inline const commandbuffers::GPUColorTargetState &colorTarget() const { return color_target_state_; }
+      inline const commandbuffers::GPUPrimitiveState &primitive() const
+      {
+        return primitive_state_;
+      }
+      inline const commandbuffers::GPUDepthStencilState &depthStencil() const
+      {
+        return depth_stencil_state_;
+      }
+      inline const commandbuffers::GPUMultisampleState &multisample() const
+      {
+        return multisample_state_;
+      }
+      inline const commandbuffers::GPUBlendState &blendState() const
+      {
+        return blend_state_;
+      }
+      inline const commandbuffers::GPUColorTargetState &colorTarget() const
+      {
+        return color_target_state_;
+      }
 
       // Explicit apply methods for state changes not gated by a capability
       void applyColorMask();
@@ -364,22 +379,38 @@ namespace renderer
         using namespace commandbuffers;
         switch (f)
         {
-        case WEBGL_ZERO: return GPUBlendFactor::kZero;
-        case WEBGL_ONE: return GPUBlendFactor::kOne;
-        case WEBGL_SRC_COLOR: return GPUBlendFactor::kSrc;
-        case WEBGL_ONE_MINUS_SRC_COLOR: return GPUBlendFactor::kOneMinusSrc;
-        case WEBGL_SRC_ALPHA: return GPUBlendFactor::kSrcAlpha;
-        case WEBGL_ONE_MINUS_SRC_ALPHA: return GPUBlendFactor::kOneMinusSrcAlpha;
-        case WEBGL_DST_COLOR: return GPUBlendFactor::kDst;
-        case WEBGL_ONE_MINUS_DST_COLOR: return GPUBlendFactor::kOneMinusDst;
-        case WEBGL_DST_ALPHA: return GPUBlendFactor::kDstAlpha;
-        case WEBGL_ONE_MINUS_DST_ALPHA: return GPUBlendFactor::kOneMinusDstAlpha;
-        case WEBGL_SRC_ALPHA_SATURATE: return GPUBlendFactor::kSrcAlphaSaturated;
-        case WEBGL_CONSTANT_COLOR: return GPUBlendFactor::kConstant;
-        case WEBGL_ONE_MINUS_CONSTANT_COLOR: return GPUBlendFactor::kOneMinusConstant;
-        case WEBGL_CONSTANT_ALPHA: return GPUBlendFactor::kConstant;
-        case WEBGL_ONE_MINUS_CONSTANT_ALPHA: return GPUBlendFactor::kOneMinusConstant;
-        default: return GPUBlendFactor::kUndefined;
+        case WEBGL_ZERO:
+          return GPUBlendFactor::kZero;
+        case WEBGL_ONE:
+          return GPUBlendFactor::kOne;
+        case WEBGL_SRC_COLOR:
+          return GPUBlendFactor::kSrc;
+        case WEBGL_ONE_MINUS_SRC_COLOR:
+          return GPUBlendFactor::kOneMinusSrc;
+        case WEBGL_SRC_ALPHA:
+          return GPUBlendFactor::kSrcAlpha;
+        case WEBGL_ONE_MINUS_SRC_ALPHA:
+          return GPUBlendFactor::kOneMinusSrcAlpha;
+        case WEBGL_DST_COLOR:
+          return GPUBlendFactor::kDst;
+        case WEBGL_ONE_MINUS_DST_COLOR:
+          return GPUBlendFactor::kOneMinusDst;
+        case WEBGL_DST_ALPHA:
+          return GPUBlendFactor::kDstAlpha;
+        case WEBGL_ONE_MINUS_DST_ALPHA:
+          return GPUBlendFactor::kOneMinusDstAlpha;
+        case WEBGL_SRC_ALPHA_SATURATE:
+          return GPUBlendFactor::kSrcAlphaSaturated;
+        case WEBGL_CONSTANT_COLOR:
+          return GPUBlendFactor::kConstant;
+        case WEBGL_ONE_MINUS_CONSTANT_COLOR:
+          return GPUBlendFactor::kOneMinusConstant;
+        case WEBGL_CONSTANT_ALPHA:
+          return GPUBlendFactor::kConstant;
+        case WEBGL_ONE_MINUS_CONSTANT_ALPHA:
+          return GPUBlendFactor::kOneMinusConstant;
+        default:
+          return GPUBlendFactor::kUndefined;
         }
       }
 
@@ -388,10 +419,14 @@ namespace renderer
         using namespace commandbuffers;
         switch (op)
         {
-        case WEBGL_FUNC_ADD: return GPUBlendOperation::kAdd;
-        case WEBGL_FUNC_SUBTRACT: return GPUBlendOperation::kSubtract;
-        case WEBGL_FUNC_REVERSE_SUBTRACT: return GPUBlendOperation::kReverseSubtract;
-        default: return GPUBlendOperation::kUndefined;
+        case WEBGL_FUNC_ADD:
+          return GPUBlendOperation::kAdd;
+        case WEBGL_FUNC_SUBTRACT:
+          return GPUBlendOperation::kSubtract;
+        case WEBGL_FUNC_REVERSE_SUBTRACT:
+          return GPUBlendOperation::kReverseSubtract;
+        default:
+          return GPUBlendOperation::kUndefined;
         }
       }
 
@@ -400,15 +435,24 @@ namespace renderer
         using namespace commandbuffers;
         switch (func)
         {
-        case WEBGL_NEVER: return GPUCompareFunction::kNever;
-        case WEBGL_LESS: return GPUCompareFunction::kLess;
-        case WEBGL_EQUAL: return GPUCompareFunction::kEqual;
-        case WEBGL_LEQUAL: return GPUCompareFunction::kLessEqual;
-        case WEBGL_GREATER: return GPUCompareFunction::kGreater;
-        case WEBGL_NOTEQUAL: return GPUCompareFunction::kNotEqual;
-        case WEBGL_GEQUAL: return GPUCompareFunction::kGreaterEqual;
-        case WEBGL_ALWAYS: return GPUCompareFunction::kAlways;
-        default: return GPUCompareFunction::kUndefined;
+        case WEBGL_NEVER:
+          return GPUCompareFunction::kNever;
+        case WEBGL_LESS:
+          return GPUCompareFunction::kLess;
+        case WEBGL_EQUAL:
+          return GPUCompareFunction::kEqual;
+        case WEBGL_LEQUAL:
+          return GPUCompareFunction::kLessEqual;
+        case WEBGL_GREATER:
+          return GPUCompareFunction::kGreater;
+        case WEBGL_NOTEQUAL:
+          return GPUCompareFunction::kNotEqual;
+        case WEBGL_GEQUAL:
+          return GPUCompareFunction::kGreaterEqual;
+        case WEBGL_ALWAYS:
+          return GPUCompareFunction::kAlways;
+        default:
+          return GPUCompareFunction::kUndefined;
         }
       }
 
@@ -417,10 +461,14 @@ namespace renderer
         using namespace commandbuffers;
         switch (mode)
         {
-        case WEBGL_FRONT: return GPUCullMode::kFront;
-        case WEBGL_BACK: return GPUCullMode::kBack;
-        case WEBGL_FRONT_AND_BACK: return GPUCullMode::kBack;
-        default: return GPUCullMode::kNone;
+        case WEBGL_FRONT:
+          return GPUCullMode::kFront;
+        case WEBGL_BACK:
+          return GPUCullMode::kBack;
+        case WEBGL_FRONT_AND_BACK:
+          return GPUCullMode::kBack;
+        default:
+          return GPUCullMode::kNone;
         }
       }
 
@@ -429,9 +477,12 @@ namespace renderer
         using namespace commandbuffers;
         switch (mode)
         {
-        case WEBGL_CW: return GPUFrontFace::kCW;
-        case WEBGL_CCW: return GPUFrontFace::kCCW;
-        default: return GPUFrontFace::kUndefined;
+        case WEBGL_CW:
+          return GPUFrontFace::kCW;
+        case WEBGL_CCW:
+          return GPUFrontFace::kCCW;
+        default:
+          return GPUFrontFace::kUndefined;
         }
       }
 
@@ -440,15 +491,24 @@ namespace renderer
         using namespace commandbuffers;
         switch (op)
         {
-        case WEBGL_KEEP: return GPUStencilOperation::kKeep;
-        case WEBGL_ZERO: return GPUStencilOperation::kZero;
-        case WEBGL_REPLACE: return GPUStencilOperation::kReplace;
-        case WEBGL_INCR: return GPUStencilOperation::kIncrementClamp;
-        case WEBGL_INCR_WRAP: return GPUStencilOperation::kIncrementWrap;
-        case WEBGL_DECR: return GPUStencilOperation::kDecrementClamp;
-        case WEBGL_DECR_WRAP: return GPUStencilOperation::kDecrementWrap;
-        case WEBGL_INVERT: return GPUStencilOperation::kInvert;
-        default: return GPUStencilOperation::kUndefined;
+        case WEBGL_KEEP:
+          return GPUStencilOperation::kKeep;
+        case WEBGL_ZERO:
+          return GPUStencilOperation::kZero;
+        case WEBGL_REPLACE:
+          return GPUStencilOperation::kReplace;
+        case WEBGL_INCR:
+          return GPUStencilOperation::kIncrementClamp;
+        case WEBGL_INCR_WRAP:
+          return GPUStencilOperation::kIncrementWrap;
+        case WEBGL_DECR:
+          return GPUStencilOperation::kDecrementClamp;
+        case WEBGL_DECR_WRAP:
+          return GPUStencilOperation::kDecrementWrap;
+        case WEBGL_INVERT:
+          return GPUStencilOperation::kInvert;
+        default:
+          return GPUStencilOperation::kUndefined;
         }
       }
 
@@ -467,8 +527,8 @@ namespace renderer
     };
   }
 
-    class TrContextWebGL
-    {
+  class TrContextWebGL
+  {
   public:
     TrContextWebGL(Ref<TrContentRenderer> content_renderer);
     ~TrContextWebGL();
@@ -950,9 +1010,9 @@ namespace renderer
     }
 
     template <typename... Args>
-      requires((sizeof...(Args) > 0) && (((std::is_same_v<Args, WebGLfloat>) && ...) ||
-                                         ((std::is_same_v<Args, WebGLint>) && ...) ||
-                                         ((std::is_same_v<Args, WebGLuint>) && ...)))
+      requires((sizeof...(Args) > 0) && (((std::is_same_v<Args, WebGLfloat>)&&...) ||
+                                         ((std::is_same_v<Args, WebGLint>)&&...) ||
+                                         ((std::is_same_v<Args, WebGLuint>)&&...)))
     void glSetUniform(WebGLuint location, Args... args)
     {
       if (current_program_ == nullptr) [[unlikely]]
@@ -1114,4 +1174,4 @@ namespace renderer
     Ref<TrRenderPass> current_render_pass_;
     std::unordered_map<WebGLuint, Ref<TrRenderPass>> framebuffer_renderpasses_;
   };
-} 
+}

@@ -68,7 +68,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(true, false, false, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -78,7 +78,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(false, true, false, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -88,7 +88,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(false, false, true, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -119,7 +119,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(true, false, false, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -129,7 +129,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(false, true, false, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -139,7 +139,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(false, false, true, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -170,7 +170,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(true, false, false, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -180,7 +180,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(false, true, false, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -190,7 +190,7 @@ namespace renderer
       auto pass = getCurrentRenderPass();
       if (pass)
       {
-        const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+        const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
         pass->clearAttachments(false, false, true, rgba, clear_depth_, clear_stencil_);
       }
     }
@@ -220,7 +220,7 @@ namespace renderer
     auto pass = getCurrentRenderPass();
     if (pass)
     {
-      const float rgba[4] = { clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3] };
+      const float rgba[4] = {clear_color_[0], clear_color_[1], clear_color_[2], clear_color_[3]};
       pass->clearAttachments(false, true, true, rgba, clear_depth_, clear_stencil_);
     }
   }
@@ -269,6 +269,12 @@ namespace renderer
                                     WebGLenum type,
                                     WebGLvoid *pixels)
   {
-    (void)x; (void)y; (void)width; (void)height; (void)format; (void)type; (void)pixels;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)format;
+    (void)type;
+    (void)pixels;
   }
 }

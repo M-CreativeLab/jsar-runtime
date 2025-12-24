@@ -188,7 +188,9 @@ namespace renderer
                                       WebGLenum type,
                                       const WebGLvoid *indices)
   {
-    (void)mode; (void)type; (void)indices;
+    (void)mode;
+    (void)type;
+    (void)indices;
     if (count <= 0)
       return;
     auto pass = getCurrentRenderPass();
@@ -199,7 +201,9 @@ namespace renderer
 
   void TrContextWebGL::glDrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type, const WebGLvoid *indices, WebGLsizei instanceCount)
   {
-    (void)mode; (void)type; (void)indices;
+    (void)mode;
+    (void)type;
+    (void)indices;
     if (count <= 0 || instanceCount <= 0)
       return;
     auto pass = getCurrentRenderPass();
@@ -210,7 +214,11 @@ namespace renderer
 
   void TrContextWebGL::glDrawRangeElements(WebGLenum mode, WebGLuint start, WebGLuint end, WebGLsizei count, WebGLenum type, const WebGLvoid *indices)
   {
-    (void)mode; (void)start; (void)end; (void)type; (void)indices;
+    (void)mode;
+    (void)start;
+    (void)end;
+    (void)type;
+    (void)indices;
     if (count <= 0)
       return;
     auto pass = getCurrentRenderPass();
@@ -321,42 +329,56 @@ namespace renderer
 
   void TrContextWebGL::glVertexAttrib1f(WebGLuint index, WebGLfloat x)
   {
-    (void)index; (void)x;
+    (void)index;
+    (void)x;
   }
 
   void TrContextWebGL::glVertexAttrib2f(WebGLuint index, WebGLfloat x, WebGLfloat y)
   {
-    (void)index; (void)x; (void)y;
+    (void)index;
+    (void)x;
+    (void)y;
   }
 
   void TrContextWebGL::glVertexAttrib3f(WebGLuint index, WebGLfloat x, WebGLfloat y, WebGLfloat z)
   {
-    (void)index; (void)x; (void)y; (void)z;
+    (void)index;
+    (void)x;
+    (void)y;
+    (void)z;
   }
 
   void TrContextWebGL::glVertexAttrib4f(WebGLuint index, WebGLfloat x, WebGLfloat y, WebGLfloat z, WebGLfloat w)
   {
-    (void)index; (void)x; (void)y; (void)z; (void)w;
+    (void)index;
+    (void)x;
+    (void)y;
+    (void)z;
+    (void)w;
   }
 
   void TrContextWebGL::glVertexAttrib1fv(WebGLuint index, const WebGLfloat *v)
   {
-    (void)index; (void)v;
+    (void)index;
+    (void)v;
   }
 
   void TrContextWebGL::glVertexAttrib2fv(WebGLuint index, const WebGLfloat *v)
   {
-    (void)index; (void)v;
+    (void)index;
+    (void)v;
   }
 
   void TrContextWebGL::glVertexAttrib3fv(WebGLuint index, const WebGLfloat *v)
   {
-    (void)index; (void)v;
+    (void)index;
+    (void)v;
   }
 
   void TrContextWebGL::glVertexAttrib4fv(WebGLuint index, const WebGLfloat *v)
   {
-    (void)index; (void)v;
+    (void)index;
+    (void)v;
   }
 
   void TrContextWebGL::glVertexAttribDivisor(WebGLuint index, WebGLuint divisor)
@@ -399,43 +421,43 @@ namespace renderer
     switch (type)
     {
     case WEBGL_FLOAT:
-      attr.format = size == 1 ? GPUVertexFormat::kFloat32 :
-                    size == 2 ? GPUVertexFormat::kFloat32x2 :
-                    size == 3 ? GPUVertexFormat::kFloat32x3 : GPUVertexFormat::kFloat32x4;
+      attr.format = size == 1 ? GPUVertexFormat::kFloat32 : size == 2 ? GPUVertexFormat::kFloat32x2
+                                                          : size == 3 ? GPUVertexFormat::kFloat32x3
+                                                                      : GPUVertexFormat::kFloat32x4;
       break;
     case WEBGL_UNSIGNED_BYTE:
-      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kUnorm8 :
-                                  size == 2 ? GPUVertexFormat::kUnorm8x2 : GPUVertexFormat::kUnorm8x4)
-                               : (size == 1 ? GPUVertexFormat::kUint8 :
-                                  size == 2 ? GPUVertexFormat::kUint8x2 : GPUVertexFormat::kUint8x4);
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kUnorm8 : size == 2 ? GPUVertexFormat::kUnorm8x2
+                                                                                   : GPUVertexFormat::kUnorm8x4)
+                               : (size == 1 ? GPUVertexFormat::kUint8 : size == 2 ? GPUVertexFormat::kUint8x2
+                                                                                  : GPUVertexFormat::kUint8x4);
       break;
     case WEBGL_BYTE:
-      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kSnorm8 :
-                                  size == 2 ? GPUVertexFormat::kSnorm8x2 : GPUVertexFormat::kSnorm8x4)
-                               : (size == 1 ? GPUVertexFormat::kSint8 :
-                                  size == 2 ? GPUVertexFormat::kSint8x2 : GPUVertexFormat::kSint8x4);
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kSnorm8 : size == 2 ? GPUVertexFormat::kSnorm8x2
+                                                                                   : GPUVertexFormat::kSnorm8x4)
+                               : (size == 1 ? GPUVertexFormat::kSint8 : size == 2 ? GPUVertexFormat::kSint8x2
+                                                                                  : GPUVertexFormat::kSint8x4);
       break;
     case WEBGL_UNSIGNED_SHORT:
-      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kUnorm16 :
-                                  size == 2 ? GPUVertexFormat::kUnorm16x2 : GPUVertexFormat::kUnorm16x4)
-                               : (size == 1 ? GPUVertexFormat::kUint16 :
-                                  size == 2 ? GPUVertexFormat::kUint16x2 : GPUVertexFormat::kUint16x4);
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kUnorm16 : size == 2 ? GPUVertexFormat::kUnorm16x2
+                                                                                    : GPUVertexFormat::kUnorm16x4)
+                               : (size == 1 ? GPUVertexFormat::kUint16 : size == 2 ? GPUVertexFormat::kUint16x2
+                                                                                   : GPUVertexFormat::kUint16x4);
       break;
     case WEBGL_SHORT:
-      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kSnorm16 :
-                                  size == 2 ? GPUVertexFormat::kSnorm16x2 : GPUVertexFormat::kSnorm16x4)
-                               : (size == 1 ? GPUVertexFormat::kSint16 :
-                                  size == 2 ? GPUVertexFormat::kSint16x2 : GPUVertexFormat::kSint16x4);
+      attr.format = normalized ? (size == 1 ? GPUVertexFormat::kSnorm16 : size == 2 ? GPUVertexFormat::kSnorm16x2
+                                                                                    : GPUVertexFormat::kSnorm16x4)
+                               : (size == 1 ? GPUVertexFormat::kSint16 : size == 2 ? GPUVertexFormat::kSint16x2
+                                                                                   : GPUVertexFormat::kSint16x4);
       break;
     case WEBGL_INT:
-      attr.format = size == 1 ? GPUVertexFormat::kSint32 :
-                    size == 2 ? GPUVertexFormat::kSint32x2 :
-                    size == 3 ? GPUVertexFormat::kSint32x3 : GPUVertexFormat::kSint32x4;
+      attr.format = size == 1 ? GPUVertexFormat::kSint32 : size == 2 ? GPUVertexFormat::kSint32x2
+                                                         : size == 3 ? GPUVertexFormat::kSint32x3
+                                                                     : GPUVertexFormat::kSint32x4;
       break;
     case WEBGL_UNSIGNED_INT:
-      attr.format = size == 1 ? GPUVertexFormat::kUint32 :
-                    size == 2 ? GPUVertexFormat::kUint32x2 :
-                    size == 3 ? GPUVertexFormat::kUint32x3 : GPUVertexFormat::kUint32x4;
+      attr.format = size == 1 ? GPUVertexFormat::kUint32 : size == 2 ? GPUVertexFormat::kUint32x2
+                                                         : size == 3 ? GPUVertexFormat::kUint32x3
+                                                                     : GPUVertexFormat::kUint32x4;
       break;
     default:
       attr.format = GPUVertexFormat::kFloat32;
@@ -466,14 +488,14 @@ namespace renderer
     switch (type)
     {
     case WEBGL_INT:
-      attr.format = size == 1 ? GPUVertexFormat::kSint32 :
-                    size == 2 ? GPUVertexFormat::kSint32x2 :
-                    size == 3 ? GPUVertexFormat::kSint32x3 : GPUVertexFormat::kSint32x4;
+      attr.format = size == 1 ? GPUVertexFormat::kSint32 : size == 2 ? GPUVertexFormat::kSint32x2
+                                                         : size == 3 ? GPUVertexFormat::kSint32x3
+                                                                     : GPUVertexFormat::kSint32x4;
       break;
     case WEBGL_UNSIGNED_INT:
-      attr.format = size == 1 ? GPUVertexFormat::kUint32 :
-                    size == 2 ? GPUVertexFormat::kUint32x2 :
-                    size == 3 ? GPUVertexFormat::kUint32x3 : GPUVertexFormat::kUint32x4;
+      attr.format = size == 1 ? GPUVertexFormat::kUint32 : size == 2 ? GPUVertexFormat::kUint32x2
+                                                         : size == 3 ? GPUVertexFormat::kUint32x3
+                                                                     : GPUVertexFormat::kUint32x4;
       break;
     default:
       attr.format = GPUVertexFormat::kSint32;

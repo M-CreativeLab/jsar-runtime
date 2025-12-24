@@ -10,6 +10,7 @@
 #include <common/command_buffers/gpu/gpu_texture_view.hpp>
 #include <common/command_buffers/gpu/gpu_commands.hpp>
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <common/command_buffers/gpu/render_encoder_base.hpp>
 #include <command_buffers/gpu/encoding_context.hpp>
 
 namespace commandbuffers
@@ -61,8 +62,8 @@ namespace commandbuffers
     std::optional<DepthStencilAttachment> depthStencilAttachment;
   };
 
-  class GPURenderPassEncoder final : public GPUPassEncoderBase,
-                                     public GPUHandle
+  class GPURenderPassEncoder final : public gpu::RenderEncoderBase,
+                                     public GPUPassEncoderBase
   {
   public:
     static Ref<GPURenderPassEncoder> Create(const GPURenderPassDescriptor &descriptor,
@@ -85,17 +86,6 @@ namespace commandbuffers
       return true;
     }
 
-    void draw(
-      uint32_t vertex_count,
-      uint32_t instance_count = 1,
-      uint32_t first_vertex = 0,
-      uint32_t first_instance = 0);
-    void drawIndexed(
-      uint32_t index_count,
-      uint32_t instance_count = 1,
-      uint32_t first_index = 0,
-      int32_t base_vertex = 0,
-      uint32_t first_instance = 0);
     void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f);
     void setScissorRect(float x, float y, float width, float height);
     void setPipeline(const GPURenderPipelineBase &pipeline);
@@ -103,6 +93,7 @@ namespace commandbuffers
     void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0);
     void setBlendConstant(float r, float g, float b, float a);
     void setStencilReference(uint32_t ref);
+    void end() override;
 
   protected:
     GPURenderPassEncoder(Ref<GPUDeviceBase> device,
@@ -118,5 +109,10 @@ namespace commandbuffers
                          gpu::EncodingContext *encodingContext,
                          ErrorTag errorTag,
                          std::string_view label);
+
+  private:
+    GPUCommandEncoder *command_encoder_ = nullptr;
+    uint32_t render_target_width_ = 0;
+    uint32_t render_target_height_ = 0;
   };
 }

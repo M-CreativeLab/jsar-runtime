@@ -31,11 +31,11 @@ namespace commandbuffers
                 uint32_t instance_count = 1,
                 uint32_t first_vertex = 0,
                 uint32_t first_instance = 0);
-      void drawIndexed(uint32_t vertex_count,
-                       uint32_t instance_count,
-                       uint32_t first_index,
-                       int32_t base_vertex,
-                       uint32_t first_instance);
+      void drawIndexed(uint32_t index_count,
+                       uint32_t instance_count = 1,
+                       uint32_t first_index = 0,
+                       int32_t base_vertex = 0,
+                       uint32_t first_instance = 0);
 
       void drawIndirect(GPUBufferBase *indirect_buffer, uint64_t indirect_fffset);
       void drawIndexedIndirect(GPUBufferBase *indirect_buffer, uint64_t indirect_fffset);

@@ -1178,7 +1178,8 @@ namespace renderer
   void details::Capabilities::applyEnable(WebGLenum cap)
   {
     using namespace commandbuffers;
-    if (!owner_) return;
+    if (!owner_)
+      return;
     switch (cap)
     {
     case WEBGL_BLEND:
@@ -1248,7 +1249,8 @@ namespace renderer
   void details::Capabilities::applyColorMask()
   {
     using namespace commandbuffers;
-    if (!owner_) return;
+    if (!owner_)
+      return;
     const bool r = owner_->color_mask_[0] != 0;
     const bool g = owner_->color_mask_[1] != 0;
     const bool b = owner_->color_mask_[2] != 0;
@@ -1266,10 +1268,10 @@ namespace renderer
     }
     else if (count == 1)
     {
-      mask = r ? GPUColorWriteMask::kRed
-               : g ? GPUColorWriteMask::kGreen
-               : b ? GPUColorWriteMask::kBlue
-                    : GPUColorWriteMask::kAlpha;
+      mask = r   ? GPUColorWriteMask::kRed
+             : g ? GPUColorWriteMask::kGreen
+             : b ? GPUColorWriteMask::kBlue
+                 : GPUColorWriteMask::kAlpha;
     }
     else
     {

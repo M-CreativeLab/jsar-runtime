@@ -80,9 +80,16 @@ namespace renderer
                                          WebGLbitfield mask,
                                          WebGLenum filter)
   {
-    (void)srcX0; (void)srcY0; (void)srcX1; (void)srcY1;
-    (void)dstX0; (void)dstY0; (void)dstX1; (void)dstY1;
-    (void)mask; (void)filter;
+    (void)srcX0;
+    (void)srcY0;
+    (void)srcX1;
+    (void)srcY1;
+    (void)dstX0;
+    (void)dstY0;
+    (void)dstX1;
+    (void)dstY1;
+    (void)mask;
+    (void)filter;
   }
 
   void TrContextWebGL::glCheckFramebufferStatus(WebGLenum target)
@@ -161,8 +168,8 @@ namespace renderer
         framebuffer->stencilAttachment->renderbuffer = rb;
       }
       auto pass = (framebuffer_renderpasses_.find(framebuffer->id) != framebuffer_renderpasses_.end())
-                      ? framebuffer_renderpasses_[framebuffer->id]
-                      : current_render_pass_;
+                    ? framebuffer_renderpasses_[framebuffer->id]
+                    : current_render_pass_;
       if (pass)
         pass->ensureDepthStencilAttachment();
     }
@@ -280,7 +287,9 @@ namespace renderer
     if (params == nullptr)
       return;
     *params = 0;
-    (void)target; (void)attachment; (void)pname;
+    (void)target;
+    (void)attachment;
+    (void)pname;
   }
 
   void TrContextWebGL::glGetRenderbufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint *params)
@@ -288,12 +297,15 @@ namespace renderer
     if (params == nullptr)
       return;
     *params = 0;
-    (void)target; (void)pname;
+    (void)target;
+    (void)pname;
   }
 
   void TrContextWebGL::glInvalidateFramebuffer(WebGLenum target, WebGLsizei n, const WebGLenum *attachments)
   {
-    (void)target; (void)n; (void)attachments;
+    (void)target;
+    (void)n;
+    (void)attachments;
   }
 
   void TrContextWebGL::glInvalidateSubFramebuffer(WebGLenum target,
@@ -304,8 +316,13 @@ namespace renderer
                                                   WebGLsizei width,
                                                   WebGLsizei height)
   {
-    (void)target; (void)n; (void)attachments;
-    (void)x; (void)y; (void)width; (void)height;
+    (void)target;
+    (void)n;
+    (void)attachments;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
   }
 
   WebGLboolean TrContextWebGL::glIsFramebuffer(WebGLuint framebuffer)
@@ -320,7 +337,10 @@ namespace renderer
 
   void TrContextWebGL::glRenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
   {
-    (void)target; (void)internalformat; (void)width; (void)height;
+    (void)target;
+    (void)internalformat;
+    (void)width;
+    (void)height;
   }
 
   void TrContextWebGL::glRenderbufferStorageMultisample(WebGLenum target,
@@ -329,6 +349,10 @@ namespace renderer
                                                         WebGLsizei width,
                                                         WebGLsizei height)
   {
-    (void)target; (void)samples; (void)internalformat; (void)width; (void)height;
+    (void)target;
+    (void)samples;
+    (void)internalformat;
+    (void)width;
+    (void)height;
   }
 }

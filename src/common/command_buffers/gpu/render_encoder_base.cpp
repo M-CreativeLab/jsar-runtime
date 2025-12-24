@@ -1,4 +1,5 @@
 #include <common/command_buffers/gpu/gpu_device.hpp>
+#include <common/command_buffers/gpu/gpu_commands.hpp>
 #include <common/command_buffers/gpu/render_encoder_base.hpp>
 #include "command_buffers/gpu/indirect_draw_metadata.hpp"
 
@@ -17,6 +18,8 @@ namespace commandbuffers::gpu
       , disable_base_vertex_(true)
       , disable_base_instance_(true)
   {
+    depth_read_only_ = depth_readonly;
+    stencil_read_only_ = stencil_readonly;
   }
 
   RenderEncoderBase::RenderEncoderBase(Ref<GPUDeviceBase> device,
@@ -34,14 +37,39 @@ namespace commandbuffers::gpu
                                uint32_t first_vertex,
                                uint32_t first_instance)
   {
+    encoding_context_->tryEncode(
+      this,
+      [&](CommandAllocator *allocator) -> MaybeError
+      {
+        auto *draw_command = allocator->allocate<GPUDrawCommand>(GPUCommand::kDraw);
+        draw_command->vertexCount = vertex_count;
+        draw_command->instanceCount = instance_count;
+        draw_command->firstVertex = first_vertex;
+        draw_command->firstInstance = first_instance;
+        draw_count_++;
+        return {};
+      });
   }
 
-  void RenderEncoderBase::drawIndexed(uint32_t vertex_count,
+  void RenderEncoderBase::drawIndexed(uint32_t index_count,
                                       uint32_t instance_count,
                                       uint32_t first_index,
                                       int32_t base_vertex,
                                       uint32_t first_instance)
   {
+    encoding_context_->tryEncode(
+      this,
+      [&](CommandAllocator *allocator) -> MaybeError
+      {
+        auto *cmd = allocator->allocate<GPUDrawIndexedCommand>(GPUCommand::kDrawIndexed);
+        cmd->indexCount = index_count;
+        cmd->instanceCount = instance_count;
+        cmd->firstIndex = first_index;
+        cmd->baseVertex = base_vertex;
+        cmd->firstInstance = first_instance;
+        draw_count_++;
+        return {};
+      });
   }
 
   void RenderEncoderBase::drawIndirect(GPUBufferBase *indirect_buffer, uint64_t indirect_fffset)
@@ -72,10 +100,37 @@ namespace commandbuffers::gpu
 
   void RenderEncoderBase::setPipeline(GPURenderPipelineBase *pipeline)
   {
+    if (pipeline == nullptr)
+    {
+      return;
+    }
+    encoding_context_->tryEncode(
+      this,
+      [&](CommandAllocator *allocator) -> MaybeError
+      {
+        auto *cmd = allocator->allocate<GPUSetRenderPipelineCommand>(GPUCommand::kSetRenderPipeline);
+        cmd->pipelineId = pipeline->id;
+        return {};
+      });
   }
 
   void RenderEncoderBase::setVertexBuffer(uint32_t slot, GPUBufferBase *buffer, uint64_t offset, uint64_t size)
   {
+    if (buffer == nullptr)
+    {
+      return;
+    }
+    encoding_context_->tryEncode(
+      this,
+      [&](CommandAllocator *allocator) -> MaybeError
+      {
+        auto *cmd = allocator->allocate<GPUSetVertexBufferCommand>(GPUCommand::kSetVertexBuffer);
+        cmd->slot = slot;
+        cmd->bufferId = buffer->id;
+        cmd->offset = static_cast<uint32_t>(offset);
+        cmd->size = static_cast<uint32_t>(size);
+        return {};
+      });
   }
 
   void RenderEncoderBase::setIndexBuffer(GPUBufferBase *buffer,
@@ -83,6 +138,21 @@ namespace commandbuffers::gpu
                                          uint64_t offset,
                                          uint64_t size)
   {
+    if (buffer == nullptr)
+    {
+      return;
+    }
+    encoding_context_->tryEncode(
+      this,
+      [&](CommandAllocator *allocator) -> MaybeError
+      {
+        auto *cmd = allocator->allocate<GPUSetIndexBufferCommand>(GPUCommand::kSetIndexBuffer);
+        cmd->bufferId = buffer->id;
+        cmd->indexFormat = format;
+        cmd->offset = static_cast<uint32_t>(offset);
+        cmd->size = static_cast<uint32_t>(size);
+        return {};
+      });
   }
 
   void RenderEncoderBase::setBindGroup(uint32_t group_index,
