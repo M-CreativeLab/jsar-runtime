@@ -87,9 +87,10 @@ namespace renderer
     Ref<TrContentRenderer> self = shared_from_this();
     context_webgl_ = AcquireRef(new TrContextWebGL(self));
     auto rhi = getRendererRef().getRHI();
+    Ref<commandbuffers::GPUDeviceBase> device = nullptr;
     if (rhi != nullptr)
     {
-      auto device = rhi->GetGPUDevice();
+      device = rhi->GetGPUDevice();
       if (device != nullptr)
         render_resource_ = AcquireRef(new TrRenderResource(device));
     }
