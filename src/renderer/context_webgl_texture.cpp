@@ -37,12 +37,14 @@ namespace renderer
                                         WebGLsizei height,
                                         WebGLint border)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = level + 1;
     texture->internalformat = internalformat;
     texture->setSize(width, height);
@@ -57,8 +59,9 @@ namespace renderer
                                            WebGLsizei width,
                                            WebGLsizei height)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
@@ -88,12 +91,14 @@ namespace renderer
 
   void TrContextWebGL::glGetTexParameter(WebGLenum target, WebGLenum pname, WebGLint *params)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture || !params) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second || !params) [[unlikely]]
       return;
-    auto it = texture->params_i.find(pname);
-    if (it != texture->params_i.end())
-      *params = it->second;
+    auto texture = it->second;
+    auto param_it = texture->params_i.find(pname);
+    if (param_it != texture->params_i.end())
+      *params = param_it->second;
   }
 
   WebGLboolean TrContextWebGL::glIsTexture(WebGLuint texture)
@@ -111,12 +116,14 @@ namespace renderer
                                     WebGLenum type,
                                     const WebGLvoid *data)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height);
@@ -145,12 +152,14 @@ namespace renderer
                                     WebGLenum type,
                                     const WebGLvoid *data)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height, depth);
@@ -186,12 +195,14 @@ namespace renderer
                                               WebGLsizei imageSize,
                                               const WebGLvoid *data)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height);
@@ -207,12 +218,14 @@ namespace renderer
                                               WebGLsizei imageSize,
                                               const WebGLvoid *data)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = std::max(1, level + 1);
     texture->internalformat = internalformat;
     texture->setSize(width, height, depth);
@@ -248,33 +261,41 @@ namespace renderer
 
   void TrContextWebGL::glTexParameterf(WebGLenum target, WebGLenum pname, WebGLfloat param)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
       return;
+    auto texture = it->second;
     texture->params_f[pname] = param;
   }
 
   void TrContextWebGL::glTexParameteri(WebGLenum target, WebGLenum pname, WebGLint param)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
       return;
+    auto texture = it->second;
     texture->params_i[pname] = param;
   }
 
   void TrContextWebGL::glTexParameterfv(WebGLenum target, WebGLenum pname, const WebGLfloat *params)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture || !params) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second || !params) [[unlikely]]
       return;
+    auto texture = it->second;
     texture->params_f[pname] = *params;
   }
 
   void TrContextWebGL::glTexParameteriv(WebGLenum target, WebGLenum pname, const WebGLint *params)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture || !params) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second || !params) [[unlikely]]
       return;
+    auto texture = it->second;
     texture->params_i[pname] = *params;
   }
 
@@ -284,12 +305,14 @@ namespace renderer
                                       WebGLsizei width,
                                       WebGLsizei height)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = std::max(1, levels);
     texture->internalformat = internalformat;
     texture->setSize(width, height);
@@ -313,12 +336,14 @@ namespace renderer
                                       WebGLsizei height,
                                       WebGLsizei depth)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
     }
+    auto texture = it->second;
     texture->mipLevels = std::max(1, levels);
     texture->internalformat = internalformat;
     texture->setSize(width, height, depth);
@@ -353,8 +378,9 @@ namespace renderer
                                        WebGLenum type,
                                        const WebGLvoid *data)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
@@ -373,8 +399,9 @@ namespace renderer
                                        WebGLenum type,
                                        const WebGLvoid *data)
   {
-    auto texture = texture_bindings_.at(target);
-    if (!texture) [[unlikely]]
+    auto target_key = details::TextureTarget(target);
+    auto it = texture_bindings_.find(target_key);
+    if (it == texture_bindings_.end() || !it->second) [[unlikely]]
     {
       last_error_ = WEBGL_INVALID_OPERATION;
       return;
