@@ -8,6 +8,10 @@ namespace commandbuffers
   GPUCommandBufferBase::GPUCommandBufferBase(GPUCommandEncoder *encoder,
                                              const GPUCommandBufferDescriptor *descriptor)
       : GPUHandle(encoder->device(), descriptor->label)
+      , commands_(encoder->acquireCommands())
+      , resource_usages_(encoder->acquireResourceUsages())
+      , indirect_draw_metadata_(encoder->acquireIndirectDrawMetadata())
+      , encoder_label_(encoder->getLabel())
   {
   }
 

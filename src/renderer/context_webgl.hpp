@@ -1172,6 +1172,5 @@ namespace renderer
 
     // WebGPU pipeline-related states are maintained inside caps_
     Ref<TrRenderPass> current_render_pass_;
-    std::unordered_map<WebGLuint, Ref<TrRenderPass>> framebuffer_renderpasses_;
   };
 }

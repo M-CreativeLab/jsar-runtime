@@ -21,6 +21,11 @@ namespace gles
   gpu::MaybeError GPUQueueImpl::submitImpl(uint32_t commandCount,
                                            GPUCommandBufferBase *const *commands)
   {
+    for (uint32_t i = 0; i < commandCount; ++i)
+    {
+      GPUCommandBufferBase *cmd = commands[i];
+      printf("Receiving command buffer %u: %p\n", i, static_cast<void *>(cmd));
+    }
     return {};
   }
 

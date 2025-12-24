@@ -93,6 +93,19 @@ namespace renderer
       if (device != nullptr)
         render_resource_ = AcquireRef(new TrRenderResource(device));
     }
+
+    opaque_renderpass_ = AcquireRef(new TrRenderPass(RenderPassType::kOpaque,
+                                                     "Opaque",
+                                                     device,
+                                                     xrDevice));
+    transparent_renderpass_ = AcquireRef(new TrRenderPass(RenderPassType::kTransparent,
+                                                          "Transparent",
+                                                          device,
+                                                          xrDevice));
+    offscreen_renderpass_ = AcquireRef(new TrRenderPass(RenderPassType::kOffscreen,
+                                                       "Offscreen",
+                                                       device,
+                                                       xrDevice));
   }
 
   void TrContentRenderer::onCommandBuffersExecuting()

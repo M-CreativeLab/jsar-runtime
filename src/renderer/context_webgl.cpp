@@ -196,7 +196,7 @@ namespace renderer
 
   static inline void DebugPrintCommandType(const TrCommandBufferRequest &req)
   {
-    DEBUG(LOG_TAG_RENDERER, "WebGL::%s", req.toString().c_str());
+    // DEBUG(LOG_TAG_RENDERER, "WebGL::%s", req.toString().c_str());
   }
 
   void TrContextWebGL::receiveIncomingCall(const TrCommandBufferRequest &req)

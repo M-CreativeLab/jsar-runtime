@@ -167,4 +167,20 @@ namespace commandbuffers
   {
     throw runtime_error("writeTimestamp is not implemented");
   }
+
+  gpu::CommandIterator GPUCommandEncoder::acquireCommands()
+  {
+    return encoding_context_.acquireCommands();
+  }
+
+  gpu::CommandBufferResourceUsage GPUCommandEncoder::acquireResourceUsages() const
+  {
+    gpu::CommandBufferResourceUsage usages;
+    return usages;
+  }
+
+  std::vector<gpu::IndirectDrawMetadata> GPUCommandEncoder::acquireIndirectDrawMetadata() const
+  {
+    return {};
+  }
 }

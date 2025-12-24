@@ -112,6 +112,11 @@ namespace commandbuffers
 
     virtual bool mayRequireDuplicationOfIndirectParameters() const;
 
+    Ref<GPUQueueBase> queue() const
+    {
+      return queue_;
+    }
+
   protected:
     GPUAdapterInfo adapter_info_;
     GPUSupportedFeatures features_;

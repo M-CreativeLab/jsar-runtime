@@ -24,7 +24,10 @@ namespace renderer
       framebuffer_bindings_[framebuffer_target] = nullptr;
 
       if (target == WEBGL_FRAMEBUFFER || target == WEBGL2_DRAW_FRAMEBUFFER)
+      {
         current_render_pass_ = content_renderer_->opaqueRenderPass();
+        current_render_pass_->bindTarget(0);
+      }
       return;
     }
 
@@ -39,14 +42,10 @@ namespace renderer
 
     if (target == WEBGL_FRAMEBUFFER || target == WEBGL2_DRAW_FRAMEBUFFER)
     {
-      if (framebuffer_renderpasses_.find(id) == framebuffer_renderpasses_.end())
-      {
-        auto pass = AcquireRef(new TrRenderPass(RenderPassType::kOffscreen, "OffscreenFramebuffer"));
-        pass->setColorAttachmentCount(1);
-        pass->ensureDepthStencilAttachment();
-        framebuffer_renderpasses_[id] = pass;
-      }
-      current_render_pass_ = framebuffer_renderpasses_[id];
+      current_render_pass_ = content_renderer_->offscreenRenderPass();
+      current_render_pass_->bindTarget(id);
+      current_render_pass_->setColorAttachmentCount(1);
+      current_render_pass_->ensureDepthStencilAttachment();
     }
   }
 
@@ -103,7 +102,9 @@ namespace renderer
       return;
     for (WebGLsizei i = 0; i < n; i++)
     {
-      framebuffer_renderpasses_.erase(framebuffers[i]);
+      auto offscreen = content_renderer_->offscreenRenderPass();
+      if (offscreen)
+        offscreen->discardTarget(framebuffers[i]);
       framebuffers_.remove(framebuffers[i]);
     }
   }
@@ -167,11 +168,12 @@ namespace renderer
           framebuffer->stencilAttachment = AcquireRef(new details::FramebufferAttachment());
         framebuffer->stencilAttachment->renderbuffer = rb;
       }
-      auto pass = (framebuffer_renderpasses_.find(framebuffer->id) != framebuffer_renderpasses_.end())
-                    ? framebuffer_renderpasses_[framebuffer->id]
-                    : current_render_pass_;
+      auto pass = content_renderer_->offscreenRenderPass();
       if (pass)
+      {
+        pass->bindTarget(framebuffer->id);
         pass->ensureDepthStencilAttachment();
+      }
     }
     else
     {

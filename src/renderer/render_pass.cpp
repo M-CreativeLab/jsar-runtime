@@ -1,17 +1,27 @@
 #include <renderer/render_pass.hpp>
+#include <renderer/render_api.hpp>
+#include <xr/device.hpp>
 
 namespace renderer
 {
   using namespace std;
   using namespace commandbuffers;
 
-  TrRenderPass::TrRenderPass(RenderPassType type, const string &name)
+  TrRenderPass::TrRenderPass(RenderPassType type,
+                             const string &name,
+                             Ref<GPUDeviceBase> device,
+                             xr::Device *xrDevice)
       : type_(type)
       , name_(name)
       , active_(false)
-      , command_encoder_(nullptr)
-      , renderpass_encoder_(nullptr)
+      , gpu_device_(device)
+      , xr_device_(xrDevice)
   {
+    for (int i = 0; i < kMaxEyes; ++i)
+    {
+      command_encoders_[i] = nullptr;
+      active_targets_[i] = std::nullopt;
+    }
   }
 
   TrRenderPass::~TrRenderPass()
@@ -35,7 +45,51 @@ namespace renderer
 
   Ref<GPURenderPassEncoder> TrRenderPass::encoder() const
   {
-    return renderpass_encoder_;
+    return encoder(0);
+  }
+
+  Ref<GPURenderPassEncoder> TrRenderPass::encoder(int eyeIndex) const
+  {
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return nullptr;
+    if (!active_targets_[eyeIndex].has_value())
+      return nullptr;
+    auto it = renderpass_encoders_.find(active_targets_[eyeIndex].value());
+    if (it == renderpass_encoders_.end())
+      return nullptr;
+    return it->second;
+  }
+
+  void TrRenderPass::bindTarget(WebGLuint framebuffer)
+  {
+    bindTarget(framebuffer, 0);
+  }
+
+  void TrRenderPass::bindTarget(WebGLuint framebuffer, int eyeIndex)
+  {
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return;
+    active_targets_[eyeIndex] = framebuffer;
+    if (renderpass_descriptors_.find(framebuffer) == renderpass_descriptors_.end())
+      renderpass_descriptors_.emplace(framebuffer, GPURenderPassDescriptor{});
+  }
+
+  void TrRenderPass::discardTarget(WebGLuint framebuffer)
+  {
+    discardTarget(framebuffer, 0);
+  }
+
+  void TrRenderPass::discardTarget(WebGLuint framebuffer, int eyeIndex)
+  {
+    if (renderpass_encoders_.find(framebuffer) != renderpass_encoders_.end())
+      renderpass_encoders_.erase(framebuffer);
+    if (renderpass_descriptors_.find(framebuffer) != renderpass_descriptors_.end())
+      renderpass_descriptors_.erase(framebuffer);
+    if (eyeIndex >= 0 && eyeIndex < kMaxEyes)
+    {
+      if (active_targets_[eyeIndex].has_value() && active_targets_[eyeIndex].value() == framebuffer)
+        active_targets_[eyeIndex].reset();
+    }
   }
 
   void TrRenderPass::clearAttachments(bool clearColor,
@@ -45,6 +99,17 @@ namespace renderer
                                       float depthValue,
                                       int stencilValue)
   {
+    clearAttachments(clearColor, clearDepth, clearStencil, rgba, depthValue, stencilValue, 0);
+  }
+
+  void TrRenderPass::clearAttachments(bool clearColor,
+                                      bool clearDepth,
+                                      bool clearStencil,
+                                      const float rgba[4],
+                                      float depthValue,
+                                      int stencilValue,
+                                      int eyeIndex)
+  {
     (void)clearColor;
     (void)clearDepth;
     (void)clearStencil;
@@ -52,9 +117,15 @@ namespace renderer
     (void)depthValue;
     (void)stencilValue;
 
-    if (!renderpass_descriptor_.colorAttachments.empty())
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return;
+    if (!active_targets_[eyeIndex].has_value())
+      return;
+    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+
+    if (!descriptor.colorAttachments.empty())
     {
-      auto &color = renderpass_descriptor_.colorAttachments[0];
+      auto &color = descriptor.colorAttachments[0];
       color.clearColor[0] = rgba[0];
       color.clearColor[1] = rgba[1];
       color.clearColor[2] = rgba[2];
@@ -62,9 +133,9 @@ namespace renderer
       color.loadOp = GPURenderPassDescriptor::LoadOp::Clear;
     }
 
-    if (renderpass_descriptor_.depthStencilAttachment.has_value())
+    if (descriptor.depthStencilAttachment.has_value())
     {
-      auto &ds = *renderpass_descriptor_.depthStencilAttachment;
+      auto &ds = *descriptor.depthStencilAttachment;
       if (clearDepth)
       {
         ds.depthClearValue = depthValue;
@@ -80,13 +151,33 @@ namespace renderer
 
   void TrRenderPass::setColorAttachmentCount(size_t n)
   {
-    renderpass_descriptor_.colorAttachments.resize(n);
+    setColorAttachmentCount(n, 0);
+  }
+
+  void TrRenderPass::setColorAttachmentCount(size_t n, int eyeIndex)
+  {
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return;
+    if (!active_targets_[eyeIndex].has_value())
+      return;
+    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    descriptor.colorAttachments.resize(n);
   }
 
   void TrRenderPass::ensureDepthStencilAttachment()
   {
-    if (!renderpass_descriptor_.depthStencilAttachment.has_value())
-      renderpass_descriptor_.depthStencilAttachment = GPURenderPassDescriptor::DepthStencilAttachment{};
+    ensureDepthStencilAttachment(0);
+  }
+
+  void TrRenderPass::ensureDepthStencilAttachment(int eyeIndex)
+  {
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return;
+    if (!active_targets_[eyeIndex].has_value())
+      return;
+    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    if (!descriptor.depthStencilAttachment.has_value())
+      descriptor.depthStencilAttachment = GPURenderPassDescriptor::DepthStencilAttachment{};
   }
 
   void TrRenderPass::receiveIncomingRequest(const TrCommandBufferRequest &request)
@@ -95,20 +186,100 @@ namespace renderer
 
   void TrRenderPass::begin()
   {
+    begin(0);
+  }
+
+  void TrRenderPass::begin(int eyeIndex)
+  {
     active_ = true;
-    {
-      renderpass_encoder_ = command_encoder_->beginRenderPass(renderpass_descriptor_);
-    }
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return;
+    if (!active_targets_[eyeIndex].has_value())
+      return;
+    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    if (command_encoders_[eyeIndex] == nullptr)
+      return;
+    auto enc = command_encoders_[eyeIndex]->beginRenderPass(descriptor);
+    renderpass_encoders_[active_targets_[eyeIndex].value()] = enc;
   }
 
   void TrRenderPass::end()
   {
+    end(0);
+  }
+
+  void TrRenderPass::end(int eyeIndex)
+  {
     active_ = false;
-    renderpass_encoder_->end();
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return;
+    if (!active_targets_[eyeIndex].has_value())
+      return;
+    auto it = renderpass_encoders_.find(active_targets_[eyeIndex].value());
+    if (it != renderpass_encoders_.end() && it->second != nullptr)
+      it->second->end();
   }
 
   unique_ptr<GPUCommandBufferBase> TrRenderPass::finish(optional<string> label)
   {
-    return command_encoder_->finish(label);
+    return finish(label, 0);
+  }
+
+  unique_ptr<GPUCommandBufferBase> TrRenderPass::finish(optional<string> label, int eyeIndex)
+  {
+    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
+      return {};
+    if (command_encoders_[eyeIndex] == nullptr)
+      return {};
+    return command_encoders_[eyeIndex]->finish(label);
+  }
+
+  void TrRenderPass::submit(optional<string> label)
+  {
+    if (gpu_device_ == nullptr || xr_device_ == nullptr)
+      return;
+
+    auto queue = gpu_device_->queue();
+    if (queue == nullptr)
+      return;
+
+    vector<unique_ptr<GPUCommandBufferBase>> owned;
+    vector<GPUCommandBufferBase *> raw;
+
+    switch (xr_device_->getStereoRenderingMode())
+    {
+    case xr::TrStereoRenderingMode::MultiPass:
+    {
+      auto cmd = finish(label, xr_device_->getActiveEyeId());
+      if (cmd)
+      {
+        raw.push_back(cmd.get());
+        owned.push_back(std::move(cmd));
+      }
+      break;
+    }
+    case xr::TrStereoRenderingMode::SinglePass:
+    case xr::TrStereoRenderingMode::SinglePassInstanced:
+    case xr::TrStereoRenderingMode::SinglePassMultiview:
+    {
+      auto cmd0 = finish(label, 0);
+      if (cmd0)
+      {
+        raw.push_back(cmd0.get());
+        owned.push_back(std::move(cmd0));
+      }
+      auto cmd1 = finish(label, 1);
+      if (cmd1)
+      {
+        raw.push_back(cmd1.get());
+        owned.push_back(std::move(cmd1));
+      }
+      break;
+    }
+    default:
+      break;
+    }
+    if (!raw.empty())
+      queue->submit(static_cast<uint32_t>(raw.size()), raw.data());
   }
 }

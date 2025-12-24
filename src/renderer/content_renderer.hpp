@@ -117,6 +117,10 @@ namespace renderer
     {
       return transparent_renderpass_;
     }
+    Ref<TrRenderPass> offscreenRenderPass() const
+    {
+      return offscreen_renderpass_;
+    }
 
     /**
      * Dispatch a command buffer request.

@@ -44,6 +44,7 @@ namespace commandbuffers
 
   void GPUQueueBase::submit(uint32_t commandCount, GPUCommandBufferBase *const *commands)
   {
+    assert(submitInternal(commandCount, commands).IsSuccess());
   }
 
   void GPUQueueBase::writeBuffer(GPUBufferBase *buffer,

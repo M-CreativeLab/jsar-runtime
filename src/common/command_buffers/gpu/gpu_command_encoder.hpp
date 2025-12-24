@@ -52,6 +52,10 @@ namespace commandbuffers
     void resolveQuerySet();
     void writeTimestamp();
 
+    gpu::CommandIterator acquireCommands();
+    gpu::CommandBufferResourceUsage acquireResourceUsages() const;
+    std::vector<gpu::IndirectDrawMetadata> acquireIndirectDrawMetadata() const;
+
   private:
     GPUCommandEncoder(Ref<GPUDeviceBase> device, const GPUCommandEncoderDescriptor &descriptor);
     GPUCommandEncoder(Ref<GPUDeviceBase> device,
