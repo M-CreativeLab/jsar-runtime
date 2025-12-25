@@ -4385,6 +4385,61 @@ namespace endor
           jsValue = String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked();
           break;
         }
+        /**
+       * WebGL object bindings (return null when nothing bound, object when bound)
+       */
+        case WEBGL_ARRAY_BUFFER_BINDING:
+        {
+          auto value = handle()->getParameter(static_cast<client_graphics::WebGLBufferBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLBuffer::NewInstance(isolate, value);
+          else
+            jsValue = Null(isolate);
+          break;
+        }
+        case WEBGL_ELEMENT_ARRAY_BUFFER_BINDING:
+        {
+          auto value = handle()->getParameter(static_cast<client_graphics::WebGLBufferBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLBuffer::NewInstance(isolate, value);
+          else
+            jsValue = Null(isolate);
+          break;
+        }
+        case WEBGL_FRAMEBUFFER_BINDING:
+        {
+          auto value = handle()->getParameterFramebuffer(static_cast<client_graphics::WebGLObjectBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLFramebuffer::NewInstance(isolate, value);
+          else
+            jsValue = Null(isolate);
+          break;
+        }
+        case WEBGL_RENDERBUFFER_BINDING:
+        {
+          auto value = handle()->getParameterRenderbuffer(static_cast<client_graphics::WebGLObjectBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLRenderbuffer::NewInstance(isolate, value);
+          else
+            jsValue = Null(isolate);
+          break;
+        }
+        case WEBGL_CURRENT_PROGRAM:
+        {
+          auto value = handle()->getParameterProgram(static_cast<client_graphics::WebGLObjectBindingParameterName>(pname));
+          if (value != nullptr)
+            jsValue = WebGLProgram::NewInstance(isolate, value);
+          else
+            jsValue = Null(isolate);
+          break;
+        }
+        case WEBGL_TEXTURE_BINDING_2D:
+        case WEBGL_TEXTURE_BINDING_CUBE_MAP:
+        {
+          // TODO: Texture bindings not yet tracked in clientState
+          jsValue = Null(isolate);
+          break;
+        }
         default:
           cerr << "WebGLRenderingContext::GetParameter: Unhandled pname " << pname << endl;
           break;
@@ -4428,6 +4483,60 @@ namespace endor
             auto value = handle<client_graphics::WebGL2Context>()
                            ->getParameterV2(static_cast<client_graphics::WebGL2IntegerParameterName>(pname));
             jsValue = Integer::New(isolate, value);
+            break;
+          }
+          /**
+         * WebGL2 object bindings (return null when nothing bound, object when bound)
+         */
+          case WEBGL2_VERTEX_ARRAY_BINDING:
+          {
+            auto value = handle<client_graphics::WebGL2Context>()
+                           ->getParameterVertexArrayV2(static_cast<client_graphics::WebGL2ObjectBindingParameterName>(pname));
+            if (value != nullptr)
+              jsValue = WebGLVertexArray::NewInstance(isolate, value);
+            else
+              jsValue = Null(isolate);
+            break;
+          }
+          case WEBGL2_DRAW_FRAMEBUFFER_BINDING:
+          case WEBGL2_READ_FRAMEBUFFER_BINDING:
+          {
+            auto value = handle<client_graphics::WebGL2Context>()
+                           ->getParameterFramebufferV2(static_cast<client_graphics::WebGL2ObjectBindingParameterName>(pname));
+            if (value != nullptr)
+              jsValue = WebGLFramebuffer::NewInstance(isolate, value);
+            else
+              jsValue = Null(isolate);
+            break;
+          }
+          case WEBGL2_COPY_READ_BUFFER_BINDING:
+          case WEBGL2_COPY_WRITE_BUFFER_BINDING:
+          case WEBGL2_PIXEL_PACK_BUFFER_BINDING:
+          case WEBGL2_PIXEL_UNPACK_BUFFER_BINDING:
+          case WEBGL2_UNIFORM_BUFFER_BINDING:
+          case WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+          {
+            auto value = handle<client_graphics::WebGL2Context>()
+                           ->getParameterV2(static_cast<client_graphics::WebGL2BufferBindingParameterName>(pname));
+            if (value != nullptr)
+              jsValue = WebGLBuffer::NewInstance(isolate, value);
+            else
+              jsValue = Null(isolate);
+            break;
+          }
+          case WEBGL2_SAMPLER_BINDING:
+          case WEBGL2_TRANSFORM_FEEDBACK_BINDING:
+          {
+            // TODO: Sampler and transform feedback bindings not yet tracked
+            // Would require creating WebGLSampler and WebGLTransformFeedback JavaScript bindings
+            jsValue = Null(isolate);
+            break;
+          }
+          case WEBGL2_TEXTURE_BINDING_2D_ARRAY:
+          case WEBGL2_TEXTURE_BINDING_3D:
+          {
+            // TODO: Texture bindings not yet tracked in clientState
+            jsValue = Null(isolate);
             break;
           }
           default:

@@ -1466,6 +1466,40 @@ namespace endor
       return v;
     }
 
+    shared_ptr<WebGLBuffer> WebGLContext::getParameter(WebGLBufferBindingParameterName pname)
+    {
+      switch (pname)
+      {
+      case WebGLBufferBindingParameterName::kArrayBufferBinding:
+        return clientState_.vertexBuffer.value_or(nullptr);
+      case WebGLBufferBindingParameterName::kElementArrayBufferBinding:
+        return clientState_.elementBuffer.value_or(nullptr);
+      default:
+        return nullptr;
+      }
+    }
+
+    shared_ptr<WebGLProgram> WebGLContext::getParameterProgram(WebGLObjectBindingParameterName pname)
+    {
+      if (pname == WebGLObjectBindingParameterName::kCurrentProgram)
+        return clientState_.program.value_or(nullptr);
+      return nullptr;
+    }
+
+    shared_ptr<WebGLFramebuffer> WebGLContext::getParameterFramebuffer(WebGLObjectBindingParameterName pname)
+    {
+      if (pname == WebGLObjectBindingParameterName::kFramebufferBinding)
+        return clientState_.framebuffer.value_or(nullptr);
+      return nullptr;
+    }
+
+    shared_ptr<WebGLRenderbuffer> WebGLContext::getParameterRenderbuffer(WebGLObjectBindingParameterName pname)
+    {
+      if (pname == WebGLObjectBindingParameterName::kRenderbufferBinding)
+        return clientState_.renderbuffer.value_or(nullptr);
+      return nullptr;
+    }
+
     WebGLShaderPrecisionFormat WebGLContext::getShaderPrecisionFormat(int shadertype, int precisiontype)
     {
       if (shadertype != WEBGL_VERTEX_SHADER && shadertype != WEBGL_FRAGMENT_SHADER)
@@ -2044,6 +2078,42 @@ namespace endor
       int v = resp->value;
       delete resp;
       return v;
+    }
+
+    shared_ptr<WebGLBuffer> WebGL2Context::getParameterV2(WebGL2BufferBindingParameterName pname)
+    {
+      // These buffer bindings are not yet tracked in clientState
+      // TODO: Extend WebGLState to track additional buffer binding points
+      switch (pname)
+      {
+      case WebGL2BufferBindingParameterName::kCopyReadBufferBinding:
+      case WebGL2BufferBindingParameterName::kCopyWriteBufferBinding:
+      case WebGL2BufferBindingParameterName::kPixelPackBufferBinding:
+      case WebGL2BufferBindingParameterName::kPixelUnpackBufferBinding:
+      case WebGL2BufferBindingParameterName::kTransformFeedbackBufferBinding:
+      case WebGL2BufferBindingParameterName::kUniformBufferBinding:
+      default:
+        return nullptr;
+      }
+    }
+
+    shared_ptr<WebGLFramebuffer> WebGL2Context::getParameterFramebufferV2(WebGL2ObjectBindingParameterName pname)
+    {
+      switch (pname)
+      {
+      case WebGL2ObjectBindingParameterName::kDrawFramebufferBinding:
+      case WebGL2ObjectBindingParameterName::kReadFramebufferBinding:
+        return clientState_.framebuffer.value_or(nullptr);
+      default:
+        return nullptr;
+      }
+    }
+
+    shared_ptr<WebGLVertexArray> WebGL2Context::getParameterVertexArrayV2(WebGL2ObjectBindingParameterName pname)
+    {
+      if (pname == WebGL2ObjectBindingParameterName::kVertexArrayBinding)
+        return clientState_.vertexArray.value_or(nullptr);
+      return nullptr;
     }
 
     shared_ptr<WebGLQuery> WebGL2Context::getQuery(WebGLQueryTarget target, int pname)
