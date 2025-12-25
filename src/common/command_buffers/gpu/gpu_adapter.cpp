@@ -107,7 +107,9 @@ namespace commandbuffers
 
   Ref<GPUDeviceBase> GPUAdapterBase::createDevice(const GPUDeviceDescriptor *descriptor)
   {
-    return physical_device_->createDevice(shared_from_this(), *descriptor);
+    GPUDeviceDescriptor default_descriptor{};
+    const GPUDeviceDescriptor &desc = descriptor ? *descriptor : default_descriptor;
+    return physical_device_->createDevice(shared_from_this(), desc);
   }
 
   gpu::PhysicalDeviceBase *GPUAdapterBase::physicalDevice()

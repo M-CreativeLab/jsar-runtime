@@ -95,18 +95,21 @@ namespace renderer
         render_resource_ = AcquireRef(new TrRenderResource(device));
     }
 
-    opaque_renderpass_ = AcquireRef(new TrRenderPass(RenderPassType::kOpaque,
-                                                     "Opaque",
-                                                     device,
-                                                     xrDevice));
-    transparent_renderpass_ = AcquireRef(new TrRenderPass(RenderPassType::kTransparent,
-                                                          "Transparent",
-                                                          device,
-                                                          xrDevice));
-    offscreen_renderpass_ = AcquireRef(new TrRenderPass(RenderPassType::kOffscreen,
-                                                       "Offscreen",
-                                                       device,
-                                                       xrDevice));
+    opaque_renderpass_ = AcquireRef(new TrRenderPass(
+      RenderPassType::kOpaque,
+      "Opaque",
+      device,
+      xrDevice));
+    transparent_renderpass_ = AcquireRef(new TrRenderPass(
+      RenderPassType::kTransparent,
+      "Transparent",
+      device,
+      xrDevice));
+    offscreen_renderpass_ = AcquireRef(new TrRenderPass(
+      RenderPassType::kOffscreen,
+      "Offscreen",
+      device,
+      xrDevice));
   }
 
   void TrContentRenderer::onCommandBuffersExecuting()
@@ -308,6 +311,9 @@ namespace renderer
      */
     onStartFrame();
     {
+      // Execute the command buffers from opaque render pass.
+      opaque_renderpass_->submit("opaque");
+
       // Execute the default command buffers first.
       executeCommandBuffersAtDefaultFrame();
 
@@ -378,28 +384,33 @@ namespace renderer
   void TrContentRenderer::onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
     // TODO(yorkie): implement the transparents render pass.
+    transparent_renderpass_->submit("transparent");
   }
 
   void TrContentRenderer::onOffscreenRenderPass()
   {
     currentPass = ExecutingPassType::kOffscreenPass;
-    if (commandBuffersOnOffscreenPass.size() > 0)
     {
-      assert(glContextOnOffscreenPass.has_value() &&
-             "The offscreen pass context is not initialized, please call `initializeGraphicsContextsOnce()` first.");
+      offscreen_renderpass_->submit("offscreen");
 
-      glContextOnOffscreenPass->restore();
-      constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
-                                                     this,
-                                                     ExecutingPassType::kOffscreenPass);
-      for (auto commandbuffer : commandBuffersOnOffscreenPass)
+      if (commandBuffersOnOffscreenPass.size() > 0)
       {
-        if (commandbuffer != nullptr) [[likely]]
-          delete commandbuffer;
-      }
+        assert(glContextOnOffscreenPass.has_value() &&
+               "The offscreen pass context is not initialized, please call `initializeGraphicsContextsOnce()` first.");
 
-      commandBuffersOnOffscreenPass.clear();
-      glContextOnOffscreenPass = nullopt;
+        glContextOnOffscreenPass->restore();
+        constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
+                                                       this,
+                                                       ExecutingPassType::kOffscreenPass);
+        for (auto commandbuffer : commandBuffersOnOffscreenPass)
+        {
+          if (commandbuffer != nullptr) [[likely]]
+            delete commandbuffer;
+        }
+
+        commandBuffersOnOffscreenPass.clear();
+        glContextOnOffscreenPass = nullopt;
+      }
     }
     currentPass = ExecutingPassType::kDefaultFrame;
   }

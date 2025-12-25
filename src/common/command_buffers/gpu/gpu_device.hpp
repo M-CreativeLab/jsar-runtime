@@ -118,6 +118,16 @@ namespace commandbuffers
     }
 
   protected:
+    void setQueue(Ref<GPUQueueBase> queue)
+    {
+      queue_ = std::move(queue);
+    }
+    void transitionToAlive()
+    {
+      state_ = State::Alive;
+    }
+
+  protected:
     GPUAdapterInfo adapter_info_;
     GPUSupportedFeatures features_;
     GPUSupportedLimits limits_;

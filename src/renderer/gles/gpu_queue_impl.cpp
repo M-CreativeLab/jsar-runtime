@@ -15,6 +15,7 @@ namespace gles
   gpu::ResultOrError<Ref<GPUQueueImpl>> GPUQueueImpl::Create(Ref<GPUDeviceBase> device,
                                                              const GPUQueueDescriptor &descriptor)
   {
+    assert(device != nullptr && "Failed to create GPUQueueImpl: device is null.");
     return AcquireRef(new GPUQueueImpl(device, descriptor));
   }
 

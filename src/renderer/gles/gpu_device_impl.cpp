@@ -5,6 +5,7 @@
 #include <renderer/gles/common.hpp>
 #include <renderer/gles/gpu_device_impl.hpp>
 #include <renderer/gles/gpu_buffer_impl.hpp>
+#include <renderer/gles/gpu_queue_impl.hpp>
 
 namespace gles
 {
@@ -15,6 +16,7 @@ namespace gles
   Ref<GPUDeviceImpl> GPUDeviceImpl::Create(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor)
   {
     Ref<GPUDeviceImpl> device = AcquireRef(new GPUDeviceImpl(adapter, descriptor));
+    assert(device != nullptr && "Failed to create GPUDeviceImpl.");
     device->initialize(descriptor);
     return device;
   }
@@ -60,6 +62,21 @@ namespace gles
 
   bool GPUDeviceImpl::initialize(const GPUDeviceDescriptor &descriptor)
   {
+    GPUQueueDescriptor qdesc = {};
+    qdesc.label = descriptor.label;
+
+    auto dev = this->shared_from_this();
+    auto qres = GPUQueueImpl::Create(dev, qdesc);
+    if (qres.IsSuccess())
+    {
+      setQueue(qres.AcquireSuccess());
+    }
+    else
+    {
+      setQueue(GPUQueueBase::MakeError(dev, qdesc.label));
+    }
+
+    transitionToAlive();
     return true;
   }
 

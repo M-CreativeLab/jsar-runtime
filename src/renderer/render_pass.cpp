@@ -236,12 +236,13 @@ namespace renderer
 
   void TrRenderPass::submit(optional<string> label)
   {
-    if (gpu_device_ == nullptr || xr_device_ == nullptr)
-      return;
-
+    assert(gpu_device_ != nullptr && xr_device_ != nullptr && "GPU device or XR device is not initialized.");
     auto queue = gpu_device_->queue();
     if (queue == nullptr)
+    {
+      std::cerr << "Failed to get GPU queue." << std::endl;
       return;
+    }
 
     vector<unique_ptr<GPUCommandBufferBase>> owned;
     vector<GPUCommandBufferBase *> raw;
