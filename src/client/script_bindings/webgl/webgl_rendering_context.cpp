@@ -456,6 +456,10 @@ namespace endor
         ADD_WEBGL1_METHOD("vertexAttrib2f", VertexAttrib2f)
         ADD_WEBGL1_METHOD("vertexAttrib3f", VertexAttrib3f)
         ADD_WEBGL1_METHOD("vertexAttrib4f", VertexAttrib4f)
+        ADD_WEBGL1_METHOD("vertexAttrib1fv", VertexAttrib1fv)
+        ADD_WEBGL1_METHOD("vertexAttrib2fv", VertexAttrib2fv)
+        ADD_WEBGL1_METHOD("vertexAttrib3fv", VertexAttrib3fv)
+        ADD_WEBGL1_METHOD("vertexAttrib4fv", VertexAttrib4fv)
         ADD_WEBGL1_METHOD("getActiveAttrib", GetActiveAttrib)
         ADD_WEBGL1_METHOD("getActiveUniform", GetActiveUniform)
         ADD_WEBGL1_METHOD("getAttribLocation", GetAttribLocation)
@@ -4168,6 +4172,138 @@ namespace endor
         float w = static_cast<float>(info[4]->NumberValue(context).FromMaybe(0.0));
 
         handle()->vertexAttrib4f(index, x, y, z, w);
+        info.GetReturnValue().SetUndefined();
+      }
+
+      void WebGLRenderingContext::VertexAttrib1fv(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        if (info.Length() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib1fv", "2 arguments required, but fewer were provided")));
+          return;
+        }
+        if (!info[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib1fv", "First argument must be a number")));
+          return;
+        }
+
+        Local<Context> context = isolate->GetCurrentContext();
+        int index = info[0]->Int32Value(context).FromMaybe(0);
+
+        std::vector<float> values = GetFloatValuesFromValue(isolate, info[1]);
+        if (values.size() < 1)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib1fv", "Expected at least 1 component in the array")));
+          return;
+        }
+
+        handle()->vertexAttrib1fv(index, values);
+        info.GetReturnValue().SetUndefined();
+      }
+
+      void WebGLRenderingContext::VertexAttrib2fv(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        if (info.Length() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib2fv", "2 arguments required, but fewer were provided")));
+          return;
+        }
+        if (!info[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib2fv", "First argument must be a number")));
+          return;
+        }
+
+        Local<Context> context = isolate->GetCurrentContext();
+        int index = info[0]->Int32Value(context).FromMaybe(0);
+
+        std::vector<float> values = GetFloatValuesFromValue(isolate, info[1]);
+        if (values.size() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib2fv", "Expected at least 2 components in the array")));
+          return;
+        }
+
+        handle()->vertexAttrib2fv(index, values);
+        info.GetReturnValue().SetUndefined();
+      }
+
+      void WebGLRenderingContext::VertexAttrib3fv(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        if (info.Length() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib3fv", "2 arguments required, but fewer were provided")));
+          return;
+        }
+        if (!info[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib3fv", "First argument must be a number")));
+          return;
+        }
+
+        Local<Context> context = isolate->GetCurrentContext();
+        int index = info[0]->Int32Value(context).FromMaybe(0);
+
+        std::vector<float> values = GetFloatValuesFromValue(isolate, info[1]);
+        if (values.size() < 3)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib3fv", "Expected at least 3 components in the array")));
+          return;
+        }
+
+        handle()->vertexAttrib3fv(index, values);
+        info.GetReturnValue().SetUndefined();
+      }
+
+      void WebGLRenderingContext::VertexAttrib4fv(const FunctionCallbackInfo<Value> &info)
+      {
+        Isolate *isolate = info.GetIsolate();
+        HandleScope scope(isolate);
+
+        if (info.Length() < 2)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib4fv", "2 arguments required, but fewer were provided")));
+          return;
+        }
+        if (!info[0]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib4fv", "First argument must be a number")));
+          return;
+        }
+
+        Local<Context> context = isolate->GetCurrentContext();
+        int index = info[0]->Int32Value(context).FromMaybe(0);
+
+        std::vector<float> values = GetFloatValuesFromValue(isolate, info[1]);
+        if (values.size() < 4)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "vertexAttrib4fv", "Expected at least 4 components in the array")));
+          return;
+        }
+
+        handle()->vertexAttrib4fv(index, values);
         info.GetReturnValue().SetUndefined();
       }
 

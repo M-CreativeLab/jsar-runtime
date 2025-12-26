@@ -69,6 +69,10 @@
   XX(VERTEX_ATTRIB_2F, VertexAttrib2fCommandBufferRequest, "GL::VertexAttrib2f")                                                 \
   XX(VERTEX_ATTRIB_3F, VertexAttrib3fCommandBufferRequest, "GL::VertexAttrib3f")                                                 \
   XX(VERTEX_ATTRIB_4F, VertexAttrib4fCommandBufferRequest, "GL::VertexAttrib4f")                                                 \
+  XX(VERTEX_ATTRIB_1FV, VertexAttrib1fvCommandBufferRequest, "GL::VertexAttrib1fv")                                              \
+  XX(VERTEX_ATTRIB_2FV, VertexAttrib2fvCommandBufferRequest, "GL::VertexAttrib2fv")                                              \
+  XX(VERTEX_ATTRIB_3FV, VertexAttrib3fvCommandBufferRequest, "GL::VertexAttrib3fv")                                              \
+  XX(VERTEX_ATTRIB_4FV, VertexAttrib4fvCommandBufferRequest, "GL::VertexAttrib4fv")                                              \
   XX(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest, "GL::VertexAttribIPointer")                               \
   XX(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest, "GL::VertexAttribDivisor")                                  \
   XX(VERTEX_ATTRIB_I4I, VertexAttribI4iCommandBufferRequest, "GL::VertexAttribI4i")                                              \

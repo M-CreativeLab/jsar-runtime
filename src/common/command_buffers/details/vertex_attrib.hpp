@@ -394,6 +394,82 @@ namespace commandbuffers
     float v0, v1, v2, v3;
   };
 
+  // Base class for vector float vertex attribute requests
+  template <typename Derived, CommandBufferType Type>
+  class VertexAttribNfvCommandBufferRequest : public SetVertexAttribCommandBufferRequest<Derived, Type>
+  {
+  public:
+    VertexAttribNfvCommandBufferRequest() = delete;
+    VertexAttribNfvCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<float> &values)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, location_name)
+        , values(values)
+    {
+    }
+    VertexAttribNfvCommandBufferRequest(uint32_t program, uint32_t index, const std::vector<float> &values)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, index)
+        , values(values)
+    {
+    }
+    VertexAttribNfvCommandBufferRequest(const Derived &that, bool clone = false)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(that, clone)
+        , values(that.values)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << SetVertexAttribCommandBufferRequest<Derived, Type>::toString(line_prefix) << "([";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        if (i > 0)
+          ss << ", ";
+        ss << values[i];
+      }
+      ss << "])";
+      return ss.str();
+    }
+
+  public:
+    std::vector<float> values;
+  };
+
+  // VertexAttrib1fv command buffer request
+  class VertexAttrib1fvCommandBufferRequest final
+      : public VertexAttribNfvCommandBufferRequest<VertexAttrib1fvCommandBufferRequest,
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_1FV_REQ>
+  {
+  public:
+    using VertexAttribNfvCommandBufferRequest::VertexAttribNfvCommandBufferRequest;
+  };
+
+  // VertexAttrib2fv command buffer request
+  class VertexAttrib2fvCommandBufferRequest final
+      : public VertexAttribNfvCommandBufferRequest<VertexAttrib2fvCommandBufferRequest,
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_2FV_REQ>
+  {
+  public:
+    using VertexAttribNfvCommandBufferRequest::VertexAttribNfvCommandBufferRequest;
+  };
+
+  // VertexAttrib3fv command buffer request
+  class VertexAttrib3fvCommandBufferRequest final
+      : public VertexAttribNfvCommandBufferRequest<VertexAttrib3fvCommandBufferRequest,
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_3FV_REQ>
+  {
+  public:
+    using VertexAttribNfvCommandBufferRequest::VertexAttribNfvCommandBufferRequest;
+  };
+
+  // VertexAttrib4fv command buffer request
+  class VertexAttrib4fvCommandBufferRequest final
+      : public VertexAttribNfvCommandBufferRequest<VertexAttrib4fvCommandBufferRequest,
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_4FV_REQ>
+  {
+  public:
+    using VertexAttribNfvCommandBufferRequest::VertexAttribNfvCommandBufferRequest;
+  };
+
   class VertexAttribIPointerCommandBufferRequest final
       : public SetVertexAttribCommandBufferRequest<VertexAttribIPointerCommandBufferRequest,
                                                    COMMAND_BUFFER_VERTEX_ATTRIB_IPOINTER_REQ>
