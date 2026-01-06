@@ -58,7 +58,8 @@ namespace commandbuffers::gpu
 
   void EncodingContext::handleError(unique_ptr<ErrorData> error)
   {
-    // TODO
+    error_ = std::move(error);
+    closeWithStatus(Status::kErrorInRecording);
   }
 
   void EncodingContext::willBeginRenderPass()
@@ -113,7 +114,13 @@ namespace commandbuffers::gpu
 
   bool EncodingContext::finish()
   {
-    return false;
+    if (current_encoder_ != top_level_encoder_)
+    {
+      return false;
+    }
+    commitCommands(std::move(pending_commands_));
+    closeWithStatus(Status::kFinished);
+    return true;
   }
 
   void EncodingContext::ensurePassExited(const GPUHandle *passEncoder)
@@ -129,17 +136,27 @@ namespace commandbuffers::gpu
 
   void EncodingContext::pushDebugGroupLabel(string_view groupLabel)
   {
+    debug_group_labels_.push_back(groupLabel);
   }
 
   void EncodingContext::popDebugGroupLabel()
   {
+    if (!debug_group_labels_.empty())
+    {
+      debug_group_labels_.pop_back();
+    }
   }
 
   void EncodingContext::commitCommands(CommandAllocator allocator)
   {
+    if (!allocator.isEmpty())
+    {
+      allocators_.push_back(std::move(allocator));
+    }
   }
 
   void EncodingContext::closeWithStatus(Status status)
   {
+    status_ = status;
   }
 }

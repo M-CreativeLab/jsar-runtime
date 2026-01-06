@@ -6,6 +6,7 @@
 #include <renderer/gles/gpu_device_impl.hpp>
 #include <renderer/gles/gpu_buffer_impl.hpp>
 #include <renderer/gles/gpu_queue_impl.hpp>
+#include <renderer/gles/gpu_command_buffer_impl.hpp>
 
 namespace gles
 {
@@ -83,7 +84,13 @@ namespace gles
   unique_ptr<GPUCommandBufferBase> GPUDeviceImpl::createCommandBuffer(GPUCommandEncoder &encoder,
                                                                       const GPUCommandBufferDescriptor *descriptor)
   {
-    return nullptr;
+    GPUCommandBufferDescriptor local_desc = {};
+    if (descriptor == nullptr)
+    {
+      local_desc.label = encoder.getLabel();
+      descriptor = &local_desc;
+    }
+    return make_unique<GPUCommandBufferImpl>(&encoder, descriptor);
   }
 
   Ref<GPUBindGroupBase> GPUDeviceImpl::createBindGroupImpl(

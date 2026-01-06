@@ -123,8 +123,8 @@ namespace renderer
           continue;
         }
         contentRenderer->onOpaquesRenderPass(tickingTimepoint);
-        totalDrawCalls += contentRenderer->drawCallsPerFrame;
-        totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
+        totalDrawCalls += contentRenderer->draw_calls_count_per_frame_;
+        totalDrawCallsCount += contentRenderer->draw_calls_count_per_frame_;
       }
       auto perfFs = constellation->perfFs;
       perfFs->setDrawCallsPerFrame(totalDrawCalls);

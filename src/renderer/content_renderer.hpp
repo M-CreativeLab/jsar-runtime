@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <vector>
+#include <deque>
 #include <shared_mutex>
 #include <common/classes.hpp>
 #include <common/utility.hpp>
@@ -20,6 +21,7 @@
 #include <renderer/render_pass.hpp>
 #include <renderer/render_resource.hpp>
 #include <renderer/context_webgl.hpp>
+#include <renderer/render_frame.hpp>
 #include <renderer/gles/context_storage.hpp>
 
 using namespace std;
@@ -29,6 +31,7 @@ namespace renderer
 {
   class TrRenderer;
   class TrContentRenderer;
+  class TrRenderFrame;
 
   /**
    * A scope class for backup GL context, using this class will automatically restore the gl context after the scope:
@@ -47,8 +50,8 @@ namespace renderer
     ~TrBackupGLContextScope();
 
   private:
-    TrContentRenderer *contentRenderer;
-    ExecutingPassType previousPass = ExecutingPassType::kDefaultFrame;
+    TrContentRenderer *content_renderer_;
+    ExecutingPassType previous_pass_ = ExecutingPassType::kDefaultFrame;
   };
 
   class TrContentRenderer final : public std::enable_shared_from_this<TrContentRenderer>
@@ -58,6 +61,7 @@ namespace renderer
     friend class TrContentRuntime;
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
+    friend class TrContextWebGL;
 
   public:
     /**
@@ -99,7 +103,7 @@ namespace renderer
     ContextGLApp *getContextGL() const;
     inline Ref<TrContentRuntime> getContent() const
     {
-      return content.lock();
+      return content_.lock();
     }
     pid_t getContentPid() const;
     TrRenderer &getRendererRef() const;
@@ -111,15 +115,18 @@ namespace renderer
     }
     Ref<TrRenderPass> opaqueRenderPass() const
     {
-      return opaque_renderpass_;
+      auto frame = getActiveFrame();
+      return frame == nullptr ? nullptr : frame->opaquePass();
     }
     Ref<TrRenderPass> transparentRenderPass() const
     {
-      return transparent_renderpass_;
+      auto frame = getActiveFrame();
+      return frame == nullptr ? nullptr : frame->transparentPass();
     }
     Ref<TrRenderPass> offscreenRenderPass() const
     {
-      return offscreen_renderpass_;
+      auto frame = getActiveFrame();
+      return frame == nullptr ? nullptr : frame->offscreenPass();
     }
 
     /**
@@ -135,16 +142,16 @@ namespace renderer
     // State updates
     inline void markOccurOutOfMemoryError()
     {
-      lastFrameHasOutOfMemoryError = true;
+      last_frame_has_out_of_memory_error_ = true;
     }
     inline void increaseFrameErrorsCount()
     {
-      lastFrameErrorsCount++;
+      last_frame_errors_count_++;
     }
     inline void increaseDrawCallsCount(int count = 1)
     {
-      drawCallsPerFrame += 1;
-      drawCallsCountPerFrame += count;
+      draw_calls_per_frame_ += 1;
+      draw_calls_count_per_frame_ += count;
     }
 
     // Offscreen pass controls
@@ -183,66 +190,70 @@ namespace renderer
     bool executeStereoFrame(int viewIndex);
     void executeBackupFrame(int viewIndex);
     size_t getPendingStereoFramesCount();
+    Ref<TrRenderFrame> getActiveFrame() const;
+    void executeRenderFramePass(RenderPassType type, const char *label);
+    void executeClientRequestOnWebGPU(TrCommandBufferBase *req);
 
   public:
     int contentId;
     uint8_t contextId;
 
   private:
-    std::weak_ptr<TrContentRuntime> content;
-    TrConstellation *constellation = nullptr;
-    xr::Device *xrDevice = nullptr;
+    std::weak_ptr<TrContentRuntime> content_;
+    TrConstellation *constellation_ = nullptr;
+    xr::Device *xr_device_ = nullptr;
 
-    bool isGraphicsContextsInitialized = false;
-    ExecutingPassType currentPass = ExecutingPassType::kDefaultFrame;
+    bool is_graphics_contexts_initialized_ = false;
+    ExecutingPassType current_pass_ = ExecutingPassType::kDefaultFrame;
     // TODO(yorkie): Remove this when gpu device is ready, because WebGPU is context-less.
-    std::unique_ptr<ContextGLApp> glContext;
-    std::unique_ptr<ContextGLApp> glContextForBackup;
+    std::unique_ptr<ContextGLApp> gl_context_;
+    std::unique_ptr<ContextGLApp> gl_context_for_backup_;
 
   private: // command buffers & rendering frames
-    std::shared_mutex commandBufferRequestsMutex;
+    std::shared_mutex command_buffer_requests_mutex_;
     // TODO(yorkie): use `GPUCommandBuffer` later.
-    std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
-    std::atomic<bool> isDefaultCommandQueuePending = false;
-    std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
+    std::vector<TrCommandBufferBase *> default_command_buffer_requests_;
+    GPURenderPassDescriptor host_renderpass_descriptor_;
+    std::atomic<bool> is_default_command_queue_pending_ = false;
+    std::atomic<uint32_t> default_command_queue_skip_times_ = 0;
 
     // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
     // TODO(yorkie): support multi-stage offscreen pass?
-    std::vector<TrCommandBufferBase *> commandBuffersOnOffscreenPass;
-    std::optional<ContextGLApp> glContextOnOffscreenPass;
+    std::vector<TrCommandBufferBase *> command_buffers_on_offscreen_pass_;
+    std::optional<ContextGLApp> gl_context_on_offscreen_pass_;
 
-    std::vector<xr::StereoRenderingFrame *> stereoFramesList;
-    std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;
+    std::vector<xr::StereoRenderingFrame *> stereo_frames_list_;
+    std::unique_ptr<xr::StereoRenderingFrame> stereo_frame_for_backup_ = nullptr;
     /**
      * The last frame has OOM error or not.
      */
-    bool lastFrameHasOutOfMemoryError = false;
+    bool last_frame_has_out_of_memory_error_ = false;
     /**
      * The number of errors occurred in the last frame rendering.
      */
-    size_t lastFrameErrorsCount = 0;
+    size_t last_frame_errors_count_ = 0;
     /**
      * The number of draw calls per frame.
      */
-    size_t drawCallsPerFrame = 0;
+    size_t draw_calls_per_frame_ = 0;
     /**
      * The number to describe the vertices count to be drawn per frame.
      */
-    size_t drawCallsCountPerFrame = 0;
+    size_t draw_calls_count_per_frame_ = 0;
 
-    std::chrono::time_point<std::chrono::system_clock> frameStartTime;
-    std::chrono::time_point<std::chrono::system_clock> frameEndTime;
-    std::chrono::milliseconds frameDuration = std::chrono::milliseconds(0);
-    std::chrono::milliseconds maxFrameDuration = std::chrono::milliseconds(0);
+    std::chrono::time_point<std::chrono::system_clock> frame_start_time_;
+    std::chrono::time_point<std::chrono::system_clock> frame_end_time_;
+    std::chrono::milliseconds frame_duration_ = std::chrono::milliseconds(0);
+    std::chrono::milliseconds max_frame_duration_ = std::chrono::milliseconds(0);
 
   private:
     Ref<TrContextWebGL> context_webgl_;
     Ref<TrRenderResource> render_resource_;
-    Ref<TrRenderPass> opaque_renderpass_;
-    Ref<TrRenderPass> transparent_renderpass_;
-    Ref<TrRenderPass> offscreen_renderpass_;
+    std::deque<Ref<TrRenderFrame>> pending_frames_;
+    Ref<TrRenderFrame> last_frame_;
+    mutable std::shared_mutex frames_mutex_;
 
   private: // frame rate control
-    uint32_t targetFrameRate;
+    uint32_t target_frame_rate_;
   };
 }

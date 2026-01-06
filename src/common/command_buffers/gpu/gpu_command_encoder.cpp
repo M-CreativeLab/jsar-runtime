@@ -3,6 +3,7 @@
 #include <common/command_buffers/gpu/gpu_commands.hpp>
 #include <common/command_buffers/gpu/command_allocator.hpp>
 #include <common/command_buffers/gpu/error.hpp>
+#include <common/command_buffers/gpu/gpu_device.hpp>
 
 using namespace std;
 
@@ -134,7 +135,9 @@ namespace commandbuffers
 
   unique_ptr<GPUCommandBufferBase> GPUCommandEncoder::finish(optional<string> label) const
   {
-    return nullptr;
+    string effective_label = label.has_value() ? *label : getLabel();
+    GPUCommandBufferDescriptor desc = { string_view(effective_label) };
+    return device()->createCommandBuffer(*const_cast<GPUCommandEncoder *>(this), &desc);
   }
 
   void GPUCommandEncoder::insertDebugMarker(std::string_view marker)

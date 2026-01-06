@@ -186,6 +186,7 @@ namespace renderer
 
   TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer)
       : content_renderer_(content_renderer)
+      , host_renderpass_descriptor_(&content_renderer->host_renderpass_descriptor_)
   {
     caps_.attach(this);
   }
@@ -1343,10 +1344,7 @@ namespace renderer
 
   Ref<TrRenderPass> TrContextWebGL::getCurrentRenderPass()
   {
-    if (!current_render_pass_)
-    {
-      current_render_pass_ = content_renderer_->opaqueRenderPass();
-    }
+    current_render_pass_ = content_renderer_->opaqueRenderPass();
     return current_render_pass_;
   }
 }

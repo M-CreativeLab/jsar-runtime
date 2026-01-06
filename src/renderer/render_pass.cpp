@@ -227,10 +227,8 @@ namespace renderer
 
   unique_ptr<GPUCommandBufferBase> TrRenderPass::finish(optional<string> label, int eyeIndex)
   {
-    if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
-      return {};
-    if (command_encoders_[eyeIndex] == nullptr)
-      return {};
+    assert(eyeIndex >= 0 && eyeIndex < kMaxEyes && "invalid eye index");
+    assert(command_encoders_[eyeIndex] != nullptr && "Could not finish render pass with an out-of-range eye index.");
     return command_encoders_[eyeIndex]->finish(label);
   }
 
@@ -280,6 +278,7 @@ namespace renderer
     default:
       break;
     }
+
     if (!raw.empty())
       queue->submit(static_cast<uint32_t>(raw.size()), raw.data());
   }

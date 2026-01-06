@@ -13,6 +13,7 @@
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_renderpass_encoder.hpp>
 
 namespace renderer
 {
@@ -1172,5 +1173,6 @@ namespace renderer
 
     // WebGPU pipeline-related states are maintained inside caps_
     Ref<TrRenderPass> current_render_pass_;
+    commandbuffers::GPURenderPassDescriptor *host_renderpass_descriptor_;
   };
 }
