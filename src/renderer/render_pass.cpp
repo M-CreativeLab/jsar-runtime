@@ -1,5 +1,6 @@
 #include <renderer/render_pass.hpp>
 #include <renderer/render_api.hpp>
+#include <stdexcept>
 #include <xr/device.hpp>
 
 namespace renderer
@@ -17,9 +18,28 @@ namespace renderer
       , gpu_device_(device)
       , xr_device_(xrDevice)
   {
+    size_t viewCount = 1;
+    if (type_ == RenderPassType::kOffscreen)
+    {
+      viewCount = 1;
+    }
+    else if (xr_device_)
+    {
+      viewCount = xr_device_->getUsedViewsCount();
+    }
+
     for (int i = 0; i < kMaxEyes; ++i)
     {
-      command_encoders_[i] = nullptr;
+      if (i < viewCount)
+      {
+        GPUCommandEncoderDescriptor desc;
+        desc.label = name_;
+        command_encoders_[i] = GPUCommandEncoder::Create(gpu_device_, desc);
+      }
+      else
+      {
+        command_encoders_[i] = nullptr;
+      }
       active_targets_[i] = std::nullopt;
     }
   }
@@ -228,8 +248,15 @@ namespace renderer
   unique_ptr<GPUCommandBufferBase> TrRenderPass::finish(optional<string> label, int eyeIndex)
   {
     assert(eyeIndex >= 0 && eyeIndex < kMaxEyes && "invalid eye index");
-    assert(command_encoders_[eyeIndex] != nullptr && "Could not finish render pass with an out-of-range eye index.");
-    return command_encoders_[eyeIndex]->finish(label);
+    if (command_encoders_[eyeIndex] == nullptr) [[unlikely]]
+    {
+      throw std::runtime_error("Failed to finish render pass with an out-of-range eye index: " +
+                               std::to_string(eyeIndex));
+    }
+    else
+    {
+      return command_encoders_[eyeIndex]->finish(label);
+    }
   }
 
   void TrRenderPass::submit(optional<string> label)
@@ -261,17 +288,15 @@ namespace renderer
     case xr::TrStereoRenderingMode::SinglePassInstanced:
     case xr::TrStereoRenderingMode::SinglePassMultiview:
     {
-      auto cmd0 = finish(label, 0);
-      if (cmd0)
+      size_t count = xr_device_->getUsedViewsCount();
+      for (size_t i = 0; i < count; ++i)
       {
-        raw.push_back(cmd0.get());
-        owned.push_back(std::move(cmd0));
-      }
-      auto cmd1 = finish(label, 1);
-      if (cmd1)
-      {
-        raw.push_back(cmd1.get());
-        owned.push_back(std::move(cmd1));
+        auto cmd = finish(label, static_cast<int>(i));
+        if (cmd)
+        {
+          raw.push_back(cmd.get());
+          owned.push_back(std::move(cmd));
+        }
       }
       break;
     }

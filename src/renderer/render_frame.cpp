@@ -4,12 +4,26 @@ namespace renderer
 {
   TrRenderFrame::TrRenderFrame(Ref<commandbuffers::GPUDeviceBase> device, xr::Device *xrDevice)
   {
-    opaque_pass_ = AcquireRef(new TrRenderPass(RenderPassType::kOpaque, "Opaque", device, xrDevice));
-    transparent_pass_ = AcquireRef(new TrRenderPass(RenderPassType::kTransparent, "Transparent", device, xrDevice));
-    offscreen_pass_ = AcquireRef(new TrRenderPass(RenderPassType::kOffscreen, "Offscreen", device, xrDevice));
+    opaque_pass_ = AcquireRef(new TrRenderPass(
+      RenderPassType::kOpaque,
+      "Opaque",
+      device,
+      xrDevice));
+    transparent_pass_ = AcquireRef(new TrRenderPass(
+      RenderPassType::kTransparent,
+      "Transparent",
+      device,
+      xrDevice));
+    offscreen_pass_ = AcquireRef(new TrRenderPass(
+      RenderPassType::kOffscreen,
+      "Offscreen",
+      device,
+      xrDevice));
   }
 
-  TrRenderFrame::~TrRenderFrame() {}
+  TrRenderFrame::~TrRenderFrame()
+  {
+  }
 
   Ref<TrRenderPass> TrRenderFrame::opaquePass() const
   {
