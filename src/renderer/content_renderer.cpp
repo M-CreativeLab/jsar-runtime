@@ -379,6 +379,11 @@ namespace renderer
     }
   }
 
+  void TrContentRenderer::onBeforeRendering()
+  {
+    // TODO(yorkie): implement the before rendering logic.
+  }
+
   void TrContentRenderer::onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
     // Check and initialize the graphics contexts on host frame.
@@ -490,6 +495,10 @@ namespace renderer
       }
     }
     current_pass_ = ExecutingPassType::kDefaultFrame;
+  }
+
+  void TrContentRenderer::onAfterRendering()
+  {
   }
 
   void TrContentRenderer::onStartFrame()

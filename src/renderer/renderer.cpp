@@ -148,13 +148,9 @@ namespace renderer
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
-    // TODO(yorkie): implement the before rendering logic.
-  }
-
-  void TrRenderer::onAfterRendering()
-  {
-    if (rhi == nullptr) [[unlikely]]
-      return; // Skip if api is not ready.
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
 
     glHostContext->recordFromHost();
     {
@@ -163,7 +159,39 @@ namespace renderer
         auto content = contentRenderer->getContent();
         if (content == nullptr || content->disableRendering) [[unlikely]]
           continue;
+        contentRenderer->onBeforeRendering();
+      }
+    }
+    glHostContext->restore();
+  }
+
+  void TrRenderer::onAfterRendering()
+  {
+    if (rhi == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
+
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
+
+    glHostContext->recordFromHost();
+    {
+      // First, call onOffscreenRenderPass() for each content renderer.
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
         contentRenderer->onOffscreenRenderPass();
+      }
+
+      // Then, call onAfterRendering() for each content renderer.
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
+        contentRenderer->onAfterRendering();
       }
     }
     glHostContext->restore();

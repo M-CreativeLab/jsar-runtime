@@ -165,9 +165,11 @@ namespace renderer
      * @param req The command buffer request to be handled.
      */
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
+    void onBeforeRendering();
     void onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
     void onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
     void onOffscreenRenderPass();
+    void onAfterRendering();
 
     void onStartFrame();
     void onEndFrame();
