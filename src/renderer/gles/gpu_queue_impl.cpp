@@ -1,4 +1,5 @@
 #include <renderer/gles/gpu_queue_impl.hpp>
+#include <renderer/gles/gpu_command_buffer_impl.hpp>
 
 namespace gles
 {
@@ -24,8 +25,8 @@ namespace gles
   {
     for (uint32_t i = 0; i < commandCount; ++i)
     {
-      GPUCommandBufferBase *cmd = commands[i];
-      printf("Receiving command buffer %u: %p\n", i, static_cast<void *>(cmd));
+      auto *cmd = static_cast<GPUCommandBufferImpl *>(commands[i]);
+      cmd->execute();
     }
     return {};
   }

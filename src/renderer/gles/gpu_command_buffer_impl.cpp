@@ -14,7 +14,18 @@ namespace gles
 
   void GPUCommandBufferImpl::execute()
   {
-    // TODO
+    GPUCommand type;
+    while (commands_.nextCommandId(&type))
+    {
+      switch (type)
+      {
+      default:
+        std::cerr << "GPUCommandBufferImpl::execute: unknown command type"
+                  << static_cast<int>(type)
+                  << std::endl;
+        break;
+      }
+    }
   }
 
   void GPUCommandBufferImpl::onDraw(const commandbuffers::GPUDrawCommand &command)

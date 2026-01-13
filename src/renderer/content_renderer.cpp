@@ -379,93 +379,13 @@ namespace renderer
     }
   }
 
-  void TrContentRenderer::onBeforeRendering()
-  {
-    // TODO(yorkie): implement the before rendering logic.
-  }
-
   void TrContentRenderer::onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
-    // Check and initialize the graphics contexts on host frame.
-    initializeGraphicsContextsOnce();
-
-    /**
-     * Execute the content's command buffers.
-     */
-    onStartFrame();
-    {
-      executeRenderFramePass(RenderPassType::kOpaque, "opaque");
-
-      // Execute the default command buffers first.
-      executeCommandBuffersAtDefaultFrame();
-
-      // Skip the XR frame in the following conditions:
-      bool shouldSkipXRFrame = false;
-
-      // If the default command queue is pending, we consider this time of XR frame might be skipped.
-      if (is_default_command_queue_pending_ == true)
-      {
-        // `defaultCommandQueueSkipTimes` is updated to a positive value such as +2 when there is a default command
-        // received.
-        //
-        // If the skip times is greater than 0, this time of XR frame must be skipped to wait for the default command
-        // queue to be executed, this is a method to ensure the default command queue should be executed completely.
-        if (default_command_queue_skip_times_ > 0)
-        {
-          shouldSkipXRFrame = true;
-          // Decrement the skip times, if it reaches 0, we will not skip the XR frame anymore.
-          default_command_queue_skip_times_--;
-        }
-        // If the skip times is 0, we will reset the pending state and skip times, this is used to ensure the XR frame
-        // will not be suspended if there is default commands is received in multiple frames.
-        //
-        // In client-side, the XR frame updater will check the pending stere frames length, if there is too much (>=2)
-        // pending frames, it won't dispatch frame callback to wait for the pending frames to be executed. To resolve
-        // the deadlock, the skip times is introduced to make sure the pending stereo frames must be executed even
-        // though the default command queue is pending.
-        else
-        {
-          is_default_command_queue_pending_ = false;
-          shouldSkipXRFrame = false;
-        }
-      }
-      // If the default command queue is not pending, we will not skip the XR frame.
-      else
-      {
-        shouldSkipXRFrame = false;
-      }
-
-      if (!shouldSkipXRFrame && getContent()->used && xr_device_->enabled())
-      {
-        current_pass_ = ExecutingPassType::kXRFrame;
-
-        // Execute the XR frame
-        switch (xr_device_->getStereoRenderingMode())
-        {
-        case xr::TrStereoRenderingMode::MultiPass:
-        {
-          executeCommandBuffersAtXRFrame(xr_device_->getActiveEyeId());
-          break;
-        }
-        case xr::TrStereoRenderingMode::SinglePass:
-        case xr::TrStereoRenderingMode::SinglePassInstanced:
-        case xr::TrStereoRenderingMode::SinglePassMultiview:
-        {
-          executeCommandBuffersAtXRFrame(0);
-          executeCommandBuffersAtXRFrame(1);
-          break;
-        }
-        default:
-          break;
-        }
-      }
-    }
-    onEndFrame();
+    executeRenderFramePass(RenderPassType::kOpaque, "opaque");
   }
 
   void TrContentRenderer::onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
-    // TODO(yorkie): implement the transparents render pass.
     executeRenderFramePass(RenderPassType::kTransparent, "transparent");
   }
 
@@ -497,8 +417,21 @@ namespace renderer
     current_pass_ = ExecutingPassType::kDefaultFrame;
   }
 
+  void TrContentRenderer::onBeforeRendering()
+  {
+    initializeGraphicsContextsOnce();
+    updateCurrentRenderFrame();
+    onStartFrame();
+  }
+
   void TrContentRenderer::onAfterRendering()
   {
+    if (current_frame_ != nullptr)
+    {
+      unique_lock<shared_mutex> lock(frames_mutex_);
+      last_frame_ = current_frame_;
+    }
+    onEndFrame();
   }
 
   void TrContentRenderer::onStartFrame()
@@ -727,72 +660,54 @@ namespace renderer
     return nullptr;
   }
 
+  void TrContentRenderer::updateCurrentRenderFrame()
+  {
+    current_frame_ = nullptr;
+    unique_lock<shared_mutex> lock(frames_mutex_);
+    if (!pending_frames_.empty())
+    {
+      for (auto it = pending_frames_.begin(); it != pending_frames_.end();)
+      {
+        auto frame = *it;
+        if (frame->ended(0) && frame->ended(1))
+        {
+          current_frame_ = frame;
+          it = pending_frames_.erase(it);
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+
+    if (current_frame_ != nullptr)
+    {
+      last_frame_ = current_frame_;
+    }
+  }
+
   void TrContentRenderer::executeRenderFramePass(RenderPassType type, const char *label)
   {
-    std::vector<Ref<TrRenderFrame>> frames_to_execute;
-    Ref<TrRenderFrame> last_copy = nullptr;
-
+    Ref<TrRenderFrame> frame = current_frame_;
+    if (frame == nullptr)
     {
-      unique_lock<shared_mutex> lock(frames_mutex_);
-      if (!pending_frames_.empty())
-      {
-        for (auto it = pending_frames_.begin(); it != pending_frames_.end();)
-        {
-          auto frame = *it;
-          if (frame->ended(0) && frame->ended(1))
-          {
-            frames_to_execute.push_back(frame);
-            it = pending_frames_.erase(it);
-          }
-          else
-          {
-            break;
-          }
-        }
-      }
-
-      if (!frames_to_execute.empty())
-      {
-        last_frame_ = frames_to_execute.back();
-      }
-      else
-      {
-        last_copy = last_frame_;
-      }
+      shared_lock<shared_mutex> lock(frames_mutex_);
+      frame = last_frame_;
     }
 
-    if (!frames_to_execute.empty())
-    {
-      for (auto &frame : frames_to_execute)
-      {
-        switch (type)
-        {
-        case RenderPassType::kOpaque:
-          frame->onOpaquePass(label);
-          break;
-        case RenderPassType::kTransparent:
-          frame->onTransparentPass(label);
-          break;
-        case RenderPassType::kOffscreen:
-          frame->onOffscreenPass(label);
-          break;
-        default:
-          break;
-        }
-      }
-    }
-    else if (last_copy != nullptr)
+    if (frame != nullptr)
     {
       switch (type)
       {
       case RenderPassType::kOpaque:
-        last_copy->onOpaquePass(label);
+        frame->onOpaquePass(label);
         break;
       case RenderPassType::kTransparent:
-        last_copy->onTransparentPass(label);
+        frame->onTransparentPass(label);
         break;
       case RenderPassType::kOffscreen:
-        last_copy->onOffscreenPass(label);
+        frame->onOffscreenPass(label);
         break;
       default:
         break;

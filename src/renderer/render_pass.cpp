@@ -269,39 +269,44 @@ namespace renderer
       return;
     }
 
-    vector<unique_ptr<GPUCommandBufferBase>> owned;
     vector<GPUCommandBufferBase *> raw;
 
-    switch (xr_device_->getStereoRenderingMode())
+    if (cached_command_buffers_.empty())
     {
-    case xr::TrStereoRenderingMode::MultiPass:
-    {
-      auto cmd = finish(label, xr_device_->getActiveEyeId());
-      if (cmd)
+      switch (xr_device_->getStereoRenderingMode())
       {
-        raw.push_back(cmd.get());
-        owned.push_back(std::move(cmd));
-      }
-      break;
-    }
-    case xr::TrStereoRenderingMode::SinglePass:
-    case xr::TrStereoRenderingMode::SinglePassInstanced:
-    case xr::TrStereoRenderingMode::SinglePassMultiview:
-    {
-      size_t count = xr_device_->getUsedViewsCount();
-      for (size_t i = 0; i < count; ++i)
+      case xr::TrStereoRenderingMode::MultiPass:
       {
-        auto cmd = finish(label, static_cast<int>(i));
+        auto cmd = finish(label, xr_device_->getActiveEyeId());
         if (cmd)
         {
-          raw.push_back(cmd.get());
-          owned.push_back(std::move(cmd));
+          cached_command_buffers_.push_back(std::move(cmd));
         }
+        break;
       }
-      break;
+      case xr::TrStereoRenderingMode::SinglePass:
+      case xr::TrStereoRenderingMode::SinglePassInstanced:
+      case xr::TrStereoRenderingMode::SinglePassMultiview:
+      {
+        size_t count = xr_device_->getUsedViewsCount();
+        for (size_t i = 0; i < count; ++i)
+        {
+          auto cmd = finish(label, static_cast<int>(i));
+          if (cmd)
+          {
+            cached_command_buffers_.push_back(std::move(cmd));
+          }
+        }
+        break;
+      }
+      default:
+        break;
+      }
     }
-    default:
-      break;
+
+    for (const auto &cmd : cached_command_buffers_)
+    {
+      raw.push_back(cmd.get());
     }
 
     if (!raw.empty())

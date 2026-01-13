@@ -5,6 +5,7 @@
 #include <optional>
 #include <unordered_map>
 #include <array>
+#include <vector>
 
 #include <common/utility.hpp>
 #include <common/command_buffers/base.hpp>
@@ -121,5 +122,6 @@ namespace renderer
     std::array<std::optional<WebGLuint>, kMaxEyes> active_targets_;
     std::unordered_map<WebGLuint, Ref<commandbuffers::GPURenderPassEncoder>> renderpass_encoders_;
     std::unordered_map<WebGLuint, commandbuffers::GPURenderPassDescriptor> renderpass_descriptors_;
+    std::vector<std::unique_ptr<commandbuffers::GPUCommandBufferBase>> cached_command_buffers_;
   };
 }

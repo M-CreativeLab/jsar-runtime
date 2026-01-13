@@ -194,6 +194,7 @@ namespace renderer
     size_t getPendingStereoFramesCount();
     Ref<TrRenderFrame> getActiveFrame() const;
     void executeRenderFramePass(RenderPassType type, const char *label);
+    void updateCurrentRenderFrame();
     void executeClientRequestOnWebGPU(TrCommandBufferBase *req);
 
   public:
@@ -253,6 +254,7 @@ namespace renderer
     Ref<TrRenderResource> render_resource_;
     std::deque<Ref<TrRenderFrame>> pending_frames_;
     Ref<TrRenderFrame> last_frame_;
+    Ref<TrRenderFrame> current_frame_;
     mutable std::shared_mutex frames_mutex_;
 
   private: // frame rate control

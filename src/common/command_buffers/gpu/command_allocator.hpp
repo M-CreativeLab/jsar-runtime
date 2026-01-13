@@ -36,6 +36,7 @@
 
 #include <common/non_copyable.hpp>
 #include <common/math_utils.hpp>
+#include <common/command_buffers/gpu/gpu_commands.hpp>
 
 namespace commandbuffers::gpu
 {
@@ -70,8 +71,7 @@ namespace commandbuffers::gpu
 
     void acquireCommandBlocks(std::vector<CommandAllocator> allocators);
 
-    template <typename E>
-    bool nextCommandId(E *commandId)
+    bool nextCommandId(GPUCommand *commandId)
     {
       return nextCommandId(reinterpret_cast<uint32_t *>(commandId));
     }
