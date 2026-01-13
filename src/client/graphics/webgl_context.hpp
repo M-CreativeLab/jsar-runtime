@@ -101,6 +101,9 @@ namespace endor
       kStencilTest = WEBGL_STENCIL_TEST,
       kUnpackFlipY = WEBGL_UNPACK_FLIP_Y_WEBGL,
       kUnpackPremultiplyAlpha = WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+      kSampleAlphaToCoverage = WEBGL_SAMPLE_ALPHA_TO_COVERAGE,
+      kSampleCoverage = WEBGL_SAMPLE_COVERAGE,
+      kRasterizerDiscard = WEBGL2_RASTERIZER_DISCARD,
     };
 
     enum class WebGLFloatParameterName
@@ -218,6 +221,35 @@ namespace endor
       kMaxTextureLodBias = WEBGL2_MAX_TEXTURE_LOD_BIAS,
       kUniformBufferOffsetAlignment = WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
       kExtMaxViewsOvr = WEBGL2_EXT_MAX_VIEWS_OVR,
+      // Pixel store parameters
+      kPackRowLength = WEBGL2_PACK_ROW_LENGTH,
+      kPackSkipPixels = WEBGL2_PACK_SKIP_PIXELS,
+      kPackSkipRows = WEBGL2_PACK_SKIP_ROWS,
+      kUnpackRowLength = WEBGL2_UNPACK_ROW_LENGTH,
+      kUnpackImageHeight = WEBGL2_UNPACK_IMAGE_HEIGHT,
+      kUnpackSkipPixels = WEBGL2_UNPACK_SKIP_PIXELS,
+      kUnpackSkipRows = WEBGL2_UNPACK_SKIP_ROWS,
+      kUnpackSkipImages = WEBGL2_UNPACK_SKIP_IMAGES,
+      // Other state parameters
+      kFragmentShaderDerivativeHint = WEBGL2_FRAGMENT_SHADER_DERIVATIVE_HINT,
+      kReadBuffer = WEBGL2_READ_BUFFER,
+      kDrawBuffer0 = WEBGL2_DRAW_BUFFER0,
+      kDrawBuffer1 = WEBGL2_DRAW_BUFFER1,
+      kDrawBuffer2 = WEBGL2_DRAW_BUFFER2,
+      kDrawBuffer3 = WEBGL2_DRAW_BUFFER3,
+      kDrawBuffer4 = WEBGL2_DRAW_BUFFER4,
+      kDrawBuffer5 = WEBGL2_DRAW_BUFFER5,
+      kDrawBuffer6 = WEBGL2_DRAW_BUFFER6,
+      kDrawBuffer7 = WEBGL2_DRAW_BUFFER7,
+      kDrawBuffer8 = WEBGL2_DRAW_BUFFER8,
+      kDrawBuffer9 = WEBGL2_DRAW_BUFFER9,
+      kDrawBuffer10 = WEBGL2_DRAW_BUFFER10,
+      kDrawBuffer11 = WEBGL2_DRAW_BUFFER11,
+      kDrawBuffer12 = WEBGL2_DRAW_BUFFER12,
+      kDrawBuffer13 = WEBGL2_DRAW_BUFFER13,
+      kDrawBuffer14 = WEBGL2_DRAW_BUFFER14,
+      kDrawBuffer15 = WEBGL2_DRAW_BUFFER15,
+      kUniformBufferOffsetAlignment = WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
     };
 
     class ContextAttributes final
