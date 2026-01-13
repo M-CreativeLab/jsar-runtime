@@ -494,4 +494,69 @@ namespace commandbuffers
   public:
     std::string infoLog;
   };
+
+  class TransformFeedbackVaryingsCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<TransformFeedbackVaryingsCommandBufferRequest,
+                                            COMMAND_BUFFER_TRANSFORM_FEEDBACK_VARYINGS_REQ>
+  {
+  public:
+    TransformFeedbackVaryingsCommandBufferRequest() = delete;
+    TransformFeedbackVaryingsCommandBufferRequest(uint32_t program, const std::vector<std::string> &varyings, uint32_t bufferMode)
+        : TrCommandBufferSimpleRequest()
+        , program(program)
+        , varyings(varyings)
+        , bufferMode(bufferMode)
+    {
+    }
+    TransformFeedbackVaryingsCommandBufferRequest(const TransformFeedbackVaryingsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , program(that.program)
+        , varyings(that.varyings)
+        , bufferMode(that.bufferMode)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << program << ", [";
+      for (size_t i = 0; i < varyings.size(); i++)
+      {
+        if (i > 0)
+          ss << ", ";
+        ss << varyings[i];
+      }
+      ss << "], " << bufferMode << ")";
+      return ss.str();
+    }
+
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(type, size, this);
+      // Serialize the varyings array
+      for (const auto &varying : varyings)
+      {
+        message->addStringSegment(const_cast<std::string &>(varying));
+      }
+      return message;
+    }
+
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      varyings.clear();
+      for (size_t i = 0; i < message.getSegmentCount(); i++)
+      {
+        auto segment = message.getSegment(i);
+        if (segment != nullptr)
+        {
+          varyings.push_back(segment->toString());
+        }
+      }
+    }
+
+  public:
+    uint32_t program;
+    std::vector<std::string> varyings;
+    uint32_t bufferMode;
+  };
 }

@@ -2196,6 +2196,21 @@ namespace endor
       sendCommandBufferRequest(req);
     }
 
+    void WebGL2Context::transformFeedbackVaryings(shared_ptr<WebGLProgram> program,
+                                                  const vector<string> &varyings,
+                                                  uint32_t bufferMode)
+    {
+      if (program == nullptr || !program->isValid())
+      {
+        return;
+      }
+
+      auto commandBuffer = commandbuffers::TransformFeedbackVaryingsCommandBufferRequest(program->id,
+                                                                                         varyings,
+                                                                                         bufferMode);
+      sendCommandBufferRequest(commandBuffer);
+    }
+
     void WebGL2Context::uniformBlockBinding(shared_ptr<WebGLProgram> program,
                                             int uniformBlockIndex,
                                             uint32_t uniformBlockBinding)

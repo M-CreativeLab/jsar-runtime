@@ -76,6 +76,7 @@
   XX(VERTEX_ATTRIB_I4IV, VertexAttribI4ivCommandBufferRequest, "GL::VertexAttribI4iv")                                           \
   XX(VERTEX_ATTRIB_I4UIV, VertexAttribI4uivCommandBufferRequest, "GL::VertexAttribI4uiv")                                        \
   XX(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest, "GL::UniformBlockBinding")                                  \
+  XX(TRANSFORM_FEEDBACK_VARYINGS, TransformFeedbackVaryingsCommandBufferRequest, "GL::TransformFeedbackVaryings")                \
   XX(UNIFORM1F, Uniform1fCommandBufferRequest, "GL::Uniform1f")                                                                  \
   XX(UNIFORM1FV, Uniform1fvCommandBufferRequest, "GL::Uniform1fv")                                                               \
   XX(UNIFORM1I, Uniform1iCommandBufferRequest, "GL::Uniform1i")                                                                  \

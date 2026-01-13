@@ -995,9 +995,65 @@ namespace endor
       {
         Isolate *isolate = args.GetIsolate();
         HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
 
-        isolate->ThrowException(Exception::Error(
-          MakeMethodError(isolate, "transformFeedbackVaryings", "Not implemented")));
+        if (args.Length() < 3)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "transformFeedbackVaryings", 3, args.Length())));
+          return;
+        }
+        if (!WebGLProgram::IsInstanceOf(isolate, args[0]))
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "transformFeedbackVaryings", 0, "WebGLProgram", args[0])));
+          return;
+        }
+        if (!args[1]->IsArray())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "transformFeedbackVaryings", 1, "Array", args[1])));
+          return;
+        }
+        if (!args[2]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "transformFeedbackVaryings", 2, "number", args[2])));
+          return;
+        }
+
+        auto programObj = args[0].As<Object>();
+        auto program = WebGLProgram::Unwrap(isolate, programObj);
+        if (program == nullptr || !program->hasData())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "transformFeedbackVaryings", "Invalid WebGLProgram")));
+          return;
+        }
+
+        // Extract varyings array
+        vector<string> varyings;
+        Local<Array> varyingsArray = args[1].As<Array>();
+        uint32_t length = varyingsArray->Length();
+        varyings.reserve(length);
+
+        for (uint32_t i = 0; i < length; ++i)
+        {
+          Local<Value> item = varyingsArray->Get(context, i).ToLocalChecked();
+          if (!item->IsString())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "transformFeedbackVaryings", "All varyings must be strings")));
+            return;
+          }
+          String::Utf8Value utf8Value(isolate, item);
+          varyings.push_back(string(*utf8Value));
+        }
+
+        uint32_t bufferMode = args[2]->Uint32Value(context).ToChecked();
+
+        handle()->transformFeedbackVaryings(program->handle(), varyings, bufferMode);
+        args.GetReturnValue().SetUndefined();
       }
 
       void WebGL2RenderingContext::GetTransformFeedbackVarying(const FunctionCallbackInfo<Value> &args)

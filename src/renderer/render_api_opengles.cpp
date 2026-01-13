@@ -1735,6 +1735,26 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
+  TR_OPENGL_FUNC void OnTransformFeedbackVaryings(TransformFeedbackVaryingsCommandBufferRequest *req,
+                                                  renderer::TrContentRenderer *reqContentRenderer,
+                                                  ApiCallOptions &options)
+  {
+    auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
+    auto program = glObjectManager.FindProgram(req->program);
+
+    // Convert vector of strings to array of C strings for OpenGL API
+    std::vector<const char *> varyings;
+    varyings.reserve(req->varyings.size());
+    for (const auto &varying : req->varyings)
+    {
+      varyings.push_back(varying.c_str());
+    }
+
+    glTransformFeedbackVaryings(program, static_cast<GLsizei>(varyings.size()), varyings.data(), req->bufferMode);
+
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
   TR_OPENGL_FUNC void OnUniform1f(Uniform1fCommandBufferRequest *req,
                                   renderer::TrContentRenderer *reqContentRenderer,
                                   ApiCallOptions &options)
@@ -2956,6 +2976,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4IV, VertexAttribI4ivCommandBufferRequest, VertexAttribI4iv)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4UIV, VertexAttribI4uivCommandBufferRequest, VertexAttribI4uiv)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest, UniformBlockBinding)
+      ADD_COMMAND_BUFFER_HANDLER(TRANSFORM_FEEDBACK_VARYINGS, TransformFeedbackVaryingsCommandBufferRequest, TransformFeedbackVaryings)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM1F, Uniform1fCommandBufferRequest, Uniform1f)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM1FV, Uniform1fvCommandBufferRequest, Uniform1fv)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM1I, Uniform1iCommandBufferRequest, Uniform1i)
