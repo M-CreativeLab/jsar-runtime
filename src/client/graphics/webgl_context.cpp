@@ -1968,6 +1968,22 @@ namespace endor
       return -1;
     }
 
+    vector<int> WebGL2Context::getInternalformatParameter(uint32_t target, uint32_t internalformat, uint32_t pname)
+    {
+      // Query the underlying GL implementation via command buffer
+      auto req = GetInternalformatParameterCommandBufferRequest(target, internalformat, pname);
+      sendCommandBufferRequest(req, true);
+      auto response = recvResponse<GetInternalformatParameterCommandBufferResponse>(
+        COMMAND_BUFFER_GET_INTERNALFORMAT_PARAMETER_RES,
+        req);
+
+      if (response == nullptr) [[unlikely]]
+      {
+        throw runtime_error("Failed to get internal format parameter: timeout.");
+      }
+      return response->values;
+    }
+
     int WebGL2Context::getParameterV2(WebGL2IntegerParameterName pname)
     {
       /**

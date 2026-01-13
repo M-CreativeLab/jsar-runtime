@@ -2689,6 +2689,73 @@ private:
       DEBUG(DEBUG_TAG, "[%d] GL::GetError() => %d", options.isDefaultQueue(), res.error);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
+  TR_OPENGL_FUNC void OnGetInternalformatParameter(GetInternalformatParameterCommandBufferRequest *req,
+                                                   renderer::TrContentRenderer *reqContentRenderer,
+                                                   ApiCallOptions &options)
+  {
+    std::vector<int> values;
+
+    // Support WEBGL_SAMPLES and GL_NUM_SAMPLE_COUNTS, log error for others
+    if (req->pname == WEBGL_SAMPLES)
+    {
+      GLint numSampleCounts = 0;
+      glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
+      GLenum error = glGetError();
+      if (error == GL_NO_ERROR && numSampleCounts > 0)
+      {
+        std::vector<GLint> samples(numSampleCounts);
+        glGetInternalformativ(req->target, req->internalformat, GL_SAMPLES, numSampleCounts, samples.data());
+        error = glGetError();
+
+        if (error == GL_NO_ERROR)
+        {
+          for (GLint sample : samples)
+          {
+            if (sample > 0)
+              values.push_back(static_cast<int>(sample));
+          }
+          std::sort(values.begin(), values.end(), std::greater<int>());
+        }
+      }
+      if (values.empty())
+      {
+        DEBUG(DEBUG_TAG, "[GetInternalformatParameter] Using fallback values {4, 2, 1}");
+        values = {4, 2, 1};
+      }
+    }
+    else if (req->pname == GL_NUM_SAMPLE_COUNTS)
+    {
+      GLint numSampleCounts = 0;
+      glGetInternalformativ(req->target, req->internalformat, GL_NUM_SAMPLE_COUNTS, 1, &numSampleCounts);
+      GLenum error = glGetError();
+      if (error == GL_NO_ERROR)
+      {
+        values.push_back(static_cast<int>(numSampleCounts));
+      }
+    }
+    else
+    {
+      // Not implemented for other pnames
+      DEBUG(LOG_TAG_ERROR,
+            "[GetInternalformatParameter] pname 0x%x is not supported.",
+            req->pname);
+    }
+
+    GetInternalformatParameterCommandBufferResponse res(req, values);
+    // Note: CheckError is called here but won't detect errors from glGetInternalformativ
+    // calls above since those errors are already consumed by explicit glGetError() calls
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
+      DEBUG(DEBUG_TAG,
+            "[%d] GL::GetInternalformativ(0x%x, 0x%x, 0x%x) => [%zu values]",
+            options.isDefaultQueue(),
+            req->target,
+            req->internalformat,
+            req->pname,
+            values.size());
+    }
+    reqContentRenderer->sendCommandBufferResponse(res);
+  }
 };
 
 void RHI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
@@ -3026,6 +3093,9 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
                                  GetShaderPrecisionFormatCommandBufferRequest,
                                  GetShaderPrecisionFormat)
       ADD_COMMAND_BUFFER_HANDLER(GET_ERROR, GetErrorCommandBufferRequest, GetError)
+      ADD_COMMAND_BUFFER_HANDLER(GET_INTERNALFORMAT_PARAMETER,
+                                 GetInternalformatParameterCommandBufferRequest,
+                                 GetInternalformatParameter)
 #undef ADD_COMMAND_BUFFER_HANDLER
 #undef ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME
 

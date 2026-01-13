@@ -418,6 +418,7 @@ namespace endor
         // Enhanced framebuffer operations
         ADD_WEBGL2_METHOD("blitFramebuffer", BlitFramebuffer)
         ADD_WEBGL2_METHOD("renderbufferStorageMultisample", RenderbufferStorageMultisample)
+        ADD_WEBGL2_METHOD("getInternalformatParameter", GetInternalformatParameter)
         ADD_WEBGL2_METHOD("framebufferTextureLayer", FramebufferTextureLayer)
 
         // Enhanced texture operations
@@ -1701,6 +1702,56 @@ namespace endor
 
         handle()->renderbufferStorageMultisample(target, samples, internalformat, width, height);
         args.GetReturnValue().SetUndefined();
+      }
+
+      void WebGL2RenderingContext::GetInternalformatParameter(const FunctionCallbackInfo<Value> &args)
+      {
+        Isolate *isolate = args.GetIsolate();
+        HandleScope scope(isolate);
+        Local<Context> context = isolate->GetCurrentContext();
+
+        if (args.Length() < 3)
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgCountError(isolate, "getInternalformatParameter", 3, args.Length())));
+          return;
+        }
+
+        for (int i = 0; i < 3; ++i)
+        {
+          if (!args[i]->IsNumber())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodArgTypeError(isolate, "getInternalformatParameter", i, "number", args[i])));
+            return;
+          }
+        }
+
+        uint32_t target = args[0]->Uint32Value(context).ToChecked();
+        uint32_t internalformat = args[1]->Uint32Value(context).ToChecked();
+        uint32_t pname = args[2]->Uint32Value(context).ToChecked();
+
+        // Delegate to WebGL2Context for the actual query
+        auto values = handle()->getInternalformatParameter(target, internalformat, pname);
+
+        // If empty vector returned, it means unsupported pname - return null per spec
+        if (values.empty())
+        {
+          args.GetReturnValue().SetNull();
+          return;
+        }
+
+        // Create Int32Array to return the values
+        auto arraybuffer = ArrayBuffer::New(isolate, sizeof(int32_t) * values.size());
+        auto backingStore = arraybuffer->GetBackingStore();
+        int32_t *data = static_cast<int32_t *>(backingStore->Data());
+        for (size_t i = 0; i < values.size(); i++)
+        {
+          data[i] = values[i];
+        }
+
+        Local<Value> result = Int32Array::New(arraybuffer, 0, values.size());
+        args.GetReturnValue().Set(result);
       }
 
       void WebGL2RenderingContext::FramebufferTextureLayer(const v8::FunctionCallbackInfo<v8::Value> &args)
