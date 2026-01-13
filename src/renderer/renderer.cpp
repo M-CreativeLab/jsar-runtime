@@ -17,6 +17,7 @@ namespace renderer
       : constellation(constellation)
       , rhi(nullptr)
       , commandBufferChanServer(make_unique<CommandBufferChanServer>("commandBufferChan"))
+      , rayRenderer(std::make_unique<TrRayRenderer>())
   {
   }
 
@@ -44,6 +45,12 @@ namespace renderer
       return;
     glHostContext = new ContextGLHost();
 
+    // Initialize ray renderer
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->initialize();
+    }
+
     assert(watcherRunning == false);
     startWatchers();
   }
@@ -51,6 +58,24 @@ namespace renderer
   void TrRenderer::shutdown()
   {
     stopWatchers();
+
+    // Shutdown ray renderer
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->shutdown();
+    }
+
+    // Clean up depth texture resources
+    if (m_ResolvedDepthTexture != 0)
+    {
+      glDeleteTextures(1, &m_ResolvedDepthTexture);
+      m_ResolvedDepthTexture = 0;
+    }
+    if (m_ResolvedDepthFBO != 0)
+    {
+      glDeleteFramebuffers(1, &m_ResolvedDepthFBO);
+      m_ResolvedDepthFBO = 0;
+    }
   }
 
   void TrRenderer::setLogFilter(string filterExpr)
@@ -157,6 +182,38 @@ namespace renderer
       return; // Skip if api is not ready.
 
     glHostContext->recordFromHost();
+
+    // Render rays and cursors after all other rendering is complete
+    if (rayRenderer != nullptr && constellation != nullptr && constellation->xrDevice != nullptr)
+    {
+      // Update ray visualizations from input sources
+      rayRenderer->updateRays(constellation->xrDevice.get());
+
+      // Get current view matrices for rendering
+      auto xrDevice = constellation->xrDevice;
+      int activeEyeId = xrDevice->getActiveEyeId();
+
+      // Get view and projection matrices
+      float *viewMatrixPtr = xrDevice->getViewMatrixForEye(activeEyeId);
+      float *projMatrixPtr = xrDevice->getProjectionMatrixForEye(activeEyeId);
+
+      if (viewMatrixPtr != nullptr && projMatrixPtr != nullptr)
+      {
+        glm::mat4 viewMatrix = glm::make_mat4(viewMatrixPtr);
+        glm::mat4 projMatrix = glm::make_mat4(projMatrixPtr);
+
+        // Get viewport
+        auto viewport = xrDevice->getViewport(activeEyeId);
+
+        // Resolve depth texture from current framebuffer for ray marching
+        unsigned int resolvedDepthTexture = resolveDepthTexture(viewport.width, viewport.height);
+
+        // Render rays and cursors
+        rayRenderer->render(viewMatrix, projMatrix, glHostContext->framebuffer(), 
+                          resolvedDepthTexture, viewport.width, viewport.height);
+      }
+    }
+
     {
       for (auto contentRenderer : contentRenderers)
       {
@@ -166,6 +223,7 @@ namespace renderer
         contentRenderer->onOffscreenRenderPass();
       }
     }
+
     glHostContext->restore();
   }
 
@@ -415,5 +473,110 @@ namespace renderer
       lastFrameTimepoint = tickingTimepoint;
       constellation->perfFs->setFps(fps);
     }
+  }
+
+  TrRayRenderer *TrRenderer::getRayRenderer()
+  {
+    return rayRenderer.get();
+  }
+
+  void TrRenderer::setRayVisualizationEnabled(bool enabled)
+  {
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->setRayVisualizationEnabled(enabled);
+    }
+  }
+
+  void TrRenderer::setCursorVisualizationEnabled(bool enabled)
+  {
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->setCursorVisualizationEnabled(enabled);
+    }
+  }
+
+  void TrRenderer::setGPURayMarchingEnabled(bool enabled)
+  {
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->setGPURayMarchingEnabled(enabled);
+    }
+  }
+
+  unsigned int TrRenderer::resolveDepthTexture(int viewportWidth, int viewportHeight)
+  {
+    if (!glHostContext->isCurrentFramebufferValid())
+    {
+      return 0;
+    }
+
+    auto currentFB = glHostContext->currentFramebufferChecked();
+    if (!currentFB.hasDepthStencilAttachment())
+    {
+      return 0;
+    }
+
+    // Create or resize resolved depth texture if needed
+    if (m_ResolvedDepthTexture == 0 || m_ResolvedDepthWidth != viewportWidth || m_ResolvedDepthHeight != viewportHeight)
+    {
+      // Clean up existing resources
+      if (m_ResolvedDepthTexture != 0)
+      {
+        glDeleteTextures(1, &m_ResolvedDepthTexture);
+        m_ResolvedDepthTexture = 0;
+      }
+      if (m_ResolvedDepthFBO != 0)
+      {
+        glDeleteFramebuffers(1, &m_ResolvedDepthFBO);
+        m_ResolvedDepthFBO = 0;
+      }
+
+      // Create new depth texture
+      glGenTextures(1, &m_ResolvedDepthTexture);
+      glBindTexture(GL_TEXTURE_2D, m_ResolvedDepthTexture);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, viewportWidth, viewportHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+      // Create framebuffer for resolved depth
+      glGenFramebuffers(1, &m_ResolvedDepthFBO);
+      glBindFramebuffer(GL_FRAMEBUFFER, m_ResolvedDepthFBO);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ResolvedDepthTexture, 0);
+
+      // Check framebuffer completeness
+      if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+      {
+        ERROR(LOG_TAG_RENDERER, "Failed to create resolved depth framebuffer");
+        glDeleteTextures(1, &m_ResolvedDepthTexture);
+        glDeleteFramebuffers(1, &m_ResolvedDepthFBO);
+        m_ResolvedDepthTexture = 0;
+        m_ResolvedDepthFBO = 0;
+        return 0;
+      }
+
+      m_ResolvedDepthWidth = viewportWidth;
+      m_ResolvedDepthHeight = viewportHeight;
+    }
+
+    // Save current framebuffer binding
+    GLint prevReadFBO, prevDrawFBO;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFBO);
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevDrawFBO);
+
+    // Resolve depth buffer (handles MSAA if present)
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, currentFB.id());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_ResolvedDepthFBO);
+    glBlitFramebuffer(0, 0, viewportWidth, viewportHeight,
+                      0, 0, viewportWidth, viewportHeight,
+                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+    // Restore framebuffer bindings
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, prevReadFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prevDrawFBO);
+
+    return m_ResolvedDepthTexture;
   }
 }

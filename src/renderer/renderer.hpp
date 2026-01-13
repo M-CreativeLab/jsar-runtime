@@ -21,6 +21,7 @@
 #include "./gles/context_storage.hpp"
 #include "./content_renderer.hpp"
 #include "./render_api.hpp"
+#include "./ray_renderer.hpp"
 
 using namespace std;
 using namespace commandbuffers;
@@ -189,6 +190,46 @@ namespace renderer
     void onBeforeRendering();
     void onAfterRendering();
 
+  public: // Ray renderer API
+    /**
+     * Get the ray renderer instance.
+     * 
+     * @returns The ray renderer instance, or nullptr if not initialized.
+     */
+    TrRayRenderer *getRayRenderer();
+
+    /**
+     * Enable or disable ray visualization.
+     * 
+     * @param enabled Whether to enable ray visualization.
+     */
+    void setRayVisualizationEnabled(bool enabled);
+
+    /**
+     * Enable or disable cursor visualization.
+     * 
+     * @param enabled Whether to enable cursor visualization.
+     */
+    void setCursorVisualizationEnabled(bool enabled);
+
+    /**
+     * Enable or disable GPU-based ray marching.
+     * 
+     * @param enabled Whether to use GPU ray marching for better performance.
+     */
+    void setGPURayMarchingEnabled(bool enabled);
+
+  private:
+    /**
+     * Resolve depth texture from current framebuffer for ray marching.
+     * This handles MSAA resolve if needed.
+     * 
+     * @param viewportWidth Current viewport width
+     * @param viewportHeight Current viewport height
+     * @returns The resolved depth texture ID (0 if failed)
+     */
+    unsigned int resolveDepthTexture(int viewportWidth, int viewportHeight);
+
   public: // API for content renderer
     /**
      * Create a new content renderer and add it to the renderer.
@@ -302,5 +343,14 @@ namespace renderer
     std::unordered_map<int, CommandBufferExecutionCallback> onExecutedCallbacks_;
     int nextCallbackId_ = 1;
     mutable std::shared_mutex callbacksMutex_;
+
+  private: // ray renderer
+    std::unique_ptr<TrRayRenderer> rayRenderer = nullptr;
+    
+    // Depth texture for ray marching
+    unsigned int m_ResolvedDepthTexture = 0;
+    unsigned int m_ResolvedDepthFBO = 0;
+    int m_ResolvedDepthWidth = 0;
+    int m_ResolvedDepthHeight = 0;
   };
 }

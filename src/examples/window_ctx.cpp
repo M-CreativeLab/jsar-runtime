@@ -269,7 +269,7 @@ namespace jsar::example
     screenCoord.z = depth;
 
     // Update the main input source's target ray
-    glm::vec3 origin = xrRenderer->viewerPosition();
+    glm::vec3 origin = xrRenderer->viewerPosition() + glm::vec3(0, -0.01f, 0); // Slightly lower than eye level
 
     if (depth < 1.0f && depth > 0.0f)
     {
