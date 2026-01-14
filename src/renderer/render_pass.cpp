@@ -34,7 +34,11 @@ namespace renderer
       {
         GPUCommandEncoderDescriptor desc;
         desc.label = name_;
-        command_encoders_[i] = GPUCommandEncoder::Create(gpu_device_, desc);
+        Ref<GPUCommandEncoder> command_encoder = GPUCommandEncoder::Create(gpu_device_, desc);
+        command_encoders_[i] = command_encoder;
+
+        renderpass_descriptors_[i] = GPURenderPassDescriptor{};
+        renderpass_encoders_[i] = command_encoder->beginRenderPass(renderpass_descriptors_[i]);
       }
       else
       {
@@ -74,10 +78,7 @@ namespace renderer
       return nullptr;
     if (!active_targets_[eyeIndex].has_value())
       return nullptr;
-    auto it = renderpass_encoders_.find(active_targets_[eyeIndex].value());
-    if (it == renderpass_encoders_.end())
-      return nullptr;
-    return it->second;
+    return renderpass_encoders_[eyeIndex];
   }
 
   void TrRenderPass::bindTarget(WebGLuint framebuffer)
@@ -90,8 +91,6 @@ namespace renderer
     if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
       return;
     active_targets_[eyeIndex] = framebuffer;
-    if (renderpass_descriptors_.find(framebuffer) == renderpass_descriptors_.end())
-      renderpass_descriptors_.emplace(framebuffer, GPURenderPassDescriptor{});
   }
 
   void TrRenderPass::discardTarget(WebGLuint framebuffer)
@@ -101,14 +100,14 @@ namespace renderer
 
   void TrRenderPass::discardTarget(WebGLuint framebuffer, int eyeIndex)
   {
-    if (renderpass_encoders_.find(framebuffer) != renderpass_encoders_.end())
-      renderpass_encoders_.erase(framebuffer);
-    if (renderpass_descriptors_.find(framebuffer) != renderpass_descriptors_.end())
-      renderpass_descriptors_.erase(framebuffer);
     if (eyeIndex >= 0 && eyeIndex < kMaxEyes)
     {
       if (active_targets_[eyeIndex].has_value() && active_targets_[eyeIndex].value() == framebuffer)
+      {
+        renderpass_encoders_[eyeIndex] = nullptr;
+        renderpass_descriptors_[eyeIndex] = GPURenderPassDescriptor{};
         active_targets_[eyeIndex].reset();
+      }
     }
   }
 
@@ -141,7 +140,7 @@ namespace renderer
       return;
     if (!active_targets_[eyeIndex].has_value())
       return;
-    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    auto &descriptor = renderpass_descriptors_[eyeIndex];
 
     if (!descriptor.colorAttachments.empty())
     {
@@ -180,7 +179,7 @@ namespace renderer
       return;
     if (!active_targets_[eyeIndex].has_value())
       return;
-    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    auto &descriptor = renderpass_descriptors_[eyeIndex];
     descriptor.colorAttachments.resize(n);
   }
 
@@ -195,7 +194,7 @@ namespace renderer
       return;
     if (!active_targets_[eyeIndex].has_value())
       return;
-    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    auto &descriptor = renderpass_descriptors_[eyeIndex];
     if (!descriptor.depthStencilAttachment.has_value())
       descriptor.depthStencilAttachment = GPURenderPassDescriptor::DepthStencilAttachment{};
   }
@@ -216,11 +215,12 @@ namespace renderer
       return;
     if (!active_targets_[eyeIndex].has_value())
       return;
-    auto &descriptor = renderpass_descriptors_[active_targets_[eyeIndex].value()];
+    
+    auto &descriptor = renderpass_descriptors_[eyeIndex];
     if (command_encoders_[eyeIndex] == nullptr)
       return;
     auto enc = command_encoders_[eyeIndex]->beginRenderPass(descriptor);
-    renderpass_encoders_[active_targets_[eyeIndex].value()] = enc;
+    renderpass_encoders_[eyeIndex] = enc;
   }
 
   void TrRenderPass::end()
@@ -235,9 +235,9 @@ namespace renderer
       return;
     if (!active_targets_[eyeIndex].has_value())
       return;
-    auto it = renderpass_encoders_.find(active_targets_[eyeIndex].value());
-    if (it != renderpass_encoders_.end() && it->second != nullptr)
-      it->second->end();
+    
+    if (renderpass_encoders_[eyeIndex] != nullptr)
+      renderpass_encoders_[eyeIndex]->end();
   }
 
   unique_ptr<GPUCommandBufferBase> TrRenderPass::finish(optional<string> label)

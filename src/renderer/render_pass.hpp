@@ -120,8 +120,8 @@ namespace renderer
     xr::Device *xr_device_ = nullptr;
     std::array<Ref<commandbuffers::GPUCommandEncoder>, kMaxEyes> command_encoders_;
     std::array<std::optional<WebGLuint>, kMaxEyes> active_targets_;
-    std::unordered_map<WebGLuint, Ref<commandbuffers::GPURenderPassEncoder>> renderpass_encoders_;
-    std::unordered_map<WebGLuint, commandbuffers::GPURenderPassDescriptor> renderpass_descriptors_;
+    std::array<Ref<commandbuffers::GPURenderPassEncoder>, kMaxEyes> renderpass_encoders_;
+    std::array<commandbuffers::GPURenderPassDescriptor, kMaxEyes> renderpass_descriptors_;
     std::vector<std::unique_ptr<commandbuffers::GPUCommandBufferBase>> cached_command_buffers_;
   };
 }
