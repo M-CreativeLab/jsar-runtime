@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WebGL2 getAttribLocation Built-in Attributes Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+    }
+
+    .test-result {
+      margin: 10px 0;
+    }
+
+    .pass {
+      color: green;
+    }
+
+    .fail {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>WebGL2 getAttribLocation Built-in Attributes Test</h1>
+  <p>Testing that getAttribLocation returns -1 for built-in attributes per WebGL 2.0 spec §5.18</p>
+  <div id="results"></div>
+
+  <script>
+    const results = document.getElementById('results');
+
+    function addResult(message, isPass) {
+      const div = document.createElement('div');
+      div.className = `test-result ${isPass ? 'pass' : 'fail'}`;
+      div.textContent = `${isPass ? '✅' : '❌'} ${message}`;
+      results.appendChild(div);
+    }
+
+    function runTests() {
+      const gl = navigator.gl;
+      if (!gl) {
+        addResult('WebGL not supported', false);
+        return;
+      }
+
+      // Check if WebGL2 is available
+      if (!gl.getParameter || typeof gl.MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS === 'undefined') {
+        addResult('WebGL2 not supported', false);
+        return;
+      }
+
+      try {
+        // Create vertex shader
+        const vs = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vs, `#version 300 es
+  void main() {
+    gl_Position = vec4(0.0);
+  }`);
+        gl.compileShader(vs);
+
+        if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
+          addResult(`Vertex shader compilation failed: ${gl.getShaderInfoLog(vs)}`, false);
+          return;
+        }
+
+        // Create fragment shader
+        const fs = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fs, `#version 300 es
+  precision mediump float;
+  out vec4 color;
+  void main() { color = vec4(1.0); }
+`);
+        gl.compileShader(fs);
+
+        if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+          addResult(`Fragment shader compilation failed: ${gl.getShaderInfoLog(fs)}`, false);
+          return;
+        }
+
+        // Create and link program
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          addResult(`Program linking failed: ${gl.getProgramInfoLog(prog)}`, false);
+          return;
+        }
+
+        // Test gl_VertexID
+        const vertexIDLoc = gl.getAttribLocation(prog, "gl_VertexID");
+        console.log('gl_VertexID location:', vertexIDLoc);
+        if (vertexIDLoc === -1) {
+          addResult('gl.getAttribLocation(prog, "gl_VertexID") === -1', true);
+        } else {
+          addResult(`gl.getAttribLocation(prog, "gl_VertexID") === ${vertexIDLoc} (expected -1)`, false);
+        }
+
+        // Test gl_InstanceID
+        const instanceIDLoc = gl.getAttribLocation(prog, "gl_InstanceID");
+        console.log('gl_InstanceID location:', instanceIDLoc);
+        if (instanceIDLoc === -1) {
+          addResult('gl.getAttribLocation(prog, "gl_InstanceID") === -1', true);
+        } else {
+          addResult(`gl.getAttribLocation(prog, "gl_InstanceID") === ${instanceIDLoc} (expected -1)`, false);
+        }
+
+        // Test gl_Position
+        const positionLoc = gl.getAttribLocation(prog, "gl_Position");
+        console.log('gl_Position location:', positionLoc);
+        if (positionLoc === -1) {
+          addResult('gl.getAttribLocation(prog, "gl_Position") === -1', true);
+        } else {
+          addResult(`gl.getAttribLocation(prog, "gl_Position") === ${positionLoc} (expected -1)`, false);
+        }
+
+        // Test gl_PointSize
+        const pointSizeLoc = gl.getAttribLocation(prog, "gl_PointSize");
+        console.log('gl_PointSize location:', pointSizeLoc);
+        if (pointSizeLoc === -1) {
+          addResult('gl.getAttribLocation(prog, "gl_PointSize") === -1', true);
+        } else {
+          addResult(`gl.getAttribLocation(prog, "gl_PointSize") === ${pointSizeLoc} (expected -1)`, false);
+        }
+
+        // Check for GL errors
+        const error = gl.getError();
+        if (error === gl.NO_ERROR) {
+          addResult('No GL errors occurred', true);
+        } else {
+          addResult(`GL error occurred: ${error}`, false);
+        }
+
+        addResult('All tests completed!', true);
+
+      } catch (error) {
+        addResult(`Error during testing: ${error.message}`, false);
+        console.error(error);
+      }
+    }
+
+    // Run tests when page loads
+    runTests();
+  </script>
+</body>
+
+</html>
