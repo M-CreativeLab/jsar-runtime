@@ -188,9 +188,6 @@ namespace renderer
                                       WebGLenum type,
                                       const WebGLvoid *indices)
   {
-    (void)mode;
-    (void)type;
-    (void)indices;
     if (count <= 0)
       return;
     auto pass = getCurrentRenderPass();

@@ -129,13 +129,6 @@ namespace renderer
                                       int stencilValue,
                                       int eyeIndex)
   {
-    (void)clearColor;
-    (void)clearDepth;
-    (void)clearStencil;
-    (void)rgba;
-    (void)depthValue;
-    (void)stencilValue;
-
     if (eyeIndex < 0 || eyeIndex >= kMaxEyes)
       return;
     if (!active_targets_[eyeIndex].has_value())

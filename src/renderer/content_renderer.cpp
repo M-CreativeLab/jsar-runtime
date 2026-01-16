@@ -85,7 +85,6 @@ namespace renderer
   void TrContentRenderer::initialize()
   {
     Ref<TrContentRenderer> self = shared_from_this();
-    context_webgl_ = AcquireRef(new TrContextWebGL(self));
     auto rhi = getRendererRef().getRHI();
     Ref<commandbuffers::GPUDeviceBase> device = nullptr;
     if (rhi != nullptr)
@@ -95,6 +94,7 @@ namespace renderer
         render_resource_ = AcquireRef(new TrRenderResource(device));
     }
 
+    context_webgl_ = AcquireRef(new TrContextWebGL(self, device));
     last_frame_ = AcquireRef(new TrRenderFrame(device, xr_device_));
   }
 
@@ -355,27 +355,25 @@ namespace renderer
         }
       }
     }
-    else if (req->renderingInfo.isValid())
+    else
     {
-      int stereoId = req->renderingInfo.stereoId;
-      Ref<TrRenderFrame> frame = nullptr;
+      Ref<TrRenderFrame> target_frame = nullptr;
+      if (req->renderingInfo.isValid())
       {
+        int stereoId = req->renderingInfo.stereoId;
         shared_lock<shared_mutex> lock(frames_mutex_);
         for (auto &f : pending_frames_)
         {
           if (f->getId() == stereoId)
           {
-            frame = f;
+            target_frame = f;
             break;
           }
         }
       }
 
-      if (frame != nullptr)
-      {
-        context_webgl_->receiveIncomingCall(dynamic_cast<const TrCommandBufferRequest &>(*req));
-        return;
-      }
+      // TODO: check the target_frame?
+      context_webgl_->receiveIncomingCall(dynamic_cast<const TrCommandBufferRequest &>(*req));
     }
   }
 

@@ -531,7 +531,7 @@ namespace renderer
   class TrContextWebGL
   {
   public:
-    TrContextWebGL(Ref<TrContentRenderer> content_renderer);
+    TrContextWebGL(Ref<TrContentRenderer> content_renderer, Ref<commandbuffers::GPUDeviceBase> gpu_device);
     ~TrContextWebGL();
 
     void receiveIncomingCall(const commandbuffers::TrCommandBufferRequest &);
@@ -1174,5 +1174,6 @@ namespace renderer
     // WebGPU pipeline-related states are maintained inside caps_
     Ref<TrRenderPass> current_render_pass_;
     commandbuffers::GPURenderPassDescriptor *host_renderpass_descriptor_;
+    Ref<commandbuffers::GPUDeviceBase> gpu_device_;
   };
 }

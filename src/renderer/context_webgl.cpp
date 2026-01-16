@@ -5,9 +5,11 @@
 #include <command_buffers/shared.hpp>
 #include <command_buffers/webgl_constants.hpp>
 #include <common/debug.hpp>
+#include <common/command_buffers/gpu/gpu_device.hpp>
 #include <renderer/content_renderer.hpp>
 #include <renderer/render_resource.hpp>
 #include <renderer/render_pass.hpp>
+#include "command_buffers/details/webgl_context_init.hpp"
 
 namespace renderer
 {
@@ -184,8 +186,10 @@ namespace renderer
     }
   }
 
-  TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer)
+  TrContextWebGL::TrContextWebGL(Ref<TrContentRenderer> content_renderer,
+                                 Ref<commandbuffers::GPUDeviceBase> gpu_device)
       : content_renderer_(content_renderer)
+      , gpu_device_(gpu_device)
       , host_renderpass_descriptor_(&content_renderer->host_renderpass_descriptor_)
   {
     caps_.attach(this);
@@ -197,7 +201,7 @@ namespace renderer
 
   static inline void DebugPrintCommandType(const TrCommandBufferRequest &req)
   {
-    // DEBUG(LOG_TAG_RENDERER, "WebGL::%s", req.toString().c_str());
+    DEBUG(LOG_TAG_RENDERER, "WebGL::%s", req.toString().c_str());
   }
 
   void TrContextWebGL::receiveIncomingCall(const TrCommandBufferRequest &req)
@@ -205,6 +209,157 @@ namespace renderer
     DebugPrintCommandType(req);
     switch (req.type)
     {
+    // Context Init
+    case COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ:
+    {
+      const auto &typed_req = To<WebGL1ContextInitCommandBufferRequest>(req);
+      WebGL1ContextInitCommandBufferResponse res(const_cast<WebGL1ContextInitCommandBufferRequest *>(&typed_req));
+
+      if (gpu_device_)
+      {
+        const auto &limits = gpu_device_->limits();
+        const auto &adapter_info = gpu_device_->adapterInfo();
+
+        res.maxTextureSize = limits.maxTextureDimension2D;
+        res.maxCubeMapTextureSize = limits.maxTextureDimension2D;
+        res.maxRenderbufferSize = limits.maxTextureDimension2D;
+
+        res.maxVertexAttribs = limits.maxVertexAttributes;
+        res.maxVaryingVectors = limits.maxInterStageShaderVariables;
+        res.maxVertexUniformVectors = limits.maxUniformBufferBindingSize / 16;
+        res.maxFragmentUniformVectors = limits.maxUniformBufferBindingSize / 16;
+
+        res.maxTextureImageUnits = limits.maxSampledTexturesPerShaderStage;
+        res.maxVertexTextureImageUnits = limits.maxSampledTexturesPerShaderStage;
+        res.maxCombinedTextureImageUnits = res.maxTextureImageUnits + res.maxVertexTextureImageUnits;
+
+        res.vendor = adapter_info.vendor;
+        res.renderer = adapter_info.architecture;
+        res.version = "WebGL 1.0 (WebGPU)";
+      }
+      else
+      {
+        res.maxTextureSize = 4096;
+        res.maxCubeMapTextureSize = 4096;
+        res.maxRenderbufferSize = 4096;
+        res.maxVertexAttribs = 16;
+        res.maxVaryingVectors = 16;
+        res.maxVertexUniformVectors = 1024;
+        res.maxFragmentUniformVectors = 1024;
+        res.maxTextureImageUnits = 16;
+        res.maxVertexTextureImageUnits = 16;
+        res.maxCombinedTextureImageUnits = 32;
+        res.vendor = "Unknown";
+        res.renderer = "Unknown";
+        res.version = "WebGL 1.0";
+      }
+
+      res.drawingViewport = TrViewport(viewport_[2], viewport_[3], viewport_[0], viewport_[1]);
+
+      auto setPrecision = [&](int *target, int range, int precision)
+      {
+        target[0] = range;
+        target[1] = range;
+        target[2] = precision;
+      };
+
+      setPrecision(res.vertexShaderPrecisionFormats[0], 127, 23);
+      setPrecision(res.vertexShaderPrecisionFormats[1], 127, 23);
+      setPrecision(res.vertexShaderPrecisionFormats[2], 127, 23);
+
+      setPrecision(res.fragmentShaderPrecisionFormats[0], 127, 23);
+      setPrecision(res.fragmentShaderPrecisionFormats[1], 127, 23);
+      setPrecision(res.fragmentShaderPrecisionFormats[2], 127, 23);
+
+      content_renderer_->sendCommandBufferResponse(res);
+      break;
+    }
+    case COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ:
+    {
+      const auto &typed_req = To<WebGL2ContextInitCommandBufferRequest>(req);
+      WebGL2ContextInitCommandBufferResponse res(const_cast<WebGL2ContextInitCommandBufferRequest *>(&typed_req));
+
+      if (gpu_device_)
+      {
+        const auto &limits = gpu_device_->limits();
+
+        res.max3DTextureSize = limits.maxTextureDimension3D;
+        res.maxArrayTextureLayers = limits.maxTextureArrayLayers;
+        res.maxColorAttachments = limits.maxColorAttachments;
+        res.maxDrawBuffers = limits.maxColorAttachments;
+
+        res.uniformBufferOffsetAlignment = limits.minUniformBufferOffsetAlignment;
+        res.maxUniformBlockSize = limits.maxUniformBufferBindingSize;
+        res.maxUniformBufferBindings = limits.maxUniformBuffersPerShaderStage;
+        res.maxCombinedUniformBlocks = limits.maxUniformBuffersPerShaderStage * 2;
+        res.maxVertexUniformBlocks = limits.maxUniformBuffersPerShaderStage;
+        res.maxFragmentUniformBlocks = limits.maxUniformBuffersPerShaderStage;
+
+        res.maxElementsIndices = 0xFFFFFFFF;
+        res.maxElementsVertices = 0xFFFFFFFF;
+        res.maxTextureLODBias = 2.0f;
+
+        res.maxSamples = 4;
+        res.maxCombinedFragmentUniformComponents = 200000;
+        res.maxCombinedVertexUniformComponents = 200000;
+        res.maxElementIndex = 0xFFFFFFFF;
+        res.maxServerWaitTimeout = 0;
+        res.maxClientWaitTimeout = 0;
+
+        res.maxFragmentInputComponents = 128;
+        res.maxFragmentUniformComponents = 4096;
+        res.maxVertexUniformComponents = 4096;
+        res.maxVaryingComponents = limits.maxInterStageShaderVariables * 4;
+        res.maxVertexOutputComponents = limits.maxInterStageShaderVariables * 4;
+
+        res.maxProgramTexelOffset = 7;
+        res.minProgramTexelOffset = -8;
+
+        res.maxTransformFeedbackInterleavedComponents = 64;
+        res.maxTransformFeedbackSeparateAttributes = 4;
+        res.maxTransformFeedbackSeparateComponents = 4;
+      }
+      else
+      {
+        res.max3DTextureSize = 2048;
+        res.maxArrayTextureLayers = 2048;
+        res.maxColorAttachments = 8;
+        res.maxDrawBuffers = 8;
+        res.uniformBufferOffsetAlignment = 256;
+        res.maxUniformBlockSize = 65536;
+        res.maxElementsIndices = 0xFFFFFFFF;
+        res.maxElementsVertices = 0xFFFFFFFF;
+        res.maxTextureLODBias = 2.0f;
+        res.maxUniformBufferBindings = 12;
+        res.maxCombinedUniformBlocks = 24;
+        res.maxVertexUniformBlocks = 12;
+        res.maxFragmentUniformBlocks = 12;
+        res.maxSamples = 4;
+        res.maxCombinedFragmentUniformComponents = 200000;
+        res.maxCombinedVertexUniformComponents = 200000;
+        res.maxElementIndex = 0xFFFFFFFF;
+        res.maxServerWaitTimeout = 0;
+        res.maxClientWaitTimeout = 0;
+        res.maxFragmentInputComponents = 128;
+        res.maxFragmentUniformComponents = 4096;
+        res.maxVertexUniformComponents = 4096;
+        res.maxVaryingComponents = 60;
+        res.maxVertexOutputComponents = 60;
+        res.maxProgramTexelOffset = 7;
+        res.minProgramTexelOffset = -8;
+        res.maxTransformFeedbackInterleavedComponents = 64;
+        res.maxTransformFeedbackSeparateAttributes = 4;
+        res.maxTransformFeedbackSeparateComponents = 4;
+      }
+
+      // Extensions
+      res.OVR_maxViews = 2;
+      res.maxTextureMaxAnisotropy = 16.0f;
+
+      content_renderer_->sendCommandBufferResponse(res);
+      break;
+    }
+
     // Textures
     case COMMAND_BUFFER_ACTIVE_TEXTURE_REQ:
     {
