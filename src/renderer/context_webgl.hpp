@@ -11,6 +11,7 @@
 
 #include <common/utility.hpp>
 #include <common/command_buffers/base.hpp>
+#include <common/command_buffers/details/webgl_context_init.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
 #include <common/command_buffers/gpu/gpu_base.hpp>
 #include <common/command_buffers/gpu/gpu_renderpass_encoder.hpp>
@@ -552,6 +553,8 @@ namespace renderer
     }
 
     // Textures
+    void glContextInit(const commandbuffers::WebGL1ContextInitCommandBufferRequest &req);
+    void glContextInit(const commandbuffers::WebGL2ContextInitCommandBufferRequest &req);
     void glActiveTexture(WebGLenum texture);
     void glBindTexture(WebGLenum target, WebGLuint texture);
     void glCompressedTexImage2D(WebGLenum target,
