@@ -2,17 +2,15 @@
 
 #include <cassert>
 #include <memory>
-#include "./gpu_command_buffer.hpp"
 
 namespace commandbuffers
 {
+  class GPUCommandBufferBase;
+
   class GPUPassEncoderBase
   {
   public:
-    GPUPassEncoderBase()
-        : ended_(false)
-    {
-    }
+    GPUPassEncoderBase();
     virtual ~GPUPassEncoderBase() = default;
 
   public:
@@ -25,24 +23,12 @@ namespace commandbuffers
       return false;
     }
 
-    virtual void begin()
-    {
-      ended_ = false;
-      assert(command_buffer_ != nullptr && "Command buffer must be initialized before beginning pass encoder.");
-    }
-    virtual void end()
-    {
-      ended_ = true;
-    }
-
-    const GPUCommandBuffer &commandBuffer() const
-    {
-      assert(command_buffer_ != nullptr && "Command buffer is not initialized.");
-      return *command_buffer_;
-    }
+    virtual void begin();
+    virtual void end();
+    const GPUCommandBufferBase &commandBuffer() const;
 
   protected:
-    std::unique_ptr<GPUCommandBuffer> command_buffer_;
+    std::unique_ptr<GPUCommandBufferBase> command_buffer_;
     bool ended_ = false;
   };
 }

@@ -39,6 +39,7 @@ node_modules
 .npmrc
 
 # JSAR Runtime
+.trae
 .cache
 !/thirdparty/**/*.a
 !/thirdparty/**/*.so

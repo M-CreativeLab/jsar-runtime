@@ -6,16 +6,9 @@
 
 namespace gles
 {
-  class GPURenderPipelineImpl : public commandbuffers::GPURenderPipeline
+  class GPUPipelineImpl
   {
   public:
-    GPURenderPipelineImpl(GLuint program)
-        : commandbuffers::GPURenderPipeline("GPURenderPipeline")
-        , program_(program)
-    {
-    }
-
-  private:
-    GLuint program_;
+    GPUPipelineImpl();
   };
 }

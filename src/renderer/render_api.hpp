@@ -7,11 +7,13 @@
 
 #include <Unity/IUnityGraphics.h>
 #include <analytics/analytics.hpp>
-#include <common/debug.hpp>
 #include <common/classes.hpp>
+#include <common/utility.hpp>
+#include <common/debug.hpp>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/command_buffers.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
+#include <common/command_buffers/gpu/gpu_instance.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
 #include <xr/device.hpp>
 
@@ -104,11 +106,7 @@ class TrRenderHardwareInterface
   friend class RHIFactory;
 
 public:
-  TrRenderHardwareInterface(RHIBackendType backend_type, std::unique_ptr<commandbuffers::GPUDevice> gpu_device = nullptr)
-      : backendType(backend_type)
-      , gpuDevice(std::move(gpu_device))
-  {
-  }
+  TrRenderHardwareInterface(RHIBackendType backend_type);
   virtual ~TrRenderHardwareInterface() = default;
 
   /**
@@ -158,7 +156,7 @@ public:
   /**
    * Submit a GPUCommandBuffer list to the GPU device for execution.
    */
-  void SubmitGPUCommandBuffer(std::vector<std::shared_ptr<commandbuffers::GPUCommandBuffer>> &);
+  void SubmitGPUCommandBuffer(std::vector<Ref<commandbuffers::GPUCommandBufferBase>> &);
   std::unique_ptr<commandbuffers::GPUCommandEncoder> CreateCommandEncoder();
 
   /**
@@ -187,6 +185,11 @@ public:
   inline RHIBackendType GetBackendType()
   {
     return backendType;
+  }
+
+  inline Ref<commandbuffers::GPUDeviceBase> GetGPUDevice()
+  {
+    return gpuDevice;
   }
 
   /**
@@ -271,7 +274,7 @@ protected:
   /**
    * @returns the `renderer::TrRenderer` shared pointer to use.
    */
-  inline std::shared_ptr<renderer::TrRenderer> GetRenderer()
+  inline Ref<renderer::TrRenderer> GetRenderer()
   {
     return renderer.lock();
   }
@@ -325,10 +328,9 @@ protected:
    */
   bool m_PrintsContext = false;
 
-  /**
-   * The GPU device instance.
-   */
-  std::unique_ptr<commandbuffers::GPUDevice> gpuDevice = nullptr;
+  Ref<commandbuffers::GPUInstance> gpuInstance = nullptr;
+  Ref<commandbuffers::GPUAdapterBase> gpuAdapter = nullptr;
+  Ref<commandbuffers::GPUDeviceBase> gpuDevice = nullptr;
 
   /**
    * The default command buffer queue.

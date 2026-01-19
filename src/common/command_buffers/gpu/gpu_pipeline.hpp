@@ -4,36 +4,34 @@
 #include <optional>
 #include <string>
 
-#include "./gpu_base.hpp"
-#include "./gpu_bind_group.hpp"
+#include <common/utility.hpp>
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_bind_group.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline_layout.hpp>
 
 namespace commandbuffers
 {
-  class GPUPipelineLayout : public GPUHandle
-  {
-  private:
-    std::vector<GPUBindGroupLayout> bind_group_layouts_;
-  };
+  class GPURenderPipelineBase;
+  class GPUComputePipelineBase;
 
-  class GPURenderPipelineDescriptor
+  class GPUPipelineBase : public GPUHandle
   {
   public:
-    std::optional<std::string> label;
-  };
+    virtual const GPUComputePipelineBase *getAsComputePipeline() const;
+    virtual GPUComputePipelineBase *getAsComputePipeline();
 
-  class GPURenderPipeline : public GPUHandle
-  {
-    using GPUHandle::GPUHandle;
+    virtual const GPURenderPipelineBase *getAsRenderPipeline() const;
+    virtual GPURenderPipelineBase *getAsRenderPipeline();
 
-  public:
-    GPUBindGroupLayout &getBindGroupLayout(size_t index)
-    {
-      if (index < bind_group_layouts_.size())
-        return bind_group_layouts_[index];
-      throw std::out_of_range("Bind group layout index out of range");
-    }
+    GPUPipelineLayoutBase *layout();
+    const GPUPipelineLayoutBase *layout() const;
+
+  protected:
+    GPUPipelineBase(Ref<GPUDeviceBase> device, Ref<GPUPipelineLayoutBase> layout, std::string_view label);
+    GPUPipelineBase(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag, std::string_view label);
 
   private:
-    std::vector<GPUBindGroupLayout> bind_group_layouts_;
+    GPUShaderStage stage_mask_ = GPUShaderStage::kNone;
+    Ref<GPUPipelineLayoutBase> layout_;
   };
 }

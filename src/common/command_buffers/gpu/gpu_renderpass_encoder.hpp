@@ -2,16 +2,21 @@
 
 #include <optional>
 #include <variant>
+#include <string_view>
 
-#include "./gpu_base.hpp"
-#include "./gpu_pass_encoder_base.hpp"
-#include "./gpu_buffer.hpp"
-#include "./gpu_command_buffer.hpp"
-#include "./gpu_pipeline.hpp"
-#include "./gpu_texture_view.hpp"
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_pass_encoder_base.hpp>
+#include <common/command_buffers/gpu/gpu_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_texture_view.hpp>
+#include <common/command_buffers/gpu/gpu_commands.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <common/command_buffers/gpu/render_encoder_base.hpp>
+#include <command_buffers/gpu/encoding_context.hpp>
 
 namespace commandbuffers
 {
+  class GPUCommandEncoder;
+
   class GPURenderPassDescriptor
   {
   public:
@@ -32,8 +37,8 @@ namespace commandbuffers
       float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
       LoadOp loadOp;
       StoreOp storeOp;
-      std::optional<GPUTextureView> resolveTarget;
-      GPUTextureView view;
+      std::weak_ptr<GPUTextureViewBase> resolveTarget;
+      std::weak_ptr<GPUTextureViewBase> view;
     };
 
     class DepthStencilAttachment
@@ -47,7 +52,7 @@ namespace commandbuffers
       std::optional<bool> stencilReadOnly;
       std::optional<LoadOp> stencilLoadOp;
       std::optional<StoreOp> stencilStoreOp;
-      GPUTextureView view;
+      std::weak_ptr<GPUTextureViewBase> view;
     };
 
   public:
@@ -57,80 +62,57 @@ namespace commandbuffers
     std::optional<DepthStencilAttachment> depthStencilAttachment;
   };
 
-  class GPURenderPassEncoder : public GPUPassEncoderBase,
-                               public GPUHandle
+  class GPURenderPassEncoder final : public gpu::RenderEncoderBase,
+                                     public GPUPassEncoderBase
   {
   public:
-    GPURenderPassEncoder(std::string label)
-        : GPUPassEncoderBase()
-        , GPUHandle(label)
-    {
-    }
+    static Ref<GPURenderPassEncoder> Create(const GPURenderPassDescriptor &descriptor,
+                                            GPUCommandEncoder *encoder,
+                                            gpu::EncodingContext *context,
+                                            uint32_t renderTargetWidth,
+                                            uint32_t renderTargetHeight,
+                                            bool depthReadOnly,
+                                            bool stencilReadOnly);
+    static Ref<GPURenderPassEncoder> MakeError(GPUCommandEncoder *encoder,
+                                               gpu::EncodingContext *context,
+                                               std::string_view label);
 
-  public:
+    GPUHandleType type() const override final
+    {
+      return GPUHandleType::kRenderPassEncoder;
+    }
     bool isRenderPassEncoder() const override
     {
       return true;
     }
 
-    void draw(uint32_t vertex_count,
-              uint32_t instance_count = 1,
-              uint32_t first_vertex = 0,
-              uint32_t first_instance = 0)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUDrawCommand>(vertex_count,
-                                                    instance_count,
-                                                    first_vertex,
-                                                    first_instance);
-    }
-    void drawIndexed(uint32_t index_count,
-                     uint32_t instance_count = 1,
-                     uint32_t first_index = 0,
-                     int32_t base_vertex = 0,
-                     uint32_t first_instance = 0)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUDrawIndexedCommand>(index_count,
-                                                           instance_count,
-                                                           first_index,
-                                                           base_vertex,
-                                                           first_instance);
-    }
-    void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetViewportCommand>(x, y, width, height, min_depth, max_depth);
-    }
-    void setScissorRect(float x, float y, float width, float height)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetScissorCommand>(x, y, width, height);
-    }
-    void setPipeline(const GPURenderPipeline &pipeline)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetRenderPipelineCommand>(pipeline);
-    }
-    void setIndexBuffer(const GPUBuffer &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetIndexBufferCommand>(buffer, index_format, offset, size);
-    }
-    void setVertexBuffer(uint32_t slot, const GPUBuffer &buffer, uint32_t offset = 0, uint32_t size = 0)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetVertexBufferCommand>(slot, buffer, offset, size);
-    }
-    void setBlendConstant(float r, float g, float b, float a)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetBlendConstantCommand>(r, g, b, a);
-    }
-    void setStencilReference(uint32_t ref)
-    {
-      if (!ended_) [[likely]]
-        command_buffer_->addCommand<GPUSetStencilReferenceCommand>(ref);
-    }
+    void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f);
+    void setScissorRect(float x, float y, float width, float height);
+    void setPipeline(const GPURenderPipelineBase *pipeline);
+    void setIndexBuffer(const GPUBufferBase &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size);
+    void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0);
+    void setBlendConstant(float r, float g, float b, float a);
+    void setStencilReference(uint32_t ref);
+    void end() override;
+
+  protected:
+    GPURenderPassEncoder(Ref<GPUDeviceBase> device,
+                         const GPURenderPassDescriptor &descriptor,
+                         GPUCommandEncoder *commandEncoder,
+                         gpu::EncodingContext *encodingContext,
+                         uint32_t renderTargetWidth,
+                         uint32_t renderTargetHeight,
+                         bool depthReadOnly,
+                         bool stencilReadOnly);
+    GPURenderPassEncoder(Ref<GPUDeviceBase> device,
+                         GPUCommandEncoder *commandEncoder,
+                         gpu::EncodingContext *encodingContext,
+                         ErrorTag errorTag,
+                         std::string_view label);
+
+  private:
+    GPUCommandEncoder *command_encoder_ = nullptr;
+    uint32_t render_target_width_ = 0;
+    uint32_t render_target_height_ = 0;
   };
 }

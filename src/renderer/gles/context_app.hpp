@@ -9,7 +9,6 @@
 
 #include "./context_storage.hpp"
 #include "./framebuffer.hpp"
-#include "./gpu_command_encoder_impl.hpp"
 
 class ContextGLHost;
 class ContextGLApp : public ContextGLStorage

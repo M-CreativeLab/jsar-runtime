@@ -4,64 +4,29 @@
 #include <vector>
 #include <variant>
 
-#include "./gpu_base.hpp"
-#include "./gpu_texture.hpp"
+#include <common/utility.hpp>
+#include <common/command_buffers/gpu/gpu_base.hpp>
+#include <common/command_buffers/gpu/gpu_bind_group_base.hpp>
+#include <common/command_buffers/gpu/gpu_bind_group_layout.hpp>
+#include <common/command_buffers/gpu/gpu_bind_group_layout_base.hpp>
 
 namespace commandbuffers
 {
-  class GPUBindGroupLayout : public GPUHandle
+  class GPUDeviceBase;
+
+  class GPUBindGroupBase : public GPUHandle
   {
   public:
-    class BufferLayout
-    {
-    public:
-      GPUBufferType type;
-      bool hasDynamicOffset = false;
-      uint32_t minBindingSize = 0; // in bytes
-    };
+    virtual ~GPUBindGroupBase() = default;
 
-    class TextureLayout
-    {
-    public:
-      bool multisampled = false;
-    };
-
-    class StorageTextureLayout
-    {
-    public:
-      GPUStorageAccess access;
-      GPUTextureFormat format;
-      std::optional<GPUTextureDimension> viewDimension;
-    };
-
-    class ExternalTextureLayout
-    {
-    };
-
-    class SamplerLayout
-    {
-    public:
-      GPUSamplerType type;
-    };
-
-    using ResourceLayout = std::variant<BufferLayout,
-                                        TextureLayout,
-                                        StorageTextureLayout,
-                                        ExternalTextureLayout,
-                                        SamplerLayout>;
-    class Entry
-    {
-    public:
-      uint32_t binding;
-      GPUShaderStage visibility;
-      ResourceLayout layout;
-    };
+  protected:
+    GPUBindGroupBase(Ref<GPUDeviceBase> device,
+                     const GPUBindGroupDescriptor &descriptor,
+                     void *bindingDataStart);
 
   private:
-    std::vector<Entry> entries_;
-  };
+    GPUBindGroupBase(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag, std::string_view label);
 
-  class GPUBindGroup : public GPUHandle
-  {
+    Ref<GPUBindGroupLayoutBase> *layout_ = nullptr;
   };
 }

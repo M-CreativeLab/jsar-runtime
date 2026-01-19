@@ -1,14 +1,31 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <iostream>
 #include <unordered_set>
 #include <unordered_map>
-#include <iostream>
-#include <sstream>
 
-#include "./gpu_base.hpp"
+#include <common/utility.hpp>
+#include <common/command_buffers/gpu/gpu_base.hpp>
 
 namespace commandbuffers
 {
+  class GPUInstance;
+  struct GPUDeviceDescriptor;
+  namespace gpu
+  {
+    class PhysicalDeviceBase;
+  }
+
+  struct RequestAdapterOptions
+  {
+    GPUFeatureLevel featureLevel = GPUFeatureLevel::kCore;
+    GPUPowerPreference powerPreference = GPUPowerPreference::kUndefined;
+    bool forceFallbackAdapter = false;
+    GPUBackendType backendType = GPUBackendType::kUndefined;
+  };
+
   class GPUAdapterInfo
   {
   public:
@@ -40,52 +57,41 @@ namespace commandbuffers
     }
   };
 
-  class GPUSupportedFeatures : public std::unordered_set<std::string>
+  class GPUAdapterBase : ErrorMonad, public std::enable_shared_from_this<GPUAdapterBase>
   {
   public:
-    GPUSupportedFeatures()
-    {
-      // TODO(yorkie): add required features
-    }
+    GPUAdapterBase(Ref<GPUInstance> instance,
+                   Ref<gpu::PhysicalDeviceBase> physicalDevice,
+                   GPUFeatureLevel level,
+                   GPUPowerPreference powerPreference);
+
+    GPUInstance *instance() const;
+    const GPUAdapterInfo &info() const;
+    bool hasFeature(GPUFeatureName) const;
+    void requestDevice(const GPUDeviceDescriptor *descriptor,
+                       std::function<void(GPUDeviceBase &)> callback);
+    Ref<GPUDeviceBase> createDevice(const GPUDeviceDescriptor *descriptor = nullptr);
+
+    gpu::PhysicalDeviceBase *physicalDevice();
+    const gpu::PhysicalDeviceBase *physicalDevice() const;
+    GPUFeatureLevel featureLevel() const;
+
+    const std::string &name() const;
+
+  private:
+    Ref<GPUInstance> instance_;
+    Ref<gpu::PhysicalDeviceBase> physical_device_;
+    GPUAdapterInfo info_;
+    GPUFeatureLevel feature_level_;
+    GPUPowerPreference power_preference_;
+
+    bool use_tiered_limits = false;
+
+    // The adapter becomes "consumed" once it has successfully been used to
+    // create a device.
+    bool adapter_is_consumed = false;
   };
 
-  class GPUSupportedLimits : public std::unordered_map<std::string, uint32_t>
-  {
-  public:
-    GPUSupportedLimits()
-    {
-      insert({"maxTextureDimension1D", 8192});
-      insert({"maxTextureDimension2D", 8192});
-      insert({"maxTextureDimension3D", 2048});
-      insert({"maxTextureArrayLayers", 256});
-      insert({"maxBindGroups", 4});
-      insert({"maxBindGroupEntries", 640});
-    }
-
-  public:
-    uint32_t maxTextureDimension1D() const
-    {
-      return at("maxTextureDimension1D");
-    }
-    uint32_t maxTextureDimension2D() const
-    {
-      return at("maxTextureDimension2D");
-    }
-    uint32_t maxTextureDimension3D() const
-    {
-      return at("maxTextureDimension3D");
-    }
-    uint32_t maxTextureArrayLayers() const
-    {
-      return at("maxTextureArrayLayers");
-    }
-    uint32_t maxBindGroups() const
-    {
-      return at("maxBindGroups");
-    }
-    uint32_t maxBindGroupEntries() const
-    {
-      return at("maxBindGroupEntries");
-    }
-  };
+  std::vector<Ref<GPUAdapterBase>> SortAdapters(std::vector<Ref<GPUAdapterBase>> adapters,
+                                                const RequestAdapterOptions &options);
 }

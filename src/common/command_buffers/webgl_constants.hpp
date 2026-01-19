@@ -9,6 +9,32 @@
  * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Constants#standard_webgl_1_constants
  */
 
+// Types
+
+typedef uint32_t WebGLbitfield;
+typedef uint8_t WebGLboolean;
+typedef int8_t WebGLbyte;
+typedef float WebGLclampf;
+typedef uint32_t WebGLenum;
+typedef float WebGLfloat;
+typedef int32_t WebGLint;
+typedef int16_t WebGLshort;
+typedef int32_t WebGLsizei;
+typedef uint8_t WebGLubyte;
+typedef uint32_t WebGLuint;
+typedef uint16_t WebGLushort;
+typedef void WebGLvoid;
+
+typedef char WebGLchar;
+typedef double WebGLdouble;
+typedef double WebGLclampd;
+typedef uint16_t WebGLhalf;
+typedef int64_t WebGLint64;
+typedef struct __WebGLsync *WebGLsync;
+typedef uint64_t WebGLuint64;
+typedef intptr_t WebGLintptr;
+typedef intptr_t WebGLsizeiptr;
+
 // Standard WebGL 1 constants
 
 // Clearing buffers

@@ -1,0 +1,42 @@
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
+#include <common/command_buffers/gpu/gpu_command_encoder.hpp>
+
+using namespace std;
+
+namespace commandbuffers
+{
+  GPUCommandBufferBase::GPUCommandBufferBase(GPUCommandEncoder *encoder,
+                                             const GPUCommandBufferDescriptor *descriptor)
+      : GPUHandle(encoder->device(), descriptor->label)
+      , commands_(encoder->acquireCommands())
+      , resource_usages_(encoder->acquireResourceUsages())
+      , indirect_draw_metadata_(encoder->acquireIndirectDrawMetadata())
+      , encoder_label_(encoder->getLabel())
+  {
+  }
+
+  GPUCommandBufferBase::GPUCommandBufferBase(Ref<GPUDeviceBase> device, GPUHandle::ErrorTag tag, string_view label)
+      : GPUHandle(device, tag, label)
+  {
+  }
+
+  const string &GPUCommandBufferBase::getEncoderLabel() const
+  {
+    return encoder_label_;
+  }
+
+  void GPUCommandBufferBase::setEncoderLabel(string encoderLabel)
+  {
+    encoder_label_ = move(encoderLabel);
+  }
+
+  const gpu::CommandBufferResourceUsage &GPUCommandBufferBase::getResourceUsages() const
+  {
+    return resource_usages_;
+  }
+
+  const vector<gpu::IndirectDrawMetadata> &GPUCommandBufferBase::getIndirectDrawMetadata()
+  {
+    return indirect_draw_metadata_;
+  }
+}

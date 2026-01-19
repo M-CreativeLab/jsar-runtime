@@ -60,7 +60,7 @@ private:
 
 public:
   RHI_OpenGL(RHIBackendType backend_type)
-      : TrRenderHardwareInterface(backend_type, make_unique<gles::GPUDeviceImpl>())
+      : TrRenderHardwareInterface(backend_type)
   {
     memset(m_TmpMatrixL, 0, 16);
     memset(m_TmpMatrixR, 0, 16);
@@ -2207,6 +2207,9 @@ private:
     auto count = req->count;
     auto type = req->indicesType;
     auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
+
+    PrintDebugInfo(req, nullptr, nullptr, options);
+    DumpDrawCallInfo(DEBUG_TAG, "DrawElements", options.isDefaultQueue(), mode, count, type, indices);
 
     reqContentRenderer->getContextGL()->drawElements(mode, count, type, indices);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))

@@ -1,7 +1,6 @@
 # Set the common source files.
-file(GLOB TR_COMMON_SOURCE
+file(GLOB_RECURSE TR_COMMON_SOURCE
     "src/common/*.cpp"
-    "src/common/**/*.cpp"
 )
 
 # Set the common include directories
@@ -36,7 +35,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build/output/release)
 set(TR_RELEASE_DEST unknown)
 if (APPLE)
-    set(TR_RELEASE_DEST universal-apple-darwin)
+    set(TR_RELEASE_DEST aarch64-apple-darwin)
 elseif (ANDROID)
     set(TR_RELEASE_DEST aarch64-linux-android)
 elseif (WIN32)
@@ -58,7 +57,7 @@ endif()
 # Set the Rust target
 set(TR_CRATE_TARGET unknown)
 if (APPLE)
-    set(TR_CRATE_TARGET universal-apple-darwin)
+    set(TR_CRATE_TARGET aarch64-apple-darwin)
 elseif (ANDROID)
     set(TR_CRATE_TARGET aarch64-linux-android)
 elseif (WIN32)

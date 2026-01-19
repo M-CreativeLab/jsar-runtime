@@ -2,33 +2,30 @@
 #include <memory>
 #include <sstream>
 
-#include "./common.hpp"
-#include "./gpu_device_impl.hpp"
-#include "./gpu_command_encoder_impl.hpp"
+#include <renderer/gles/common.hpp>
+#include <renderer/gles/gpu_device_impl.hpp>
+#include <renderer/gles/gpu_buffer_impl.hpp>
+#include <renderer/gles/gpu_queue_impl.hpp>
+#include <renderer/gles/gpu_command_buffer_impl.hpp>
+#include <renderer/gles/gpu_pipeline_layout_impl.hpp>
 
 namespace gles
 {
   using namespace std;
   using namespace commandbuffers;
 
-  GPUQueueImpl::GPUQueueImpl()
-      : GPUQueue()
+  // static
+  Ref<GPUDeviceImpl> GPUDeviceImpl::Create(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor)
   {
-    // Initialize the queue if needed.
-    // For GLES, this might not require any specific initialization.
+    Ref<GPUDeviceImpl> device = AcquireRef(new GPUDeviceImpl(adapter, descriptor));
+    assert(device != nullptr && "Failed to create GPUDeviceImpl.");
+    device->initialize(descriptor);
+    return device;
   }
 
-  void GPUQueueImpl::submit(const vector<shared_ptr<commandbuffers::GPUCommandBuffer>> &command_buffers)
+  GPUDeviceImpl::GPUDeviceImpl(Ref<GPUAdapterBase> adapter, const GPUDeviceDescriptor &descriptor)
+      : GPUDeviceBase(adapter, descriptor)
   {
-    for (const auto &command_buffer : command_buffers)
-      command_buffer->execute();
-  }
-
-  GPUDeviceImpl::GPUDeviceImpl()
-      : GPUDevice()
-  {
-    queue_ = make_unique<GPUQueueImpl>();
-
     auto get_gl_string = [](GLenum name) -> string
     {
       const char *str = (const char *)glGetString(name);
@@ -65,8 +62,98 @@ namespace gles
     DEBUG(LOG_TAG_RENDERER, "GPU Device Info: %s", adapter_info_.toString().c_str());
   }
 
-  unique_ptr<GPUCommandEncoder> GPUDeviceImpl::createCommandEncoder(optional<string> label)
+  bool GPUDeviceImpl::initialize(const GPUDeviceDescriptor &descriptor)
   {
-    return unique_ptr<GPUCommandEncoder>(new GPUCommandEncoderImpl(label.value_or("")));
+    GPUQueueDescriptor qdesc = {};
+    qdesc.label = descriptor.label;
+
+    auto dev = this->shared_from_this();
+    auto qres = GPUQueueImpl::Create(dev, qdesc);
+    if (qres.IsSuccess())
+    {
+      setQueue(qres.AcquireSuccess());
+    }
+    else
+    {
+      setQueue(GPUQueueBase::MakeError(dev, qdesc.label));
+    }
+
+    transitionToAlive();
+    return true;
+  }
+
+  unique_ptr<GPUCommandBufferBase> GPUDeviceImpl::createCommandBuffer(GPUCommandEncoder &encoder,
+                                                                      const GPUCommandBufferDescriptor *descriptor)
+  {
+    GPUCommandBufferDescriptor local_desc = {};
+    if (descriptor == nullptr)
+    {
+      local_desc.label = encoder.getLabel();
+      descriptor = &local_desc;
+    }
+    return make_unique<GPUCommandBufferImpl>(&encoder, descriptor);
+  }
+
+  Ref<GPUBindGroupBase> GPUDeviceImpl::createBindGroupImpl(
+    const GPUBindGroupDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUBindGroupLayoutInternalBase> GPUDeviceImpl::createBindGroupLayoutImpl(
+    const GPUBindGroupLayoutDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUBufferBase> GPUDeviceImpl::createBufferImpl(
+    const GPUBufferDescriptor &descriptor)
+  {
+    auto dev = this->shared_from_this();
+    return AcquireRef(new GPUBufferImpl(dev, descriptor));
+  }
+
+  Ref<GPUPipelineLayoutBase> GPUDeviceImpl::createPipelineLayoutImpl(
+    const GPUPipelineLayoutDescriptor &descriptor)
+  {
+    auto dev = this->shared_from_this();
+    return AcquireRef(new GPUPipelineLayoutImpl(dev, descriptor));
+  }
+
+  Ref<GPUShaderModuleBase> GPUDeviceImpl::createShaderModuleImpl(
+    const GPUShaderModuleDescriptor &descriptor,
+    const std::vector<wgsl::Extension> &internalExtensions)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUTextureBase> GPUDeviceImpl::createTextureImpl(
+    const GPUTextureDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUTextureViewBase> GPUDeviceImpl::createTextureViewImpl(
+    Ref<GPUTextureBase> texture,
+    const GPUTextureViewDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPUComputePipelineBase> GPUDeviceImpl::createUninitializedComputePipelineImpl(
+    const GPUComputePipelineDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  Ref<GPURenderPipelineBase> GPUDeviceImpl::createUninitializedRenderPipelineImpl(
+    const GPURenderPipelineDescriptor &descriptor)
+  {
+    return nullptr;
+  }
+
+  bool GPUDeviceImpl::tickImpl()
+  {
+    return true;
   }
 }

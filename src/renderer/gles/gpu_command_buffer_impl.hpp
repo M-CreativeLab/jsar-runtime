@@ -4,20 +4,19 @@
 #include <optional>
 #include <string>
 #include <common/command_buffers/gpu/gpu_command_buffer.hpp>
-
+#include <common/command_buffers/gpu/gpu_command_encoder.hpp>
 #include "./common.hpp"
-#include "./gpu_renderpass_encoder_impl.hpp"
 
 namespace gles
 {
-  class GPUCommandBufferImpl : public commandbuffers::GPUCommandBuffer
+  class GPUCommandBufferImpl : public commandbuffers::GPUCommandBufferBase
   {
   public:
-    GPUCommandBufferImpl(std::optional<std::string> label);
-    GPUCommandBufferImpl(std::optional<std::string> label, const GPURenderPassEncoderImpl &);
+    GPUCommandBufferImpl(commandbuffers::GPUCommandEncoder *encoder,
+                         const commandbuffers::GPUCommandBufferDescriptor *descriptor);
 
   public:
-    void execute() override;
+    void execute();
 
   private:
     void onDraw(const commandbuffers::GPUDrawCommand &);

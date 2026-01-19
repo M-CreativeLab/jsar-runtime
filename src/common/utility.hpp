@@ -4,6 +4,7 @@
 #include <string>
 #include <concepts>
 #include <memory>
+#include <utility>
 #include <unistd.h>
 
 #ifndef TR_UNLIKELY
@@ -31,6 +32,25 @@ public:                                      \
                                              \
 private:                                     \
   void *operator new(size_t) = delete
+
+template <typename T>
+using Ref = std::shared_ptr<T>;
+
+template <typename T>
+inline Ref<T> AcquireRef(T *ptr)
+{
+  auto ref = std::shared_ptr<T>(ptr, [](T *p)
+                                { delete p; });
+
+  // If T derives from std::enable_shared_from_this, set the weak_from_this pointer.
+  if constexpr (std::derived_from<T, std::enable_shared_from_this<T>>)
+  {
+    ref->weak_from_this() = ref;
+  }
+
+  // Return the shared pointer.
+  return ref;
+}
 
 /**
  * Shared reference is a template class that holds the shared pointer of a type.
@@ -264,4 +284,20 @@ namespace transmute::common
   template <class Derived, class Base>
   concept derived_from = std::derived_from<Derived, Base>;
 #endif
+
+  inline std::pair<std::string, bool> GetEnvironmentVar(const char *variableName)
+  {
+    char *value = getenv(variableName);
+    return value == nullptr ? std::make_pair(std::string(), false)
+                            : std::make_pair(std::string(value), true);
+  }
+
+  inline bool SetEnvironmentVar(const char *variableName, const char *value)
+  {
+    if (value == nullptr)
+    {
+      return unsetenv(variableName) == 0;
+    }
+    return setenv(variableName, value, 1) == 0;
+  }
 }

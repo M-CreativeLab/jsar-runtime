@@ -123,8 +123,8 @@ namespace renderer
           continue;
         }
         contentRenderer->onOpaquesRenderPass(tickingTimepoint);
-        totalDrawCalls += contentRenderer->drawCallsPerFrame;
-        totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
+        totalDrawCalls += contentRenderer->draw_calls_count_per_frame_;
+        totalDrawCallsCount += contentRenderer->draw_calls_count_per_frame_;
       }
       auto perfFs = constellation->perfFs;
       perfFs->setDrawCallsPerFrame(totalDrawCalls);
@@ -140,7 +140,44 @@ namespace renderer
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
-    // TODO(yorkie): support the transparents render pass.
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
+
+    glHostContext->recordFromHost();
+    // Update the view's framebuffer and viewport when the host context is recorded.
+    constellation->xrDevice->updateViewFramebuffer(glHostContext->framebuffer(),
+                                                   glHostContext->viewport(),
+                                                   useDoubleWideFramebuffer);
+    if (isHostContextSummaryEnabled)
+      glHostContext->print();
+    perfCounter.record("  renderer.finishedHostContextRecord");
+
+    size_t totalDrawCalls = 0, totalDrawCallsCount = 0;
+    {
+      for (auto contentRenderer : contentRenderers)
+      {
+        shared_ptr<TrContentRuntime> content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering)
+        {
+          /**
+           * Skip the content rendering if the following conditions are met:
+           * 1. The content has been removed.
+           * 2. The content rendering is disabled.
+           */
+          continue;
+        }
+        contentRenderer->onTransparentsRenderPass(tickingTimepoint);
+        totalDrawCalls += contentRenderer->draw_calls_count_per_frame_;
+        totalDrawCallsCount += contentRenderer->draw_calls_count_per_frame_;
+      }
+      auto perfFs = constellation->perfFs;
+      perfFs->setDrawCallsPerFrame(totalDrawCalls);
+      perfFs->setDrawCallsCountPerFrame(totalDrawCallsCount);
+      perfCounter.record("  renderer.finishedContentRendererFrame");
+    }
+    glHostContext->restore();
+    perfCounter.record("  renderer.finishedHostContextRestore");
   }
 
   void TrRenderer::onBeforeRendering()
@@ -148,13 +185,9 @@ namespace renderer
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
-    // TODO(yorkie): implement the before rendering logic.
-  }
-
-  void TrRenderer::onAfterRendering()
-  {
-    if (rhi == nullptr) [[unlikely]]
-      return; // Skip if api is not ready.
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
 
     glHostContext->recordFromHost();
     {
@@ -163,7 +196,39 @@ namespace renderer
         auto content = contentRenderer->getContent();
         if (content == nullptr || content->disableRendering) [[unlikely]]
           continue;
+        contentRenderer->onBeforeRendering();
+      }
+    }
+    glHostContext->restore();
+  }
+
+  void TrRenderer::onAfterRendering()
+  {
+    if (rhi == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
+
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
+
+    glHostContext->recordFromHost();
+    {
+      // First, call onOffscreenRenderPass() for each content renderer.
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
         contentRenderer->onOffscreenRenderPass();
+      }
+
+      // Then, call onAfterRendering() for each content renderer.
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
+        contentRenderer->onAfterRendering();
       }
     }
     glHostContext->restore();
