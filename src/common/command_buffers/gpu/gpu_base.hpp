@@ -39,6 +39,8 @@
 
 namespace commandbuffers
 {
+  class GPUShaderModuleBase;
+
   using GPUBindingNumber = uint32_t;
   constexpr GPUBindingNumber kMaxBindingsPerBindGroupTyped = GPUBindingNumber(gpu_constants::kMaxBindingsPerBindGroup);
 
@@ -627,7 +629,7 @@ namespace commandbuffers
 
   struct GPUFragmentState
   {
-    // ShaderModuleBase *module;
+    GPUShaderModuleBase *module;
     std::string_view entryPoint;
     size_t constantCount = 0;
     GPUConstantEntry const *constants = nullptr;
@@ -652,7 +654,7 @@ namespace commandbuffers
 
   struct GPUVertexState
   {
-    // ShaderModuleBase *module;
+    GPUShaderModuleBase *module;
     std::string_view entryPoint;
     size_t constantCount = 0;
     GPUConstantEntry const *constants = nullptr;
@@ -729,7 +731,7 @@ namespace commandbuffers
 
   struct GPUComputeState
   {
-    // ShaderModuleBase *module;
+    GPUShaderModuleBase *module;
     std::string_view entryPoint;
     size_t constantCount = 0;
     GPUConstantEntry const *constants = nullptr;
@@ -777,6 +779,7 @@ namespace commandbuffers
 
   class GPUInstance;
   class GPUDeviceBase;
+  class GPUShaderModuleBase;
 
   class GPUObject : public ErrorMonad
   {

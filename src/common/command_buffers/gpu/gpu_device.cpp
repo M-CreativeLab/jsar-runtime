@@ -54,10 +54,14 @@ namespace commandbuffers
     return empty_bind_group_layout_.get();
   }
 
-  GPUPipelineLayoutBase *GPUDeviceBase::getEmptyPipelineLayout()
+  Ref<GPUPipelineLayoutBase> GPUDeviceBase::getEmptyPipelineLayout()
   {
+    if (!empty_pipeline_layout_)
+    {
+      empty_pipeline_layout_ = createEmptyPipelineLayout();
+    }
     assert(empty_pipeline_layout_ != nullptr);
-    return empty_pipeline_layout_.get();
+    return empty_pipeline_layout_;
   }
 
   // Object creation methods that be used in a reentrant manner.
@@ -87,7 +91,12 @@ namespace commandbuffers
 
   Ref<GPUComputePipelineBase> GPUDeviceBase::createComputePipeline(const GPUComputePipelineDescriptor *descriptor)
   {
-    return nullptr;
+    return createUninitializedComputePipelineImpl(*descriptor);
+  }
+
+  Ref<GPURenderPipelineBase> GPUDeviceBase::createRenderPipeline(const GPURenderPipelineDescriptor *descriptor)
+  {
+    return createUninitializedRenderPipelineImpl(*descriptor);
   }
 
   Ref<GPUShaderModuleBase> GPUDeviceBase::createShaderModule(const GPUShaderModuleDescriptor *descriptor,
@@ -188,7 +197,7 @@ namespace commandbuffers
 
   Ref<GPUPipelineLayoutBase> GPUDeviceBase::createEmptyPipelineLayout()
   {
-    // TODO(yorkie): implement this.
-    return nullptr;
+    GPUPipelineLayoutDescriptor desc;
+    return createPipelineLayoutImpl(desc);
   }
 }

@@ -426,6 +426,10 @@ namespace renderer
       return;
     }
     prog->linked = (prog->vertexShader != nullptr && prog->fragmentShader != nullptr);
+    if (prog->linked)
+    {
+      prog->createPipeline(gpu_device_);
+    }
   }
 
   void TrContextWebGL::glProgramBinary(WebGLuint program, WebGLenum binaryFormat, const WebGLbyte *binary, WebGLsizei binaryLength)
@@ -676,6 +680,19 @@ namespace renderer
     else
     {
       current_program_ = programs_.get(program);
+      if (current_program_)
+      {
+        auto pass = getCurrentRenderPass();
+        Ref<GPURenderPassEncoder> enc = pass ? pass->encoder() : nullptr;
+        if (enc)
+        {
+          enc->setPipeline(current_program_->pipeline.get());
+        }
+      }
+      else
+      {
+        std::cerr << "program not found: " << program << std::endl;
+      }
     }
   }
 

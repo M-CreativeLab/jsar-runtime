@@ -7,6 +7,7 @@
 #include <renderer/gles/gpu_buffer_impl.hpp>
 #include <renderer/gles/gpu_queue_impl.hpp>
 #include <renderer/gles/gpu_command_buffer_impl.hpp>
+#include <renderer/gles/gpu_pipeline_layout_impl.hpp>
 
 namespace gles
 {
@@ -115,7 +116,8 @@ namespace gles
   Ref<GPUPipelineLayoutBase> GPUDeviceImpl::createPipelineLayoutImpl(
     const GPUPipelineLayoutDescriptor &descriptor)
   {
-    return nullptr;
+    auto dev = this->shared_from_this();
+    return AcquireRef(new GPUPipelineLayoutImpl(dev, descriptor));
   }
 
   Ref<GPUShaderModuleBase> GPUDeviceImpl::createShaderModuleImpl(

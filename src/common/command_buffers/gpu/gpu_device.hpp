@@ -63,7 +63,7 @@ namespace commandbuffers
       const GPUBindGroupLayoutDescriptor &descriptor);
 
     GPUBindGroupLayoutBase *getEmptyBindGroupLayout();
-    GPUPipelineLayoutBase *getEmptyPipelineLayout();
+    Ref<GPUPipelineLayoutBase> getEmptyPipelineLayout();
 
     // Object creation methods that be used in a reentrant manner.
     Ref<GPUBindGroupBase> createBindGroup(const GPUBindGroupDescriptor *,
@@ -73,6 +73,7 @@ namespace commandbuffers
     Ref<GPUBufferBase> createBuffer(const GPUBufferDescriptor *);
     Ref<GPUCommandEncoder> createCommandEncoder(const GPUCommandEncoderDescriptor *);
     Ref<GPUComputePipelineBase> createComputePipeline(const GPUComputePipelineDescriptor *);
+    Ref<GPURenderPipelineBase> createRenderPipeline(const GPURenderPipelineDescriptor *);
     Ref<GPUShaderModuleBase> createShaderModule(const GPUShaderModuleDescriptor *,
                                                 const std::vector<wgsl::Extension> &internal_extensions = {});
     Ref<GPUTextureBase> createTexture(const GPUTextureDescriptor *);

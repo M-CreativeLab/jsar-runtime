@@ -225,10 +225,12 @@ namespace renderer
     {
     public:
       Program(WebGLuint id);
+      void createPipeline(Ref<commandbuffers::GPUDeviceBase> device);
 
       Ref<Shader> vertexShader;
       Ref<Shader> fragmentShader;
       Uniforms uniforms;
+      Ref<commandbuffers::GPURenderPipelineBase> pipeline;
       bool linked = false;
       std::unordered_map<std::string, WebGLuint> attrib_locations;
       std::unordered_map<std::string, WebGLuint> uniform_locations;
@@ -1102,6 +1104,14 @@ namespace renderer
           }
         }
         return false;
+      }
+
+      void printIds()
+      {
+        for (const auto &obj : *this)
+        {
+          std::cerr << "id: " << obj->id << std::endl;
+        }
       }
     };
 

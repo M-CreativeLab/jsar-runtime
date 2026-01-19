@@ -6,6 +6,8 @@
 #include <command_buffers/webgl_constants.hpp>
 #include <common/debug.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
+#include <common/command_buffers/gpu/gpu_render_pipeline.hpp>
+#include <common/command_buffers/gpu/gpu_shader_module.hpp>
 #include <renderer/content_renderer.hpp>
 #include <renderer/render_resource.hpp>
 #include <renderer/render_pass.hpp>
@@ -161,6 +163,46 @@ namespace renderer
         , vertexShader(nullptr)
         , fragmentShader(nullptr)
     {
+    }
+
+    void Program::createPipeline(Ref<GPUDeviceBase> device)
+    {
+      if (!vertexShader || !fragmentShader)
+        return;
+
+      GPUShaderModuleDescriptor vs_desc;
+      vs_desc.label = "VertexShader";
+      vs_desc.code = vertexShader->source;
+      auto vs_module = device->createShaderModule(&vs_desc);
+
+      GPUShaderModuleDescriptor fs_desc;
+      fs_desc.label = "FragmentShader";
+      fs_desc.code = fragmentShader->source;
+      auto fs_module = device->createShaderModule(&fs_desc);
+
+      GPURenderPipelineDescriptor desc;
+      desc.label = "ProgramPipeline";
+      desc.layout = device->getEmptyPipelineLayout();
+
+      desc.vertex.module = vs_module.get();
+      desc.vertex.entryPoint = "main";
+
+      GPUFragmentState fragment;
+      fragment.module = fs_module.get();
+      fragment.entryPoint = "main";
+      fragment.targetCount = 1;
+
+      GPUColorTargetState colorTarget;
+      colorTarget.format = GPUTextureFormat::kBGRA8Unorm;
+      colorTarget.writeMask = GPUColorWriteMask::kAll;
+      fragment.targets = &colorTarget;
+
+      desc.fragment = &fragment;
+      desc.primitive.topology = GPUPrimitiveTopology::kTriangleList;
+      desc.multisample.count = 1;
+      desc.multisample.mask = 0xFFFFFFFF;
+
+      pipeline = device->createRenderPipeline(&desc);
     }
 
     string Texture::toString() const
@@ -572,14 +614,14 @@ namespace renderer
     {
       const auto &typed_req = To<CreateProgramCommandBufferRequest>(req);
       auto index = glCreateProgram();
-      programs_[index]->set(req.id);
+      programs_[index]->set(typed_req.clientId);
       break;
     }
     case COMMAND_BUFFER_CREATE_SHADER_REQ:
     {
       const auto &typed_req = To<CreateShaderCommandBufferRequest>(req);
       auto index = glCreateShader(typed_req.shaderType);
-      shaders_[index]->set(req.id);
+      shaders_[index]->set(typed_req.clientId);
       break;
     }
     case COMMAND_BUFFER_DELETE_PROGRAM_REQ:
@@ -1369,7 +1411,6 @@ namespace renderer
   void TrContextWebGL::glContextInit(const WebGL1ContextInitCommandBufferRequest &req)
   {
     WebGL1ContextInitCommandBufferResponse res(const_cast<WebGL1ContextInitCommandBufferRequest *>(&req));
-
     if (gpu_device_)
     {
       const auto &limits = gpu_device_->limits();

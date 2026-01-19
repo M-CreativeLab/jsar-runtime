@@ -251,6 +251,17 @@ namespace renderer
     viewport_[1] = y;
     viewport_[2] = width;
     viewport_[3] = height;
+
+    auto encoder = getCurrentRenderPass()->encoder();
+    if (encoder)
+    {
+      encoder->setViewport(static_cast<float>(x),
+                           static_cast<float>(y),
+                           static_cast<float>(width),
+                           static_cast<float>(height),
+                           depth_range_[0],
+                           depth_range_[1]);
+    }
   }
 }
 // moved to renderer/context_webgl.cpp

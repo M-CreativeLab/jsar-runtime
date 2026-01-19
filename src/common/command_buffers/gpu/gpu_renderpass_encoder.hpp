@@ -88,7 +88,7 @@ namespace commandbuffers
 
     void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f);
     void setScissorRect(float x, float y, float width, float height);
-    void setPipeline(const GPURenderPipelineBase &pipeline);
+    void setPipeline(const GPURenderPipelineBase *pipeline);
     void setIndexBuffer(const GPUBufferBase &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size);
     void setVertexBuffer(uint32_t slot, const GPUBufferBase &buffer, uint32_t offset = 0, uint32_t size = 0);
     void setBlendConstant(float r, float g, float b, float a);

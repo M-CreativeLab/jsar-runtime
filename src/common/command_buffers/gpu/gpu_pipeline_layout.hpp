@@ -16,6 +16,17 @@ namespace commandbuffers
 
   class GPUPipelineLayoutBase : public GPUHandle
   {
+  public:
+    GPUPipelineLayoutBase(Ref<GPUDeviceBase> device, const GPUPipelineLayoutDescriptor &descriptor)
+        : GPUHandle(device, "GPUPipelineLayout")
+    {
+    }
+
+    GPUHandleType type() const override final
+    {
+      return GPUHandleType::kPipelineLayout;
+    }
+
   private:
     std::vector<GPUBindGroupLayoutBase> bind_group_layouts_;
   };

@@ -102,9 +102,9 @@ namespace commandbuffers
       });
   }
 
-  void GPURenderPassEncoder::setPipeline(const GPURenderPipelineBase &pipeline)
+  void GPURenderPassEncoder::setPipeline(const GPURenderPipelineBase *pipeline)
   {
-    gpu::RenderEncoderBase::setPipeline(const_cast<GPURenderPipelineBase *>(&pipeline));
+    gpu::RenderEncoderBase::setPipeline(const_cast<GPURenderPipelineBase *>(pipeline));
   }
 
   void GPURenderPassEncoder::setIndexBuffer(const GPUBufferBase &buffer,
